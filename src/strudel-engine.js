@@ -24,7 +24,7 @@ function nextDrawTarget() {
 // Перенаправляем встроенные визуализации Strudel в наш контейнер
 // вместо полноэкранного canvas, который пакеты рисуют по умолчанию.
 function patchVisuals() {
-  for (const name of ['pianoroll', 'scope', 'fscope', 'spectrum']) {
+  for (const name of ['pianoroll', '_pianoroll', 'scope', '_scope', 'fscope', '_fscope', 'spectrum', '_spectrum']) {
     const orig = Pattern.prototype[name];
     if (typeof orig !== 'function') continue;
     Pattern.prototype[name] = function (opts = {}) {
@@ -105,4 +105,26 @@ export async function unlockAudio() {
     }
   }
   return ctx?.state || 'unknown';
+}
+
+// Тихий прогон для валидатора: контекст приостанавливается, звук не звучит,
+// но ошибки парсинга всплывают. По завершении паттерны глушатся.
+export async function dryRun(code) {
+  await initPromise;
+  if (!initialized) throw new Error('Strudel не инициализирован');
+  const ctx = getAudioContext?.();
+  const wasRunning = ctx?.state === 'running';
+  lastError = null;
+  try {
+    if (wasRunning) await ctx.suspend();
+    await evaluate(code);
+    if (lastError) throw lastError?.error || lastError;
+    hush();
+    return { ok: true };
+  } catch (err) {
+    hush();
+    return { ok: false, error: String(err?.message || err) };
+  } finally {
+    if (wasRunning) await ctx.resume();
+  }
 }
