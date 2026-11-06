@@ -32,6 +32,12 @@
         <section class="panel" aria-label="Пресеты и история">
           <h2 class="panel-title">Пресеты</h2>
           <div id="preset-list" class="list"></div>
+          <div class="row wrap">
+            <button id="btn-save-preset" class="btn" type="button">💾 Сохранить</button>
+            <button id="btn-export" class="btn ghost" type="button">⬇ Экспорт</button>
+            <label class="btn ghost">⬆ Импорт<input id="btn-import-input" type="file" accept="application/json" hidden /></label>
+            <button id="btn-clear-history" class="btn ghost" type="button">Очистить историю</button>
+          </div>
           <h2 class="panel-title">История</h2>
           <div id="history-list" class="list"></div>
         </section>
@@ -47,6 +53,7 @@
 
         <div class="row">
           <button id="btn-play-code" class="btn" type="button">▶ Играть этот код</button>
+          <button id="btn-share" class="btn ghost" type="button">🔗 Ссылка</button>
           <button id="btn-clear" class="btn ghost" type="button">⏹ Сброс</button>
         </div>
 
@@ -90,6 +97,17 @@
       <label class="transport-field">Лад
         <select id="scale-select"></select>
       </label>
+      <label class="transport-field">Запись
+        <select id="rec-bars">
+          <option value="1">1 такт</option>
+          <option value="4" selected>4 такта</option>
+          <option value="8">8 тактов</option>
+          <option value="16">16 тактов</option>
+          <option value="0">Ручная</option>
+        </select>
+      </label>
+      <button id="btn-record" class="btn" type="button">● Rec</button>
+      <span id="rec-time" class="rec-time"></span>
     </footer>
 
     <div id="audio-gate" class="audio-gate">

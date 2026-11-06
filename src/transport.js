@@ -1,5 +1,6 @@
 // Транспорт: play/stop, слайдер BPM 40–220, выбор тональности, пульсация play в такт.
 import { getBpm, setCpm, getKey, setKey } from './core/code-model.js';
+import { startRecording, stopRecording, isRecording } from './core/recorder.js';
 import { staticValidate } from './core/validator.js';
 import { evaluateCode, stop } from './strudel-engine.js';
 import { log } from './ui.js';
@@ -71,6 +72,39 @@ export function initTransport({ getCode, setCode, onPlayToggle }) {
   $('key-select').addEventListener('change', applyTransport);
   $('scale-select').addEventListener('change', applyTransport);
 
+  // Запись WAV: длительность в тактах или ручная остановка.
+  $('btn-record').addEventListener('click', async () => {
+    const btn = $('btn-record');
+    if (isRecording()) {
+      const res = await stopRecording();
+      btn.classList.remove('recording');
+      btn.textContent = '● Rec';
+      $('rec-time').textContent = '';
+      if (res) log(`WAV сохранён (${res.seconds.toFixed(1)} с)`, 'ok');
+      return;
+    }
+    const bars = Number($('rec-bars').value) || null;
+    const res = await startRecording({
+      bars,
+      bpm: Number($('bpm-slider').value),
+      name: 'track',
+      onTick: (s) => { $('rec-time').textContent = `${s.toFixed(1)} с`; },
+      onFinished: () => {
+        btn.classList.remove('recording');
+        btn.textContent = '● Rec';
+        $('rec-time').textContent = '';
+        log('Запись завершена — WAV скачан', 'ok');
+      },
+    });
+    if (!res.ok) {
+      log(res.reason, 'error');
+      return;
+    }
+    btn.classList.add('recording');
+    btn.textContent = '■ Стоп';
+    log(bars ? `Запись ${bars} такт(ов) пошла…` : 'Запись пошла (ручная остановка кнопкой)', 'ok');
+  });
+
   $('btn-play').addEventListener('click', async () => {
     if (playing) {
       stop();
@@ -108,4 +142,12 @@ export function syncTransport(code) {
 
 export function transportIsPlaying() {
   return playing;
+}
+
+// Текущие значения транспорта для сохранения в пресет.
+export function transportState() {
+  return {
+    bpm: Number($('bpm-slider').value),
+    key: `${$('key-select').value}:${$('scale-select').value}`,
+  };
 }

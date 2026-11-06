@@ -5,6 +5,7 @@ import { staticValidate, dryValidate } from './core/validator.js';
 import { initMixer, syncMixer, mixerPlaying } from './mixer.js';
 import { initTransport, syncTransport } from './transport.js';
 import { initImprove } from './improve.js';
+import { makeShareLink } from './core/share.js';
 
 const $ = (id) => document.getElementById(id);
 const state = { busy: false, generating: false, abort: null };
@@ -195,6 +196,28 @@ export function initUI() {
   });
 
   $('btn-run').addEventListener('click', runPrompt);
+
+  // Шеринг: код → сжатая ссылка #c=… в буфер обмена.
+  $('btn-share').addEventListener('click', async () => {
+    const code = codeEl.value;
+    if (!code.trim()) {
+      log('Нечего шарить — сначала сгенерируйте трек', 'error');
+      return;
+    }
+    const { url, tooLong } = makeShareLink(code);
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      prompt('Скопируйте ссылку вручную:', url);
+      return;
+    }
+    log(
+      tooLong
+        ? `Ссылка скопирована (длинная, ${url.length} симв. — не в каждый чат влезет)`
+        : 'Ссылка на трек скопирована',
+      'ok',
+    );
+  });
   $('btn-play-code').addEventListener('click', playCode);
   $('btn-stop').addEventListener('click', () => {
     if (state.generating && state.abort) {

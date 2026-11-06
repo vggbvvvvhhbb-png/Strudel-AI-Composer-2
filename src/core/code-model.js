@@ -166,3 +166,24 @@ export function diffLines(oldText, newText) {
   while (j < m) { out.push({ type: 'add', text: b[j] }); j++; }
   return out;
 }
+
+// Снимок состояния микшера для пресета: громкость и mute каждой партии.
+export function captureMixer(code) {
+  return parseParts(code).map((p) => ({
+    label: p.label,
+    gain: getPartGain(code, p.label) ?? 0.8,
+    muted: p.muted,
+  }));
+}
+
+// Применить снимок к коду (при загрузке пресета или трека по ссылке).
+export function applyMixerState(code, snapshot) {
+  let out = code;
+  const labels = new Set(parseParts(out).map((p) => p.label));
+  for (const ch of snapshot || []) {
+    if (!labels.has(ch.label)) continue; // партии нет — пропускаем
+    out = setPartGain(out, ch.label, Number(ch.gain ?? 0.8));
+    out = setPartMuted(out, ch.label, Boolean(ch.muted));
+  }
+  return out;
+}
