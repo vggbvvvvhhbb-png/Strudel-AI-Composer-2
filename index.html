@@ -6,42 +6,91 @@
     <title>Strudel AI Composer</title>
   </head>
   <body>
-    <div id="app">
-      <header class="header">
-        <h1>Strudel AI Composer</h1>
-        <p class="subtitle">Опишите музыку словами — AI напишет код на Strudel и сразу исполнит его</p>
-      </header>
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-name">Strudel AI Composer</span>
+        <span class="brand-sub">опишите музыку — AI напишет код и исполнит его</span>
+      </div>
+      <button id="theme-toggle" class="btn ghost" type="button" title="Сменить тему">◐ Тема</button>
+    </header>
 
-      <main class="layout">
-        <section class="panel composer" aria-label="Управление">
+    <main class="app-grid">
+      <!-- Левая колонка: промпт, улучшение, история -->
+      <aside class="col-left">
+        <section class="panel" aria-label="Генерация">
           <label class="field-label" for="prompt-input">Команда</label>
-          <textarea id="prompt-input" rows="3" placeholder="Например: драм-партия в стиле Queen с мощным басом"></textarea>
-
-          <div class="controls">
-            <button id="btn-run" class="btn primary" type="button">▶ Исполнить</button>
-            <button id="btn-stop" class="btn" type="button">⏹ Стоп</button>
-            <button id="btn-clear" class="btn" type="button">🗑 Сброс</button>
-          </div>
-
-          <div id="status" class="voice-status" hidden></div>
-
-          <label class="field-label" for="code-input">Код Strudel (можно править вручную)</label>
-          <textarea id="code-input" class="code" rows="12" spellcheck="false" placeholder="// Здесь появится сгенерированный код"></textarea>
-
-          <div class="controls">
-            <button id="btn-play-code" class="btn" type="button">▶ Играть этот код</button>
-          </div>
+          <textarea id="prompt-input" rows="3" placeholder="Например: спокойный lo-fi с пианино и мягким басом"></textarea>
+          <button id="btn-run" class="btn primary wide" type="button">▶ Сгенерировать</button>
         </section>
 
-        <section class="panel output" aria-label="Результат">
-          <h2>Визуализация</h2>
-          <div id="strudel-container"></div>
-
-          <h2>Лог</h2>
-          <div id="log" class="log" aria-live="polite"></div>
+        <section class="panel" aria-label="Улучшить трек">
+          <label class="field-label" for="improve-input">Что поправить</label>
+          <textarea id="improve-input" rows="2" placeholder="Например: добавь синкопу в бас, сделай барабаны жёстче"></textarea>
+          <button id="btn-improve" class="btn wide" type="button">✨ Улучшить</button>
         </section>
-      </main>
-    </div>
+
+        <section class="panel" aria-label="Пресеты и история">
+          <h2 class="panel-title">Пресеты</h2>
+          <div id="preset-list" class="list"></div>
+          <h2 class="panel-title">История</h2>
+          <div id="history-list" class="list"></div>
+        </section>
+      </aside>
+
+      <!-- Центр: визуализация + редактор -->
+      <section class="col-center">
+        <div id="strudel-container" aria-label="Визуализация партий"></div>
+        <div id="status" class="status" hidden></div>
+
+        <label class="field-label" for="code-input">Код Strudel</label>
+        <textarea id="code-input" class="code" rows="14" spellcheck="false" placeholder="// Здесь появится сгенерированный код"></textarea>
+
+        <div class="row">
+          <button id="btn-play-code" class="btn" type="button">▶ Играть этот код</button>
+          <button id="btn-clear" class="btn ghost" type="button">⏹ Сброс</button>
+        </div>
+
+        <section id="diff-panel" class="panel diff" hidden>
+          <div class="row spread">
+            <h2 class="panel-title">Предложенные правки</h2>
+            <div class="row">
+              <button id="btn-diff-apply" class="btn primary" type="button">✓ Применить</button>
+              <button id="btn-diff-reject" class="btn ghost" type="button">✕ Отклонить</button>
+            </div>
+          </div>
+          <div id="diff-view" class="diff-view"></div>
+        </section>
+
+        <h2 class="panel-title">Лог</h2>
+        <div id="log" class="log" aria-live="polite"></div>
+      </section>
+
+      <!-- Правая колонка: микшер -->
+      <aside class="col-right">
+        <section class="panel" aria-label="Микшер">
+          <h2 class="panel-title">Микшер</h2>
+          <div id="mixer" class="mixer"></div>
+          <p class="hint">M — заглушить партию, S — соло, ползунок — громкость</p>
+        </section>
+      </aside>
+    </main>
+
+    <!-- Нижний транспорт -->
+    <footer class="transport" aria-label="Транспорт">
+      <button id="btn-play" class="btn primary play-btn" type="button">▶</button>
+      <button id="btn-stop-transport" class="btn" type="button">⏹</button>
+      <button id="btn-stop" class="btn ghost" type="button">⏹ Стоп генерации</button>
+      <label class="transport-field">BPM
+        <input id="bpm-slider" type="range" min="40" max="220" step="1" value="120" />
+        <span id="bpm-value">120</span>
+      </label>
+      <label class="transport-field">Нота
+        <select id="key-select"></select>
+      </label>
+      <label class="transport-field">Лад
+        <select id="scale-select"></select>
+      </label>
+    </footer>
 
     <div id="audio-gate" class="audio-gate">
       <div class="gate-card">

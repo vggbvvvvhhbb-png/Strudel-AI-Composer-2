@@ -2,6 +2,9 @@
 import { evaluateCode, stop, reset, unlockAudio } from './strudel-engine.js';
 import { generateCode, fixCode } from './api/client.js';
 import { staticValidate, dryValidate } from './core/validator.js';
+import { initMixer, syncMixer, mixerPlaying } from './mixer.js';
+import { initTransport, syncTransport } from './transport.js';
+import { initImprove } from './improve.js';
 
 const $ = (id) => document.getElementById(id);
 const state = { busy: false, generating: false, abort: null };
@@ -47,7 +50,7 @@ function stripMarkdown(text) {
 
 // Проверка → тихий прогон → исполнение. При ошибке — автофикс через /api/fix, максимум 2 попытки.
 // Небезопасный код не исполняется и не чинится — сразу блокируется.
-async function runValidated(codeRaw, onStatus) {
+export async function runValidated(codeRaw, onStatus) {
   let code = codeRaw;
   for (let step = 0; step < 3; step++) {
     const staticResult = staticValidate(code);
@@ -129,6 +132,68 @@ async function playCode() {
 }
 
 export function initUI() {
+  const codeEl = $('code-input');
+
+  initMixer({
+    getCode: () => codeEl.value,
+    setCode: (code) => { codeEl.value = code; },
+  });
+  initTransport({
+    getCode: () => codeEl.value,
+    setCode: (code) => { codeEl.value = code; },
+  });
+  initImprove({
+    getCode: () => codeEl.value,
+    apply: async (code) => {
+      codeEl.value = code;
+      log('Правки применены — проверяю и исполняю…');
+      setBusy(true);
+      try {
+        const res = await runValidated(code, (s) => setStatus(s));
+        codeEl.value = res.code;
+        if (res.ok) log('Играет ✓', 'ok');
+        else log(`Ошибка: ${res.error}`, 'error');
+      } finally {
+        setBusy(false);
+      }
+    },
+  });
+
+  // Ручные правки в редакторе синхронизируют микшер и транспорт.
+  let syncTimer;
+  codeEl.addEventListener('input', () => {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => {
+      syncMixer(codeEl.value);
+      syncTransport(codeEl.value);
+    }, 400);
+  });
+
+  // Тема: blue (по умолчанию) / dark, запоминается в localStorage.
+  const themeBtn = $('theme-toggle');
+  const savedTheme = localStorage.getItem('strudel.theme');
+  if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+  themeBtn.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'blue' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('strudel.theme', next);
+  });
+
+  // Горячие клавиши: Space — play/stop, Ctrl+Enter — сгенерировать.
+  window.addEventListener('keydown', (e) => {
+    const tag = document.activeElement?.tagName;
+    const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      runPrompt();
+      return;
+    }
+    if (e.code === 'Space' && !typing) {
+      e.preventDefault();
+      $('btn-play').click();
+    }
+  });
+
   $('btn-run').addEventListener('click', runPrompt);
   $('btn-play-code').addEventListener('click', playCode);
   $('btn-stop').addEventListener('click', () => {
