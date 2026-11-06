@@ -1,0 +1,3 @@
+#!/bin/sh
+# Включить на своей машине: git config core.hooksPath .githooks
+node scripts/check-secrets.js
