@@ -1,0 +1,272 @@
+:root {
+  --bg: #0a0e27;
+  --bg-soft: #11163a;
+  --bg-panel: #0d1230;
+  --text: #ffffff;
+  --text-dim: #9aa3c7;
+  --accent: #4f8cff;
+  --accent-soft: rgba(79, 140, 255, 0.15);
+  --danger: #ff5f7a;
+  --ok: #4fd1a5;
+  --radius: 10px;
+  --font-ui: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-code: ui-monospace, 'Cascadia Code', Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+#app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  padding: 16px;
+  min-width: 0;
+}
+
+.panel h2 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.field-label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+textarea {
+  width: 100%;
+  background: var(--bg-soft);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  resize: vertical;
+}
+
+textarea.code {
+  font-family: var(--font-code);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 16px;
+}
+
+.controls:last-child {
+  margin-bottom: 0;
+}
+
+.btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 180ms ease-out, border-color 180ms ease-out;
+}
+
+.btn:hover:not(:disabled) {
+  background: #1a2050;
+  border-color: var(--accent);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: #3d7bf0;
+}
+
+.btn.recording {
+  background: var(--danger);
+  border-color: var(--danger);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 95, 122, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 95, 122, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn.recording {
+    animation: none;
+  }
+}
+
+.voice-status {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.voice-status.error {
+  background: rgba(255, 95, 122, 0.15);
+}
+
+#strudel-container {
+  min-height: 220px;
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+  padding: 8px;
+  overflow-x: auto;
+}
+
+#strudel-container:empty::after {
+  content: 'Здесь появится pianoroll после исполнения кода';
+  display: block;
+  padding: 96px 16px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+#strudel-container canvas.strudel-view {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 8px;
+  background: #070b1e;
+  border-radius: 8px;
+}
+
+.log {
+  height: 220px;
+  overflow-y: auto;
+  background: var(--bg-soft);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-family: var(--font-code);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.log .entry {
+  margin: 0 0 8px;
+}
+
+.log .entry .time {
+  color: var(--text-dim);
+}
+
+.log .entry.info { color: var(--text); }
+.log .entry.ok { color: var(--ok); }
+.log .entry.error { color: var(--danger); }
+.log .entry.agent { color: var(--accent); }
+
+.audio-gate {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 8, 24, 0.85);
+  z-index: 10;
+}
+
+.audio-gate[hidden] {
+  display: none;
+}
+
+.gate-card {
+  background: var(--bg-panel);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 360px;
+  text-align: center;
+}
+
+.gate-card h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.gate-card p {
+  margin: 0 0 16px;
+  color: var(--text-dim);
+  font-size: 14px;
+}
