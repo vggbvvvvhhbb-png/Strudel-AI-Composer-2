@@ -3,7 +3,7 @@
 
 ## Жёсткие правила
 - Используй только функции Strudel. Запрещены: fetch, import, eval, document, window, localStorage и любые обращения к сети или DOM.
-- Сэмплы — только из банков dirt-samples: `.bank("RolandTR909")`, `.bank("RolandTR808")`, `.bank("AkaiLinn")`, `.bank("vis")`. Строку `samples(...)` не пиши — сэмплы приложение подгружает само.
+- Сэмплы — только из загруженных наборов, по имени без `.bank(...)` (банков нет, звук с банком молчит). Рабочие имена: `bd`, `sd`, `hh`, `hh27`, `cp`, `oh`, `perc`, `808`, `808bd`, `808sd`, `808oh`, `808mc`, `808ht`, `808lc`, `909`, `bass`, `bass0`, `bass1`, `bass2`, `bass3`, `pluck`, `stab`, `jazz`, `juno`, `moog`, `sax`, `trump`, `sitar`, `house`, `dr`, `dr2`, `dr55`, `breaks125`, `breaks152`, `breaks157`, `breaks165`, `realclaps`, `sh`, `rave`, `gab`, `industrial`, `jungle`, `techno`, `piano`. Строку `samples(...)` не пиши — сэмплы приложение подгружает само.
 - Верхнеуровневый код: только вызовы Strudel и объявления `const` для тональности. Никаких своих функций, циклов и DOM.
 
 ## Структура трека — строго в этом порядке
@@ -17,7 +17,7 @@
 - Бас (`$BASS`): низкие ноты `note("c2 …")` или `n(…).scale(key)`, в конце `._pianoroll()`.
 - ВАЖНО: буквенные имена нот (`a1`, `c3`, `f#2`) — только внутри `note("…")`. В `n("…")` — только числа ступеней (например `n("0 ~ 3 ~ 5 ~").scale(key)`); `n("a1")` — ошибка парсинга.
 - ВАЖНО: пауза в mini-нотации — это тильда `~`, а НЕ точка. Точка внутри строки mini-нотации ломает парсер: `n("0 ~ 3 ~ 5 ~")` — верно, `n("0 . 3 . 5 .")` — ошибка.
-- Ударные (`$DRUMS`): `s("bd*4, hh*8, cp(3,8)")` с `.bank("RolandTR909")` и `._scope()` в конце.
+- Ударные (`$DRUMS`): `s("bd*4, hh*8, cp(3,8)")` — только имена из списка выше, без `.bank(...)`; в конце `._scope()`.
 - Эффекты по вкусу: `.room(.5)`, `.delay(.3)`, `.lpf(800)`, `.hpf(200)`, `.gain(.7)` (значения gain 0.2–0.9); ритм: `.fast(2)`, `.slow(2)`, `.every(4, x => x.rev())`.
 - Ритмы музыкально осмысленные: качающий бас, синкопы, партии различаются между собой.
 
@@ -32,7 +32,7 @@
 setCpm(78/4)
 const key = "a:minor"
 
-$DRUMS: s("bd*2, hh*8, sd(3,8)").bank("RolandTR909").gain(.6)._scope()
+$DRUMS: s("bd*2, hh*8, sd(3,8)").gain(.6)._scope()
 $BASS: n("0 ~ 3 ~ 5 ~ 3 ~").scale(key).s("triangle").gain(.55)._pianoroll()
 $MEL: note("a3 c4 e4 g4").s("piano").slow(2).room(.6).gain(.7)._pianoroll()
 $PAD: chord("Am").s("sine").slow(4).room(.8).gain(.35)._pianoroll()
@@ -43,7 +43,7 @@ $PAD: chord("Am").s("sine").slow(4).room(.8).gain(.35)._pianoroll()
 setCpm(132/4)
 const key = "f:minor"
 
-$DRUMS: s("bd*4, hh*8, cp(2,8)").bank("RolandTR909").gain(.85)._scope()
+$DRUMS: s("bd*4, hh*8, cp(2,8)").gain(.85)._scope()
 $BASS: n("[0,0,3,5]!2 [0,0,5,3]!2").scale(key).s("sawtooth").lpf(300).gain(.7)._pianoroll()
 $ARP: n("0 7 3 10").scale(key).s("square").fast(2).gain(.4)._pianoroll()
 ```
@@ -55,7 +55,7 @@ const key = "d:dorian"
 
 $PAD: chord("Dm7").s("sine").slow(8).room(.9).gain(.4)._pianoroll()
 $MEL: note("d4 f4 a4 c4").s("triangle").slow(4).delay(.5).gain(.5)._pianoroll()
-$DRUMS: s("bd, rim*2").bank("TR808").gain(.3)._scope()
+$DRUMS: s("bd, perc*2").gain(.3)._scope()
 ```
 
 Отвечай только кодом, начиная со строки `setCpm(...)`.

@@ -25,7 +25,7 @@
 }
 
 .btn:hover {
-  background: rgba(47, 224, 160, 0.12);
+  background: rgb(var(--jade-rgb) / 0.12);
   border-color: var(--jade);
   color: var(--mint);
 }
@@ -46,17 +46,17 @@
 }
 
 .btn.primary {
-  background: linear-gradient(135deg, var(--jade) 0%, #008f5c 100%);
+  background: linear-gradient(135deg, var(--jade) 0%, var(--jade-deep) 100%);
   border-color: transparent;
   color: var(--ink-on-jade);
   font-weight: 700;
-  box-shadow: 0 0 0 1px rgba(47, 224, 160, 0.2), 0 4px 18px rgba(0, 168, 107, 0.28);
+  box-shadow: 0 0 0 1px rgb(var(--jade-rgb) / 0.2), 0 4px 18px rgb(var(--jade-deep-rgb) / 0.28);
 }
 
 .btn.primary:hover {
   background: linear-gradient(135deg, var(--jade-bright) 0%, var(--jade) 100%);
   color: var(--ink-on-jade);
-  box-shadow: 0 0 22px rgba(47, 224, 160, 0.42);
+  box-shadow: 0 0 22px rgb(var(--jade-rgb) / 0.42);
 }
 
 .btn.ghost {
@@ -64,7 +64,7 @@
 }
 
 .btn.ghost:hover {
-  background: rgba(47, 224, 160, 0.1);
+  background: rgb(var(--jade-rgb) / 0.1);
 }
 
 .btn.wide {
@@ -72,7 +72,7 @@
 }
 
 .btn.recording {
-  color: var(--danger);
+  color: var(--danger-text);
   border-color: var(--danger);
   animation: rec-pulse 1.2s infinite;
 }
@@ -166,9 +166,9 @@ select option {
 
 /* Идёт запись — кнопка подсвечивается и «дышит». */
 .voice-btn[data-state='recording'] {
-  color: var(--danger);
+  color: var(--danger-text);
   border-color: var(--danger);
-  box-shadow: 0 0 0 1px var(--danger), 0 0 18px rgba(255, 107, 107, 0.35);
+  box-shadow: 0 0 0 1px var(--danger), 0 0 18px rgb(var(--danger-rgb) / 0.35);
   animation: voice-pulse 1.1s ease-in-out infinite;
 }
 
@@ -185,7 +185,7 @@ select option {
 }
 
 .editor-wrap:focus-within {
-  box-shadow: 0 0 0 1px rgba(47, 224, 160, 0.35), 0 0 22px rgba(47, 224, 160, 0.14);
+  box-shadow: 0 0 0 1px rgb(var(--jade-rgb) / 0.35), 0 0 22px rgb(var(--jade-rgb) / 0.14);
 }
 
 .editor-wrap pre,
@@ -222,11 +222,11 @@ select option {
   resize: vertical;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(47, 224, 160, 0.25) transparent;
+  scrollbar-color: rgb(var(--jade-rgb) / 0.25) transparent;
 }
 
 .editor-wrap textarea::selection {
-  background: rgba(47, 224, 160, 0.28);
+  background: rgb(var(--jade-rgb) / 0.28);
 }
 
 /* Строки редактора */
@@ -241,7 +241,7 @@ select option {
 
 /* Текущая строка курсора */
 .ln.current {
-  background: rgba(47, 224, 160, 0.07);
+  background: rgb(var(--jade-rgb) / 0.07);
 }
 
 /* Заголовок партии ($PART:) */
@@ -251,11 +251,11 @@ select option {
 
 /* Активная партия — та, что звучит прямо сейчас */
 .ln.part-active {
-  background: rgba(47, 224, 160, 0.055);
+  background: rgb(var(--jade-rgb) / 0.055);
 }
 
 .ln.part.part-active {
-  background: rgba(47, 224, 160, 0.14);
+  background: rgb(var(--jade-rgb) / 0.14);
   border-left-color: var(--jade-bright);
 }
 
@@ -321,7 +321,7 @@ select option {
 }
 
 .list-row:hover {
-  background: rgba(47, 224, 160, 0.08);
+  background: rgb(var(--jade-rgb) / 0.08);
 }
 
 .list-name {
@@ -358,7 +358,7 @@ select option {
 
 .chip:hover {
   color: var(--mint);
-  background: rgba(47, 224, 160, 0.12);
+  background: rgb(var(--jade-rgb) / 0.12);
   border-color: var(--jade);
 }
 
@@ -369,7 +369,7 @@ select option {
 .chip[aria-label^='Mute'][aria-pressed='true'] {
   background: var(--danger);
   border-color: var(--danger);
-  color: #2a0000;
+  color: var(--ink-on-danger);
 }
 
 .chip[aria-label^='Solo'][aria-pressed='true'] {
@@ -391,7 +391,7 @@ select option {
   border: 1px solid var(--border);
   border-left: 3px solid var(--accent, var(--jade));
   border-radius: var(--radius-s);
-  background: rgba(3, 26, 20, 0.42);
+  background: rgb(var(--bg-deep-rgb) / 0.42);
   padding: var(--sp-2) var(--sp-3) var(--sp-3);
   overflow: hidden;
   transition: box-shadow 0.2s ease-out, border-color 0.2s ease-out;
@@ -412,8 +412,8 @@ select option {
 
 /* Партия звучит — мягкое свечение по краю */
 .part-block.live {
-  box-shadow: 0 0 18px rgba(47, 224, 160, 0.18);
-  border-color: rgba(47, 224, 160, 0.3);
+  box-shadow: 0 0 18px rgb(var(--jade-rgb) / 0.18);
+  border-color: rgb(var(--jade-rgb) / 0.3);
 }
 
 /* Код партии прямо над пианороллом — видно, какой строкой он построен. */
@@ -422,7 +422,7 @@ select option {
   padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3);
   border-left: 2px solid var(--accent, var(--jade));
   border-radius: var(--radius-xs);
-  background: rgba(0, 0, 0, 0.28);
+  background: rgb(var(--black-rgb) / 0.28);
   color: var(--text-dim);
   font-family: var(--font-mono);
   font-size: 11.5px;
@@ -505,7 +505,7 @@ select option {
   grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 6px 10px;
   align-items: center;
-  background: rgba(3, 26, 20, 0.5);
+  background: rgb(var(--bg-deep-rgb) / 0.5);
   border: 1px solid var(--border);
   border-left: 3px solid var(--accent, var(--jade));
   border-radius: var(--radius-s);
@@ -514,8 +514,8 @@ select option {
 }
 
 .mixer .channel.live {
-  background: rgba(6, 46, 34, 0.6);
-  box-shadow: 0 0 16px rgba(47, 224, 160, 0.16);
+  background: rgb(var(--bg-lift-rgb) / 0.6);
+  box-shadow: 0 0 16px rgb(var(--jade-rgb) / 0.16);
 }
 
 .mixer .channel.accent-jade {
@@ -601,13 +601,13 @@ select option {
   grid-column: 1 / -1;
   height: 6px;
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgb(var(--white-rgb) / 0.07);
   overflow: hidden;
   transition: background 0.15s ease-out;
 }
 
 .channel.live .vu {
-  background: rgba(47, 224, 160, 0.14);
+  background: rgb(var(--jade-rgb) / 0.14);
 }
 
 .vu::after {
@@ -616,7 +616,7 @@ select option {
   height: 100%;
   width: calc(var(--level, 0) * 100%);
   background: linear-gradient(90deg, var(--accent, var(--jade)), var(--jade-bright));
-  box-shadow: 0 0 10px rgba(47, 224, 160, 0.65);
+  box-shadow: 0 0 10px rgb(var(--jade-rgb) / 0.65);
   transition: width 0.06s linear;
 }
 
@@ -637,7 +637,7 @@ select option {
   padding: var(--sp-2) var(--sp-3);
   color: var(--mint);
   border-bottom: 1px solid var(--border);
-  background: rgba(47, 224, 160, 0.07);
+  background: rgb(var(--jade-rgb) / 0.07);
 }
 
 .diff-line {
@@ -647,13 +647,13 @@ select option {
 }
 
 .diff-add {
-  background: rgba(47, 224, 160, 0.16);
+  background: rgb(var(--jade-rgb) / 0.16);
   color: var(--jade-bright);
 }
 
 .diff-del {
-  background: rgba(255, 107, 107, 0.14);
-  color: var(--danger);
+  background: rgb(var(--danger-rgb) / 0.14);
+  color: var(--danger-text);
   text-decoration: line-through;
 }
 
@@ -665,7 +665,7 @@ select option {
 .status {
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--radius-s);
-  background: rgba(47, 224, 160, 0.07);
+  background: rgb(var(--jade-rgb) / 0.07);
   border: 1px solid var(--border);
   font-size: 13.5px;
   color: var(--mint);
@@ -679,8 +679,8 @@ select option {
 
 .status.error {
   border-color: var(--danger);
-  color: var(--danger);
-  background: rgba(255, 107, 107, 0.08);
+  color: var(--danger-text);
+  background: rgb(var(--danger-rgb) / 0.08);
 }
 
 .status.busy {
@@ -714,7 +714,7 @@ select option {
 .log-line.error,
 .log .entry.error {
   border-color: var(--danger);
-  color: var(--danger);
+  color: var(--danger-text);
 }
 
 .log .time {
@@ -729,7 +729,7 @@ select option {
   display: none;
   align-items: center;
   justify-content: center;
-  background: rgba(2, 12, 9, 0.82);
+  background: rgb(var(--gate-rgb) / 0.82);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   z-index: 100;
@@ -773,7 +773,7 @@ input[type='range'] {
 input[type='range']::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 2px;
-  background: rgba(47, 224, 160, 0.2);
+  background: rgb(var(--jade-rgb) / 0.2);
 }
 
 input[type='range']::-webkit-slider-thumb {
@@ -785,13 +785,13 @@ input[type='range']::-webkit-slider-thumb {
   border-radius: 50%;
   background: var(--jade-bright);
   border: none;
-  box-shadow: 0 0 10px rgba(47, 224, 160, 0.55);
+  box-shadow: 0 0 10px rgb(var(--jade-rgb) / 0.55);
 }
 
 input[type='range']::-moz-range-track {
   height: 4px;
   border-radius: 2px;
-  background: rgba(47, 224, 160, 0.2);
+  background: rgb(var(--jade-rgb) / 0.2);
 }
 
 input[type='range']::-moz-range-thumb {
@@ -800,7 +800,7 @@ input[type='range']::-moz-range-thumb {
   border: none;
   border-radius: 50%;
   background: var(--jade-bright);
-  box-shadow: 0 0 10px rgba(47, 224, 160, 0.55);
+  box-shadow: 0 0 10px rgb(var(--jade-rgb) / 0.55);
 }
 
 /* --- Разное --- */

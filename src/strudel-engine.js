@@ -95,6 +95,9 @@ export function initEngine(container) {
     });
     installJadeVisuals({ drawTarget: nextDrawTarget });
     initialized = true;
+    // Прогреваем сэмплы заранее: к моменту первого нажатия «play»
+    // манифест уже загружен, и звук есть с первой ноты.
+    ensureSamples();
     window.addEventListener('resize', () => {
       visualRoot?.querySelectorAll('.part-block').forEach((block) => {
         const canvas = block.querySelector('canvas');
@@ -109,30 +112,54 @@ export function initEngine(container) {
 let samplesPromise = null;
 let samplesRetryAt = 0;
 
-// Сэмплы dirt-samples тянутся с GitHub в фоне: загрузка не должна блокировать
-// первое исполнение (иначе медленный канал добавляет десятки секунд к старту).
-// При недоступности сети музыка просто играет без барабанных сэмплов.
+// Наборы сэмплов, которые реально существуют.
+//   github:tidalcycles/dirt-samples — большой набор (bd, sd, hh, cp, 808*, breaks* …);
+//   shabda:piano — пианино (в dirt-samples его нет).
+// Имена из манифеста — единственные рабочие: неизвестное имя молча
+// выпадает из звука («sound … not found!»).
+const SAMPLE_SETS = ['github:tidalcycles/dirt-samples', 'shabda:piano'];
+
+/**
+ * Подгружает манифесты сэмплов. Возвращает промис, который можно ждать:
+ * после его резолва soundMap готов и первый такт уже со звуком.
+ */
 export function ensureSamples({ force = false } = {}) {
-  if (samplesPromise) return samplesPromise;
+  if (samplesPromise && !force) return samplesPromise;
   if (!force && Date.now() < samplesRetryAt) return Promise.resolve();
-  samplesPromise = Promise.resolve()
-    .then(() => samples('github:tidalcycles/dirt-samples'))
-    .then(() => {
-      window.dispatchEvent(new CustomEvent('strudel:samples', { detail: { ok: true } }));
-    })
-    .catch((err) => {
-      console.warn('Сэмплы dirt-samples недоступны:', err?.message || err);
+  samplesPromise = Promise.allSettled(SAMPLE_SETS.map((src) => samples(src))).then((results) => {
+    const failed = results.filter((r) => r.status === 'rejected');
+    for (const f of failed) console.warn('Набор сэмплов недоступен:', f.reason?.message || f.reason);
+    const ok = failed.length < results.length;
+    if (!ok) {
       samplesPromise = null;
       samplesRetryAt = Date.now() + 60_000;
-      window.dispatchEvent(new CustomEvent('strudel:samples', { detail: { ok: false, error: err?.message } }));
-    });
+    }
+    window.dispatchEvent(
+      new CustomEvent('strudel:samples', { detail: { ok, failed: failed.length } }),
+    );
+    return ok;
+  });
   return samplesPromise;
+}
+
+/** Ждём сэмплы, но не дольше лимита: медленная сеть не должна блокировать звук. */
+async function waitForSamples(timeoutMs = 5000) {
+  try {
+    await Promise.race([
+      ensureSamples(),
+      new Promise((resolve) => setTimeout(resolve, timeoutMs)),
+    ]);
+  } catch {
+    /* сэмплы не пришли — играем на синтезаторах */
+  }
 }
 
 export async function evaluateCode(code) {
   await initPromise;
   if (!initialized) throw new Error('Strudel не инициализирован');
-  ensureSamples();
+  // Сэмплы нужны до первого звука: иначе ударные и пианино молчат
+  // («sound bd not found») до конца загрузки манифеста.
+  await waitForSamples();
   planCache = visualPlan(code);
   if (visualRoot) visualRoot.replaceChildren();
   drawSeq = 0;

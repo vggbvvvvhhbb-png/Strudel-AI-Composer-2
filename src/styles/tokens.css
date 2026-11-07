@@ -25,9 +25,14 @@ html.theme-jade {
   /* --- Пианоролл --- */
   --note: #f2fff9; /* ноты (белые, как на референсе) */
   --note-glow: rgba(47, 224, 160, 0.55);
+  --note-active: #2fe0a0; /* активная нота */
+  --roll-grid: rgba(120, 255, 200, 0.1); /* сетка пианоролла */
+  --playhead: rgba(181, 255, 225, 0.5); /* линия «сейчас» */
+  --scope-line: #2fe0a0; /* линия осциллографа */
 
   /* --- Служебные --- */
-  --danger: #ff6b6b;
+  --danger: #ff6b6b; /* рамки, точки, заливка кнопок */
+  --danger-text: #ff9b9b; /* текст об ошибке — не ниже WCAG AA на всех фонах */
   --warn: #ffd166;
   --radius: 12px;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
@@ -46,6 +51,20 @@ html.theme-obsidian {
   --text: #e4f6ef;
   --text-dim: #7d9a92;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --danger-text: #ff9b9b;
+
+  /* Пианоролл obsidian: ноты чуть холоднее, сетка мягче. */
+  --note: #eef7f4;
+  --note-glow: rgba(47, 224, 160, 0.42);
+  --note-active: #37e6a8;
+  --roll-grid: rgba(120, 255, 200, 0.07);
+  --playhead: rgba(200, 255, 235, 0.42);
+  --scope-line: #37e6a8;
+
+  /* Полупрозрачные слои — под тёмный obsidian. */
+  --bg-deep-rgb: 4 6 10;
+  --bg-lift-rgb: 12 18 24;
+  --gate-rgb: 2 3 5;
 }
 
 :root {
@@ -90,6 +109,21 @@ html.theme-obsidian {
   /* --- Текст на заливке --- */
   --ink-on-jade: #021510; /* тёмный текст на jade-фоне (контраст 6:1) */
   --ink-on-warn: #241a00;
+  --ink-on-danger: #2a0000; /* текст на заливке --danger */
+  --jade-deep: #008f5c; /* нижний стоп градиента jade-кнопки */
+
+  /* --- RGB-тройки для полупрозрачных слоёв ---
+     rgb(var(--jade-rgb) / 0.12) — так все цвета интерфейса
+     живут в tokens.css, а тема переключается в одном месте. */
+  --jade-rgb: 47 224 160; /* --jade-bright */
+  --jade-deep-rgb: 0 168 107; /* --jade */
+  --mint-rgb: 181 255 225;
+  --white-rgb: 255 255 255;
+  --black-rgb: 0 0 0;
+  --danger-rgb: 255 107 107;
+  --bg-deep-rgb: 3 26 20; /* фон пианоролла и каналов микшера */
+  --bg-lift-rgb: 6 46 34; /* канал микшера, когда партия звучит */
+  --gate-rgb: 2 12 9; /* затемнение оверлея «включить звук» */
 
   /* --- Пульс --- */
   --beat-dur: 0.5s;

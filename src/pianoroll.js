@@ -6,13 +6,42 @@
 // хотя именно их пишет генератор кода. Здесь мы их заводим и красим по-своему.
 import { Pattern, noteToMidi, freqToMidi } from '@strudel/web';
 
-export const PALETTE = {
-  note: '#f2fff9',       // обычные ноты
-  active: '#2fe0a0',     // активная нота
+// Палитра canvas берётся из CSS-переменных tokens.css — так цвета пианоролла
+// меняются вместе с темой (jade / obsidian) и не дублируются в JS.
+// FALLBACK нужен на случай, если стили ещё не загрузились (или в тестах без DOM).
+const FALLBACK = {
+  note: '#f2fff9', // обычные ноты
+  active: '#2fe0a0', // активная нота
   glow: 'rgba(47,224,160,0.55)',
   grid: 'rgba(120,255,200,0.10)',
   playhead: 'rgba(181,255,225,0.5)',
+  scope: '#2fe0a0', // линия осциллографа
 };
+
+export const PALETTE = FALLBACK;
+
+let paletteCache = { theme: null, value: FALLBACK };
+
+/** Актуальная палитра: перечитывается при смене темы на <html>. */
+export function palette() {
+  if (typeof document === 'undefined' || !document.documentElement) return FALLBACK;
+  const theme = document.documentElement.dataset.theme || 'jade';
+  if (paletteCache.theme === theme) return paletteCache.value;
+  const cs = getComputedStyle(document.documentElement);
+  const read = (name, fallback) => (cs.getPropertyValue(name) || '').trim() || fallback;
+  paletteCache = {
+    theme,
+    value: {
+      note: read('--note', FALLBACK.note),
+      active: read('--note-active', FALLBACK.active),
+      glow: read('--note-glow', FALLBACK.glow),
+      grid: read('--roll-grid', FALLBACK.grid),
+      playhead: read('--playhead', FALLBACK.playhead),
+      scope: read('--scope-line', FALLBACK.scope),
+    },
+  };
+  return paletteCache.value;
+}
 
 // Прокси контекста: встроенный осциллограф Strudel рисует в своей теме —
 // подменяем цвет линии на нефритовый, не трогая остальную геометрию.
@@ -24,7 +53,7 @@ function jadeCtx(ctx) {
     },
     set(target, prop, value) {
       if (prop === 'strokeStyle') {
-        target.strokeStyle = PALETTE.active;
+        target.strokeStyle = palette().scope;
         return true;
       }
       target[prop] = value;
@@ -78,6 +107,7 @@ export function paintPianoroll({ ctx, haps = [], time = 0, cycles = 4, playhead 
   const h = ctx.canvas.height;
   if (!w || !h) return;
 
+  const colors = palette();
   const from = -cycles * playhead;
   const to = cycles * (1 - playhead);
   const extent = to - from;
@@ -108,7 +138,7 @@ export function paintPianoroll({ ctx, haps = [], time = 0, cycles = 4, playhead 
 
   // горизонтальная сетка — ориентир по высоте
   ctx.save();
-  ctx.strokeStyle = PALETTE.grid;
+  ctx.strokeStyle = colors.grid;
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (let i = 0; i <= valueExtent; i += 1) {
@@ -132,10 +162,10 @@ export function paintPianoroll({ ctx, haps = [], time = 0, cycles = 4, playhead 
 
     ctx.save();
     if (active) {
-      ctx.shadowColor = PALETTE.glow;
+      ctx.shadowColor = colors.glow;
       ctx.shadowBlur = 14;
     }
-    ctx.fillStyle = active ? PALETTE.active : PALETTE.note;
+    ctx.fillStyle = active ? colors.active : colors.note;
     ctx.globalAlpha = active ? 1 : 0.7;
     roundRect(ctx, x, y, noteWidth, noteHeight, Math.min(3, noteHeight / 2));
     ctx.fill();
@@ -144,7 +174,7 @@ export function paintPianoroll({ ctx, haps = [], time = 0, cycles = 4, playhead 
 
   // playhead — там, где «сейчас»
   ctx.save();
-  ctx.strokeStyle = PALETTE.playhead;
+  ctx.strokeStyle = colors.playhead;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   const px = (-from / extent) * w;

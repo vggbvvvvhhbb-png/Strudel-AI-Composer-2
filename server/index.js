@@ -25,7 +25,17 @@ app.use(
       useDefaults: true,
       directives: {
         'default-src': ["'self'"],
-        'script-src': ["'self'", "'unsafe-eval'", "'wasm-unsafe-eval'", "'unsafe-inline'", 'blob:'],
+        // data: нужен Strudel: его AudioWorklet-модули (sample-generator,
+        // recorder, эффекты) приходят как data:text/javascript;base64.
+        // Без него в консоли «could not load AudioWorklet effects».
+        'script-src': [
+          "'self'",
+          "'unsafe-eval'",
+          "'wasm-unsafe-eval'",
+          "'unsafe-inline'",
+          'blob:',
+          'data:',
+        ],
         'style-src': ["'self'", "'unsafe-inline'"],
         'img-src': ["'self'", 'data:', 'blob:'],
         'media-src': ["'self'", 'blob:', 'https://raw.githubusercontent.com'],

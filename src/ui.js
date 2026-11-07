@@ -275,5 +275,5 @@ export function initUI({ editor: editorApi } = {}) {
   window.addEventListener('strudel:error', (e) => {
     log(`Ошибка инициализации Strudel: ${e.detail?.message || e.detail}`, 'error');
   });
-  log('Введите команду и нажмите «▶ Исполнить»');
+  log('Введите команду и нажмите «▶ Сгенерировать»');
 }
