@@ -4,7 +4,7 @@
 const PART_LINE = /^[ \t]*([_S]?)\$[ \t]*([A-Za-z]\w*)?[ \t]*:/;
 
 // Позиция // комментария вне строковых литералов (-1 если нет).
-function commentStart(text) {
+export function commentStart(text) {
   let inString = null;
   for (let i = 0; i < text.length; i++) {
     const c = text[i];

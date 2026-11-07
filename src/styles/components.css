@@ -1,0 +1,828 @@
+/* ============================================================
+   Компоненты: кнопки, поля, списки, редактор, микшер, визуализации, diff, лог.
+   Все цвета — через переменные из tokens.css.
+   ============================================================ */
+
+/* --- Кнопки --- */
+.btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  transition: background 0.15s ease-out, border-color 0.15s ease-out, transform 0.1s ease-out,
+    box-shadow 0.15s ease-out, color 0.15s ease-out;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: rgba(47, 224, 160, 0.12);
+  border-color: var(--jade);
+  color: var(--mint);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--jade-bright);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, var(--jade) 0%, #008f5c 100%);
+  border-color: transparent;
+  color: var(--ink-on-jade);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px rgba(47, 224, 160, 0.2), 0 4px 18px rgba(0, 168, 107, 0.28);
+}
+
+.btn.primary:hover {
+  background: linear-gradient(135deg, var(--jade-bright) 0%, var(--jade) 100%);
+  color: var(--ink-on-jade);
+  box-shadow: 0 0 22px rgba(47, 224, 160, 0.42);
+}
+
+.btn.ghost {
+  background: transparent;
+}
+
+.btn.ghost:hover {
+  background: rgba(47, 224, 160, 0.1);
+}
+
+.btn.wide {
+  width: 100%;
+}
+
+.btn.recording {
+  color: var(--danger);
+  border-color: var(--danger);
+  animation: rec-pulse 1.2s infinite;
+}
+
+/* Пульс play-кнопки в такт BPM — длительность задаёт --beat-dur. */
+.btn-play.playing {
+  animation: beat-pulse var(--beat-dur) infinite;
+}
+
+/* --- Поля ввода --- */
+textarea,
+select,
+input[type='text'] {
+  width: 100%;
+  background: var(--field-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-s);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: 14px;
+  font-family: var(--font-ui);
+}
+
+textarea::placeholder {
+  color: var(--text-dim);
+  opacity: 0.75;
+}
+
+textarea:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--jade-bright);
+  outline-offset: 0;
+  border-color: var(--jade);
+}
+
+select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-dim) 50%),
+    linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+  background-position: calc(100% - 15px) calc(50% + 1px), calc(100% - 10px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: var(--sp-5);
+}
+
+select option {
+  background: var(--bg-2);
+  color: var(--text);
+}
+
+.field-label {
+  display: block;
+  color: var(--mint);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  margin: 0 0 var(--sp-1);
+}
+
+/* --- Поле промпта + кнопка микрофона --- */
+.prompt-row {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: stretch;
+}
+
+.prompt-row textarea {
+  flex: 1;
+  min-width: 0;
+}
+
+.voice-btn {
+  flex: 0 0 auto;
+  width: 44px;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease-out, border-color 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+/* Атрибут hidden должен побеждать авторский display, иначе кнопка микрофона
+   остаётся видимой без ключа распознавания. */
+.voice-btn[hidden] {
+  display: none;
+}
+
+/* Идёт запись — кнопка подсвечивается и «дышит». */
+.voice-btn[data-state='recording'] {
+  color: var(--danger);
+  border-color: var(--danger);
+  box-shadow: 0 0 0 1px var(--danger), 0 0 18px rgba(255, 107, 107, 0.35);
+  animation: voice-pulse 1.1s ease-in-out infinite;
+}
+
+.voice-btn[data-state='busy'] {
+  color: var(--text-dim);
+}
+
+/* --- Редактор: подсветка синтаксиса --- */
+.editor-wrap {
+  position: relative;
+  border-radius: var(--radius-s);
+  box-shadow: var(--shadow-1);
+  transition: box-shadow 0.25s ease-out;
+}
+
+.editor-wrap:focus-within {
+  box-shadow: 0 0 0 1px rgba(47, 224, 160, 0.35), 0 0 22px rgba(47, 224, 160, 0.14);
+}
+
+.editor-wrap pre,
+.editor-wrap textarea {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.55;
+  padding: var(--sp-3);
+  border-radius: var(--radius-s);
+  white-space: pre-wrap;
+  word-break: break-word;
+  tab-size: 2;
+  border: 1px solid var(--border);
+}
+
+.editor-wrap pre {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  color: var(--text);
+  background: var(--field-bg-strong);
+}
+
+.editor-wrap textarea {
+  position: relative;
+  display: block;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+  caret-color: var(--jade-bright);
+  min-height: 320px;
+  resize: vertical;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(47, 224, 160, 0.25) transparent;
+}
+
+.editor-wrap textarea::selection {
+  background: rgba(47, 224, 160, 0.28);
+}
+
+/* Строки редактора */
+.ln {
+  display: block;
+  min-height: 1.55em;
+  padding: 0 var(--sp-1);
+  margin: 0 calc(-1 * var(--sp-1));
+  border-left: 2px solid transparent;
+  transition: background 0.18s ease-out;
+}
+
+/* Текущая строка курсора */
+.ln.current {
+  background: rgba(47, 224, 160, 0.07);
+}
+
+/* Заголовок партии ($PART:) */
+.ln.part {
+  font-weight: 700;
+}
+
+/* Активная партия — та, что звучит прямо сейчас */
+.ln.part-active {
+  background: rgba(47, 224, 160, 0.055);
+}
+
+.ln.part.part-active {
+  background: rgba(47, 224, 160, 0.14);
+  border-left-color: var(--jade-bright);
+}
+
+/* Мигающий курсор стриминга */
+.caret {
+  color: var(--jade-bright);
+  animation: caret-blink 1s steps(2, start) infinite;
+  font-weight: 700;
+}
+
+.editor-wrap.streaming textarea {
+  caret-color: transparent;
+}
+
+/* Токены */
+.hl-label {
+  color: var(--hl-label);
+  font-weight: 700;
+}
+.hl-string {
+  color: var(--hl-string);
+}
+.hl-number {
+  color: var(--hl-number);
+}
+.hl-comment {
+  color: var(--hl-comment);
+  font-style: italic;
+}
+.hl-keyword {
+  color: var(--hl-keyword);
+}
+.hl-func {
+  color: var(--hl-func);
+}
+
+/* --- Строки и списки --- */
+.row {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.row.spread {
+  justify-content: space-between;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  border-radius: var(--radius-s);
+}
+
+.list-row:hover {
+  background: rgba(47, 224, 160, 0.08);
+}
+
+.list-name {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  padding: var(--sp-2) var(--sp-1);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.list-name:hover {
+  color: var(--mint);
+}
+
+.chip {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 3px 8px;
+  transition: background 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out;
+}
+
+.chip:hover {
+  color: var(--mint);
+  background: rgba(47, 224, 160, 0.12);
+  border-color: var(--jade);
+}
+
+.chip[aria-pressed='true'] {
+  color: var(--ink-on-jade);
+}
+
+.chip[aria-label^='Mute'][aria-pressed='true'] {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #2a0000;
+}
+
+.chip[aria-label^='Solo'][aria-pressed='true'] {
+  background: var(--jade-bright);
+  border-color: var(--jade-bright);
+  color: var(--ink-on-jade);
+}
+
+.hint {
+  color: var(--text-dim);
+  font-size: 12px;
+  margin: var(--sp-1) 0 0;
+  line-height: 1.45;
+}
+
+/* --- Визуализации партий --- */
+.part-block {
+  position: relative;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent, var(--jade));
+  border-radius: var(--radius-s);
+  background: rgba(3, 26, 20, 0.42);
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease-out, border-color 0.2s ease-out;
+}
+
+.part-block.accent-jade {
+  --accent: var(--part-jade);
+}
+.part-block.accent-mint {
+  --accent: var(--part-mint);
+}
+.part-block.accent-teal {
+  --accent: var(--part-teal);
+}
+.part-block.accent-lime {
+  --accent: var(--part-lime);
+}
+
+/* Партия звучит — мягкое свечение по краю */
+.part-block.live {
+  box-shadow: 0 0 18px rgba(47, 224, 160, 0.18);
+  border-color: rgba(47, 224, 160, 0.3);
+}
+
+/* Код партии прямо над пианороллом — видно, какой строкой он построен. */
+.part-code {
+  margin: 0 0 var(--sp-2);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3);
+  border-left: 2px solid var(--accent, var(--jade));
+  border-radius: var(--radius-xs);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 96px;
+  overflow: hidden;
+}
+
+.part-code .hl-label {
+  color: var(--accent, var(--mint));
+  font-weight: 700;
+}
+
+.part-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-1);
+}
+
+.part-name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent, var(--mint));
+}
+
+.part-kind {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 7px;
+  line-height: 16px;
+}
+
+/* Индикатор активности партии */
+.part-live {
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent, var(--jade));
+  opacity: 0.25;
+  transition: opacity 0.12s linear, box-shadow 0.12s linear;
+}
+
+.part-block.live .part-live {
+  opacity: 1;
+  box-shadow: 0 0 10px var(--accent, var(--jade));
+}
+
+#strudel-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+#strudel-container canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius-xs);
+}
+
+/* --- Микшер --- */
+.mixer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.mixer .channel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 6px 10px;
+  align-items: center;
+  background: rgba(3, 26, 20, 0.5);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent, var(--jade));
+  border-radius: var(--radius-s);
+  padding: 10px 12px;
+  transition: box-shadow 0.2s ease-out, background 0.2s ease-out;
+}
+
+.mixer .channel.live {
+  background: rgba(6, 46, 34, 0.6);
+  box-shadow: 0 0 16px rgba(47, 224, 160, 0.16);
+}
+
+.mixer .channel.accent-jade {
+  --accent: var(--part-jade);
+}
+.mixer .channel.accent-mint {
+  --accent: var(--part-mint);
+}
+.mixer .channel.accent-teal {
+  --accent: var(--part-teal);
+}
+.mixer .channel.accent-lime {
+  --accent: var(--part-lime);
+}
+
+.channel-name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Точка-акцент партии */
+.channel-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent, var(--jade));
+  box-shadow: 0 0 8px var(--accent, var(--jade));
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out;
+}
+
+/* Партия звучит — точка разгорается */
+.channel.live .channel-dot {
+  transform: scale(1.3);
+  box-shadow: 0 0 14px var(--accent, var(--jade));
+}
+
+.channel-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Числовое значение громкости */
+.channel-gain {
+  margin-left: auto;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  padding-left: var(--sp-2);
+}
+
+.channel.muted {
+  opacity: 0.55;
+}
+
+.mixer .channel input[type='range'] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.mixer .chip {
+  width: 30px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Индикатор уровня партии (живой) */
+.vu {
+  grid-column: 1 / -1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+  transition: background 0.15s ease-out;
+}
+
+.channel.live .vu {
+  background: rgba(47, 224, 160, 0.14);
+}
+
+.vu::after {
+  content: '';
+  display: block;
+  height: 100%;
+  width: calc(var(--level, 0) * 100%);
+  background: linear-gradient(90deg, var(--accent, var(--jade)), var(--jade-bright));
+  box-shadow: 0 0 10px rgba(47, 224, 160, 0.65);
+  transition: width 0.06s linear;
+}
+
+/* --- Diff улучшения --- */
+.diff {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  overflow: hidden;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--field-bg);
+}
+
+.diff-summary {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  color: var(--mint);
+  border-bottom: 1px solid var(--border);
+  background: rgba(47, 224, 160, 0.07);
+}
+
+.diff-line {
+  padding: 1px var(--sp-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.diff-add {
+  background: rgba(47, 224, 160, 0.16);
+  color: var(--jade-bright);
+}
+
+.diff-del {
+  background: rgba(255, 107, 107, 0.14);
+  color: var(--danger);
+  text-decoration: line-through;
+}
+
+.diff-ctx {
+  color: var(--text-dim);
+}
+
+/* --- Статус и лог --- */
+.status {
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-s);
+  background: rgba(47, 224, 160, 0.07);
+  border: 1px solid var(--border);
+  font-size: 13.5px;
+  color: var(--mint);
+  min-height: 1em;
+}
+
+.status.ok {
+  border-color: var(--jade);
+  color: var(--jade-bright);
+}
+
+.status.error {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.status.busy {
+  color: var(--warn);
+}
+
+.log {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  font-family: var(--font-mono);
+}
+
+.log-line,
+.log .entry {
+  padding: 2px var(--sp-1);
+  border-left: 2px solid var(--border);
+  color: var(--text-dim);
+}
+
+.log-line.ok,
+.log .entry.ok {
+  border-color: var(--jade);
+  color: var(--text);
+}
+
+.log-line.error,
+.log .entry.error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.log .time {
+  color: var(--text-dim);
+  opacity: 0.7;
+}
+
+/* --- Оверлей включения звука --- */
+.audio-gate {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 12, 9, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 100;
+}
+
+.audio-gate.visible {
+  display: flex;
+}
+
+.gate-card {
+  background: var(--glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--sp-5);
+  max-width: 380px;
+  text-align: center;
+}
+
+.gate-card h2 {
+  margin: 0 0 var(--sp-2);
+  font-size: 20px;
+  color: var(--mint);
+  font-family: var(--font-mono);
+}
+
+.gate-card p {
+  color: var(--text-dim);
+  margin: 0 0 var(--sp-4);
+}
+
+/* --- Ползунки в цвет темы --- */
+input[type='range'] {
+  accent-color: var(--jade);
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(47, 224, 160, 0.2);
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--jade-bright);
+  border: none;
+  box-shadow: 0 0 10px rgba(47, 224, 160, 0.55);
+}
+
+input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(47, 224, 160, 0.2);
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: var(--jade-bright);
+  box-shadow: 0 0 10px rgba(47, 224, 160, 0.55);
+}
+
+/* --- Разное --- */
+.improve-bar {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.improve-bar input {
+  flex: 1;
+}
+
+.mixer-toggle {
+  box-shadow: var(--shadow);
+}
+
+.visual-empty {
+  color: var(--text-dim);
+  font-size: 12.5px;
+  font-family: var(--font-mono);
+  text-align: center;
+  padding: var(--sp-4) var(--sp-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-s);
+}

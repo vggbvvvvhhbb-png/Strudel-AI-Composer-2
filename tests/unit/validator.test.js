@@ -38,6 +38,31 @@ describe('staticValidate: маркер unsafe', () => {
   });
 });
 
+describe('staticValidate: точка вместо тильды в mini-нотации', () => {
+  it('ловит одиночную точку на месте паузы', () => {
+    const res = staticValidate('$MEL: note("c4 . e4 .")');
+    expect(res.ok).toBe(false);
+    expect(res.error.message).toMatch(/тильда|~/);
+  });
+
+  it('указывает номер строки', () => {
+    const res = staticValidate('setCpm(120/4)\n$MEL: note("c4 . e4")\n');
+    expect(res.error.line).toBe(2);
+  });
+
+  it('тильда как пауза проходит', () => {
+    expect(staticValidate('$MEL: note("c4 ~ e4")').ok).toBe(true);
+  });
+
+  it('точка внутри слова — не пауза', () => {
+    expect(staticValidate('$MEL: s("bass.wav")').ok).toBe(true);
+  });
+
+  it('числа с точкой не считаются паузой', () => {
+    expect(staticValidate('$MEL: note("c4").gain(.5).lpf(1200)').ok).toBe(true);
+  });
+});
+
 describe('parseErrorLocation', () => {
   it('извлекает строку из <anonymous>:L:C', () => {
     const loc = parseErrorLocation('SyntaxError: <anonymous>:2:1 Unexpected token', '$MEL:\nnote(');

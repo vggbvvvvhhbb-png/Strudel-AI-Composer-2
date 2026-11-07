@@ -3,6 +3,7 @@
 import { evaluateCode } from './strudel-engine.js';
 import { parseParts, setPartMuted, setPartSolo, unsoloAll, setPartGain, getPartGain } from './core/code-model.js';
 import { staticValidate } from './core/validator.js';
+import { accentOf } from './accents.js';
 import { log } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
@@ -18,15 +19,20 @@ function applyLive(code) {
   }, 250);
 }
 
-function channelEl(part) {
+function channelEl(part, index) {
   const row = document.createElement('div');
-  row.className = 'channel';
+  row.className = `channel accent-${accentOf(index)}`;
   row.dataset.label = part.label;
 
   const name = document.createElement('span');
   name.className = 'channel-name';
-  name.textContent = part.label || '$';
-  name.title = part.muted ? 'Приглушена (_)' : '';
+  const dot = document.createElement('span');
+  dot.className = 'channel-dot';
+  const label = document.createElement('span');
+  label.className = 'channel-label';
+  label.textContent = part.label || '$';
+  label.title = part.muted ? 'Приглушена (_)' : '';
+  name.append(dot, label);
 
   const fader = document.createElement('input');
   fader.type = 'range';
@@ -35,20 +41,31 @@ function channelEl(part) {
   fader.step = '0.01';
   fader.value = String(getPartGain(currentCode(), part.label) ?? 0.8);
   fader.setAttribute('aria-label', `Громкость ${part.label}`);
+
+  // Числовое значение громкости — рядом с именем партии.
+  const readout = document.createElement('span');
+  readout.className = 'channel-gain';
+  readout.textContent = Number(fader.value).toFixed(2);
+
   fader.addEventListener('input', () => {
-    applyLive(setPartGain(currentCode(), part.label, Number(fader.value)));
-    vu.style.setProperty('--level', fader.value);
+    readout.textContent = Number(fader.value).toFixed(2);
+    // Gain тоже попадает в код редактора — иначе пресет сохранит старое значение.
+    const next = setPartGain(currentCode(), part.label, Number(fader.value));
+    setEditorCode(next);
+    applyLive(next);
   });
 
+  // Индикатор уровня: значение приходит из живых метров (см. meters.js).
   const vu = document.createElement('div');
   vu.className = 'vu';
-  vu.style.setProperty('--level', fader.value);
+  vu.style.setProperty('--level', '0');
 
   const muteBtn = document.createElement('button');
   muteBtn.type = 'button';
   muteBtn.className = 'chip';
   muteBtn.textContent = 'M';
   muteBtn.setAttribute('aria-label', `Mute ${part.label}`);
+  muteBtn.setAttribute('aria-pressed', String(Boolean(part.muted)));
   muteBtn.addEventListener('click', () => {
     const nowMuted = !part.muted;
     if (state.solo && !nowMuted) return; // при активном solo ручная разглушка запрещена
@@ -61,6 +78,7 @@ function channelEl(part) {
   soloBtn.type = 'button';
   soloBtn.className = 'chip';
   soloBtn.textContent = 'S';
+  soloBtn.setAttribute('aria-pressed', String(state.solo === part.label));
   soloBtn.setAttribute('aria-label', `Solo ${part.label}`);
   soloBtn.addEventListener('click', () => {
     let next;
@@ -78,7 +96,7 @@ function channelEl(part) {
     applyLive(next);
   });
 
-  row.append(name, fader, vu, muteBtn, soloBtn);
+  row.append(name, muteBtn, soloBtn, fader, vu);
   return row;
 }
 
@@ -104,14 +122,18 @@ export function syncMixer(code) {
       const part = parts.find((p) => p.label === el.dataset.label);
       if (!part) return;
       el.classList.toggle('muted', part.muted);
-      el.querySelector('.chip').classList.toggle('active', part.muted);
+      const muteBtn = el.querySelector('.chip[aria-label^="Mute"]');
+      if (muteBtn) muteBtn.setAttribute('aria-pressed', String(Boolean(part.muted)));
+      const soloBtn = el.querySelector('.chip[aria-label^="Solo"]');
+      if (soloBtn) soloBtn.setAttribute('aria-pressed', String(state.solo === part.label));
     });
     return;
   }
   state.labels = parts.map((p) => p.label);
-  box.replaceChildren(...parts.map(channelEl));
+  box.replaceChildren(...parts.map((part, i) => channelEl(part, i)));
 }
 
+// Индикатор «играет» на <html> — им пользуется подсветка партий и анимации.
 export function mixerPlaying(on) {
   document.documentElement.classList.toggle('playing', on);
 }

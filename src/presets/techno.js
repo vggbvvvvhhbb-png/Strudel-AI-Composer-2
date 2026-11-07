@@ -7,10 +7,10 @@ export const techno = {
   code: [
     'setCpm(132/4)',
     'const key = "e:minor"',
-    '$BASS: n("e1 e1 <e2 g2> e1").s("sawtooth").lpf(300).gain(.8)._pianoroll()',
-    '$STAB: chord("<e4 . . .> <g4 . . .>").voicing().s("square").gain(.3).room(.4)._pianoroll()',
+    '$BASS: note("e1 e1 <e2 g2> e1").s("sawtooth").lpf(300).gain(.8)._pianoroll()',
+    '$STAB: chord("<e4 ~ ~ ~> <g4 ~ ~ ~>").voicing().s("square").gain(.3).room(.4)._pianoroll()',
     '$DRUMS: s("bd*4").bank("RolandTR909").gain(.9)._scope()',
     '$HATS: s("~ hh ~ hh ~ hh ~ hh").bank("RolandTR909").gain(.5)._scope()',
-    '$CLAP: s("~ . cp .").bank("RolandTR909").gain(.6).room(.5)._scope()',
+    '$CLAP: s("~ ~ cp ~").bank("RolandTR909").gain(.6).room(.5)._scope()',
   ].join('\n'),
 };

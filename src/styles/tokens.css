@@ -1,0 +1,97 @@
+/* ============================================================
+   Нефритовая дизайн-система Strudel AI Composer.
+   Все цвета живут здесь — остальные файлы используют только переменные.
+   Темы переключаются классом на <html>: theme-jade (по умолчанию) / theme-obsidian.
+   ============================================================ */
+
+:root,
+html.theme-jade {
+  /* --- База: фон и поверхности --- */
+  --bg-0: #031a14; /* самый тёмный, края */
+  --bg-1: #06281f; /* основной фон */
+  --bg-2: #0b3d2e; /* панели, редактор */
+  --bg-grad: linear-gradient(160deg, #0b3d2e 0%, #052a20 55%, #021510 100%);
+  --bg-glow: radial-gradient(120% 90% at 18% 0%, rgba(0, 168, 107, 0.22) 0%, rgba(0, 0, 0, 0) 62%);
+  --surface: rgba(255, 255, 255, 0.04);
+  --border: rgba(120, 255, 200, 0.12);
+
+  /* --- Акценты --- */
+  --jade: #00a86b; /* основной акцент, кнопки, активное */
+  --jade-bright: #2fe0a0; /* hover, подсветка активных нот */
+  --mint: #b5ffe1; /* заголовки, иконки */
+  --text: #e6fff4;
+  --text-dim: #7fb5a0;
+
+  /* --- Пианоролл --- */
+  --note: #f2fff9; /* ноты (белые, как на референсе) */
+  --note-glow: rgba(47, 224, 160, 0.55);
+
+  /* --- Служебные --- */
+  --danger: #ff6b6b;
+  --warn: #ffd166;
+  --radius: 12px;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+}
+
+/* Почти чёрный фон, тот же jade-акцент. */
+html.theme-obsidian {
+  --bg-0: #04060a;
+  --bg-1: #080b10;
+  --bg-2: #10151c;
+  --bg-grad: linear-gradient(160deg, #10151c 0%, #080b10 55%, #030507 100%);
+  --bg-glow: radial-gradient(120% 90% at 18% 0%, rgba(0, 168, 107, 0.14) 0%, rgba(0, 0, 0, 0) 60%);
+  --surface: rgba(255, 255, 255, 0.035);
+  --border: rgba(120, 255, 200, 0.1);
+  --text: #e4f6ef;
+  --text-dim: #7d9a92;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+:root {
+  /* --- Типографика --- */
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* --- Ритм отступов --- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+
+  /* --- Форма --- */
+  --radius-s: 8px;
+  --radius-xs: 6px;
+  --shadow-1: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 0 18px var(--note-glow);
+
+  /* --- Стекло: панели --- */
+  --glass: var(--surface);
+  --glass-blur: blur(10px);
+  --glass-strong: rgba(11, 61, 46, 0.55);
+  --field-bg: rgba(3, 26, 20, 0.55);
+  --field-bg-strong: rgba(4, 34, 25, 0.82);
+
+  /* --- Акценты партий: индикаторы в микшере и визуализациях.
+         Ноты пианоролла остаются светлыми (--note). --- */
+  --part-jade: #00a86b;
+  --part-mint: #b5ffe1;
+  --part-teal: #2fd4c8;
+  --part-lime: #a8e05f;
+
+  /* --- Подсветка синтаксиса: зелёный / мятный / янтарный --- */
+  --hl-label: var(--jade-bright); /* $PART: */
+  --hl-string: var(--mint); /* строки */
+  --hl-number: var(--warn); /* числа */
+  --hl-comment: var(--text-dim); /* комментарии */
+  --hl-keyword: #f0b96b; /* ключевые слова */
+  --hl-func: var(--jade-bright); /* методы */
+
+  /* --- Текст на заливке --- */
+  --ink-on-jade: #021510; /* тёмный текст на jade-фоне (контраст 6:1) */
+  --ink-on-warn: #241a00;
+
+  /* --- Пульс --- */
+  --beat-dur: 0.5s;
+  --breathe-dur: 42s; /* «дыхание» фона — медленно, >30 с */
+}

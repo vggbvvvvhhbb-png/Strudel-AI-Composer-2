@@ -59,14 +59,23 @@ function applyTransport() {
   }, 300);
 }
 
+// Длительность пульса play-кнопки = длительность такта.
+function setBeatDuration(bpm) {
+  const value = Number(bpm);
+  if (!Number.isFinite(value) || value <= 0) return;
+  document.documentElement.style.setProperty('--beat-dur', `${60 / value}s`);
+}
+
 export function initTransport({ getCode, setCode, onPlayToggle }) {
   hooks.getCode = getCode;
   hooks.setCode = setCode;
   hooks.onPlayToggle = onPlayToggle;
 
+  setBeatDuration($('bpm-slider')?.value || 120);
+
   $('bpm-slider').addEventListener('input', () => {
     $('bpm-value').textContent = $('bpm-slider').value;
-    document.documentElement.style.setProperty('--beat-dur', `${60 / Number($('bpm-slider').value)}s`);
+    setBeatDuration($('bpm-slider').value);
     applyTransport();
   });
   $('key-select').addEventListener('change', applyTransport);
@@ -106,6 +115,7 @@ export function initTransport({ getCode, setCode, onPlayToggle }) {
   });
 
   $('btn-play').addEventListener('click', async () => {
+    const btn = $('btn-play');
     if (playing) {
       stop();
       playing = false;
@@ -119,12 +129,19 @@ export function initTransport({ getCode, setCode, onPlayToggle }) {
         document.documentElement.classList.add('playing');
       } else log(`Ошибка исполнения: ${res.error}`, 'error');
     }
+    btn.classList.toggle('playing', playing);
+    btn.setAttribute('aria-pressed', String(playing));
+    btn.textContent = playing ? '⏸' : '▶';
     hooks.onPlayToggle?.(playing);
   });
   $('btn-stop-transport').addEventListener('click', () => {
     stop();
     playing = false;
     document.documentElement.classList.remove('playing');
+    const btn = $('btn-play');
+    btn.classList.remove('playing');
+    btn.setAttribute('aria-pressed', 'false');
+    btn.textContent = '▶';
     hooks.onPlayToggle?.(false);
   });
 }
@@ -135,6 +152,7 @@ export function syncTransport(code) {
   if (bpm && Number($('bpm-slider').value) !== Math.round(bpm)) {
     $('bpm-slider').value = String(Math.min(220, Math.max(40, Math.round(bpm))));
     $('bpm-value').textContent = $('bpm-slider').value;
+    setBeatDuration(bpm);
   }
   const keyStr = getKey(code);
   if (keyStr) fillKeySelect(keyStr);

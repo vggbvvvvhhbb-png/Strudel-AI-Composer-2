@@ -1,0 +1,372 @@
+/* ============================================================
+   Каркас: шапка / три колонки / транспорт.
+   Планшет — две колонки, мобильный — одна колонка + микшер в нижней шторке.
+   ============================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  font-family: var(--font-ui);
+  color: var(--text);
+  background: var(--bg-grad) fixed;
+  background-color: var(--bg-0);
+  font-size: 15px;
+  line-height: 1.5;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Медленное «дыхание» фона: мягкое нефритовое свечение, >30 с. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  background: var(--bg-glow);
+  animation: breathe var(--breathe-dur) ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+/* Виньетка по краям — собирает взгляд к центру. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(130% 100% at 50% 40%, rgba(0, 0, 0, 0) 45%, var(--bg-0) 100%);
+  opacity: 0.85;
+}
+
+/* --- Шапка --- */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-2) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  position: relative;
+  z-index: 20;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.brand-name {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--mint);
+  font-family: var(--font-mono);
+  font-size: 15px;
+}
+
+.brand-sub {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* Подсказки горячих клавиш в шапке — только на широких экранах. */
+.shortcuts {
+  display: flex;
+  gap: var(--sp-3);
+  color: var(--text-dim);
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.shortcuts kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--mint);
+  background: rgba(47, 224, 160, 0.1);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-xs);
+  padding: 1px 5px;
+  margin-right: 4px;
+}
+
+/* --- Три колонки --- */
+.app-grid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr) 300px;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.col-left,
+.col-right {
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(47, 224, 160, 0.25) transparent;
+}
+
+.col-left {
+  border-right: 1px solid var(--border);
+}
+
+.col-right {
+  border-left: 1px solid var(--border);
+}
+
+.col-center {
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-4) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(47, 224, 160, 0.25) transparent;
+}
+
+.col-left::-webkit-scrollbar,
+.col-right::-webkit-scrollbar,
+.col-center::-webkit-scrollbar {
+  width: 8px;
+}
+
+.col-left::-webkit-scrollbar-thumb,
+.col-right::-webkit-scrollbar-thumb,
+.col-center::-webkit-scrollbar-thumb {
+  background: rgba(47, 224, 160, 0.22);
+  border-radius: 4px;
+}
+
+/* --- Панели: стекло и глубина --- */
+.panel {
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+  box-shadow: var(--shadow);
+}
+
+.panel-title {
+  margin: 0 0 var(--sp-2);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mint);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+/* --- Сцена визуализаций --- */
+.visual-stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.visual-stage:empty {
+  display: none;
+}
+
+.visual-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-mono);
+}
+
+/* --- Транспорт --- */
+.transport {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  padding: var(--sp-2) var(--sp-5);
+  border-top: 1px solid var(--border);
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  position: relative;
+  z-index: 20;
+}
+
+.transport-field {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.transport-field input[type='range'] {
+  width: 140px;
+}
+
+#bpm-value {
+  min-width: 4ch;
+  font-family: var(--font-mono);
+  color: var(--mint);
+}
+
+.rec-time {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--danger);
+}
+
+/* Кнопка-шторка микшера (только мобильный).
+   Селектор с типом — чтобы перебить .btn из components.css (тот грузится позже). */
+button.mixer-toggle {
+  display: none;
+}
+
+/* --- Планшет: микшер уходит под центр --- */
+@media (max-width: 1180px) {
+  .app-grid {
+    grid-template-columns: 280px minmax(0, 1fr);
+    /* Вторая строка — микшер во всю ширину; высоту задаёт его содержимое. */
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .col-right {
+    grid-column: 1 / -1;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .col-right .panel {
+    flex: 1;
+  }
+
+  .shortcuts {
+    display: none;
+  }
+}
+
+/* --- Мобильный: одна колонка, микшер в нижней шторке --- */
+@media (max-width: 860px) {
+  /* На мобильном документ скроллится целиком: колонки идут друг за другом
+     естественной высоты. Сетка с фиксированной высотой растягивала строки,
+     и содержимое колонок наезжало друг на друга. */
+  html,
+  body {
+    height: auto;
+    min-height: 100%;
+  }
+
+  body {
+    display: block;
+    overflow: visible;
+  }
+
+  .app-grid {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .col-left,
+  .col-center {
+    flex: 0 0 auto;
+    overflow: visible;
+    min-height: 0;
+  }
+
+  .col-left {
+    border-right: none;
+    padding: var(--sp-3);
+  }
+
+  .col-center {
+    padding: var(--sp-4) var(--sp-3);
+  }
+
+  .col-right {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    flex-direction: column;
+    max-height: 66vh;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
+    background: var(--glass-strong);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    padding-bottom: var(--sp-5);
+  }
+
+  .col-right.open {
+    transform: translateY(0);
+  }
+
+  button.mixer-toggle {
+    display: inline-flex;
+    position: fixed;
+    right: var(--sp-4);
+    bottom: calc(var(--sp-4) + 52px);
+    z-index: 41;
+    box-shadow: var(--shadow);
+  }
+
+  .transport {
+    padding: var(--sp-2) var(--sp-3);
+    gap: var(--sp-2);
+    position: sticky;
+    bottom: 0;
+  }
+
+  .transport-field input[type='range'] {
+    width: 110px;
+  }
+
+  .app-header {
+    padding: var(--sp-2) var(--sp-3);
+  }
+
+  .brand-sub {
+    display: none;
+  }
+}

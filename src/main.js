@@ -1,15 +1,33 @@
+import './styles/tokens.css';
+import './styles/layout.css';
+import './styles/components.css';
+import './styles/animations.css';
+import { initEditor } from './editor.js';
 import { initUI } from './ui.js';
 import { initEngine } from './strudel-engine.js';
 import { initHistory } from './history.js';
 import { syncMixer } from './mixer.js';
 import { syncTransport } from './transport.js';
+import { initLive } from './live.js';
+import { initVoice } from './voice.js';
 import { applyMixerState } from './core/code-model.js';
 import { codeFromHash } from './core/share.js';
 
-initUI();
+const editor = initEditor();
+
+initUI({ editor });
 initEngine(document.getElementById('strudel-container'));
+initLive({ editor });
+initVoice();
+
+// Мобильная шторка микшера
+document.getElementById('mixer-toggle')?.addEventListener('click', () => {
+  document.querySelector('.col-right')?.classList.toggle('open');
+});
 
 initHistory({
+  // Пресет сохраняется из текущего кода в редакторе.
+  getCode: () => document.getElementById('code-input').value,
   load: ({ code, mixer }) => {
     const el = document.getElementById('code-input');
     el.value = applyMixerState(code, mixer);

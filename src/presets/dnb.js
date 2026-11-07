@@ -7,9 +7,9 @@ export const dnb = {
   code: [
     'setCpm(174/4)',
     'const key = "e:minor"',
-    '$BREAK: s("bd . sd . . sd . ~").fast(2).bank("RolandTR909").gain(.8)._scope()',
+    '$BREAK: s("bd ~ sd ~ ~ sd ~ ~").fast(2).bank("RolandTR909").gain(.8)._scope()',
     '$RIDE: s("hh*8").bank("RolandTR909").gain(.35)._scope()',
-    '$BASS: n("e1 . <d1 e1> .").s("sawtooth").lpf(220).gain(.85)._pianoroll()',
-    '$STAB: chord("<e4 .> <g4 .>").voicing().s("square").gain(.3).room(.4)._pianoroll()',
+    '$BASS: note("e1 ~ <d1 e1> ~").s("sawtooth").lpf(220).gain(.85)._pianoroll()',
+    '$STAB: chord("<e4 ~> <g4 ~>").voicing().s("square").gain(.3).room(.4)._pianoroll()',
   ].join('\n'),
 };

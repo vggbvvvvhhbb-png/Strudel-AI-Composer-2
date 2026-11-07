@@ -1,9 +1,16 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" class="theme-jade" data-theme="jade">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
     <title>Strudel AI Composer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <header class="app-header">
@@ -11,7 +18,14 @@
         <span class="brand-name">Strudel AI Composer</span>
         <span class="brand-sub">опишите музыку — AI напишет код и исполнит его</span>
       </div>
-      <button id="theme-toggle" class="btn ghost" type="button" title="Сменить тему">◐ Тема</button>
+      <div class="header-actions">
+        <div class="shortcuts" aria-hidden="true">
+          <span><kbd>Space</kbd>play</span>
+          <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd>генерация</span>
+          <span><kbd>Ctrl</kbd>+<kbd>S</kbd>пресет</span>
+        </div>
+        <button id="theme-toggle" class="btn ghost" type="button" title="Сменить тему">◐ Jade</button>
+      </div>
     </header>
 
     <main class="app-grid">
@@ -19,13 +33,16 @@
       <aside class="col-left">
         <section class="panel" aria-label="Генерация">
           <label class="field-label" for="prompt-input">Команда</label>
-          <textarea id="prompt-input" rows="3" placeholder="Например: спокойный lo-fi с пианино и мягким басом"></textarea>
+          <div class="prompt-row">
+            <textarea id="prompt-input" rows="3" placeholder="Например: спокойный lo-fi с пианино и мягким басом"></textarea>
+            <button id="btn-voice" class="btn voice-btn" type="button" title="Записать голосовое описание" aria-pressed="false" hidden>🎤</button>
+          </div>
           <button id="btn-run" class="btn primary wide" type="button">▶ Сгенерировать</button>
         </section>
 
         <section class="panel" aria-label="Улучшить трек">
           <label class="field-label" for="improve-input">Что поправить</label>
-          <textarea id="improve-input" rows="2" placeholder="Например: добавь синкопу в бас, сделай барабаны жёстче"></textarea>
+          <textarea id="improve-input" rows="2" placeholder="Например: добавь синкопу в бас"></textarea>
           <button id="btn-improve" class="btn wide" type="button">✨ Улучшить</button>
         </section>
 
@@ -43,18 +60,25 @@
         </section>
       </aside>
 
-      <!-- Центр: визуализация + редактор -->
+      <!-- Центр: редактор кода + живая партитура (пианоролл под каждой $PART:) -->
       <section class="col-center">
-        <div id="strudel-container" aria-label="Визуализация партий"></div>
         <div id="status" class="status" hidden></div>
 
         <label class="field-label" for="code-input">Код Strudel</label>
-        <textarea id="code-input" class="code" rows="14" spellcheck="false" placeholder="// Здесь появится сгенерированный код"></textarea>
+        <div class="editor-wrap">
+          <pre id="code-hl" class="code" aria-hidden="true"></pre>
+          <textarea id="code-input" class="code" rows="14" spellcheck="false" placeholder="// Здесь появится сгенерированный код"></textarea>
+        </div>
 
         <div class="row">
           <button id="btn-play-code" class="btn" type="button">▶ Играть этот код</button>
           <button id="btn-share" class="btn ghost" type="button">🔗 Ссылка</button>
           <button id="btn-clear" class="btn ghost" type="button">⏹ Сброс</button>
+        </div>
+
+        <div class="visual-stage">
+          <div class="visual-head"><span>◆</span><span>живая партитура</span></div>
+          <div id="strudel-container" aria-label="Визуализация партий"></div>
         </div>
 
         <section id="diff-panel" class="panel diff" hidden>
@@ -77,15 +101,16 @@
         <section class="panel" aria-label="Микшер">
           <h2 class="panel-title">Микшер</h2>
           <div id="mixer" class="mixer"></div>
-          <p class="hint">M — заглушить партию, S — соло, ползунок — громкость</p>
+          <p class="hint">M — заглушить партию, S — соло, ползунок — громкость. Индикатор показывает, что партия звучит сейчас.</p>
         </section>
       </aside>
     </main>
 
     <!-- Нижний транспорт -->
+    <button id="mixer-toggle" class="btn mixer-toggle" type="button">🎚 Микшер</button>
     <footer class="transport" aria-label="Транспорт">
-      <button id="btn-play" class="btn primary play-btn" type="button">▶</button>
-      <button id="btn-stop-transport" class="btn" type="button">⏹</button>
+      <button id="btn-play" class="btn primary btn-play" type="button" aria-pressed="false">▶</button>
+      <button id="btn-stop-transport" class="btn" type="button" title="Остановить звук">⏹</button>
       <button id="btn-stop" class="btn ghost" type="button">⏹ Стоп генерации</button>
       <label class="transport-field">BPM
         <input id="bpm-slider" type="range" min="40" max="220" step="1" value="120" />

@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path';
 import { config } from './config.js';
 import generateRoute from './routes/generate.js';
 import fixRoute from './routes/fix.js';
+import transcribeRoute from './routes/transcribe.js';
 import healthRoute from './routes/health.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -61,6 +62,7 @@ app.use(express.json({ limit: '100kb' }));
 
 app.use(generateRoute);
 app.use(fixRoute);
+app.use(transcribeRoute);
 app.use(healthRoute);
 
 if (existsSync(distDir)) {

@@ -14,6 +14,20 @@ describe('встроенные пресеты', () => {
     }
   });
 
+  it('в n("…") нет буквенных нот — только note() (регрессия: parse error)', () => {
+    for (const p of PRESETS) {
+      const bad = /\bn\(\s*"[^"]*[a-g][0-9]/.test(p.code);
+      expect(bad, `${p.name}: буквенные ноты должны быть в note()`).toBe(false);
+    }
+  });
+
+  it('имена пресетов без мусорных символов (защита от двойного кодирования)', () => {
+    // Разрешены латиница, кириллица, пробелы и типографика — ничего больше.
+    const allowed = /^[A-Za-z0-9Ѐ-ӿ\s«»–—.,!()&+\-/−]+$/u;    for (const p of PRESETS) {
+      expect(allowed.test(p.name), `${p.id}: «${p.name}»`).toBe(true);
+    }
+  });
+
   it('capture/apply состояния микшера — обратимая операция', () => {
     const lofi = PRESETS.find((p) => p.id === 'lofi');
     const snap = captureMixer(lofi.code).map((c, i) => (i === 0 ? { ...c, gain: 0.2, muted: true } : c));

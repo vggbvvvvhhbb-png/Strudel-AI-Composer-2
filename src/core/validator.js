@@ -59,6 +59,42 @@ function checkBalance(code) {
   return { ok: true };
 }
 
+// Mini-нотация: пауза — это тильда ~. Одиночная точка в некоторых позициях роняет
+// парсер, а в остальных молча трактуется как мусор и музыка не играет.
+// Точка внутри слова ("bass.wav") — не пауза, её не трогаем.
+const DOT_REST_RE = /(^|\s)\.(\s|$)/;
+
+// Ищет строковый литерал, где одиночная точка стоит на месте паузы.
+function findDotRest(code) {
+  let inString = null;
+  let start = 0;
+  let i = 0;
+  while (i < code.length) {
+    const c = code[i];
+    if (inString) {
+      if (c === '\\') { i += 2; continue; }
+      if (c === inString) {
+        if (DOT_REST_RE.test(code.slice(start, i))) {
+          return { line: code.slice(0, start).split('\n').length };
+        }
+        inString = null;
+      }
+      i += 1;
+      continue;
+    }
+    if (c === '/' && code[i + 1] === '/') { while (i < code.length && code[i] !== '\n') i += 1; continue; }
+    if (c === '/' && code[i + 1] === '*') {
+      i += 2;
+      while (i < code.length && !(code[i] === '*' && code[i + 1] === '/')) i += 1;
+      i += 2;
+      continue;
+    }
+    if (c === '\'' || c === '"' || c === '`') { inString = c; start = i + 1; i += 1; continue; }
+    i += 1;
+  }
+  return null;
+}
+
 export function staticValidate(code) {
   if (typeof code !== 'string' || !code.trim()) {
     return { ok: false, error: { line: 0, message: 'Пустой код' } };
@@ -73,6 +109,16 @@ export function staticValidate(code) {
       const line = code.slice(0, code.search(re)).split('\n').length;
       return { ok: false, unsafe: true, error: { line, message: `Небезопасный код: ${why}` } };
     }
+  }
+  const dotRest = findDotRest(code);
+  if (dotRest) {
+    return {
+      ok: false,
+      error: {
+        line: dotRest.line,
+        message: 'В mini-нотации пауза — это тильда ~, а не точка. Замените «.» на «~»',
+      },
+    };
   }
   if (!PART_RE.test(code)) {
     return { ok: false, error: { line: 0, message: 'Не найдено ни одной партии ($NAME: или $:)' } };

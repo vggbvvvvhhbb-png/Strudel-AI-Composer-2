@@ -52,3 +52,14 @@ export async function fixCode({ code, error, signal }) {
   const data = await jsonOrThrow(res);
   return data.code;
 }
+
+// Голос: аудио-блоб → распознанный текст.
+export async function transcribeAudio(blob, mimeType = 'audio/webm', signal) {
+  const form = new FormData();
+  // Имя файла с расширением помогает апстриму определить формат.
+  const ext = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm';
+  form.append('audio', blob, `recording.${ext}`);
+  const res = await fetch('/api/transcribe', { method: 'POST', body: form, signal });
+  const data = await jsonOrThrow(res);
+  return data;
+}

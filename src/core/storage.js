@@ -6,6 +6,20 @@ const H = 'strudel.history.v1';
 const SEED = 'strudel.presets.seeded.v1';
 const HISTORY_LIMIT = 50;
 
+// Подпись встроенных пресетов: хеш их кода. Меняется автоматически, когда
+// правятся встроенные пресеты, — тогда они обновляются у пользователей,
+// а пользовательские (переименованные, сохранённые) остаются нетронутыми.
+function builtinSignature() {
+  const source = PRESETS.map((p) => `${p.id}:${p.name}:${p.code}`).join('|');
+  // FNV-1a, 32 бита — достаточно для отслеживания изменений.
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < source.length; i += 1) {
+    hash ^= source.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash.toString(36);
+}
+
 const available = () => typeof localStorage !== 'undefined';
 
 function read(key, fallback) {
@@ -41,9 +55,20 @@ const newId = () => (globalThis.crypto?.randomUUID ? crypto.randomUUID() : `p${D
 
 export function listPresets() {
   let list = read(K, null);
-  if (!list) {
-    list = PRESETS.map((p) => ({ ...p, id: `builtin-${p.id}`, builtin: true, createdAt: Date.now() }));
+  const signature = builtinSignature();
+  const seeded = read(SEED, '');
+  // Встроенные пресеты обновляются при смене их содержимого; пользовательские не трогаем.
+  if (!Array.isArray(list) || seeded !== signature) {
+    const builtin = PRESETS.map((p) => ({
+      ...p,
+      id: `builtin-${p.id}`,
+      builtin: true,
+      createdAt: Date.now(),
+    }));
+    const user = (Array.isArray(list) ? list : []).filter((p) => p && !p.builtin);
+    list = [...user, ...builtin];
     write(K, list);
+    write(SEED, signature);
   }
   return Array.isArray(list) ? list : [];
 }

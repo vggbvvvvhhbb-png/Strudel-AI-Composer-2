@@ -56,25 +56,37 @@ router.post('/api/generate', (req, res) => {
     Connection: 'keep-alive',
     'X-Accel-Buffering': 'no',
   });
-  const send = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
+  const send = (obj) => {
+    if (!res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`);
+  };
 
   // Отмена апстрима при разрыве соединения клиентом (кнопка «Стоп»).
+  // Слушаем close у ответа: close у запроса приходит сразу после чтения тела
+  // и обрывал бы апстрим ещё до генерации.
   const upstream = new AbortController();
-  req.on('close', () => upstream.abort());
+  res.on('close', () => {
+    if (!res.writableEnded) upstream.abort();
+  });
 
   let full = '';
-  streamChat({ messages: buildMessages(body), signal: upstream.signal })
-    .then(async (deltas) => {
-      for await (const delta of deltas) {
+  // streamChat — асинхронный генератор, поэтому обходим его через for await,
+  // а не через .then(): промисом он не является.
+  (async () => {
+    try {
+      for await (const delta of streamChat({ messages: buildMessages(body), signal: upstream.signal })) {
+        if (upstream.signal.aborted) break;
         full += delta;
         send({ type: 'delta', text: delta });
       }
-      send({ type: 'done', code: full });
-    })
-    .catch((err) => {
-      if (!upstream.signal.aborted) send({ type: 'error', message: err?.message || 'Ошибка генерации' });
-    })
-    .finally(() => res.end());
+      if (!upstream.signal.aborted) send({ type: 'done', code: full });
+    } catch (err) {
+      if (!upstream.signal.aborted) {
+        send({ type: 'error', message: err?.message || 'Ошибка генерации' });
+      }
+    } finally {
+      res.end();
+    }
+  })();
 });
 
 export default router;

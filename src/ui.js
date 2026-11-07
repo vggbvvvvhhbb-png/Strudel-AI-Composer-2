@@ -2,13 +2,16 @@
 import { evaluateCode, stop, reset, unlockAudio } from './strudel-engine.js';
 import { generateCode, fixCode } from './api/client.js';
 import { staticValidate, dryValidate } from './core/validator.js';
-import { initMixer, syncMixer, mixerPlaying } from './mixer.js';
+import { initMixer, syncMixer } from './mixer.js';
 import { initTransport, syncTransport } from './transport.js';
 import { initImprove } from './improve.js';
 import { makeShareLink } from './core/share.js';
+import { pushHistory } from './core/storage.js';
+import { renderHistory } from './history.js';
 
 const $ = (id) => document.getElementById(id);
 const state = { busy: false, generating: false, abort: null };
+let editor = null;
 
 export function log(message, type = 'info') {
   const box = $('log');
@@ -34,7 +37,7 @@ function setBusy(busy) {
   state.busy = busy;
   $('btn-run').disabled = busy;
   $('btn-play-code').disabled = busy;
-  $('btn-run').textContent = busy ? '⏳ Генерация…' : '▶ Исполнить';
+  $('btn-run').textContent = busy ? '⏳ Генерация…' : '▶ Сгенерировать';
 }
 
 // Markdown-обёртки ``` и преамбулу до кода срезаем на лету, пока текст печатается.
@@ -85,6 +88,7 @@ async function runPrompt() {
   state.generating = true;
   const controller = new AbortController();
   state.abort = controller;
+  editor?.setStreaming(true);
   log(`Команда: ${prompt}`);
   try {
     const code = await generateCode({
@@ -97,13 +101,17 @@ async function runPrompt() {
       signal: controller.signal,
     });
     codeEl.value = stripMarkdown(code) || code;
+    editor?.setStreaming(false);
     log('Код сгенерирован', 'ok');
+    pushHistory({ prompt, code: codeEl.value });
+    renderHistory();
     log('Проверяю и исполняю…');
     const outcome = await runValidated(codeEl.value, (status) => setStatus(status));
     codeEl.value = outcome.code;
     if (outcome.ok) log('Играет ✓', 'ok');
     else log(`Ошибка: ${outcome.error}`, 'error');
   } catch (err) {
+    editor?.setStreaming(false);
     if (err?.name === 'AbortError') log('Генерация остановлена');
     else log(String(err.message || err), 'error');
   } finally {
@@ -132,8 +140,9 @@ async function playCode() {
   }
 }
 
-export function initUI() {
+export function initUI({ editor: editorApi } = {}) {
   const codeEl = $('code-input');
+  editor = editorApi || null;
 
   initMixer({
     getCode: () => codeEl.value,
@@ -170,26 +179,47 @@ export function initUI() {
     }, 400);
   });
 
-  // Тема: blue (по умолчанию) / dark, запоминается в localStorage.
+  // Тема: jade (по умолчанию) / obsidian — класс на <html>, запоминается в localStorage.
   const themeBtn = $('theme-toggle');
+  const THEMES = [
+    { id: 'jade', label: 'Jade' },
+    { id: 'obsidian', label: 'Obsidian' },
+  ];
+  const applyTheme = (id) => {
+    const theme = THEMES.find((t) => t.id === id) || THEMES[0];
+    document.documentElement.classList.remove('theme-jade', 'theme-obsidian');
+    document.documentElement.classList.add(`theme-${theme.id}`);
+    document.documentElement.dataset.theme = theme.id;
+    if (themeBtn) {
+      themeBtn.textContent = `◐ ${theme.label}`;
+      themeBtn.title = `Тема: ${theme.label} — переключить`;
+    }
+  };
   const savedTheme = localStorage.getItem('strudel.theme');
-  if (savedTheme) document.documentElement.dataset.theme = savedTheme;
-  themeBtn.addEventListener('click', () => {
-    const next = document.documentElement.dataset.theme === 'dark' ? 'blue' : 'dark';
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('strudel.theme', next);
+  applyTheme(savedTheme || 'jade');
+  themeBtn?.addEventListener('click', () => {
+    const current = document.documentElement.dataset.theme === 'obsidian' ? 'jade' : 'obsidian';
+    applyTheme(current);
+    localStorage.setItem('strudel.theme', current);
   });
 
-  // Горячие клавиши: Space — play/stop, Ctrl+Enter — сгенерировать.
+  // Горячие клавиши: Space — play/stop, Ctrl+Enter — сгенерировать, Ctrl+S — сохранить пресет.
   window.addEventListener('keydown', (e) => {
     const tag = document.activeElement?.tagName;
     const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    const mod = e.ctrlKey || e.metaKey;
+
+    if (mod && e.key === 'Enter') {
       e.preventDefault();
       runPrompt();
       return;
     }
-    if (e.code === 'Space' && !typing) {
+    if (mod && (e.key === 's' || e.key === 'S' || e.code === 'KeyS')) {
+      e.preventDefault();
+      $('btn-save-preset')?.click();
+      return;
+    }
+    if (e.code === 'Space' && !typing && !mod) {
       e.preventDefault();
       $('btn-play').click();
     }

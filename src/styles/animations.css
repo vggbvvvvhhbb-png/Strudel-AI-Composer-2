@@ -1,0 +1,120 @@
+/* ============================================================
+   Анимации: пульс play в такт, дыхание фона, мигающий курсор стриминга.
+   Всё отключается при prefers-reduced-motion: reduce.
+   ============================================================ */
+
+/* Пульс play-кнопки в такт — длительность задаёт --beat-dur (из BPM). */
+@keyframes beat-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(47, 224, 160, 0.5), 0 0 18px rgba(47, 224, 160, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(47, 224, 160, 0), 0 0 18px rgba(47, 224, 160, 0.12);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(47, 224, 160, 0), 0 0 18px rgba(47, 224, 160, 0.35);
+  }
+}
+
+/* Медленное «дыхание» фона. */
+@keyframes breathe {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate3d(2%, 2%, 0) scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes rec-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Мигающий курсор при живой печати кода. */
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Мягкое появление панелей при загрузке.
+   Важно: анимируется только transform, без opacity. В фоновой вкладке или в iframe
+   Chromium останавливает анимации, и элемент замирает на нулевом кадре. Если бы там
+   был opacity: 0, приложение выглядело бы пустым и переставало принимать клики. */
+@keyframes panel-in {
+  from {
+    transform: translateY(6px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.btn-play.playing {
+  animation: beat-pulse var(--beat-dur) infinite;
+}
+
+.btn.recording {
+  animation: rec-pulse 1.2s infinite;
+}
+
+/* Пульс кнопки микрофона во время записи. */
+@keyframes voice-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px var(--danger), 0 0 10px rgba(255, 107, 107, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 1px var(--danger), 0 0 22px rgba(255, 107, 107, 0.55);
+  }
+}
+
+.caret {
+  animation: caret-blink 1s steps(2, start) infinite;
+}
+
+.app-header,
+.col-left > *,
+.col-center > *,
+.col-right > *,
+.transport > * {
+  animation: panel-in 0.22s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  body::before {
+    opacity: 0.9;
+    transform: none;
+  }
+}
