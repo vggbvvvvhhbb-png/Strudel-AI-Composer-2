@@ -53,6 +53,47 @@ export async function fixCode({ code, error, signal }) {
   return data.code;
 }
 
+// --- Музыкальный разбор ---
+
+// Список стилей-референсов для панели разбора.
+export async function fetchMusicStyles(signal) {
+  const data = await jsonOrThrow(await fetch('/api/music/styles', { signal }));
+  return data.styles || [];
+}
+
+// Разбор кода по референсу стиля: метрики, оценка 0–100, замечания.
+export async function analyzeMusic({ code, style, signal }) {
+  const res = await fetch('/api/music/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, style }),
+    signal,
+  });
+  return jsonOrThrow(res);
+}
+
+// Переписывание кода под замечания разбора: было → стало + список шагов.
+export async function refineMusic({ code, style, iterations = 2, signal }) {
+  const res = await fetch('/api/music/refine', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, style, iterations }),
+    signal,
+  });
+  return jsonOrThrow(res);
+}
+
+// Несколько вариантов трека с оценкой каждого (best-of-N).
+export async function musicVariants({ prompt, count = 3, style, currentCode, signal }) {
+  const res = await fetch('/api/music/variants', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, count, style, currentCode }),
+    signal,
+  });
+  return jsonOrThrow(res);
+}
+
 // Голос: аудио-блоб → распознанный текст.
 export async function transcribeAudio(blob, mimeType = 'audio/webm', signal) {
   const form = new FormData();

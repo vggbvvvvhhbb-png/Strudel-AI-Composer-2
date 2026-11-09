@@ -4,14 +4,24 @@ import rateLimit from 'express-rate-limit';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { config } from './config.js';
+import { config, hasAnyProvider, providerIds } from './config.js';
 import generateRoute from './routes/generate.js';
 import fixRoute from './routes/fix.js';
 import transcribeRoute from './routes/transcribe.js';
+import musicRoute from './routes/music.js';
 import healthRoute from './routes/health.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const distDir = join(here, '../dist');
+
+// Без ключа LLM сервер принимает запросы и падает на каждом из них —
+// лучше не стартовать вовсе и объяснить, что поправить.
+if (!hasAnyProvider()) {
+  console.error('[config] Не настроен ни один провайдер LLM.');
+  console.error('Заполните .env: задайте ключ и модель хотя бы для одного провайдера');
+  console.error(`(доступны: ${config.llmProviders.join(', ')}) и перезапустите сервер.`);
+  process.exit(1);
+}
 
 const app = express();
 app.set('trust proxy', 1); // за nginx: реальный IP клиента в X-Forwarded-For
@@ -73,6 +83,7 @@ app.use(express.json({ limit: '100kb' }));
 app.use(generateRoute);
 app.use(fixRoute);
 app.use(transcribeRoute);
+app.use(musicRoute);
 app.use(healthRoute);
 
 if (existsSync(distDir)) {
@@ -104,6 +115,7 @@ app.use((err, req, res, next) => {
 
 const server = app.listen(config.port, config.host, () => {
   console.log(`Strudel AI Composer: http://${config.host}:${config.port}`);
+  console.log(`Провайдеры LLM: ${providerIds().join(', ')}`);
 });
 
 const shutdown = () => {

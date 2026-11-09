@@ -5,6 +5,7 @@ import { staticValidate, dryValidate } from './core/validator.js';
 import { initMixer, syncMixer } from './mixer.js';
 import { initTransport, syncTransport } from './transport.js';
 import { initImprove } from './improve.js';
+import { initMusicPanel, analyzeCurrent } from './music-panel.js';
 import { makeShareLink } from './core/share.js';
 import { pushHistory } from './core/storage.js';
 import { renderHistory } from './history.js';
@@ -110,6 +111,8 @@ async function runPrompt() {
     codeEl.value = outcome.code;
     if (outcome.ok) log('Играет ✓', 'ok');
     else log(`Ошибка: ${outcome.error}`, 'error');
+    // Разбор нового трека — в фоне, интерфейс не блокируем.
+    analyzeCurrent().catch(() => {});
   } catch (err) {
     editor?.setStreaming(false);
     if (err?.name === 'AbortError') log('Генерация остановлена');
@@ -167,6 +170,18 @@ export function initUI({ editor: editorApi } = {}) {
         setBusy(false);
       }
     },
+  });
+  initMusicPanel({
+    getCode: () => codeEl.value,
+    setCode: (code) => { codeEl.value = code; },
+    applyCode: async (code) => {
+      codeEl.value = code;
+      const res = await runValidated(code, (s) => setStatus(s));
+      codeEl.value = res.code;
+      if (res.ok) log('Играет ✓', 'ok');
+      else log(`Ошибка: ${res.error}`, 'error');
+    },
+    log,
   });
 
   // Ручные правки в редакторе синхронизируют микшер и транспорт.

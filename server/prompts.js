@@ -13,4 +13,5 @@ export const prompts = {
   system: load('system.md'),
   improve: load('improve.md'),
   fix: load('fix.md'),
+  critic: load('critic.md'),
 };

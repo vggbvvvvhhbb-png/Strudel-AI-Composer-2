@@ -826,3 +826,307 @@ input[type='range']::-moz-range-thumb {
   border: 1px dashed var(--border);
   border-radius: var(--radius-s);
 }
+
+/* --- Музыкальный разбор --- */
+#music-score,
+#music-criteria,
+#music-issues,
+#music-variants {
+  min-width: 0;
+}
+
+#music-score:not(:empty) {
+  margin-top: var(--sp-3);
+}
+
+.music-score {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: rgb(var(--jade-rgb) / 0.07);
+}
+
+/* Крупная цифра оценки */
+.music-score-total {
+  font-family: var(--font-mono);
+  font-size: 38px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--mint);
+}
+
+/* Буквенная оценка рядом с числом */
+.music-grade {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--jade-bright);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 2px 9px;
+  background: rgb(var(--jade-rgb) / 0.1);
+}
+
+.music-profile {
+  margin: var(--sp-1) 0 var(--sp-2);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* --- Строка критерия --- */
+.music-criterion {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: var(--sp-2);
+  margin-bottom: var(--sp-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--text-dim);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+}
+
+.music-criterion.music-status-ok {
+  border-left-color: var(--jade);
+}
+
+.music-criterion.music-status-near {
+  border-left-color: var(--warn);
+}
+
+.music-criterion.music-status-bad {
+  border-left-color: var(--danger);
+}
+
+.music-criterion-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.music-criterion-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.music-criterion-points {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.music-criterion-meta {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+/* --- Полоса попадания в цель --- */
+.music-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgb(var(--white-rgb) / 0.07);
+  overflow: hidden;
+}
+
+.music-bar-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--jade), var(--jade-bright));
+  transition: width 0.25s ease-out;
+}
+
+.music-status-near .music-bar-fill {
+  background: var(--warn);
+}
+
+.music-status-bad .music-bar-fill {
+  background: var(--danger);
+}
+
+.music-status-na .music-bar-fill {
+  background: var(--text-dim);
+}
+
+/* --- Замечания разбора --- */
+.music-issue {
+  padding: var(--sp-2);
+  margin-bottom: var(--sp-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warn);
+  border-radius: var(--radius-xs);
+  background: rgb(var(--jade-rgb) / 0.05);
+}
+
+.music-issue-bad {
+  border-left-color: var(--danger);
+}
+
+.music-issue-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.music-issue-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.music-issue-gain {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--warn);
+  white-space: nowrap;
+}
+
+.music-issue-bad .music-issue-gain {
+  color: var(--danger-text);
+}
+
+.music-issue-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+/* --- Сводка улучшения (было → стало) --- */
+.music-refine-box {
+  padding: var(--sp-2);
+  margin-top: var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+}
+
+.music-refine-head {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--mint);
+  margin-bottom: var(--sp-1);
+}
+
+.music-step {
+  padding: 4px 0;
+  border-top: 1px solid var(--border);
+}
+
+.music-step-title {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.music-step-applied .music-step-title {
+  color: var(--jade-bright);
+}
+
+.music-step-reason,
+.music-step-fixed {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+.music-step-fixed {
+  color: var(--mint);
+}
+
+/* --- Карточки вариантов --- */
+.music-variant {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: var(--sp-3);
+  margin-top: var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.music-variant-original {
+  border-style: dashed;
+}
+
+.music-variant-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: baseline;
+}
+
+.music-variant-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--mint);
+}
+
+.music-variant-total {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.music-variant-grade {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--jade-bright);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 1px 7px;
+}
+
+.music-variant-angle {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+.music-variant-load {
+  align-self: flex-start;
+}
+
+/* Общая подпись-пустышка, когда данных нет */
+.music-note {
+  margin: var(--sp-1) 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* Мобильный: панель не должна вылезать за ширину колонки. */
+@media (max-width: 900px) {
+  .music-score {
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+
+  .music-score-total {
+    font-size: 30px;
+  }
+
+  .music-variant-head {
+    gap: var(--sp-1) var(--sp-2);
+  }
+}
+

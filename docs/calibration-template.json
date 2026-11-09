@@ -1,0 +1,58 @@
+[
+  {
+    "id": "ex-01",
+    "style": "techno",
+    "humanRating": null,
+    "note": "Плотный техно с четырьмя партиями",
+    "code": "setCpm(132/4)\nconst key = \"e:minor\"\n\n$DRUMS: s(\"bd*4, hh*8, cp(2,8)\").gain(.85)._scope()\n$BASS: note(\"e1 e1 <e2 g2> e1\").s(\"sawtooth\").lpf(300).gain(.75)._pianoroll()\n$STAB: chord(\"<e4 ~ ~ ~> <g4 ~ ~ ~>\").voicing().s(\"square\").gain(.3).room(.4)._pianoroll()"
+  },
+  {
+    "id": "ex-02",
+    "style": "techno",
+    "humanRating": null,
+    "note": "То же, но скучно: две партии, ровная сетка",
+    "code": "setCpm(132/4)\nconst key = \"e:minor\"\n\n$DRUMS: s(\"bd*4\").gain(.8)._scope()\n$MEL: note(\"e4 e4 g4 e4\").s(\"triangle\").gain(.6)._pianoroll()"
+  },
+  {
+    "id": "ex-03",
+    "style": "lofi",
+    "humanRating": null,
+    "note": "Лоу-фай с пианино и мягким басом",
+    "code": "setCpm(72/4)\nconst key = \"a:minor\"\n\n$DRUMS: s(\"bd ~ sd ~\").gain(.7)._scope()\n$HATS: s(\"hh ~ hh ~ hh*2 ~\").gain(.35)._scope()\n$BASS: note(\"<a1 ~ ~ ~> <f1 ~ ~ ~>\").s(\"sine\").gain(.75)._pianoroll()\n$MEL: note(\"a4 ~ c5 e5 ~ g5 ~ e4\").s(\"piano\").gain(.6).room(.7)._pianoroll()"
+  },
+  {
+    "id": "ex-04",
+    "style": "lofi",
+    "humanRating": null,
+    "note": "Лоу-фай вырожденный: одна партия, ноты вне лада",
+    "code": "setCpm(72/4)\nconst key = \"a:minor\"\n\n$MEL: note(\"a4 c4 b4 d5\").s(\"triangle\").gain(.6)._pianoroll()"
+  },
+  {
+    "id": "ex-05",
+    "style": "ambient",
+    "humanRating": null,
+    "note": "Эмбиент с падом и субом",
+    "code": "setCpm(60/4)\nconst key = \"c:major\"\n\n$PAD: chord(\"<c3 maj> <a2 min> <f2 maj>\").voicing().s(\"sawtooth\").slow(4).gain(.3).room(1)._pianoroll()\n$SPARKLE: note(\"<c5 g5 ~ e5> ~\").s(\"triangle\").slow(2).gain(.4).room(1)._pianoroll()\n$SUB: note(\"c1 ~ ~ ~\").s(\"sine\").slow(4).gain(.5)._pianoroll()"
+  },
+  {
+    "id": "ex-06",
+    "style": "dnb",
+    "humanRating": null,
+    "note": "Драм-н-бейс с быстрым басом",
+    "code": "setCpm(174/4)\nconst key = \"e:minor\"\n\n$DRUMS: s(\"bd*4, ~ cp ~ cp ~ cp ~ cp\").gain(.8)._scope()\n$SNARE: s(\"~ ~ sd ~ ~ ~ sd ~\").gain(.7)._scope()\n$BASS: note(\"e1 e1 f1 g1 e1 e1 d1 c1\").s(\"sawtooth\").lpf(400).gain(.8)._pianoroll()\n$PAD: chord(\"<em> <am> <bm>\").voicing().s(\"square\").gain(.25)._pianoroll()"
+  },
+  {
+    "id": "ex-07",
+    "style": "house",
+    "humanRating": null,
+    "note": "Хаус с офф-бит хатами и шампуем",
+    "code": "setCpm(124/4)\nconst key = \"f:minor\"\n\n$DRUMS: s(\"bd*4, ~ cp ~ cp\").gain(.85)._scope()\n$HATS: s(\"~ hh ~ hh ~ hh ~ hh\").gain(.4)._scope()\n$SHUFFLE: s(\"~ ~ hh ~ ~ ~ hh ~\").gain(.35)._scope()\n$CHORD: chord(\"<fm7> <dbmaj7>\").voicing().s(\"sawtooth\").gain(.3).room(.5)._pianoroll()\n$BASS: note(\"f2 f2 ab2 bb2\").s(\"sawtooth\").lpf(300).gain(.75)._pianoroll()"
+  },
+  {
+    "id": "ex-08",
+    "style": "synthwave",
+    "humanRating": null,
+    "note": "Синтвейв с арпеджио",
+    "code": "setCpm(100/4)\nconst key = \"g:major\"\n\n$ARP: note(\"g4 b4 d5 g5\").s(\"square\").fast(2).gain(.4)._pianoroll()\n$BASS: note(\"g1 ~ g1 ~ g1 ~ g1 ~\").s(\"sawtooth\").gain(.75)._pianoroll()\n$DRUMS: s(\"bd*4, ~ cp ~ cp\").gain(.8)._scope()\n$HATS: s(\"~ hh ~ hh ~ hh ~ hh\").gain(.4)._scope()"
+  }
+]

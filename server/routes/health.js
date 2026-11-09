@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { config } from '../config.js';
+import { config, providerIds } from '../config.js';
 
 const router = Router();
 
@@ -15,7 +15,9 @@ router.get('/api/health', (req, res) => {
     ok: true,
     version: pkg.version,
     // Фронт прячет кнопку микрофона, если ключа распознавания нет.
-    features: { voice: Boolean(config.groqApiKey) },
+    features: { voice: Boolean(config.groqApiKey), music: true },
+    // Какие провайдеры LLM реально настроены — видно в интерфейсе.
+    providers: providerIds(),
   });
 });
 
