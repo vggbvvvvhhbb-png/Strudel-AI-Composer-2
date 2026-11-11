@@ -5,7 +5,7 @@
 
 import { PROGRESSIONS, progressionsForStyle, progressionById, PROGRESSION_STYLES } from './progressions.js';
 import { FORMS, formsForStyle, formBars, SECTION_KINDS, FORM_STYLES } from './forms.js';
-import { ROLE_MATRIX, ROLES, rolesForStyle, roleFor, SYNTHS, ROLE_STYLES } from './roles.js';
+import { ROLE_MATRIX, ROLES, rolesForStyle, roleFor, SYNTHS, ROLE_STYLES, RECIPES, patternDensity, normalizeRecipe, selectPattern } from './roles.js';
 import { TRANSITIONS, TRANSITION_TYPES, applyTransition } from './transitions.js';
 import { CURVES, CURVE_NAMES, CURVE_RANGES, rangeFor, buildCurve } from './automation.js';
 import * as descriptor from './descriptor.js';
@@ -26,6 +26,10 @@ export {
   roleFor,
   ROLE_STYLES,
   SYNTHS,
+  RECIPES,
+  patternDensity,
+  normalizeRecipe,
+  selectPattern,
   TRANSITIONS,
   TRANSITION_TYPES,
   applyTransition,

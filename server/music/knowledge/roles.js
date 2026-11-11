@@ -167,6 +167,167 @@ export const ROLE_MATRIX = {
 export const ROLE_STYLES = Object.keys(ROLE_MATRIX);
 
 /**
+ * Рецепты партии: что модель может попросить у библиотеки.
+ *
+ *   default — обычная плотность роли, рисунок чередуется по секциям;
+ *   busy    — плотнее обычного (больше атак на такт);
+ *   sparse  — реже обычного (воздух, место для других партий).
+ *
+ * Рецепт влияет на выбор ритмического шаблона, а не на гармонию.
+ */
+export const RECIPES = ['default', 'busy', 'sparse'];
+
+/**
+ * Разбивает мини-строку на верхнеуровневые шаги (скобки не разрывают шаг).
+ * @param {string} text
+ * @returns {string[]}
+ */
+function splitTop(text) {
+  const out = [];
+  let depth = 0;
+  let current = '';
+  for (const ch of String(text)) {
+    if (ch === '[' || ch === '<' || ch === '(') depth += 1;
+    else if (ch === ']' || ch === '>' || ch === ')') depth -= 1;
+    if (depth === 0 && /\s/.test(ch)) {
+      if (current) out.push(current);
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  if (current) out.push(current);
+  return out;
+}
+
+/**
+ * Плотность одного шага в атаках.
+ * @param {string} token
+ * @returns {number}
+ */
+function tokenDensity(token) {
+  if (!token) return 0;
+  if (token === '~' || token === '_' || token === '?') return 0;
+  const mul = token.match(/^(.*)\*(\d+)$/);
+  if (mul) {
+    const inner = mul[1];
+    const count = Number(mul[2]);
+    return inner.startsWith('[') ? tokenDensity(inner) * count : count;
+  }
+  if (token.startsWith('[') && token.endsWith(']')) {
+    return splitTop(token.slice(1, -1)).reduce((sum, t) => sum + tokenDensity(t), 0);
+  }
+  if (token.startsWith('<') && token.endsWith('>')) {
+    // Альтернативы: берём самую плотную ветку.
+    return splitTop(token.slice(1, -1)).reduce((max, t) => Math.max(max, tokenDensity(t)), 0);
+  }
+  return 1;
+}
+
+/**
+ * Плотность ритмического шаблона в атаках на такт.
+ *
+ * Нужна, чтобы рецепт ('busy'/'sparse') выбирал шаблон осмысленно:
+ * 'hh*16' — 16 атак, 'bd ~ bd ~' — 2, 'x ~ x x' — 3.
+ *
+ * @param {string} text мини-строка
+ * @returns {number}
+ */
+export function patternDensity(text) {
+  return splitTop(text).reduce((sum, t) => sum + tokenDensity(t), 0);
+}
+
+/**
+ * Приводит имя рецепта к одному из известных.
+ * @param {string} recipe
+ * @returns {'default'|'busy'|'sparse'}
+ */
+export function normalizeRecipe(recipe) {
+  const raw = String(recipe || '').trim().toLowerCase();
+  if (raw === 'busy' || raw === 'dense' || raw === 'fast') return 'busy';
+  if (raw === 'sparse' || raw === 'calm' || raw === 'minimal') return 'sparse';
+  return 'default';
+}
+
+/**
+ * Выбирает ритмический шаблон роли под рецепт и секцию.
+ *
+ * Правила:
+ *   • 'busy'   — самый плотный подходящий шаблон;
+ *   • 'sparse' — самый редкий подходящий шаблон;
+ *   • 'default'— ближайший к плотности роли, но со сдвигом по секциям,
+ *     чтобы соседние секции не звучали одинаково.
+ *
+ * Выбор детерминирован: зависит только от роли, рецепта, индекса секции и
+ * зерна. Один и тот же вход — один и тот же результат.
+ *
+ * @param {object} role описание роли из ROLE_MATRIX
+ * @param {string} recipe имя рецепта
+ * @param {number} index индекс секции
+ * @param {number|string} seed зерно трека
+ * @returns {string|null} мини-строка шаблона
+ */
+export function selectPattern(role, recipe, index, seed) {
+  const patterns = Array.isArray(role?.patterns) ? role.patterns : [];
+  if (!patterns.length) return null;
+
+  // Дубли в матрице (например, 'bd*4' дважды) не дают разнообразия:
+  // оставляем по одному вхождению каждого шаблона.
+  const unique = [];
+  for (const pattern of patterns) {
+    if (!unique.includes(pattern)) unique.push(pattern);
+  }
+
+  const mode = normalizeRecipe(recipe);
+  const density = role.density || 2;
+  const scored = unique.map((pattern, i) => ({ pattern, i, d: patternDensity(pattern) }));
+
+  let pool;
+  if (mode === 'busy') {
+    pool = scored.filter((x) => x.d >= density * 0.8);
+    if (!pool.length) pool = scored;
+  } else if (mode === 'sparse') {
+    pool = scored.filter((x) => x.d <= density * 0.8);
+    if (!pool.length) pool = scored;
+  } else {
+    pool = scored.filter((x) => x.d >= density * 0.35 && x.d <= density * 1.6);
+    if (!pool.length) pool = scored;
+  }
+
+  // Ближе к плотности роли — раньше. Сортировка стабильная, поэтому при равной
+  // плотности порядок matrix не меняется, а выбор делает фаза (сдвиг по секциям).
+  const target = density;
+  const phase = hashPhase(`${seed}|${role.octave}|${role.density}|${role.synth || ''}`, pool.length);
+  pool.sort((a, b) => Math.abs(a.d - target) - Math.abs(b.d - target));
+
+  if (mode === 'busy') {
+    const max = Math.max(...pool.map((x) => x.d));
+    const tied = pool.filter((x) => x.d === max);
+    return tied[(phase + index) % tied.length].pattern;
+  }
+  if (mode === 'sparse') {
+    const min = Math.min(...pool.map((x) => x.d));
+    const tied = pool.filter((x) => x.d === min);
+    return tied[(phase + index) % tied.length].pattern;
+  }
+  return pool[(phase + index) % pool.length].pattern;
+}
+
+/**
+ * Устойчивая фаза по строке — число в диапазоне [0, length).
+ * @param {string} text
+ * @param {number} length
+ */
+function hashPhase(text, length) {
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) % Math.max(1, length);
+}
+
+/**
  * Описание роли для стиля.
  * @param {string} style
  * @param {string} role

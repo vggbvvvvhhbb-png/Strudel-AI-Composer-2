@@ -22,6 +22,9 @@ import {
   TRANSITION_TYPES,
   CURVES,
   CURVE_NAMES,
+  RECIPES,
+  patternDensity,
+  selectPattern,
   descriptor,
 } from '../../server/music/knowledge/index.js';
 import { formsForStyle, formBars } from '../../server/music/knowledge/forms.js';
@@ -354,5 +357,67 @@ describe('knowledge: кривые автоматизации', () => {
     };
     expect(sweepWidth('techno')).toBeGreaterThan(sweepWidth('lofi'));
     expect(sweepWidth('techno')).toBeGreaterThan(sweepWidth('ambient'));
+  });
+});
+
+describe('библиотека знаний: выбор рисунка по рецепту', () => {
+  it('плотность шаблона считается по mini-нотации', () => {
+    expect(patternDensity('bd*4')).toBe(4);
+    expect(patternDensity('hh*16')).toBe(16);
+    expect(patternDensity('bd ~ bd ~')).toBe(2);
+    expect(patternDensity('x ~ x x')).toBe(3);
+    expect(patternDensity('~ sd ~ ~')).toBe(1);
+    expect(patternDensity('[hh*2 hh]')).toBe(3);
+  });
+
+  it('выбранный шаблон всегда есть в библиотеке роли', () => {
+    for (const style of STYLES) {
+      for (const role of ROLES) {
+        const info = ROLE_MATRIX[style][role];
+        for (const recipe of RECIPES) {
+          const picked = selectPattern(info, recipe, 0, 7);
+          expect(info.patterns, `${style}.${role} ${recipe}`).toContain(picked);
+        }
+      }
+    }
+  });
+
+  it('busy не реже, чем sparse; строго плотнее — где библиотека это позволяет', () => {
+    for (const style of STYLES) {
+      const info = ROLE_MATRIX[style].hats;
+      const busy = patternDensity(selectPattern(info, 'busy', 0, 7));
+      const sparse = patternDensity(selectPattern(info, 'sparse', 0, 7));
+      expect(busy, style).toBeGreaterThanOrEqual(sparse);
+      const densities = new Set(info.patterns.map((p) => patternDensity(p)));
+      if (densities.size > 1) {
+        expect(busy, style).toBeGreaterThan(sparse);
+      }
+    }
+  });
+
+  it('выбор детерминирован: тот же вход — тот же рисунок', () => {
+    const info = ROLE_MATRIX.techno.kick;
+    const a = selectPattern(info, 'default', 2, 42);
+    const b = selectPattern(info, 'default', 2, 42);
+    expect(a).toBe(b);
+  });
+
+  it('соседние секции не звучат одинаково', () => {
+    const info = ROLE_MATRIX.techno.hats;
+    const first = selectPattern(info, 'default', 0, 42);
+    const second = selectPattern(info, 'default', 1, 42);
+    expect(first).not.toBe(second);
+  });
+
+  it('выбранный шаблон разбирается движком Strudel', () => {
+    for (const style of STYLES) {
+      for (const role of ROLES) {
+        const info = ROLE_MATRIX[style][role];
+        const picked = selectPattern(info, 'default', 0, 7);
+        const source = info.synth ? `n("${picked}")` : `s("${picked}")`;
+        expect(() => api.mini(picked), `${style}.${role}`).not.toThrow();
+        expect(source).toContain(picked);
+      }
+    }
   });
 });
