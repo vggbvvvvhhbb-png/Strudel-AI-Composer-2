@@ -13,6 +13,7 @@
     "check:secrets": "node scripts/check-secrets.js",
     "check:presets": "node scripts/check-presets.mjs",
     "check:api": "node scripts/extract-strudel-api.mjs",
+    "check:knowledge": "node scripts/check-knowledge.mjs",
     "spike": "node tests/spike/probe.mjs"
   },
   "dependencies": {

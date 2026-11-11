@@ -1,18 +1,28 @@
-Фаза 0: spike — исполнение Strudel в Node, whitelist API, docs/SPIKE.md
+Фаза 1: библиотека знаний (server/music/knowledge/)
 
 Что сделано
-- server/music/strudel-runtime.mjs: headless-исполнение Strudel в Node.
-  Прямой import @strudel/core падает (SalatRepl из @kabelsalat/web), поэтому
-  загружается UMD-бандл @strudel/web — тот же приём, что в check-presets.
-- Ключевые находки: нужен setStringParser(mini), метки $PART: собираются
-  транспилятором в expr.p('$PART'), алиасы _pianoroll/_scope живут в приложении.
-- scripts/extract-strudel-api.mjs -> server/music/data/strudel-api.json:
-  1017 экспортов, 1172 метода паттерна.
-- docs/SPIKE.md: все ответы фазы 0, проверенные кодом.
-- docs/DECISIONS.md: решения D-001…D-010 с обоснованием.
-- tests/unit/spike-strudel.test.js: 30 тестов, фиксирующих находки.
+- progressions.js: 43 прогрессии, 10 стилей × 4–5. Гармония — в степенях лада
+  (degrees), не символами аккордов: chord("A:min") движок не понимает, а
+  степени всегда в ладу по построению.
+- forms.js: 16 форм по 10 стилям. Длина 32–96 тактов, секции кратны 4,
+  арка энергии, переходы в секциях.
+- roles.js: матрица «стиль × роль», 12 ролей × 10 стилей. У каждой роли
+  2–4 ритмических паттерна, регистр, плотность, сэмплы/синтезатор.
+- transitions.js: build/drop/breakdown/riser/fill — ЧИСТЫЕ ФУНКЦИИ
+  (pattern, barsLen) → pattern над дескриптором партии.
+- automation.js: sweep/swell/fade/motion — описания сигналов с диапазонами
+  по стилям (у EDM шире, у lofi/ambient уже).
+- descriptor.js: общий язык библиотеки и компилятора.
+- scripts/check-knowledge.mjs (npm run check:knowledge) + tests/unit/knowledge.test.js:
+  29 тестов. Каждый паттерн, аккорд и рецепт проходит НАСТОЯЩИЙ парсер Strudel.
+
+Найдено и исправлено по ходу
+- Паттерны из одной тишины (~ ~ ~ ~) не дают ни одного события — роли fx/texture
+  переписаны так, чтобы партия реально играла.
+- `sax` — это сэмпл, а не синтезатор: в роли jazz/lead заменён на organ.
+- Три формы выходили за 96 тактов — укорочены.
 
 Проверено
-- npm test: 136 тестов (106 старых + 30 новых) — зелёные.
+- npm test: 165 тестов (106 старых + 30 spike + 29 knowledge) — зелёные.
+- npm run check:knowledge — библиотека целостна.
 - npm run build, check:secrets, check:presets — чисто.
-- 64 такта × 6 партий считаются за 25 мс.
