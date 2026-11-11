@@ -7,3 +7,6 @@ dist/
 *.log.*
 .DS_Store
 Thumbs.db
+
+# Артефакты проб spike: воспроизводятся командой node tests/spike/probe.mjs
+tests/spike/*.out.txt

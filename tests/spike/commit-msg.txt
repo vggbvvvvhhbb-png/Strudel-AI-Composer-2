@@ -1,0 +1,18 @@
+Фаза 0: spike — исполнение Strudel в Node, whitelist API, docs/SPIKE.md
+
+Что сделано
+- server/music/strudel-runtime.mjs: headless-исполнение Strudel в Node.
+  Прямой import @strudel/core падает (SalatRepl из @kabelsalat/web), поэтому
+  загружается UMD-бандл @strudel/web — тот же приём, что в check-presets.
+- Ключевые находки: нужен setStringParser(mini), метки $PART: собираются
+  транспилятором в expr.p('$PART'), алиасы _pianoroll/_scope живут в приложении.
+- scripts/extract-strudel-api.mjs -> server/music/data/strudel-api.json:
+  1017 экспортов, 1172 метода паттерна.
+- docs/SPIKE.md: все ответы фазы 0, проверенные кодом.
+- docs/DECISIONS.md: решения D-001…D-010 с обоснованием.
+- tests/unit/spike-strudel.test.js: 30 тестов, фиксирующих находки.
+
+Проверено
+- npm test: 136 тестов (106 старых + 30 новых) — зелёные.
+- npm run build, check:secrets, check:presets — чисто.
+- 64 такта × 6 партий считаются за 25 мс.
