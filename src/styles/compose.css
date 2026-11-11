@@ -1,0 +1,270 @@
+/* ============================================================
+   Структурная композиция: трейс пайплайна, таймлайн секций,
+   кривая энергии.
+   Все цвета — через переменные из tokens.css.
+   ============================================================ */
+
+/* --- Трейс пайплайна --- */
+.compose-trace {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 260px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.compose-trace-row {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: baseline;
+  padding: 3px var(--sp-2);
+  border-left: 2px solid var(--border);
+  border-radius: var(--radius-xs);
+}
+
+.compose-trace-label {
+  flex: 0 0 auto;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10.5px;
+}
+
+.compose-trace-value {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.compose-trace-ok {
+  border-left-color: var(--jade);
+}
+
+.compose-trace-ok .compose-trace-value {
+  color: var(--mint);
+}
+
+.compose-trace-warn {
+  border-left-color: var(--warn);
+}
+
+.compose-trace-warn .compose-trace-value {
+  color: var(--warn);
+}
+
+.compose-trace-error {
+  border-left-color: var(--danger);
+}
+
+.compose-trace-error .compose-trace-value {
+  color: var(--danger-text);
+}
+
+.compose-trace-note {
+  margin: 0 0 0 var(--sp-2);
+  padding: 2px var(--sp-2);
+  color: var(--text-dim);
+  font-size: 11.5px;
+  line-height: 1.45;
+  border-left: 1px solid var(--border);
+}
+
+/* --- Секции спеки --- */
+.compose-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.compose-section {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--jade);
+  border-radius: var(--radius-xs);
+  padding: var(--sp-1) var(--sp-2);
+  background: rgb(var(--bg-deep-rgb) / 0.35);
+}
+
+.compose-section-head {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.compose-section-kind {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mint);
+}
+
+.compose-section-bars,
+.compose-section-energy {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.compose-section-roles {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+/* --- Варианты спеки --- */
+.compose-variants {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-top: var(--sp-2);
+}
+
+.compose-variants:empty {
+  display: none;
+}
+
+.compose-variant {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  padding: var(--sp-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--jade);
+  border-radius: var(--radius-xs);
+  background: rgb(var(--bg-deep-rgb) / 0.35);
+}
+
+.compose-variant-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.compose-variant-rank {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mint);
+}
+
+.compose-variant-angle {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compose-variant-score {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.compose-variant-load {
+  min-height: 28px;
+  padding: 2px var(--sp-2);
+  font-size: 12px;
+}
+
+/* --- Таймлайн секций --- */
+.compose-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.compose-timeline[hidden] {
+  display: none;
+}
+
+.compose-timeline-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-mono);
+}
+
+/* Кривая энергии: тонкая полоса справа от заголовка. */
+.compose-energy-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 32px;
+}
+
+.compose-energy-curve {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.compose-energy-area {
+  fill: rgb(var(--jade-rgb) / 0.16);
+}
+
+.compose-energy-line {
+  fill: none;
+  stroke: var(--jade-bright);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.compose-timeline-blocks {
+  display: flex;
+  gap: 2px;
+  height: 30px;
+}
+
+.compose-tl-block {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  /* Насыщенность блока = энергия секции: тихие секции бледные, дроп — яркий. */
+  background: rgb(var(--jade-rgb) / calc(0.12 + var(--energy, 0.5) * 0.5));
+  border: 1px solid rgb(var(--jade-rgb) / calc(0.2 + var(--energy, 0.5) * 0.5));
+  transition: background 0.2s ease-out, border-color 0.2s ease-out;
+}
+
+.compose-tl-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+  /* Подпись не должна вылезать за узкий блок. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 4px;
+}
+
+@media (max-width: 900px) {
+  .compose-tl-label {
+    font-size: 9px;
+  }
+}

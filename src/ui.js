@@ -6,6 +6,7 @@ import { initMixer, syncMixer } from './mixer.js';
 import { initTransport, syncTransport } from './transport.js';
 import { initImprove } from './improve.js';
 import { initMusicPanel, analyzeCurrent } from './music-panel.js';
+import { initCompose } from './compose.js';
 import { makeShareLink } from './core/share.js';
 import { pushHistory } from './core/storage.js';
 import { renderHistory } from './history.js';
@@ -180,6 +181,22 @@ export function initUI({ editor: editorApi } = {}) {
       codeEl.value = res.code;
       if (res.ok) log('Играет ✓', 'ok');
       else log(`Ошибка: ${res.error}`, 'error');
+    },
+    log,
+  });
+
+  // Структурная композиция: спека → код. Тот же путь применения,
+  // что и у разбора, — код проверяется и исполняется одинаково.
+  initCompose({
+    getCode: () => codeEl.value,
+    setCode: (code) => { codeEl.value = code; },
+    applyCode: async (code) => {
+      codeEl.value = code;
+      const res = await runValidated(code, (s) => setStatus(s));
+      codeEl.value = res.code;
+      if (res.ok) log('Играет ✓', 'ok');
+      else log(`Ошибка: ${res.error}`, 'error');
+      await analyzeCurrent().catch(() => {});
     },
     log,
   });

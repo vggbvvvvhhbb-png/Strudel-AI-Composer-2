@@ -104,3 +104,76 @@ export async function transcribeAudio(blob, mimeType = 'audio/webm', signal) {
   const data = await jsonOrThrow(res);
   return data;
 }
+
+// --- Структурная композиция ---
+
+/**
+ * Композиция трека с потоком событий пайплайна.
+ *
+ * События приходят по SSE: spec, compiled, scored, refined, done.
+ * onEvent получает каждое событие — по нему интерфейс рисует трейс
+ * и таймлайн секций.
+ */
+export async function composeTrack({ prompt, mode = 'structured', style, seed, refine = true, onEvent, signal }) {
+  const res = await fetch('/api/music/compose', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, mode, style, seed, refine }),
+    signal,
+  });
+  if (!res.ok || !res.body) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `HTTP ${res.status}`);
+  }
+
+  let code = '';
+  let score = null;
+  let spec = null;
+  let sections = [];
+  let improved = false;
+  let before = null;
+  let streamError = null;
+
+  await consumeSSE(res, (event) => {
+    if (event.type === 'error') {
+      streamError = new Error(event.message || 'Ошибка композиции');
+      return;
+    }
+    if (event.type === 'done') {
+      code = event.code ?? code;
+      score = event.score ?? score;
+      spec = event.spec ?? spec;
+      sections = event.sections ?? sections;
+    }
+    if (event.type === 'refined') {
+      improved = Boolean(event.improved);
+      before = event.before ?? null;
+    }
+    onEvent?.(event);
+  });
+
+  if (streamError) throw streamError;
+  return { code, score, spec, sections, improved, before };
+}
+
+// Варианты одной спеки: структурно разные планы (форма, гармония, роли).
+export async function composeVariants({ spec, count = 4, seed, signal }) {
+  const res = await fetch('/api/music/compose/variants', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ spec, count, seed }),
+    signal,
+  });
+  return jsonOrThrow(res);
+}
+
+// Одна детерминированная мутация спеки — кнопка «🎲 ещё вариант».
+export async function composeMutate({ spec, mutation, seed, signal }) {
+  const res = await fetch('/api/music/compose/mutate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ spec, mutation, seed }),
+    signal,
+  });
+  return jsonOrThrow(res);
+}

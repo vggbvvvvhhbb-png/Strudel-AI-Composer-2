@@ -14,7 +14,12 @@
     "check:presets": "node scripts/check-presets.mjs",
     "check:api": "node scripts/extract-strudel-api.mjs",
     "check:knowledge": "node scripts/check-knowledge.mjs",
-    "spike": "node tests/spike/probe.mjs"
+    "spike": "node tests/spike/probe.mjs",
+    "spike:compose": "node tests/spike/compose-pipeline.probe.mjs",
+    "eval": "node eval/run.mjs",
+    "eval:dry": "node eval/run.mjs --dry",
+    "eval:ab": "node eval/analyze-ab.mjs",
+    "corpus": "node scripts/build-corpus.mjs"
   },
   "dependencies": {
     "@strudel/web": "^1.3.0",

@@ -9,6 +9,7 @@ import generateRoute from './routes/generate.js';
 import fixRoute from './routes/fix.js';
 import transcribeRoute from './routes/transcribe.js';
 import musicRoute from './routes/music.js';
+import composeRoute from './routes/compose.js';
 import healthRoute from './routes/health.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -84,6 +85,7 @@ app.use(generateRoute);
 app.use(fixRoute);
 app.use(transcribeRoute);
 app.use(musicRoute);
+app.use(composeRoute);
 app.use(healthRoute);
 
 if (existsSync(distDir)) {

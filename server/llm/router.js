@@ -88,13 +88,17 @@ function splitSystem(messages) {
   return { system, rest };
 }
 
-async function openaiRequest({ provider, messages, temperature, stream, signal, maxTokens }) {
+async function openaiRequest({ provider, messages, temperature, stream, signal, maxTokens, responseFormat }) {
   const body = {
     model: provider.model,
     messages,
     temperature,
     ...(maxTokens ? { max_tokens: maxTokens } : {}),
     ...(stream ? { stream: true, stream_options: { include_usage: true } } : {}),
+    // Структурированный вывод: провайдер сам гарантирует, что ответ — JSON
+    // по схеме. Поддерживают не все: если провайдер ответит ошибкой,
+    // запрос повторяется без response_format (см. completeChat).
+    ...(responseFormat ? { response_format: responseFormat } : {}),
   };
   const headers = { 'Content-Type': 'application/json' };
   if (provider.apiKey) headers.Authorization = `Bearer ${provider.apiKey}`;
@@ -117,8 +121,7 @@ async function anthropicRequest({ provider, messages, temperature, stream, signa
     messages: rest,
     ...(system ? { system } : {}),
     ...(stream ? { stream: true } : {}),
-  };
-  const res = await fetch(`${provider.baseUrl}/v1/messages`, {
+  };  const res = await fetch(`${provider.baseUrl}/v1/messages`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -227,34 +230,78 @@ export async function* streamChat({ messages, temperature = 0.8, signal, provide
 /**
  * Нестримовый вызов: один ответ целиком. Используется для автофикса,
  * улучшения и генерации вариантов.
+ *
+ * `responseFormat` — структурированный вывод (`{type:'json_schema', ...}`).
+ * Anthropic его не поддерживает, поэтому там формат задаётся промптом.
+ * Если провайдер отвергает `response_format` (не все модели и не все
+ * провайдеры его умеют), запрос повторяется без него — ответ придёт
+ * обычным текстом, а разбор JSON сделает вызывающий код.
+ *
  * @returns {Promise<string>}
  */
-export async function completeChat({ messages, temperature = 0.2, signal, providerId, maxTokens, onUsage } = {}) {
+export async function completeChat({
+  messages,
+  temperature = 0.2,
+  signal,
+  providerId,
+  maxTokens,
+  onUsage,
+  responseFormat,
+} = {}) {
   let lastError = null;
   const chain = providerChain().filter((p) => !providerId || p.id === providerId);
   if (!chain.length) throw new Error('Нет доступных провайдеров LLM');
 
   for (const provider of chain) {
     if (signal?.aborted) throw new Error('Запрос отменён');
-    try {
-      const res = await request({ provider, messages, temperature, stream: false, signal, maxTokens });
-      const json = await res.json();
-      let content = null;
-      if (provider.type === 'anthropic') {
-        content = (json.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('');
-      } else {
-        content = json.choices?.[0]?.message?.content;
+    // Структурированный вывод есть только у OpenAI-совместимых провайдеров.
+    const wantsFormat = Boolean(responseFormat) && provider.type !== 'anthropic';
+    let attempts = wantsFormat ? 2 : 1;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const useFormat = wantsFormat && attempt === 0;
+      try {
+        const res = await request({
+          provider,
+          messages,
+          temperature,
+          stream: false,
+          signal,
+          maxTokens,
+          ...(useFormat ? { responseFormat } : {}),
+        });
+        const json = await res.json();
+        let content = null;
+        if (provider.type === 'anthropic') {
+          content = (json.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('');
+        } else {
+          content = json.choices?.[0]?.message?.content;
+        }
+        if (typeof content !== 'string' || !content.trim()) throw new Error('провайдер вернул пустой ответ');
+        if (json.usage && typeof onUsage === 'function') {
+          onUsage({ provider: provider.id, model: provider.model, ...json.usage });
+        }
+        return content;
+      } catch (err) {
+        if (signal?.aborted) throw err;
+        // Провайдер не понял response_format — пробуем без него.
+        if (useFormat && isFormatUnsupported(err)) {
+          console.error(
+            `[llm] провайдер ${provider.id} не поддерживает response_format — повтор без него`,
+          );
+          continue;
+        }
+        lastError = err;
+        console.error(`[llm] провайдер ${provider.id} недоступен: ${err.message}`);
+        break;
       }
-      if (typeof content !== 'string' || !content.trim()) throw new Error('провайдер вернул пустой ответ');
-      if (json.usage && typeof onUsage === 'function') {
-        onUsage({ provider: provider.id, model: provider.model, ...json.usage });
-      }
-      return content;
-    } catch (err) {
-      if (signal?.aborted) throw err;
-      lastError = err;
-      console.error(`[llm] провайдер ${provider.id} недоступен: ${err.message}`);
     }
   }
   throw lastError || new Error('LLM недоступен');
+}
+
+// Провайдер отверг именно формат ответа (а не сам запрос) — тогда есть смысл
+// повторить без него. Остальные ошибки (ключ, лимит, сеть) не лечатся повтором.
+function isFormatUnsupported(err) {
+  const text = String(err?.message || '');
+  return /response_format|json_schema|schema/i.test(text);
 }

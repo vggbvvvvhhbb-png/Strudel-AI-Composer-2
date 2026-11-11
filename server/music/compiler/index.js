@@ -102,6 +102,28 @@ function pickPattern(role, recipe, index, seed, family) {
   return selectPattern(role, recipe, index, seed) || '~';
 }
 
+/**
+ * Транспозиция партии, в полутонах.
+ *
+ * Зачем: без неё бас, пэд и арпеджио собираются из степеней лада и звучат
+ * в ОДНОЙ октаве — трек лишён регистрового разделения, и метрика
+ * «разделение регистров» штрафует каждый скомпилированный трек.
+ *
+ * Проверено пробой (tests/spike/transpose-probe.mjs):
+ *   • `.transpose(-24)` ПОСЛЕ `.scale(key)` работает: F3 → F1;
+ *   • ДО `.scale(key)` — ошибка «transpose: not a note», значение игнорируется.
+ * Поэтому транспозиция ставится строго после масштаба.
+ */
+const ROLE_TRANSPOSE = {
+  bass: -24,
+  sub: -24,
+  pad: 0,
+  chords: 0,
+  texture: 0,
+  arp: 12,
+  lead: 12,
+};
+
 /** Трезвучие из ступени лада: d, d+2, d+4. */
 function triad(degree) {
   return [degree, degree + 2, degree + 4];
@@ -394,7 +416,11 @@ export function compile(spec) {
       // .scale(key) — только для партий с нотами. К сэмплам применять
       // лад бессмысленно: движок ругается «Invalid value format for scale».
       const scalePart = SAMPLED.has(role) ? '' : '.scale(key)';
-      const body = `${built.source}${scalePart}${renderChain(chain)}`;
+      // Транспозиция — строго ПОСЛЕ масштаба (см. ROLE_TRANSPOSE).
+      const transpose = !SAMPLED.has(role) && ROLE_TRANSPOSE[role]
+        ? `.transpose(${ROLE_TRANSPOSE[role]})`
+        : '';
+      const body = `${built.source}${scalePart}${transpose}${renderChain(chain)}`;
       constants.push({ name, role, index, body, section, built, chain });
 
       trace.push({
@@ -405,6 +431,7 @@ export function compile(spec) {
         variant: choice.variant || null,
         pattern: built.rhythm || null,
         synth: SAMPLED.has(role) ? 'sample' : roleInfo.synth || null,
+        transpose: ROLE_TRANSPOSE[role] ?? 0,
       });
 
       // Переход: хвост секции — отдельный кусок arrange.

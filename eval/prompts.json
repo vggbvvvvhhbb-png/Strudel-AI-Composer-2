@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "note": "40 промптов: 10 стилей × 4 типа. Типы: simple (простой), mood (настроение), structure (явная структура), tricky (противоречивый или сложный).",
+  "prompts": [
+    { "id": "lofi-simple", "style": "lofi", "type": "simple", "text": "Спокойный lo-fi с пианино и мягким басом, 78 BPM" },
+    { "id": "lofi-mood", "style": "lofi", "type": "mood", "text": "Ностальгический lo-fi: тёплый, уютный, как пыльный винил в дождливой комнате" },
+    { "id": "lofi-structure", "style": "lofi", "type": "structure", "text": "Lo-fi трек: интро 8 тактов, куплет 16, припев 16, аутро 8" },
+    { "id": "lofi-tricky", "style": "lofi", "type": "tricky", "text": "Lo-fi без баса и без ударных — только пианино, пэд и лёгкий шум, но всё равно с развитием" },
+
+    { "id": "techno-simple", "style": "techno", "type": "simple", "text": "Жёсткий техно 132 BPM с киacidным басом" },
+    { "id": "techno-mood", "style": "techno", "type": "mood", "text": "Мрачный подземный техно: тревожно, влажно, медленное нарастание" },
+    { "id": "techno-structure", "style": "techno", "type": "structure", "text": "Техно: интро, билд 16 тактов, дроп 16, бридждаун, второй дроп, аутро" },
+    { "id": "techno-tricky", "style": "techno", "type": "tricky", "text": "Техно, но энергия падает к середине и снова нарастает — без повторяющихся секций" },
+
+    { "id": "house-simple", "style": "house", "type": "simple", "text": "Дом-хаус 122 BPM с качающимся басом и хатами" },
+    { "id": "house-mood", "style": "house", "type": "mood", "text": "Летний хаус на крыше: солнечно, танцевально, без агрессии" },
+    { "id": "house-structure", "style": "house", "type": "structure", "text": "Хаус: вступление, первый куплет 16, припев 16, бридждаун 8, второй припев 16" },
+    { "id": "house-tricky", "style": "house", "type": "tricky", "text": "Хаус с длинным вступлением и очень коротким припевом — контраст должен быть резким" },
+
+    { "id": "ambient-simple", "style": "ambient", "type": "simple", "text": "Эмбиент: медленное пэано и воздух, 64 BPM" },
+    { "id": "ambient-mood", "style": "ambient", "type": "mood", "text": "Медитативный эмбиент на рассвете: прозрачно, тихо, бесконечно" },
+    { "id": "ambient-structure", "style": "ambient", "type": "structure", "text": "Эмбиент: вступление 16 тактов, развитие 16, спад 16, выход 8" },
+    { "id": "ambient-tricky", "style": "ambient", "type": "tricky", "text": "Эмбиент, в котором почти нет атак — но гармония всё равно меняется" },
+
+    { "id": "dnb-simple", "style": "dnb", "type": "simple", "text": "Драм-н-бейс 174 BPM: мощный драм, быстрый бас" },
+    { "id": "dnb-mood", "style": "dnb", "type": "mood", "text": "Нейрофанк: тёмный, сухой, минималистичный драм-н-бейс" },
+    { "id": "dnb-structure", "style": "dnb", "type": "structure", "text": "DNB: интро 8, билд 8, дроп 16, бридждаун 8, второй дроп 16, аутро 8" },
+    { "id": "dnb-tricky", "style": "dnb", "type": "tricky", "text": "DNB с двумя разными дропами: первый тяжёлый, второй — ломаный и неожиданный" },
+
+    { "id": "synthwave-simple", "style": "synthwave", "type": "simple", "text": "Синтвейв 100 BPM: арпеджио, синт-бас, ретро-электро" },
+    { "id": "synthwave-mood", "style": "synthwave", "type": "mood", "text": "Ночной синтвейв: неон, пустая трасса, тоска и скорость" },
+    { "id": "synthwave-structure", "style": "synthwave", "type": "structure", "text": "Синтвейв: интро 8, куплет 16, припев 16, бридждаун 8, припев 16, аутро 8" },
+    { "id": "synthwave-tricky", "style": "synthwave", "type": "tricky", "text": "Синтвейв без ритм-секции: только арпеджио и пад, но с чёткой формой" },
+
+    { "id": "trap-simple", "style": "trap", "type": "simple", "text": "Трэп 140 BPM с 808-басом" },
+    { "id": "trap-mood", "style": "trap", "type": "mood", "text": "Мрачный трэп: много 808, хаоты 16, минимум мелодии" },
+    { "id": "trap-structure", "style": "trap", "type": "structure", "text": "Трэп: интро 8, куплет 8, припев 8, бридждаун 4, припев 8, аутро 4" },
+    { "id": "trap-tricky", "style": "trap", "type": "tricky", "text": "Трэп с неожиданным финалом: последние 8 тактов — только пад и один синк" },
+
+    { "id": "jazz-simple", "style": "jazz", "type": "simple", "text": "Джаз: контрабас, щётки по малому барабану, пиано, 118 BPM" },
+    { "id": "jazz-mood", "style": "jazz", "type": "mood", "text": "Камерный джаз в пустом зале: тихо, грустно, много воздуха" },
+    { "id": "jazz-structure", "style": "jazz", "type": "structure", "text": "Джаз: интро 8, тема 8, импровизация 8, тема 8, аутро 8" },
+    { "id": "jazz-tricky", "style": "jazz", "type": "tricky", "text": "Джаз без малого барабана: только контрабас, пиано и сольный саксофон" },
+
+    { "id": "rock-simple", "style": "rock", "type": "simple", "text": "Рок 128 BPM: гитара, бас, барабаны" },
+    { "id": "rock-mood", "style": "rock", "type": "mood", "text": "Мрачный инди-рок: медленный, тяжёлый, с длинными нотами" },
+    { "id": "rock-structure", "style": "rock", "type": "structure", "text": "Рок: интро 8, куплет 8, припев 8, куплет 8, припев 8, бридж 8, припев 8, аутро 8" },
+    { "id": "rock-tricky", "style": "rock", "type": "tricky", "text": "Рок, где припев тише куплета — перевёрнутая динамика" },
+
+    { "id": "cinematic-simple", "style": "cinematic", "type": "simple", "text": "Кинематографичный трек: пады, суб-бас, медленный рост, 90 BPM" },
+    { "id": "cinematic-mood", "style": "cinematic", "type": "mood", "text": "Тревожное кино: надвигается что-то огромное, всё громче и громче" },
+    { "id": "cinematic-structure", "style": "cinematic", "type": "structure", "text": "Кинотрек: интро 8, билд 16, кульминация 16, спад 8, финал 16, аутро 8" },
+    { "id": "cinematic-tricky", "style": "cinematic", "type": "tricky", "text": "Кинотрек без ударных: только оркестровые тона и напряжение, но с ясной аркой" }
+  ]
+}

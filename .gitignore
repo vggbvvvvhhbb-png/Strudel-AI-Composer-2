@@ -10,3 +10,13 @@ Thumbs.db
 
 # Артефакты проб spike: воспроизводятся командой node tests/spike/probe.mjs
 tests/spike/*.out.txt
+
+# Результаты eval-прогонов: генерируются, в репозитории им не место.
+# Пара для слепого теста тоже собирается на месте: node eval/run.mjs
+eval/results/
+eval/results-dry/
+eval/ab-pairs.json
+eval/ab-results.json
+
+# Корпус кандидатов генерируется: node scripts/build-corpus.mjs
+corpus/candidates/*.js

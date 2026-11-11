@@ -3,6 +3,8 @@
 A web app that turns a text description of music into [Strudel](https://strudel.cc/) code (a live-coding music framework) and plays it in the browser with per-part visualisations.
 
 - **Text → code** — an LLM generates Strudel code with streaming (live typing effect)
+- **Structured composition** — the model picks ideas (harmony, form, roles, energy), a deterministic compiler turns them into code. The track develops over time: sections, harmony changes, transitions
+- **Trace and timeline** — see how the track was built: spec, score, refinement steps; above the editor — section blocks and the energy curve
 - **Music analysis** — the generated code is measured against objective metrics (tempo, density, groove, scale fit, range, register separation) and gets a transparent 0–100 score with a per-criterion breakdown
 - **Feedback loop** — "✨ Improve from analysis": the model rewrites the track against concrete findings ("tempo 90, target 124–142", "too few onsets", "bass and melody in the same octave")
 - **A/B variants** — best-of-N: several variants generated from different angles, each scored, best on top
@@ -16,6 +18,7 @@ A web app that turns a text description of music into [Strudel](https://strudel.
 - **Samples** — `dirt-samples` (bd, sd, hh, cp, 808*, breaks* …) and `shabda:piano`, loaded on demand, names without `.bank(...)`
 
 Details on the analysis and the feedback loop: [docs/MUSIC-ANALYSIS.md](docs/MUSIC-ANALYSIS.md).
+How structured composition works: [docs/COMPOSE.md](docs/COMPOSE.md).
 Russian version of this README: [README.md](README.md).
 
 ## Install
@@ -49,13 +52,26 @@ Keys live on the server only: requests go through the Vite proxy (`/api/generate
 ## Usage
 
 1. Describe the music in the "Command" field and press "▶ Generate"
-2. "🎼 Analyse" — score the track against objective metrics and see what holds it back
-3. "✨ Improve from analysis" — the model rewrites the track against the findings; shows before → after
-4. "🎲 A/B variants" — three variants from different angles, each scored, best on top
-5. "✨ Improve" — describe edits to the current track, review the diff, apply
-6. The "Strudel code" panel is editable: edit by hand and press "▶ Play this code"
-7. Mixer on the right: M mutes a part, S solos it, the slider sets volume
-8. 🎤 next to the prompt records a voice description (needs `GROQ_API_KEY`); nothing is sent automatically
+2. "🧩 Plan and build" — structured mode: the model plans the track (sections,
+   harmony, roles), the compiler assembles the code. The pipeline trace and the
+   section timeline with the energy curve appear
+3. "🎼 Analyse" — score the track against objective metrics and see what holds it back
+4. "✨ Improve from analysis" — the model rewrites the track against the findings; shows before → after
+5. "🎲 A/B variants" — three variants from different angles, each scored, best on top
+6. "✨ Improve" — describe edits to the current track, review the diff, apply
+7. The "Strudel code" panel is editable: edit by hand and press "▶ Play this code"
+8. Mixer on the right: M mutes a part, S solos it, the slider sets volume
+9. 🎤 next to the prompt records a voice description (needs `GROQ_API_KEY`); nothing is sent automatically
+
+### Two generation modes
+
+| Mode | What the model does | What you get |
+|---|---|---|
+| **Structured** (default) | picks ideas: harmony, form, roles, energy, motif | a track with sections that develops; the code is valid by construction |
+| **Free** | writes the whole code itself | maximum freedom, no guarantee of form |
+
+The switch sits under the "Command" field. Both modes go through the same
+validation, and both feed the analysis and improvement panels.
 
 ### Hotkeys
 

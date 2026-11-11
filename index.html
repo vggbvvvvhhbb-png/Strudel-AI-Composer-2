@@ -37,7 +37,25 @@
             <textarea id="prompt-input" rows="3" placeholder="Например: спокойный lo-fi с пианино и мягким басом"></textarea>
             <button id="btn-voice" class="btn voice-btn" type="button" title="Записать голосовое описание" aria-pressed="false" hidden>🎤</button>
           </div>
+          <label class="field-label" for="compose-mode">Режим</label>
+          <select id="compose-mode">
+            <option value="structured" selected>Структурный — план, затем код</option>
+            <option value="free">Свободный — код пишет модель</option>
+          </select>
           <button id="btn-run" class="btn primary wide" type="button">▶ Сгенерировать</button>
+          <button id="btn-compose" class="btn wide" type="button">🧩 Спланировать и собрать</button>
+          <div class="row">
+            <button id="btn-compose-mutate" class="btn" type="button">🎲 Ещё вариант</button>
+            <button id="btn-compose-variants" class="btn ghost" type="button">🧬 Варианты плана</button>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="Ход композиции">
+          <h2 class="panel-title">◆ Ход композиции</h2>
+          <div id="compose-trace" class="compose-trace" aria-live="polite"></div>
+          <h2 class="panel-title">Форма трека</h2>
+          <div id="compose-sections" class="compose-sections"></div>
+          <div id="compose-variants" class="compose-variants"></div>
         </section>
 
         <section class="panel" aria-label="Улучшить трек">
@@ -78,6 +96,23 @@
       <!-- Центр: редактор кода + живая партитура (пианоролл под каждой $PART:) -->
       <section class="col-center">
         <div id="status" class="status" hidden></div>
+
+        <section id="compose-timeline" class="compose-timeline" hidden aria-label="Таймлайн секций">
+          <div class="compose-timeline-head">
+            <span>Таймлайн секций</span>
+            <span id="compose-energy-wrap" class="compose-energy-wrap">
+              <svg
+                id="compose-energy"
+                class="compose-energy-curve"
+                viewBox="0 0 100 32"
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="Кривая энергии трека по секциям"
+              ></svg>
+            </span>
+          </div>
+          <div id="compose-timeline-blocks" class="compose-timeline-blocks"></div>
+        </section>
 
         <label class="field-label" for="code-input">Код Strudel</label>
         <div class="editor-wrap">

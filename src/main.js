@@ -1,9 +1,11 @@
 import './styles/tokens.css';
 import './styles/layout.css';
 import './styles/components.css';
+import './styles/compose.css';
 import './styles/animations.css';
 import { initEditor } from './editor.js';
 import { initUI } from './ui.js';
+import { initCompose } from './compose.js';
 import { initEngine } from './strudel-engine.js';
 import { initHistory } from './history.js';
 import { syncMixer } from './mixer.js';

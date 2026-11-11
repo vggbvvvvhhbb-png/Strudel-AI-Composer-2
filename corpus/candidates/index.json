@@ -1,0 +1,2966 @@
+{
+  "createdAt": "2026-11-11T07:59:08.223Z",
+  "count": 18,
+  "note": "Кандидаты. Few-shot примеры берутся из отмеченных человеком.",
+  "candidates": [
+    {
+      "id": "corpus-01",
+      "style": "jazz",
+      "score": 67.9,
+      "grade": "B",
+      "bars": 48,
+      "sections": 6,
+      "fingerprint": "intro:8:0.3,verse:8:0.55,chorus:8:0.8,verse:8:0.6,chorus:8:0.85,outro:8:0.25|jazz-dorian-ii-v-i|bass+chords+hats+kick+lead+perc+snare|bass:busy,bass:busy,bass:default,bass:default,bass:sparse,bass:sparse,chords:busy,chords:busy,chords:default,chords:default,chords:sparse,hats:busy,hats:busy,hats:default,hats:default,hats:sparse,kick:busy,kick:busy,kick:default,kick:default,kick:sparse,kick:sparse,lead:busy,lead:default,perc:busy,perc:busy,perc:default,perc:default,snare:busy,snare:busy",
+      "code": "// jazz — 118 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → verse(8) → chorus(8) → outro(8)\n// Прогрессия: jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i\n// Зерно: 7\n\nsetCpm(118/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst KICK_0 = s(\"bd ~ ~ bd\")\nconst KICK_1 = s(\"bd ~ bd ~\")\nconst KICK_2 = s(\"bd*4\")\nconst KICK_3 = s(\"bd ~ ~ bd\")\nconst KICK_4 = s(\"bd*4\")\nconst KICK_5 = s(\"bd ~ bd ~\")\nconst HATS_0 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_1 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_3 = s(\"hh*8\")\nconst HATS_4 = s(\"hh*8\")\nconst BASS_0 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst BASS_1 = n(\"<1 4 0>\").scale(key).slow(2).ply(3).s(\"triangle\")\nconst BASS_2 = n(\"<1 4 0>\").scale(key).slow(2).ply(4).s(\"triangle\")\nconst BASS_3 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst BASS_4 = n(\"<1 4 0>\").scale(key).slow(2).ply(4).s(\"triangle\")\nconst BASS_5 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst PERC_1 = s(\"~ perc ~ perc\")\nconst PERC_2 = s(\"~ perc ~ perc\")\nconst PERC_3 = s(\"~ perc ~ perc\")\nconst PERC_4 = s(\"~ perc ~ perc\")\nconst CHORDS_1 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst CHORDS_2 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).ply(2).s(\"piano\").room(0.35)\nconst CHORDS_3 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst CHORDS_4 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).ply(2).s(\"piano\").room(0.35)\nconst CHORDS_5 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst SNARE_2 = s(\"~ sd ~ sd\")\nconst SNARE_4 = s(\"rim ~ rim ~\")\nconst LEAD_3 = n(\"<5 8 4>\").scale(key).slow(2).s(\"organ\").room(0.4)\nconst LEAD_4 = n(\"<5 8 4>\").scale(key).slow(2).s(\"organ\").room(0.4)\n\n// --- партии ---\n$KICK: arrange([8, KICK_0], [8, KICK_1], [8, KICK_2], [8, KICK_3], [8, KICK_4], [8, KICK_5]).gain(0.9)._scope()\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [8, HATS_3], [8, HATS_4]).gain(0.45)._scope()\n$BASS: arrange([8, BASS_0], [8, BASS_1], [8, BASS_2], [8, BASS_3], [8, BASS_4], [8, BASS_5]).gain(0.7)._pianoroll()\n$PERC: arrange([8, PERC_1], [8, PERC_2], [8, PERC_3], [8, PERC_4]).gain(0.5)._scope()\n$CHORDS: arrange([8, CHORDS_1], [8, CHORDS_2], [8, CHORDS_3], [8, CHORDS_4], [8, CHORDS_5]).gain(0.5)._pianoroll()\n$SNARE: arrange([8, SNARE_2], [8, SNARE_4]).gain(0.7)._scope()\n$LEAD: arrange([8, LEAD_3], [8, LEAD_4]).gain(0.55)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "jazz",
+          "bpm": 118,
+          "key": "c:minor",
+          "seed": 7
+        },
+        "harmony": {
+          "progressionId": "jazz-dorian-ii-v-i",
+          "mode": "dorian",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.55,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.8,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              },
+              "lead": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.85,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.25,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-02",
+      "style": "rock",
+      "score": 67.9,
+      "grade": "B",
+      "bars": 64,
+      "sections": 8,
+      "fingerprint": "intro:8:0.4,verse:8:0.55,chorus:8:0.9,verse:8:0.6,chorus:8:0.95,bridge:8:0.5,chorus:8:1,outro:8:0.3|rock-major-i-v-vi-iv|arp+bass+chords+hats+kick+lead+snare|arp:busy,arp:busy,bass:busy,bass:busy,bass:busy,bass:default,bass:default,bass:default,bass:sparse,bass:sparse,chords:busy,chords:busy,chords:busy,chords:default,chords:default,chords:default,chords:sparse,chords:sparse,hats:busy,hats:busy,hats:busy,hats:default,hats:default,hats:default,hats:sparse,hats:sparse,kick:busy,kick:busy,kick:busy,kick:default,kick:default,kick:default,kick:sparse,kick:sparse,lead:busy,lead:busy,lead:busy,snare:busy,snare:busy,snare:busy,snare:default,snare:default",
+      "code": "// rock — 128 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → verse(8) → chorus(8) → bridge(8) → chorus(8) → outro(8)\n// Прогрессия: rock-major-i-v-vi-iv | rock-major-i-v-vi-iv | rock-major-i-v-vi-iv | rock-major-i-v-vi-iv | rock-major-i-v-vi-iv | rock-major-i-v-vi-iv | rock-major-i-v-vi-iv | rock-major-i-v-vi-iv\n// Зерно: 8\n\nsetCpm(128/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst KICK_0 = s(\"bd ~ bd ~\")\nconst KICK_1 = s(\"bd ~ bd ~\")\nconst KICK_2 = s(\"bd*2 bd*2\")\nconst KICK_3 = s(\"bd*2 bd*2\")\nconst KICK_4 = s(\"bd*2 bd*2\")\nconst KICK_5 = s(\"bd*4\")\nconst KICK_5_TAIL = s(\"bd*4\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst KICK_6 = s(\"bd*2 bd*2\")\nconst KICK_7 = s(\"bd ~ bd ~\")\nconst HATS_0 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_1 = s(\"hh*4\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_3 = s(\"hh*8\")\nconst HATS_4 = s(\"hh*8\")\nconst HATS_5 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_5_TAIL = s(\"~ hh ~ hh ~ hh ~ hh\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst HATS_6 = s(\"hh*8\")\nconst HATS_7 = s(\"hh*4\")\nconst BASS_0 = n(\"<0 4 5 3>\").scale(key).slow(2).s(\"sawtooth\")\nconst BASS_1 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_2 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(2).s(\"sawtooth\")\nconst BASS_3 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(2).s(\"sawtooth\")\nconst BASS_4 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_5 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_5_TAIL = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst BASS_6 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(2).s(\"sawtooth\")\nconst BASS_7 = n(\"<0 4 5 3>\").scale(key).slow(2).s(\"sawtooth\")\nconst CHORDS_0 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_1 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_2 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_3 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_4 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_5 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_5_TAIL = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35).gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst CHORDS_6 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_7 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst SNARE_1 = s(\"sd ~ ~ sd\")\nconst SNARE_2 = s(\"sd ~ ~ sd\")\nconst SNARE_3 = s(\"~ sd ~ ~\")\nconst SNARE_4 = s(\"sd ~ ~ sd\")\nconst SNARE_6 = s(\"sd ~ ~ sd\")\nconst LEAD_2 = n(\"<4 8 9 7>\").scale(key).slow(2).s(\"square\").room(0.4)\nconst LEAD_4 = n(\"<4 8 9 7>\").scale(key).slow(2).s(\"square\").room(0.4)\nconst LEAD_6 = n(\"<4 8 9 7>\").scale(key).slow(2).s(\"square\").room(0.4)\nconst ARP_4 = n(\"0 2 4\").fast(2).add(n(\"<0 4 5 3>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst ARP_6 = n(\"0 2 4\").fast(2).add(n(\"<0 4 5 3>\").slow(2)).scale(key).s(\"square\").delay(0.3)\n\n// --- партии ---\n$KICK: arrange([8, KICK_0], [8, KICK_1], [8, KICK_2], [8, KICK_3], [8, KICK_4], [6, KICK_5], [2, KICK_5_TAIL], [8, KICK_6], [8, KICK_7]).gain(0.9)._scope()\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [8, HATS_3], [8, HATS_4], [6, HATS_5], [2, HATS_5_TAIL], [8, HATS_6], [8, HATS_7]).gain(0.45)._scope()\n$BASS: arrange([8, BASS_0], [8, BASS_1], [8, BASS_2], [8, BASS_3], [8, BASS_4], [6, BASS_5], [2, BASS_5_TAIL], [8, BASS_6], [8, BASS_7]).gain(0.7)._pianoroll()\n$CHORDS: arrange([8, CHORDS_0], [8, CHORDS_1], [8, CHORDS_2], [8, CHORDS_3], [8, CHORDS_4], [6, CHORDS_5], [2, CHORDS_5_TAIL], [8, CHORDS_6], [8, CHORDS_7]).gain(0.5)._pianoroll()\n$SNARE: arrange([8, SNARE_1], [8, SNARE_2], [8, SNARE_3], [8, SNARE_4], [8, SNARE_6]).gain(0.7)._scope()\n$LEAD: arrange([8, LEAD_2], [8, LEAD_4], [8, LEAD_6]).gain(0.55)._pianoroll()\n$ARP: arrange([8, ARP_4], [8, ARP_6]).gain(0.4)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "rock",
+          "bpm": 128,
+          "key": "c:minor",
+          "seed": 8
+        },
+        "harmony": {
+          "progressionId": "rock-major-i-v-vi-iv",
+          "mode": "major",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.4,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.55,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "snare": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.9,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "snare": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.95,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "bridge",
+            "bars": 8,
+            "energy": 0.5,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            },
+            "transition": {
+              "into": "chorus",
+              "type": "build"
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 1,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-03",
+      "style": "ambient",
+      "score": 63.5,
+      "grade": "C+",
+      "bars": 32,
+      "sections": 4,
+      "fingerprint": "intro:8:0.15,verse:8:0.35,chorus:8:0.6,outro:8:0.1|ambient-minor-i-vi-iv-v|bass+chords+lead+pad+texture|bass:default,bass:sparse,chords:default,lead:default,pad:default,pad:sparse,pad:sparse,pad:sparse,texture:sparse,texture:sparse",
+      "code": "// ambient — 64 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → outro(8)\n// Прогрессия: ambient-minor-i-vi-iv-v | ambient-minor-i-vi-iv-v | ambient-minor-i-vi-iv-v | ambient-minor-i-vi-iv-v\n// Зерно: 3\n\nsetCpm(64/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst PAD_0 = stack(n(\"<0 5 3 4>\"), n(\"<2 7 5 6>\"), n(\"<4 9 7 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_1 = stack(n(\"<0 5 3 4>\"), n(\"<2 7 5 6>\"), n(\"<4 9 7 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_2 = stack(n(\"<0 5 3 4>\"), n(\"<2 7 5 6>\"), n(\"<4 9 7 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_3 = stack(n(\"<0 5 3 4>\"), n(\"<2 7 5 6>\"), n(\"<4 9 7 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst BASS_1 = n(\"<0 5 3 4>\").scale(key).slow(4).s(\"sine\")\nconst BASS_2 = n(\"<0 5 3 4>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst TEXTURE_1 = n(\"7 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst TEXTURE_3 = n(\"7 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst CHORDS_2 = stack(n(\"<0 5 3 4>\"), n(\"<2 7 5 6>\"), n(\"<4 9 7 8>\")).scale(key).slow(4).ply(2).s(\"piano\").room(0.35)\nconst LEAD_2 = n(\"<4 9 7 8>\").scale(key).slow(4).s(\"triangle\").room(0.4)\n\n// --- партии ---\n$PAD: arrange([8, PAD_0], [8, PAD_1], [8, PAD_2], [8, PAD_3]).gain(0.4)._pianoroll()\n$BASS: arrange([8, BASS_1], [8, BASS_2]).gain(0.7)._pianoroll()\n$TEXTURE: arrange([8, TEXTURE_1], [8, TEXTURE_3]).gain(0.3)._pianoroll()\n$CHORDS: arrange([8, CHORDS_2]).gain(0.5)._pianoroll()\n$LEAD: arrange([8, LEAD_2]).gain(0.55)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "ambient",
+          "bpm": 64,
+          "key": "c:minor",
+          "seed": 3
+        },
+        "harmony": {
+          "progressionId": "ambient-minor-i-vi-iv-v",
+          "mode": "minor",
+          "barsPerChord": 4
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.15,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.35,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "pad": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              },
+              "lead": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.1,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-04",
+      "style": "lofi",
+      "score": 63.4,
+      "grade": "C+",
+      "bars": 40,
+      "sections": 5,
+      "fingerprint": "intro:8:0.3,verse:8:0.5,chorus:8:0.8,verse:8:0.5,outro:8:0.25|lofi-diatonic-ii-v-i|bass+chords+hats+kick+lead+snare|bass:busy,bass:default,bass:default,bass:sparse,bass:sparse,chords:busy,chords:default,chords:default,hats:busy,hats:default,hats:default,hats:sparse,hats:sparse,kick:busy,kick:default,kick:default,kick:sparse,kick:sparse,lead:busy,snare:busy",
+      "code": "// lofi — 78 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → verse(8) → outro(8)\n// Прогрессия: lofi-diatonic-ii-v-i | lofi-diatonic-ii-v-i | lofi-diatonic-ii-v-i | lofi-diatonic-ii-v-i | lofi-diatonic-ii-v-i\n// Зерно: 0\n\nsetCpm(78/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst KICK_0 = s(\"bd ~ ~ ~\")\nconst KICK_1 = s(\"bd ~ bd ~\")\nconst KICK_2 = s(\"bd ~ bd ~\")\nconst KICK_3 = s(\"bd ~ ~ bd\")\nconst KICK_4 = s(\"bd ~ ~ ~\")\nconst HATS_0 = s(\"~ hh ~ hh\")\nconst HATS_1 = s(\"hh*8\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_3 = s(\"hh*8\")\nconst HATS_4 = s(\"~ hh ~ hh\")\nconst BASS_0 = n(\"<1 4 0 0>\").scale(key).slow(2).s(\"triangle\")\nconst BASS_1 = n(\"<1 4 0 0>\").scale(key).slow(2).ply(4).s(\"triangle\")\nconst BASS_2 = n(\"<1 4 0 0>\").scale(key).slow(2).ply(2).s(\"triangle\")\nconst BASS_3 = n(\"<1 4 0 0>\").scale(key).slow(2).ply(2).s(\"triangle\")\nconst BASS_4 = n(\"<1 4 0 0>\").scale(key).slow(2).s(\"triangle\")\nconst CHORDS_1 = stack(n(\"<1 4 0 0>\"), n(\"<3 6 2 2>\"), n(\"<5 8 4 4>\")).scale(key).slow(2).ply(2).s(\"piano\").room(0.35)\nconst CHORDS_2 = stack(n(\"<1 4 0 0>\"), n(\"<3 6 2 2>\"), n(\"<5 8 4 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst CHORDS_3 = stack(n(\"<1 4 0 0>\"), n(\"<3 6 2 2>\"), n(\"<5 8 4 4>\")).scale(key).slow(2).ply(2).s(\"piano\").room(0.35)\nconst SNARE_2 = s(\"sd ~ ~ ~\")\nconst LEAD_2 = n(\"<5 8 4 4>\").scale(key).slow(2).s(\"piano\").room(0.4)\n\n// --- партии ---\n$KICK: arrange([8, KICK_0], [8, KICK_1], [8, KICK_2], [8, KICK_3], [8, KICK_4]).gain(0.9)._scope()\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [8, HATS_3], [8, HATS_4]).gain(0.45)._scope()\n$BASS: arrange([8, BASS_0], [8, BASS_1], [8, BASS_2], [8, BASS_3], [8, BASS_4]).gain(0.7)._pianoroll()\n$CHORDS: arrange([8, CHORDS_1], [8, CHORDS_2], [8, CHORDS_3]).gain(0.5)._pianoroll()\n$SNARE: arrange([8, SNARE_2]).gain(0.7)._scope()\n$LEAD: arrange([8, LEAD_2]).gain(0.55)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "lofi",
+          "bpm": 78,
+          "key": "c:minor",
+          "seed": 0
+        },
+        "harmony": {
+          "progressionId": "lofi-diatonic-ii-v-i",
+          "mode": "major",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.5,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.8,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.5,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.25,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-05",
+      "style": "cinematic",
+      "score": 63.1,
+      "grade": "C+",
+      "bars": 96,
+      "sections": 8,
+      "fingerprint": "intro:8:0.12,build:16:0.45,chorus:16:0.8,breakdown:8:0.2,chorus:16:0.9,build:8:0.6,chorus:16:1,outro:8:0.1|cinematic-lydian-i-ii-iii-iv|arp+bass+chords+hats+kick+lead+pad+perc+snare+sub+texture|arp:busy,arp:busy,bass:busy,bass:busy,bass:busy,bass:default,bass:default,chords:busy,chords:busy,chords:busy,hats:busy,hats:busy,hats:busy,hats:default,kick:busy,kick:busy,kick:busy,kick:default,lead:busy,lead:busy,lead:busy,lead:sparse,pad:busy,pad:busy,pad:busy,pad:default,pad:sparse,pad:sparse,pad:sparse,perc:busy,perc:busy,perc:default,perc:default,snare:busy,snare:busy,sub:busy,sub:busy,sub:busy,sub:default,sub:default,texture:sparse,texture:sparse,texture:sparse",
+      "code": "// cinematic — 90 BPM, c:minor\n// Форма: intro(8) → build(16) → chorus(16) → breakdown(8) → chorus(16) → build(8) → chorus(16) → outro(8)\n// Прогрессия: cinematic-lydian-i-ii-iii-iv | cinematic-lydian-i-ii-iii-iv | cinematic-lydian-i-ii-iii-iv | cinematic-lydian-i-ii-iii-iv | cinematic-lydian-i-ii-iii-iv | cinematic-lydian-i-ii-iii-iv | cinematic-lydian-i-ii-iii-iv | cinematic-lydian-i-ii-iii-iv\n// Зерно: 9\n\nsetCpm(90/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst PAD_0 = stack(n(\"<0 1 2 3>\"), n(\"<2 3 4 5>\"), n(\"<4 5 6 7>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_1 = stack(n(\"<0 1 2 3>\"), n(\"<2 3 4 5>\"), n(\"<4 5 6 7>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_1_TAIL = stack(n(\"<0 1 2 3>\"), n(\"<2 3 4 5>\"), n(\"<4 5 6 7>\")).scale(key).slow(4).s(\"sine\").room(0.5).gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst PAD_2 = stack(n(\"<0 1 2 3>\"), n(\"<2 3 4 5>\"), n(\"<4 5 6 7>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_3 = stack(n(\"<0 1 2 3>\"), n(\"<2 3 4 5>\"), n(\"<4 5 6 7>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_3_TAIL = stack(n(\"<0 1 2 3>\"), n(\"<2 3 4 5>\"), n(\"<4 5 6 7>\")).scale(key).slow(4).s(\"sine\").room(0.5).gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst PAD_4 = stack(n(\"<0 1 2 3>\"), n(\"<2 3 4 5>\"), n(\"<4 5 6 7>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_6 = stack(n(\"<0 1 2 3>\"), n(\"<2 3 4 5>\"), n(\"<4 5 6 7>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_7 = stack(n(\"<0 1 2 3>\"), n(\"<2 3 4 5>\"), n(\"<4 5 6 7>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst TEXTURE_0 = n(\"0 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst TEXTURE_3 = n(\"7 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst TEXTURE_3_TAIL = n(\"7 ~ ~ ~\").scale(key).s(\"sine\").room(0.7).gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst TEXTURE_7 = n(\"7 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst SUB_1 = n(\"<0 1 2 3>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst SUB_1_TAIL = n(\"<0 1 2 3>\").scale(key).slow(4).ply(4).s(\"sine\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst SUB_2 = n(\"<0 1 2 3>\").scale(key).slow(4).ply(2).s(\"sine\")\nconst SUB_4 = n(\"<0 1 2 3>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst SUB_5 = n(\"<0 1 2 3>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst SUB_5_TAIL = n(\"<0 1 2 3>\").scale(key).slow(4).ply(4).s(\"sine\").gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst SUB_6 = n(\"<0 1 2 3>\").scale(key).slow(4).ply(2).s(\"sine\")\nconst BASS_1 = n(\"<0 1 2 3>\").scale(key).slow(4).s(\"sine\")\nconst BASS_1_TAIL = n(\"<0 1 2 3>\").scale(key).slow(4).s(\"sine\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst BASS_2 = n(\"<0 1 2 3>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst BASS_4 = n(\"<0 1 2 3>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst BASS_5 = n(\"<0 1 2 3>\").scale(key).slow(4).s(\"sine\")\nconst BASS_5_TAIL = n(\"<0 1 2 3>\").scale(key).slow(4).s(\"sine\").gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst BASS_6 = n(\"<0 1 2 3>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst PERC_1 = s(\"~ perc ~ perc\")\nconst PERC_1_TAIL = s(\"~ perc ~ perc\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst PERC_4 = s(\"~ perc ~ perc\")\nconst PERC_5 = s(\"~ perc ~ perc\")\nconst PERC_5_TAIL = s(\"~ perc ~ perc\").gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst PERC_6 = s(\"~ perc ~ perc\")\nconst KICK_2 = s(\"bd*4\")\nconst KICK_4 = s(\"bd*4\")\nconst KICK_5 = s(\"bd ~ bd ~\")\nconst KICK_5_TAIL = s(\"bd ~ bd ~\").gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst KICK_6 = s(\"bd*4\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_4 = s(\"hh*8\")\nconst HATS_5 = s(\"hh*8\")\nconst HATS_5_TAIL = s(\"hh*8\").gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst HATS_6 = s(\"hh*8\")\nconst CHORDS_2 = stack(n(\"<0 1 2 3>\"), n(\"<2 3 4 5>\"), n(\"<4 5 6 7>\")).scale(key).slow(4).ply(2).s(\"sine\").room(0.35)\nconst CHORDS_4 = stack(n(\"<0 1 2 3>\"), n(\"<2 3 4 5>\"), n(\"<4 5 6 7>\")).scale(key).slow(4).ply(2).s(\"sine\").room(0.35)\nconst CHORDS_6 = stack(n(\"<0 1 2 3>\"), n(\"<2 3 4 5>\"), n(\"<4 5 6 7>\")).scale(key).slow(4).ply(2).s(\"sine\").room(0.35)\nconst LEAD_2 = n(\"<4 5 6 7>\").scale(key).slow(4).s(\"triangle\").room(0.4)\nconst LEAD_3 = n(\"<4 5 6 7>\").scale(key).slow(4).s(\"triangle\").room(0.4)\nconst LEAD_3_TAIL = n(\"<4 5 6 7>\").scale(key).slow(4).s(\"triangle\").room(0.4).gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst LEAD_4 = n(\"<4 5 6 7>\").scale(key).slow(4).s(\"triangle\").room(0.4)\nconst LEAD_6 = n(\"<4 5 6 7>\").scale(key).slow(4).s(\"triangle\").room(0.4)\nconst SNARE_4 = s(\"~ sd ~ ~\")\nconst SNARE_6 = s(\"~ ~ sd ~\")\nconst ARP_4 = n(\"0 2 4\").fast(2).add(n(\"<0 1 2 3>\").slow(4)).scale(key).s(\"triangle\").delay(0.3)\nconst ARP_6 = n(\"0 2 4\").fast(2).add(n(\"<0 1 2 3>\").slow(4)).scale(key).s(\"triangle\").delay(0.3)\n\n// --- партии ---\n$PAD: arrange([8, PAD_0], [14, PAD_1], [2, PAD_1_TAIL], [16, PAD_2], [6, PAD_3], [2, PAD_3_TAIL], [16, PAD_4], [16, PAD_6], [8, PAD_7]).gain(0.4)._pianoroll()\n$TEXTURE: arrange([8, TEXTURE_0], [6, TEXTURE_3], [2, TEXTURE_3_TAIL], [8, TEXTURE_7]).gain(0.3)._pianoroll()\n$SUB: arrange([14, SUB_1], [2, SUB_1_TAIL], [16, SUB_2], [16, SUB_4], [6, SUB_5], [2, SUB_5_TAIL], [16, SUB_6]).gain(0.75)._pianoroll()\n$BASS: arrange([14, BASS_1], [2, BASS_1_TAIL], [16, BASS_2], [16, BASS_4], [6, BASS_5], [2, BASS_5_TAIL], [16, BASS_6]).gain(0.7)._pianoroll()\n$PERC: arrange([14, PERC_1], [2, PERC_1_TAIL], [16, PERC_4], [6, PERC_5], [2, PERC_5_TAIL], [16, PERC_6]).gain(0.5)._scope()\n$KICK: arrange([16, KICK_2], [16, KICK_4], [6, KICK_5], [2, KICK_5_TAIL], [16, KICK_6]).gain(0.9)._scope()\n$HATS: arrange([16, HATS_2], [16, HATS_4], [6, HATS_5], [2, HATS_5_TAIL], [16, HATS_6]).gain(0.45)._scope()\n$CHORDS: arrange([16, CHORDS_2], [16, CHORDS_4], [16, CHORDS_6]).gain(0.5)._pianoroll()\n$LEAD: arrange([16, LEAD_2], [6, LEAD_3], [2, LEAD_3_TAIL], [16, LEAD_4], [16, LEAD_6]).gain(0.55)._pianoroll()\n$SNARE: arrange([16, SNARE_4], [16, SNARE_6]).gain(0.7)._scope()\n$ARP: arrange([16, ARP_4], [16, ARP_6]).gain(0.4)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "cinematic",
+          "bpm": 90,
+          "key": "c:minor",
+          "seed": 9
+        },
+        "harmony": {
+          "progressionId": "cinematic-lydian-i-ii-iii-iv",
+          "mode": "lydian",
+          "barsPerChord": 4
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.12,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "build",
+            "bars": 16,
+            "energy": 0.45,
+            "roles": {
+              "sub": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "pad": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              }
+            },
+            "transition": {
+              "into": "chorus",
+              "type": "build"
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 16,
+            "energy": 0.8,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "sub": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "pad": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "breakdown",
+            "bars": 8,
+            "energy": 0.2,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "lead": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            },
+            "transition": {
+              "into": "chorus",
+              "type": "riser"
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 16,
+            "energy": 0.9,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "sub": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "pad": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "build",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              },
+              "sub": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              }
+            },
+            "transition": {
+              "into": "chorus",
+              "type": "riser"
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 16,
+            "energy": 1,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "sub": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "pad": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.1,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-06",
+      "style": "synthwave",
+      "score": 58.5,
+      "grade": "C+",
+      "bars": 72,
+      "sections": 6,
+      "fingerprint": "intro:8:0.25,verse:16:0.5,chorus:16:0.9,breakdown:8:0.3,chorus:16:0.95,outro:8:0.2|synthwave-minor-i-iv-v|arp+bass+chords+hats+kick+lead+pad+snare|arp:busy,arp:busy,arp:default,arp:sparse,arp:sparse,bass:busy,bass:busy,bass:default,chords:busy,chords:busy,hats:busy,hats:busy,hats:default,kick:busy,kick:busy,kick:default,lead:busy,lead:busy,lead:sparse,pad:sparse,pad:sparse,pad:sparse,snare:busy,snare:busy",
+      "code": "// synthwave — 100 BPM, c:minor\n// Форма: intro(8) → verse(16) → chorus(16) → breakdown(8) → chorus(16) → outro(8)\n// Прогрессия: synthwave-minor-i-iv-v | synthwave-minor-i-iv-v | synthwave-minor-i-iv-v | synthwave-minor-i-iv-v | synthwave-minor-i-iv-v | synthwave-minor-i-iv-v\n// Зерно: 5\n\nsetCpm(100/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst PAD_0 = stack(n(\"<0 3 4 0>\"), n(\"<2 5 6 2>\"), n(\"<4 7 8 4>\")).scale(key).slow(2).s(\"sawtooth\").room(0.5)\nconst PAD_3 = stack(n(\"<0 3 4 0>\"), n(\"<2 5 6 2>\"), n(\"<4 7 8 4>\")).scale(key).slow(2).s(\"sawtooth\").room(0.5)\nconst PAD_3_TAIL = stack(n(\"<0 3 4 0>\"), n(\"<2 5 6 2>\"), n(\"<4 7 8 4>\")).scale(key).slow(2).s(\"sawtooth\").room(0.5).gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst PAD_5 = stack(n(\"<0 3 4 0>\"), n(\"<2 5 6 2>\"), n(\"<4 7 8 4>\")).scale(key).slow(2).s(\"sawtooth\").room(0.5)\nconst ARP_0 = n(\"0 2 4\").add(n(\"<0 3 4 0>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst ARP_1 = n(\"0 2 4\").fast(2).add(n(\"<0 3 4 0>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst ARP_2 = n(\"0 2 4\").fast(2).add(n(\"<0 3 4 0>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst ARP_4 = n(\"0 2 4\").fast(2).add(n(\"<0 3 4 0>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst ARP_5 = n(\"0 2 4\").add(n(\"<0 3 4 0>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst KICK_1 = s(\"bd ~ bd ~\")\nconst KICK_2 = s(\"bd*4\")\nconst KICK_4 = s(\"bd*4\")\nconst HATS_1 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_4 = s(\"hh*8\")\nconst BASS_1 = n(\"<0 3 4 0>\").scale(key).slow(2).s(\"sawtooth\")\nconst BASS_2 = n(\"<0 3 4 0>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_4 = n(\"<0 3 4 0>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst SNARE_2 = s(\"~ cp ~ cp\")\nconst SNARE_4 = s(\"~ cp ~ cp\")\nconst CHORDS_2 = stack(n(\"<0 3 4 0>\"), n(\"<2 5 6 2>\"), n(\"<4 7 8 4>\")).scale(key).slow(2).ply(2).s(\"sawtooth\").room(0.35)\nconst CHORDS_4 = stack(n(\"<0 3 4 0>\"), n(\"<2 5 6 2>\"), n(\"<4 7 8 4>\")).scale(key).slow(2).ply(2).s(\"sawtooth\").room(0.35)\nconst LEAD_2 = n(\"<4 7 8 4>\").scale(key).slow(2).s(\"sawtooth\").room(0.4)\nconst LEAD_3 = n(\"<4 7 8 4>\").scale(key).slow(2).s(\"sawtooth\").room(0.4)\nconst LEAD_3_TAIL = n(\"<4 7 8 4>\").scale(key).slow(2).s(\"sawtooth\").room(0.4).gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst LEAD_4 = n(\"<4 7 8 4>\").scale(key).slow(2).s(\"sawtooth\").room(0.4)\n\n// --- партии ---\n$PAD: arrange([8, PAD_0], [6, PAD_3], [2, PAD_3_TAIL], [8, PAD_5]).gain(0.4)._pianoroll()\n$ARP: arrange([8, ARP_0], [16, ARP_1], [16, ARP_2], [16, ARP_4], [8, ARP_5]).gain(0.4)._pianoroll()\n$KICK: arrange([16, KICK_1], [16, KICK_2], [16, KICK_4]).gain(0.9)._scope()\n$HATS: arrange([16, HATS_1], [16, HATS_2], [16, HATS_4]).gain(0.45)._scope()\n$BASS: arrange([16, BASS_1], [16, BASS_2], [16, BASS_4]).gain(0.7)._pianoroll()\n$SNARE: arrange([16, SNARE_2], [16, SNARE_4]).gain(0.7)._scope()\n$CHORDS: arrange([16, CHORDS_2], [16, CHORDS_4]).gain(0.5)._pianoroll()\n$LEAD: arrange([16, LEAD_2], [6, LEAD_3], [2, LEAD_3_TAIL], [16, LEAD_4]).gain(0.55)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "synthwave",
+          "bpm": 100,
+          "key": "c:minor",
+          "seed": 5
+        },
+        "harmony": {
+          "progressionId": "synthwave-minor-i-iv-v",
+          "mode": "minor",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.25,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "arp": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 16,
+            "energy": 0.5,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "arp": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 16,
+            "energy": 0.9,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "breakdown",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "lead": {
+                "recipe": "sparse"
+              }
+            },
+            "transition": {
+              "into": "chorus",
+              "type": "build"
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 16,
+            "energy": 0.95,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.2,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "arp": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-07",
+      "style": "trap",
+      "score": 56.4,
+      "grade": "C+",
+      "bars": 40,
+      "sections": 6,
+      "fingerprint": "intro:8:0.3,verse:8:0.5,chorus:8:0.85,breakdown:4:0.25,chorus:8:0.9,outro:4:0.2|trap-minor-pedal|bass+chords+hats+kick+lead+pad+snare+sub+texture|bass:busy,bass:busy,bass:default,chords:busy,chords:busy,hats:busy,hats:busy,hats:default,hats:sparse,hats:sparse,kick:busy,kick:busy,kick:default,lead:busy,pad:sparse,snare:busy,snare:busy,sub:busy,sub:busy,sub:default,sub:sparse,texture:sparse,texture:sparse,texture:sparse",
+      "code": "// trap — 140 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → breakdown(4) → chorus(8) → outro(4)\n// Прогрессия: trap-minor-pedal | trap-minor-pedal | trap-minor-pedal | trap-minor-pedal | trap-minor-pedal | trap-minor-pedal\n// Зерно: 6\n\nsetCpm(140/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst HATS_0 = s(\"hh*8\")\nconst HATS_1 = s(\"hh*16\")\nconst HATS_2 = s(\"hh*16\")\nconst HATS_4 = s(\"hh*16\")\nconst HATS_5 = s(\"hh*8\")\nconst SUB_0 = n(\"<0 0 0 0>\").scale(key).slow(2).s(\"sine\")\nconst SUB_1 = n(\"<0 0 0 0>\").scale(key).slow(2).s(\"sine\")\nconst SUB_2 = n(\"<0 0 0 0>\").scale(key).slow(2).ply(4).s(\"sine\")\nconst SUB_4 = n(\"<0 0 0 0>\").scale(key).slow(2).ply(4).s(\"sine\")\nconst TEXTURE_0 = n(\"0 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst TEXTURE_3 = n(\"7 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst TEXTURE_5 = n(\"7 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst KICK_1 = s(\"bd*2 ~ bd ~ bd\")\nconst KICK_2 = s(\"bd*2 ~ bd ~ bd\")\nconst KICK_4 = s(\"bd*2 ~ bd ~ bd\")\nconst BASS_1 = n(\"<0 0 0 0>\").scale(key).slow(2).ply(2).s(\"sawtooth\")\nconst BASS_2 = n(\"<0 0 0 0>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_4 = n(\"<0 0 0 0>\").scale(key).slow(2).ply(2).s(\"sawtooth\")\nconst SNARE_2 = s(\"sd ~ ~ sd\")\nconst SNARE_4 = s(\"~ sd ~ sd\")\nconst CHORDS_2 = stack(n(\"<0 0 0 0>\"), n(\"<2 2 2 2>\"), n(\"<4 4 4 4>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_4 = stack(n(\"<0 0 0 0>\"), n(\"<2 2 2 2>\"), n(\"<4 4 4 4>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst PAD_3 = stack(n(\"<0 0 0 0>\"), n(\"<2 2 2 2>\"), n(\"<4 4 4 4>\")).scale(key).slow(2).s(\"sine\").room(0.5)\nconst LEAD_4 = n(\"<4 4 4 4>\").scale(key).slow(2).s(\"square\").room(0.4)\n\n// --- партии ---\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [8, HATS_4], [4, HATS_5]).gain(0.45)._scope()\n$SUB: arrange([8, SUB_0], [8, SUB_1], [8, SUB_2], [8, SUB_4]).gain(0.75)._pianoroll()\n$TEXTURE: arrange([8, TEXTURE_0], [4, TEXTURE_3], [4, TEXTURE_5]).gain(0.3)._pianoroll()\n$KICK: arrange([8, KICK_1], [8, KICK_2], [8, KICK_4]).gain(0.9)._scope()\n$BASS: arrange([8, BASS_1], [8, BASS_2], [8, BASS_4]).gain(0.7)._pianoroll()\n$SNARE: arrange([8, SNARE_2], [8, SNARE_4]).gain(0.7)._scope()\n$CHORDS: arrange([8, CHORDS_2], [8, CHORDS_4]).gain(0.5)._pianoroll()\n$PAD: arrange([4, PAD_3]).gain(0.4)._pianoroll()\n$LEAD: arrange([8, LEAD_4]).gain(0.55)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "trap",
+          "bpm": 140,
+          "key": "c:minor",
+          "seed": 6
+        },
+        "harmony": {
+          "progressionId": "trap-minor-pedal",
+          "mode": "minor",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "hats": {
+                "recipe": "sparse"
+              },
+              "sub": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.5,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "sub": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.85,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "sub": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "breakdown",
+            "bars": 4,
+            "energy": 0.25,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.9,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "sub": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 4,
+            "energy": 0.2,
+            "roles": {
+              "hats": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-08",
+      "style": "rock",
+      "score": 67.9,
+      "grade": "B",
+      "bars": 64,
+      "sections": 8,
+      "fingerprint": "intro:8:0.4,verse:8:0.55,chorus:8:0.9,verse:8:0.6,chorus:8:0.95,bridge:8:0.5,chorus:8:1,outro:8:0.3|rock-minor-i-v-vi-iv|arp+bass+chords+hats+kick+lead+snare|arp:busy,arp:busy,bass:busy,bass:busy,bass:busy,bass:default,bass:default,bass:default,bass:sparse,bass:sparse,chords:busy,chords:busy,chords:busy,chords:default,chords:default,chords:default,chords:sparse,chords:sparse,hats:busy,hats:busy,hats:busy,hats:default,hats:default,hats:default,hats:sparse,hats:sparse,kick:busy,kick:busy,kick:busy,kick:default,kick:default,kick:default,kick:sparse,kick:sparse,lead:busy,lead:busy,lead:busy,snare:busy,snare:busy,snare:busy,snare:default,snare:default",
+      "code": "// rock — 128 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → verse(8) → chorus(8) → bridge(8) → chorus(8) → outro(8)\n// Прогрессия: rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv\n// Зерно: 18\n\nsetCpm(128/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst KICK_0 = s(\"bd ~ bd ~\")\nconst KICK_1 = s(\"bd ~ bd ~\")\nconst KICK_2 = s(\"bd*4\")\nconst KICK_3 = s(\"bd*2 bd*2\")\nconst KICK_4 = s(\"bd*4\")\nconst KICK_5 = s(\"bd*4\")\nconst KICK_5_TAIL = s(\"bd*4\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst KICK_6 = s(\"bd*4\")\nconst KICK_7 = s(\"bd ~ bd ~\")\nconst HATS_0 = s(\"hh*4\")\nconst HATS_1 = s(\"hh*4\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_3 = s(\"hh*8\")\nconst HATS_4 = s(\"hh*8\")\nconst HATS_5 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_5_TAIL = s(\"~ hh ~ hh ~ hh ~ hh\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst HATS_6 = s(\"hh*8\")\nconst HATS_7 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst BASS_0 = n(\"<0 4 5 3>\").scale(key).slow(2).s(\"sawtooth\")\nconst BASS_1 = n(\"<0 4 5 3>\").scale(key).slow(2).s(\"sawtooth\")\nconst BASS_2 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_3 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(3).s(\"sawtooth\")\nconst BASS_4 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_5 = n(\"<0 4 5 3>\").scale(key).slow(2).s(\"sawtooth\")\nconst BASS_5_TAIL = n(\"<0 4 5 3>\").scale(key).slow(2).s(\"sawtooth\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst BASS_6 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_7 = n(\"<0 4 5 3>\").scale(key).slow(2).s(\"sawtooth\")\nconst CHORDS_0 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_1 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_2 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_3 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_4 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_5 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_5_TAIL = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35).gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst CHORDS_6 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_7 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst SNARE_1 = s(\"~ sd ~ sd\")\nconst SNARE_2 = s(\"~ sd ~ sd\")\nconst SNARE_3 = s(\"sd ~ ~ sd\")\nconst SNARE_4 = s(\"~ sd ~ sd\")\nconst SNARE_6 = s(\"~ sd ~ sd\")\nconst LEAD_2 = n(\"<4 8 9 7>\").scale(key).slow(2).s(\"square\").room(0.4)\nconst LEAD_4 = n(\"<4 8 9 7>\").scale(key).slow(2).s(\"square\").room(0.4)\nconst LEAD_6 = n(\"<4 8 9 7>\").scale(key).slow(2).s(\"square\").room(0.4)\nconst ARP_4 = n(\"0 2 4\").fast(2).add(n(\"<0 4 5 3>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst ARP_6 = n(\"0 2 4\").fast(2).add(n(\"<0 4 5 3>\").slow(2)).scale(key).s(\"square\").delay(0.3)\n\n// --- партии ---\n$KICK: arrange([8, KICK_0], [8, KICK_1], [8, KICK_2], [8, KICK_3], [8, KICK_4], [6, KICK_5], [2, KICK_5_TAIL], [8, KICK_6], [8, KICK_7]).gain(0.9)._scope()\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [8, HATS_3], [8, HATS_4], [6, HATS_5], [2, HATS_5_TAIL], [8, HATS_6], [8, HATS_7]).gain(0.45)._scope()\n$BASS: arrange([8, BASS_0], [8, BASS_1], [8, BASS_2], [8, BASS_3], [8, BASS_4], [6, BASS_5], [2, BASS_5_TAIL], [8, BASS_6], [8, BASS_7]).gain(0.7)._pianoroll()\n$CHORDS: arrange([8, CHORDS_0], [8, CHORDS_1], [8, CHORDS_2], [8, CHORDS_3], [8, CHORDS_4], [6, CHORDS_5], [2, CHORDS_5_TAIL], [8, CHORDS_6], [8, CHORDS_7]).gain(0.5)._pianoroll()\n$SNARE: arrange([8, SNARE_1], [8, SNARE_2], [8, SNARE_3], [8, SNARE_4], [8, SNARE_6]).gain(0.7)._scope()\n$LEAD: arrange([8, LEAD_2], [8, LEAD_4], [8, LEAD_6]).gain(0.55)._pianoroll()\n$ARP: arrange([8, ARP_4], [8, ARP_6]).gain(0.4)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "rock",
+          "bpm": 128,
+          "key": "c:minor",
+          "seed": 18
+        },
+        "harmony": {
+          "progressionId": "rock-minor-i-v-vi-iv",
+          "mode": "minor",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.4,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.55,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "snare": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.9,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "snare": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.95,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "bridge",
+            "bars": 8,
+            "energy": 0.5,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            },
+            "transition": {
+              "into": "chorus",
+              "type": "build"
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 1,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-09",
+      "style": "ambient",
+      "score": 63.5,
+      "grade": "C+",
+      "bars": 32,
+      "sections": 4,
+      "fingerprint": "intro:8:0.15,verse:8:0.35,chorus:8:0.6,outro:8:0.1|ambient-lydian-i-ii-iii|bass+chords+lead+pad+texture|bass:default,bass:sparse,chords:default,lead:default,pad:default,pad:sparse,pad:sparse,pad:sparse,texture:sparse,texture:sparse",
+      "code": "// ambient — 64 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → outro(8)\n// Прогрессия: ambient-lydian-i-ii-iii | ambient-lydian-i-ii-iii | ambient-lydian-i-ii-iii | ambient-lydian-i-ii-iii\n// Зерно: 13\n\nsetCpm(64/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst PAD_0 = stack(n(\"<0 1 2 4>\"), n(\"<2 3 4 6>\"), n(\"<4 5 6 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_1 = stack(n(\"<0 1 2 4>\"), n(\"<2 3 4 6>\"), n(\"<4 5 6 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_2 = stack(n(\"<0 1 2 4>\"), n(\"<2 3 4 6>\"), n(\"<4 5 6 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_3 = stack(n(\"<0 1 2 4>\"), n(\"<2 3 4 6>\"), n(\"<4 5 6 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst BASS_1 = n(\"<0 1 2 4>\").scale(key).slow(4).s(\"sine\")\nconst BASS_2 = n(\"<0 1 2 4>\").scale(key).slow(4).ply(3).s(\"sine\")\nconst TEXTURE_1 = n(\"0 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst TEXTURE_3 = n(\"0 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst CHORDS_2 = stack(n(\"<0 1 2 4>\"), n(\"<2 3 4 6>\"), n(\"<4 5 6 8>\")).scale(key).slow(4).s(\"piano\").room(0.35)\nconst LEAD_2 = n(\"<4 5 6 8>\").scale(key).slow(4).s(\"triangle\").room(0.4)\n\n// --- партии ---\n$PAD: arrange([8, PAD_0], [8, PAD_1], [8, PAD_2], [8, PAD_3]).gain(0.4)._pianoroll()\n$BASS: arrange([8, BASS_1], [8, BASS_2]).gain(0.7)._pianoroll()\n$TEXTURE: arrange([8, TEXTURE_1], [8, TEXTURE_3]).gain(0.3)._pianoroll()\n$CHORDS: arrange([8, CHORDS_2]).gain(0.5)._pianoroll()\n$LEAD: arrange([8, LEAD_2]).gain(0.55)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "ambient",
+          "bpm": 64,
+          "key": "c:minor",
+          "seed": 13
+        },
+        "harmony": {
+          "progressionId": "ambient-lydian-i-ii-iii",
+          "mode": "lydian",
+          "barsPerChord": 4
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.15,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.35,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "pad": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              },
+              "lead": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.1,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-10",
+      "style": "cinematic",
+      "score": 63.1,
+      "grade": "C+",
+      "bars": 96,
+      "sections": 8,
+      "fingerprint": "intro:8:0.12,build:16:0.45,chorus:16:0.8,breakdown:8:0.2,chorus:16:0.9,build:8:0.6,chorus:16:1,outro:8:0.1|cinematic-minor-pedal-climb|arp+bass+chords+hats+kick+lead+pad+perc+snare+sub+texture|arp:busy,arp:busy,bass:busy,bass:busy,bass:busy,bass:default,bass:default,chords:busy,chords:busy,chords:busy,hats:busy,hats:busy,hats:busy,hats:default,kick:busy,kick:busy,kick:busy,kick:default,lead:busy,lead:busy,lead:busy,lead:sparse,pad:busy,pad:busy,pad:busy,pad:default,pad:sparse,pad:sparse,pad:sparse,perc:busy,perc:busy,perc:default,perc:default,snare:busy,snare:busy,sub:busy,sub:busy,sub:busy,sub:default,sub:default,texture:sparse,texture:sparse,texture:sparse",
+      "code": "// cinematic — 90 BPM, c:minor\n// Форма: intro(8) → build(16) → chorus(16) → breakdown(8) → chorus(16) → build(8) → chorus(16) → outro(8)\n// Прогрессия: cinematic-minor-pedal-climb | cinematic-minor-pedal-climb | cinematic-minor-pedal-climb | cinematic-minor-pedal-climb | cinematic-minor-pedal-climb | cinematic-minor-pedal-climb | cinematic-minor-pedal-climb | cinematic-minor-pedal-climb\n// Зерно: 19\n\nsetCpm(90/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst PAD_0 = stack(n(\"<0 0 4 4>\"), n(\"<2 2 6 6>\"), n(\"<4 4 8 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_1 = stack(n(\"<0 0 4 4>\"), n(\"<2 2 6 6>\"), n(\"<4 4 8 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_1_TAIL = stack(n(\"<0 0 4 4>\"), n(\"<2 2 6 6>\"), n(\"<4 4 8 8>\")).scale(key).slow(4).s(\"sine\").room(0.5).gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst PAD_2 = stack(n(\"<0 0 4 4>\"), n(\"<2 2 6 6>\"), n(\"<4 4 8 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_3 = stack(n(\"<0 0 4 4>\"), n(\"<2 2 6 6>\"), n(\"<4 4 8 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_3_TAIL = stack(n(\"<0 0 4 4>\"), n(\"<2 2 6 6>\"), n(\"<4 4 8 8>\")).scale(key).slow(4).s(\"sine\").room(0.5).gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst PAD_4 = stack(n(\"<0 0 4 4>\"), n(\"<2 2 6 6>\"), n(\"<4 4 8 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_6 = stack(n(\"<0 0 4 4>\"), n(\"<2 2 6 6>\"), n(\"<4 4 8 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst PAD_7 = stack(n(\"<0 0 4 4>\"), n(\"<2 2 6 6>\"), n(\"<4 4 8 8>\")).scale(key).slow(4).s(\"sine\").room(0.5)\nconst TEXTURE_0 = n(\"7 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst TEXTURE_3 = n(\"0 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst TEXTURE_3_TAIL = n(\"0 ~ ~ ~\").scale(key).s(\"sine\").room(0.7).gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst TEXTURE_7 = n(\"0 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst SUB_1 = n(\"<0 0 4 4>\").scale(key).slow(4).ply(3).s(\"sine\")\nconst SUB_1_TAIL = n(\"<0 0 4 4>\").scale(key).slow(4).ply(3).s(\"sine\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst SUB_2 = n(\"<0 0 4 4>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst SUB_4 = n(\"<0 0 4 4>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst SUB_5 = n(\"<0 0 4 4>\").scale(key).slow(4).ply(3).s(\"sine\")\nconst SUB_5_TAIL = n(\"<0 0 4 4>\").scale(key).slow(4).ply(3).s(\"sine\").gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst SUB_6 = n(\"<0 0 4 4>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst BASS_1 = n(\"<0 0 4 4>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst BASS_1_TAIL = n(\"<0 0 4 4>\").scale(key).slow(4).ply(4).s(\"sine\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst BASS_2 = n(\"<0 0 4 4>\").scale(key).slow(4).ply(2).s(\"sine\")\nconst BASS_4 = n(\"<0 0 4 4>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst BASS_5 = n(\"<0 0 4 4>\").scale(key).slow(4).ply(4).s(\"sine\")\nconst BASS_5_TAIL = n(\"<0 0 4 4>\").scale(key).slow(4).ply(4).s(\"sine\").gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst BASS_6 = n(\"<0 0 4 4>\").scale(key).slow(4).ply(2).s(\"sine\")\nconst PERC_1 = s(\"perc ~ ~ ~\")\nconst PERC_1_TAIL = s(\"perc ~ ~ ~\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst PERC_4 = s(\"~ perc ~ perc\")\nconst PERC_5 = s(\"perc ~ ~ ~\")\nconst PERC_5_TAIL = s(\"perc ~ ~ ~\").gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst PERC_6 = s(\"~ perc ~ perc\")\nconst KICK_2 = s(\"bd*4\")\nconst KICK_4 = s(\"bd*4\")\nconst KICK_5 = s(\"bd ~ ~ bd\")\nconst KICK_5_TAIL = s(\"bd ~ ~ bd\").gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst KICK_6 = s(\"bd*4\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_4 = s(\"hh*8\")\nconst HATS_5 = s(\"hh*8\")\nconst HATS_5_TAIL = s(\"hh*8\").gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst HATS_6 = s(\"hh*8\")\nconst CHORDS_2 = stack(n(\"<0 0 4 4>\"), n(\"<2 2 6 6>\"), n(\"<4 4 8 8>\")).scale(key).slow(4).s(\"sine\").room(0.35)\nconst CHORDS_4 = stack(n(\"<0 0 4 4>\"), n(\"<2 2 6 6>\"), n(\"<4 4 8 8>\")).scale(key).slow(4).s(\"sine\").room(0.35)\nconst CHORDS_6 = stack(n(\"<0 0 4 4>\"), n(\"<2 2 6 6>\"), n(\"<4 4 8 8>\")).scale(key).slow(4).s(\"sine\").room(0.35)\nconst LEAD_2 = n(\"<4 4 8 8>\").scale(key).slow(4).s(\"triangle\").room(0.4)\nconst LEAD_3 = n(\"<4 4 8 8>\").scale(key).slow(4).s(\"triangle\").room(0.4)\nconst LEAD_3_TAIL = n(\"<4 4 8 8>\").scale(key).slow(4).s(\"triangle\").room(0.4).gain(saw.slow(2).range(0.2, 0.95)).lpf(saw.slow(2).range(300, 7000))\nconst LEAD_4 = n(\"<4 4 8 8>\").scale(key).slow(4).s(\"triangle\").room(0.4)\nconst LEAD_6 = n(\"<4 4 8 8>\").scale(key).slow(4).s(\"triangle\").room(0.4)\nconst SNARE_4 = s(\"sd ~ ~ ~\")\nconst SNARE_6 = s(\"~ sd ~ ~\")\nconst ARP_4 = n(\"0 2 4\").fast(2).add(n(\"<0 0 4 4>\").slow(4)).scale(key).s(\"triangle\").delay(0.3)\nconst ARP_6 = n(\"0 2 4\").fast(2).add(n(\"<0 0 4 4>\").slow(4)).scale(key).s(\"triangle\").delay(0.3)\n\n// --- партии ---\n$PAD: arrange([8, PAD_0], [14, PAD_1], [2, PAD_1_TAIL], [16, PAD_2], [6, PAD_3], [2, PAD_3_TAIL], [16, PAD_4], [16, PAD_6], [8, PAD_7]).gain(0.4)._pianoroll()\n$TEXTURE: arrange([8, TEXTURE_0], [6, TEXTURE_3], [2, TEXTURE_3_TAIL], [8, TEXTURE_7]).gain(0.3)._pianoroll()\n$SUB: arrange([14, SUB_1], [2, SUB_1_TAIL], [16, SUB_2], [16, SUB_4], [6, SUB_5], [2, SUB_5_TAIL], [16, SUB_6]).gain(0.75)._pianoroll()\n$BASS: arrange([14, BASS_1], [2, BASS_1_TAIL], [16, BASS_2], [16, BASS_4], [6, BASS_5], [2, BASS_5_TAIL], [16, BASS_6]).gain(0.7)._pianoroll()\n$PERC: arrange([14, PERC_1], [2, PERC_1_TAIL], [16, PERC_4], [6, PERC_5], [2, PERC_5_TAIL], [16, PERC_6]).gain(0.5)._scope()\n$KICK: arrange([16, KICK_2], [16, KICK_4], [6, KICK_5], [2, KICK_5_TAIL], [16, KICK_6]).gain(0.9)._scope()\n$HATS: arrange([16, HATS_2], [16, HATS_4], [6, HATS_5], [2, HATS_5_TAIL], [16, HATS_6]).gain(0.45)._scope()\n$CHORDS: arrange([16, CHORDS_2], [16, CHORDS_4], [16, CHORDS_6]).gain(0.5)._pianoroll()\n$LEAD: arrange([16, LEAD_2], [6, LEAD_3], [2, LEAD_3_TAIL], [16, LEAD_4], [16, LEAD_6]).gain(0.55)._pianoroll()\n$SNARE: arrange([16, SNARE_4], [16, SNARE_6]).gain(0.7)._scope()\n$ARP: arrange([16, ARP_4], [16, ARP_6]).gain(0.4)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "cinematic",
+          "bpm": 90,
+          "key": "c:minor",
+          "seed": 19
+        },
+        "harmony": {
+          "progressionId": "cinematic-minor-pedal-climb",
+          "mode": "minor",
+          "barsPerChord": 4
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.12,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "build",
+            "bars": 16,
+            "energy": 0.45,
+            "roles": {
+              "sub": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "pad": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              }
+            },
+            "transition": {
+              "into": "chorus",
+              "type": "build"
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 16,
+            "energy": 0.8,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "sub": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "pad": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "breakdown",
+            "bars": 8,
+            "energy": 0.2,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "lead": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            },
+            "transition": {
+              "into": "chorus",
+              "type": "riser"
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 16,
+            "energy": 0.9,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "sub": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "pad": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "build",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              },
+              "sub": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              }
+            },
+            "transition": {
+              "into": "chorus",
+              "type": "riser"
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 16,
+            "energy": 1,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "sub": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "pad": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.1,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-11",
+      "style": "synthwave",
+      "score": 58.5,
+      "grade": "C+",
+      "bars": 72,
+      "sections": 6,
+      "fingerprint": "intro:8:0.25,verse:16:0.5,chorus:16:0.9,breakdown:8:0.3,chorus:16:0.95,outro:8:0.2|synthwave-minor-pedal-riff|arp+bass+chords+hats+kick+lead+pad+snare|arp:busy,arp:busy,arp:default,arp:sparse,arp:sparse,bass:busy,bass:busy,bass:default,chords:busy,chords:busy,hats:busy,hats:busy,hats:default,kick:busy,kick:busy,kick:default,lead:busy,lead:busy,lead:sparse,pad:sparse,pad:sparse,pad:sparse,snare:busy,snare:busy",
+      "code": "// synthwave — 100 BPM, c:minor\n// Форма: intro(8) → verse(16) → chorus(16) → breakdown(8) → chorus(16) → outro(8)\n// Прогрессия: synthwave-minor-pedal-riff | synthwave-minor-pedal-riff | synthwave-minor-pedal-riff | synthwave-minor-pedal-riff | synthwave-minor-pedal-riff | synthwave-minor-pedal-riff\n// Зерно: 15\n\nsetCpm(100/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst PAD_0 = stack(n(\"<0 0 5 5>\"), n(\"<2 2 7 7>\"), n(\"<4 4 9 9>\")).scale(key).slow(2).s(\"sawtooth\").room(0.5)\nconst PAD_3 = stack(n(\"<0 0 5 5>\"), n(\"<2 2 7 7>\"), n(\"<4 4 9 9>\")).scale(key).slow(2).s(\"sawtooth\").room(0.5)\nconst PAD_3_TAIL = stack(n(\"<0 0 5 5>\"), n(\"<2 2 7 7>\"), n(\"<4 4 9 9>\")).scale(key).slow(2).s(\"sawtooth\").room(0.5).gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst PAD_5 = stack(n(\"<0 0 5 5>\"), n(\"<2 2 7 7>\"), n(\"<4 4 9 9>\")).scale(key).slow(2).s(\"sawtooth\").room(0.5)\nconst ARP_0 = n(\"0 2 4\").add(n(\"<0 0 5 5>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst ARP_1 = n(\"0 2 4\").add(n(\"<0 0 5 5>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst ARP_2 = n(\"0 2 4\").fast(2).add(n(\"<0 0 5 5>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst ARP_4 = n(\"0 2 4\").fast(2).add(n(\"<0 0 5 5>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst ARP_5 = n(\"0 2 4\").fast(2).add(n(\"<0 0 5 5>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst KICK_1 = s(\"bd*4\")\nconst KICK_2 = s(\"bd*4\")\nconst KICK_4 = s(\"bd*4\")\nconst HATS_1 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_4 = s(\"hh*8\")\nconst BASS_1 = n(\"<0 0 5 5>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_2 = n(\"<0 0 5 5>\").scale(key).slow(2).ply(2).s(\"sawtooth\")\nconst BASS_4 = n(\"<0 0 5 5>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst SNARE_2 = s(\"sd ~ ~ sd\")\nconst SNARE_4 = s(\"sd ~ ~ sd\")\nconst CHORDS_2 = stack(n(\"<0 0 5 5>\"), n(\"<2 2 7 7>\"), n(\"<4 4 9 9>\")).scale(key).slow(2).s(\"sawtooth\").room(0.35)\nconst CHORDS_4 = stack(n(\"<0 0 5 5>\"), n(\"<2 2 7 7>\"), n(\"<4 4 9 9>\")).scale(key).slow(2).s(\"sawtooth\").room(0.35)\nconst LEAD_2 = n(\"<4 4 9 9>\").scale(key).slow(2).s(\"sawtooth\").room(0.4)\nconst LEAD_3 = n(\"<4 4 9 9>\").scale(key).slow(2).s(\"sawtooth\").room(0.4)\nconst LEAD_3_TAIL = n(\"<4 4 9 9>\").scale(key).slow(2).s(\"sawtooth\").room(0.4).gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst LEAD_4 = n(\"<4 4 9 9>\").scale(key).slow(2).s(\"sawtooth\").room(0.4)\n\n// --- партии ---\n$PAD: arrange([8, PAD_0], [6, PAD_3], [2, PAD_3_TAIL], [8, PAD_5]).gain(0.4)._pianoroll()\n$ARP: arrange([8, ARP_0], [16, ARP_1], [16, ARP_2], [16, ARP_4], [8, ARP_5]).gain(0.4)._pianoroll()\n$KICK: arrange([16, KICK_1], [16, KICK_2], [16, KICK_4]).gain(0.9)._scope()\n$HATS: arrange([16, HATS_1], [16, HATS_2], [16, HATS_4]).gain(0.45)._scope()\n$BASS: arrange([16, BASS_1], [16, BASS_2], [16, BASS_4]).gain(0.7)._pianoroll()\n$SNARE: arrange([16, SNARE_2], [16, SNARE_4]).gain(0.7)._scope()\n$CHORDS: arrange([16, CHORDS_2], [16, CHORDS_4]).gain(0.5)._pianoroll()\n$LEAD: arrange([16, LEAD_2], [6, LEAD_3], [2, LEAD_3_TAIL], [16, LEAD_4]).gain(0.55)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "synthwave",
+          "bpm": 100,
+          "key": "c:minor",
+          "seed": 15
+        },
+        "harmony": {
+          "progressionId": "synthwave-minor-pedal-riff",
+          "mode": "minor",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.25,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "arp": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 16,
+            "energy": 0.5,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "arp": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 16,
+            "energy": 0.9,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "breakdown",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "lead": {
+                "recipe": "sparse"
+              }
+            },
+            "transition": {
+              "into": "chorus",
+              "type": "build"
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 16,
+            "energy": 0.95,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.2,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "arp": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-12",
+      "style": "trap",
+      "score": 56.4,
+      "grade": "C+",
+      "bars": 40,
+      "sections": 6,
+      "fingerprint": "intro:8:0.3,verse:8:0.5,chorus:8:0.85,breakdown:4:0.25,chorus:8:0.9,outro:4:0.2|trap-phrygian-i-bII|bass+chords+hats+kick+lead+pad+snare+sub+texture|bass:busy,bass:busy,bass:default,chords:busy,chords:busy,hats:busy,hats:busy,hats:default,hats:sparse,hats:sparse,kick:busy,kick:busy,kick:default,lead:busy,pad:sparse,snare:busy,snare:busy,sub:busy,sub:busy,sub:default,sub:sparse,texture:sparse,texture:sparse,texture:sparse",
+      "code": "// trap — 140 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → breakdown(4) → chorus(8) → outro(4)\n// Прогрессия: trap-phrygian-i-bII | trap-phrygian-i-bII | trap-phrygian-i-bII | trap-phrygian-i-bII | trap-phrygian-i-bII | trap-phrygian-i-bII\n// Зерно: 16\n\nsetCpm(140/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst HATS_0 = s(\"hh*8\")\nconst HATS_1 = s(\"hh*8\")\nconst HATS_2 = s(\"[hh*3 hh]*4\")\nconst HATS_4 = s(\"[hh*3 hh]*4\")\nconst HATS_5 = s(\"hh*8\")\nconst SUB_0 = n(\"<0 1 0 6>\").scale(key).slow(2).s(\"sine\")\nconst SUB_1 = n(\"<0 1 0 6>\").scale(key).slow(2).ply(2).s(\"sine\")\nconst SUB_2 = n(\"<0 1 0 6>\").scale(key).slow(2).ply(4).s(\"sine\")\nconst SUB_4 = n(\"<0 1 0 6>\").scale(key).slow(2).ply(2).s(\"sine\")\nconst TEXTURE_0 = n(\"7 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst TEXTURE_3 = n(\"0 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst TEXTURE_5 = n(\"0 ~ ~ ~\").scale(key).s(\"sine\").room(0.7)\nconst KICK_1 = s(\"bd ~ ~ bd ~ ~ bd ~\")\nconst KICK_2 = s(\"bd*2 ~ bd ~ bd\")\nconst KICK_4 = s(\"bd*2 ~ bd ~ bd\")\nconst BASS_1 = n(\"<0 1 0 6>\").scale(key).slow(2).ply(3).s(\"sawtooth\")\nconst BASS_2 = n(\"<0 1 0 6>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_4 = n(\"<0 1 0 6>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst SNARE_2 = s(\"sd ~ ~ sd\")\nconst SNARE_4 = s(\"~ sd ~ sd\")\nconst CHORDS_2 = stack(n(\"<0 1 0 6>\"), n(\"<2 3 2 8>\"), n(\"<4 5 4 10>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_4 = stack(n(\"<0 1 0 6>\"), n(\"<2 3 2 8>\"), n(\"<4 5 4 10>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst PAD_3 = stack(n(\"<0 1 0 6>\"), n(\"<2 3 2 8>\"), n(\"<4 5 4 10>\")).scale(key).slow(2).s(\"sine\").room(0.5)\nconst LEAD_4 = n(\"<4 5 4 10>\").scale(key).slow(2).s(\"square\").room(0.4)\n\n// --- партии ---\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [8, HATS_4], [4, HATS_5]).gain(0.45)._scope()\n$SUB: arrange([8, SUB_0], [8, SUB_1], [8, SUB_2], [8, SUB_4]).gain(0.75)._pianoroll()\n$TEXTURE: arrange([8, TEXTURE_0], [4, TEXTURE_3], [4, TEXTURE_5]).gain(0.3)._pianoroll()\n$KICK: arrange([8, KICK_1], [8, KICK_2], [8, KICK_4]).gain(0.9)._scope()\n$BASS: arrange([8, BASS_1], [8, BASS_2], [8, BASS_4]).gain(0.7)._pianoroll()\n$SNARE: arrange([8, SNARE_2], [8, SNARE_4]).gain(0.7)._scope()\n$CHORDS: arrange([8, CHORDS_2], [8, CHORDS_4]).gain(0.5)._pianoroll()\n$PAD: arrange([4, PAD_3]).gain(0.4)._pianoroll()\n$LEAD: arrange([8, LEAD_4]).gain(0.55)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "trap",
+          "bpm": 140,
+          "key": "c:minor",
+          "seed": 16
+        },
+        "harmony": {
+          "progressionId": "trap-phrygian-i-bII",
+          "mode": "phrygian",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "hats": {
+                "recipe": "sparse"
+              },
+              "sub": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.5,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "sub": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.85,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "sub": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "breakdown",
+            "bars": 4,
+            "energy": 0.25,
+            "roles": {
+              "pad": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.9,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "sub": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 4,
+            "energy": 0.2,
+            "roles": {
+              "hats": {
+                "recipe": "sparse"
+              },
+              "texture": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-13",
+      "style": "jazz",
+      "score": 67.9,
+      "grade": "B",
+      "bars": 48,
+      "sections": 6,
+      "fingerprint": "intro:8:0.3,verse:8:0.55,chorus:8:0.8,verse:8:0.6,chorus:8:0.85,outro:8:0.25|jazz-dorian-ii-v-i|bass+chords+hats+kick+lead+perc+snare|bass:busy,bass:busy,bass:default,bass:default,bass:sparse,bass:sparse,chords:busy,chords:busy,chords:default,chords:default,chords:sparse,hats:busy,hats:busy,hats:default,hats:default,hats:sparse,kick:busy,kick:busy,kick:default,kick:default,kick:sparse,kick:sparse,lead:busy,lead:default,perc:busy,perc:busy,perc:default,perc:default,snare:busy,snare:busy",
+      "code": "// jazz — 118 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → verse(8) → chorus(8) → outro(8)\n// Прогрессия: jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i\n// Зерно: 17\n\nsetCpm(118/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst KICK_0 = s(\"bd ~ bd ~\")\nconst KICK_1 = s(\"bd ~ bd ~\")\nconst KICK_2 = s(\"bd*4\")\nconst KICK_3 = s(\"bd ~ ~ bd\")\nconst KICK_4 = s(\"bd*4\")\nconst KICK_5 = s(\"bd ~ ~ bd\")\nconst HATS_0 = s(\"hh*4\")\nconst HATS_1 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_3 = s(\"hh*8\")\nconst HATS_4 = s(\"hh*8\")\nconst BASS_0 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst BASS_1 = n(\"<1 4 0>\").scale(key).slow(2).ply(2).s(\"triangle\")\nconst BASS_2 = n(\"<1 4 0>\").scale(key).slow(2).ply(4).s(\"triangle\")\nconst BASS_3 = n(\"<1 4 0>\").scale(key).slow(2).ply(4).s(\"triangle\")\nconst BASS_4 = n(\"<1 4 0>\").scale(key).slow(2).ply(2).s(\"triangle\")\nconst BASS_5 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst PERC_1 = s(\"perc ~ ~ ~\")\nconst PERC_2 = s(\"~ perc ~ perc\")\nconst PERC_3 = s(\"perc ~ ~ ~\")\nconst PERC_4 = s(\"~ perc ~ perc\")\nconst CHORDS_1 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).ply(2).s(\"piano\").room(0.35)\nconst CHORDS_2 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst CHORDS_3 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).ply(2).s(\"piano\").room(0.35)\nconst CHORDS_4 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst CHORDS_5 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst SNARE_2 = s(\"rim ~ rim ~\")\nconst SNARE_4 = s(\"sd ~ sd ~\")\nconst LEAD_3 = n(\"<5 8 4>\").scale(key).slow(2).s(\"organ\").room(0.4)\nconst LEAD_4 = n(\"<5 8 4>\").scale(key).slow(2).s(\"organ\").room(0.4)\n\n// --- партии ---\n$KICK: arrange([8, KICK_0], [8, KICK_1], [8, KICK_2], [8, KICK_3], [8, KICK_4], [8, KICK_5]).gain(0.9)._scope()\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [8, HATS_3], [8, HATS_4]).gain(0.45)._scope()\n$BASS: arrange([8, BASS_0], [8, BASS_1], [8, BASS_2], [8, BASS_3], [8, BASS_4], [8, BASS_5]).gain(0.7)._pianoroll()\n$PERC: arrange([8, PERC_1], [8, PERC_2], [8, PERC_3], [8, PERC_4]).gain(0.5)._scope()\n$CHORDS: arrange([8, CHORDS_1], [8, CHORDS_2], [8, CHORDS_3], [8, CHORDS_4], [8, CHORDS_5]).gain(0.5)._pianoroll()\n$SNARE: arrange([8, SNARE_2], [8, SNARE_4]).gain(0.7)._scope()\n$LEAD: arrange([8, LEAD_3], [8, LEAD_4]).gain(0.55)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "jazz",
+          "bpm": 118,
+          "key": "c:minor",
+          "seed": 17
+        },
+        "harmony": {
+          "progressionId": "jazz-dorian-ii-v-i",
+          "mode": "dorian",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.55,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.8,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              },
+              "lead": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.85,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.25,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-14",
+      "style": "jazz",
+      "score": 67.9,
+      "grade": "B",
+      "bars": 48,
+      "sections": 6,
+      "fingerprint": "intro:8:0.3,verse:8:0.55,chorus:8:0.8,verse:8:0.6,chorus:8:0.85,outro:8:0.25|jazz-dorian-ii-v-i|bass+chords+hats+kick+lead+perc+snare|bass:busy,bass:busy,bass:default,bass:default,bass:sparse,bass:sparse,chords:busy,chords:busy,chords:default,chords:default,chords:sparse,hats:busy,hats:busy,hats:default,hats:default,hats:sparse,kick:busy,kick:busy,kick:default,kick:default,kick:sparse,kick:sparse,lead:busy,lead:default,perc:busy,perc:busy,perc:default,perc:default,snare:busy,snare:busy",
+      "code": "// jazz — 118 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → verse(8) → chorus(8) → outro(8)\n// Прогрессия: jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i\n// Зерно: 27\n\nsetCpm(118/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst KICK_0 = s(\"bd ~ ~ bd\")\nconst KICK_1 = s(\"bd ~ bd ~\")\nconst KICK_2 = s(\"bd*4\")\nconst KICK_3 = s(\"bd ~ ~ bd\")\nconst KICK_4 = s(\"bd*4\")\nconst KICK_5 = s(\"bd ~ bd ~\")\nconst HATS_0 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_1 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_3 = s(\"hh*8\")\nconst HATS_4 = s(\"hh*8\")\nconst BASS_0 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst BASS_1 = n(\"<1 4 0>\").scale(key).slow(2).ply(3).s(\"triangle\")\nconst BASS_2 = n(\"<1 4 0>\").scale(key).slow(2).ply(4).s(\"triangle\")\nconst BASS_3 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst BASS_4 = n(\"<1 4 0>\").scale(key).slow(2).ply(4).s(\"triangle\")\nconst BASS_5 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst PERC_1 = s(\"~ perc ~ perc\")\nconst PERC_2 = s(\"~ perc ~ perc\")\nconst PERC_3 = s(\"~ perc ~ perc\")\nconst PERC_4 = s(\"~ perc ~ perc\")\nconst CHORDS_1 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst CHORDS_2 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).ply(2).s(\"piano\").room(0.35)\nconst CHORDS_3 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst CHORDS_4 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).ply(2).s(\"piano\").room(0.35)\nconst CHORDS_5 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst SNARE_2 = s(\"~ sd ~ sd\")\nconst SNARE_4 = s(\"rim ~ rim ~\")\nconst LEAD_3 = n(\"<5 8 4>\").scale(key).slow(2).s(\"organ\").room(0.4)\nconst LEAD_4 = n(\"<5 8 4>\").scale(key).slow(2).s(\"organ\").room(0.4)\n\n// --- партии ---\n$KICK: arrange([8, KICK_0], [8, KICK_1], [8, KICK_2], [8, KICK_3], [8, KICK_4], [8, KICK_5]).gain(0.9)._scope()\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [8, HATS_3], [8, HATS_4]).gain(0.45)._scope()\n$BASS: arrange([8, BASS_0], [8, BASS_1], [8, BASS_2], [8, BASS_3], [8, BASS_4], [8, BASS_5]).gain(0.7)._pianoroll()\n$PERC: arrange([8, PERC_1], [8, PERC_2], [8, PERC_3], [8, PERC_4]).gain(0.5)._scope()\n$CHORDS: arrange([8, CHORDS_1], [8, CHORDS_2], [8, CHORDS_3], [8, CHORDS_4], [8, CHORDS_5]).gain(0.5)._pianoroll()\n$SNARE: arrange([8, SNARE_2], [8, SNARE_4]).gain(0.7)._scope()\n$LEAD: arrange([8, LEAD_3], [8, LEAD_4]).gain(0.55)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "jazz",
+          "bpm": 118,
+          "key": "c:minor",
+          "seed": 27
+        },
+        "harmony": {
+          "progressionId": "jazz-dorian-ii-v-i",
+          "mode": "dorian",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.55,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.8,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              },
+              "lead": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.85,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.25,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-15",
+      "style": "rock",
+      "score": 67.9,
+      "grade": "B",
+      "bars": 64,
+      "sections": 8,
+      "fingerprint": "intro:8:0.4,verse:8:0.55,chorus:8:0.9,verse:8:0.6,chorus:8:0.95,bridge:8:0.5,chorus:8:1,outro:8:0.3|rock-major-i-v-vi-iv|arp+bass+chords+hats+kick+lead+snare|arp:busy,arp:busy,bass:busy,bass:busy,bass:busy,bass:default,bass:default,bass:default,bass:sparse,bass:sparse,chords:busy,chords:busy,chords:busy,chords:default,chords:default,chords:default,chords:sparse,chords:sparse,hats:busy,hats:busy,hats:busy,hats:default,hats:default,hats:default,hats:sparse,hats:sparse,kick:busy,kick:busy,kick:busy,kick:default,kick:default,kick:default,kick:sparse,kick:sparse,lead:busy,lead:busy,lead:busy,snare:busy,snare:busy,snare:busy,snare:default,snare:default",
+      "code": "// rock — 128 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → verse(8) → chorus(8) → bridge(8) → chorus(8) → outro(8)\n// Прогрессия: rock-major-i-v-vi-iv | rock-major-i-v-vi-iv | rock-major-i-v-vi-iv | rock-major-i-v-vi-iv | rock-major-i-v-vi-iv | rock-major-i-v-vi-iv | rock-major-i-v-vi-iv | rock-major-i-v-vi-iv\n// Зерно: 28\n\nsetCpm(128/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst KICK_0 = s(\"bd ~ bd ~\")\nconst KICK_1 = s(\"bd ~ bd ~\")\nconst KICK_2 = s(\"bd*2 bd*2\")\nconst KICK_3 = s(\"bd*2 bd*2\")\nconst KICK_4 = s(\"bd*2 bd*2\")\nconst KICK_5 = s(\"bd*4\")\nconst KICK_5_TAIL = s(\"bd*4\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst KICK_6 = s(\"bd*2 bd*2\")\nconst KICK_7 = s(\"bd ~ bd ~\")\nconst HATS_0 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_1 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_3 = s(\"hh*4\")\nconst HATS_4 = s(\"hh*8\")\nconst HATS_5 = s(\"hh*8\")\nconst HATS_5_TAIL = s(\"hh*8\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst HATS_6 = s(\"hh*8\")\nconst HATS_7 = s(\"hh*4\")\nconst BASS_0 = n(\"<0 4 5 3>\").scale(key).slow(2).s(\"sawtooth\")\nconst BASS_1 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_2 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(2).s(\"sawtooth\")\nconst BASS_3 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(2).s(\"sawtooth\")\nconst BASS_4 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_5 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_5_TAIL = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst BASS_6 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(2).s(\"sawtooth\")\nconst BASS_7 = n(\"<0 4 5 3>\").scale(key).slow(2).s(\"sawtooth\")\nconst CHORDS_0 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_1 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_2 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_3 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_4 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_5 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_5_TAIL = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35).gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst CHORDS_6 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_7 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst SNARE_1 = s(\"~ sd ~ sd\")\nconst SNARE_2 = s(\"sd ~ ~ sd\")\nconst SNARE_3 = s(\"sd ~ ~ sd\")\nconst SNARE_4 = s(\"sd ~ ~ sd\")\nconst SNARE_6 = s(\"sd ~ ~ sd\")\nconst LEAD_2 = n(\"<4 8 9 7>\").scale(key).slow(2).s(\"square\").room(0.4)\nconst LEAD_4 = n(\"<4 8 9 7>\").scale(key).slow(2).s(\"square\").room(0.4)\nconst LEAD_6 = n(\"<4 8 9 7>\").scale(key).slow(2).s(\"square\").room(0.4)\nconst ARP_4 = n(\"0 2 4\").fast(2).add(n(\"<0 4 5 3>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst ARP_6 = n(\"0 2 4\").fast(2).add(n(\"<0 4 5 3>\").slow(2)).scale(key).s(\"square\").delay(0.3)\n\n// --- партии ---\n$KICK: arrange([8, KICK_0], [8, KICK_1], [8, KICK_2], [8, KICK_3], [8, KICK_4], [6, KICK_5], [2, KICK_5_TAIL], [8, KICK_6], [8, KICK_7]).gain(0.9)._scope()\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [8, HATS_3], [8, HATS_4], [6, HATS_5], [2, HATS_5_TAIL], [8, HATS_6], [8, HATS_7]).gain(0.45)._scope()\n$BASS: arrange([8, BASS_0], [8, BASS_1], [8, BASS_2], [8, BASS_3], [8, BASS_4], [6, BASS_5], [2, BASS_5_TAIL], [8, BASS_6], [8, BASS_7]).gain(0.7)._pianoroll()\n$CHORDS: arrange([8, CHORDS_0], [8, CHORDS_1], [8, CHORDS_2], [8, CHORDS_3], [8, CHORDS_4], [6, CHORDS_5], [2, CHORDS_5_TAIL], [8, CHORDS_6], [8, CHORDS_7]).gain(0.5)._pianoroll()\n$SNARE: arrange([8, SNARE_1], [8, SNARE_2], [8, SNARE_3], [8, SNARE_4], [8, SNARE_6]).gain(0.7)._scope()\n$LEAD: arrange([8, LEAD_2], [8, LEAD_4], [8, LEAD_6]).gain(0.55)._pianoroll()\n$ARP: arrange([8, ARP_4], [8, ARP_6]).gain(0.4)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "rock",
+          "bpm": 128,
+          "key": "c:minor",
+          "seed": 28
+        },
+        "harmony": {
+          "progressionId": "rock-major-i-v-vi-iv",
+          "mode": "major",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.4,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.55,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "snare": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.9,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "snare": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.95,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "bridge",
+            "bars": 8,
+            "energy": 0.5,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            },
+            "transition": {
+              "into": "chorus",
+              "type": "build"
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 1,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-16",
+      "style": "jazz",
+      "score": 67.9,
+      "grade": "B",
+      "bars": 48,
+      "sections": 6,
+      "fingerprint": "intro:8:0.3,verse:8:0.55,chorus:8:0.8,verse:8:0.6,chorus:8:0.85,outro:8:0.25|jazz-dorian-ii-v-i|bass+chords+hats+kick+lead+perc+snare|bass:busy,bass:busy,bass:default,bass:default,bass:sparse,bass:sparse,chords:busy,chords:busy,chords:default,chords:default,chords:sparse,hats:busy,hats:busy,hats:default,hats:default,hats:sparse,kick:busy,kick:busy,kick:default,kick:default,kick:sparse,kick:sparse,lead:busy,lead:default,perc:busy,perc:busy,perc:default,perc:default,snare:busy,snare:busy",
+      "code": "// jazz — 118 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → verse(8) → chorus(8) → outro(8)\n// Прогрессия: jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i\n// Зерно: 37\n\nsetCpm(118/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst KICK_0 = s(\"bd ~ bd ~\")\nconst KICK_1 = s(\"bd*4\")\nconst KICK_2 = s(\"bd*4\")\nconst KICK_3 = s(\"bd ~ bd ~\")\nconst KICK_4 = s(\"bd*4\")\nconst KICK_5 = s(\"bd ~ ~ bd\")\nconst HATS_0 = s(\"hh*4\")\nconst HATS_1 = s(\"hh*8\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_3 = s(\"hh*4\")\nconst HATS_4 = s(\"hh*8\")\nconst BASS_0 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst BASS_1 = n(\"<1 4 0>\").scale(key).slow(2).ply(4).s(\"triangle\")\nconst BASS_2 = n(\"<1 4 0>\").scale(key).slow(2).ply(2).s(\"triangle\")\nconst BASS_3 = n(\"<1 4 0>\").scale(key).slow(2).ply(2).s(\"triangle\")\nconst BASS_4 = n(\"<1 4 0>\").scale(key).slow(2).ply(4).s(\"triangle\")\nconst BASS_5 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst PERC_1 = s(\"perc ~ ~ ~\")\nconst PERC_2 = s(\"~ perc ~ perc\")\nconst PERC_3 = s(\"perc ~ ~ ~\")\nconst PERC_4 = s(\"~ perc ~ perc\")\nconst CHORDS_1 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).ply(2).s(\"piano\").room(0.35)\nconst CHORDS_2 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst CHORDS_3 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).ply(2).s(\"piano\").room(0.35)\nconst CHORDS_4 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst CHORDS_5 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst SNARE_2 = s(\"rim ~ rim ~\")\nconst SNARE_4 = s(\"sd ~ sd ~\")\nconst LEAD_3 = n(\"<5 8 4>\").scale(key).slow(2).s(\"organ\").room(0.4)\nconst LEAD_4 = n(\"<5 8 4>\").scale(key).slow(2).s(\"organ\").room(0.4)\n\n// --- партии ---\n$KICK: arrange([8, KICK_0], [8, KICK_1], [8, KICK_2], [8, KICK_3], [8, KICK_4], [8, KICK_5]).gain(0.9)._scope()\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [8, HATS_3], [8, HATS_4]).gain(0.45)._scope()\n$BASS: arrange([8, BASS_0], [8, BASS_1], [8, BASS_2], [8, BASS_3], [8, BASS_4], [8, BASS_5]).gain(0.7)._pianoroll()\n$PERC: arrange([8, PERC_1], [8, PERC_2], [8, PERC_3], [8, PERC_4]).gain(0.5)._scope()\n$CHORDS: arrange([8, CHORDS_1], [8, CHORDS_2], [8, CHORDS_3], [8, CHORDS_4], [8, CHORDS_5]).gain(0.5)._pianoroll()\n$SNARE: arrange([8, SNARE_2], [8, SNARE_4]).gain(0.7)._scope()\n$LEAD: arrange([8, LEAD_3], [8, LEAD_4]).gain(0.55)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "jazz",
+          "bpm": 118,
+          "key": "c:minor",
+          "seed": 37
+        },
+        "harmony": {
+          "progressionId": "jazz-dorian-ii-v-i",
+          "mode": "dorian",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.55,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.8,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              },
+              "lead": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.85,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.25,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-17",
+      "style": "rock",
+      "score": 67.9,
+      "grade": "B",
+      "bars": 64,
+      "sections": 8,
+      "fingerprint": "intro:8:0.4,verse:8:0.55,chorus:8:0.9,verse:8:0.6,chorus:8:0.95,bridge:8:0.5,chorus:8:1,outro:8:0.3|rock-minor-i-v-vi-iv|arp+bass+chords+hats+kick+lead+snare|arp:busy,arp:busy,bass:busy,bass:busy,bass:busy,bass:default,bass:default,bass:default,bass:sparse,bass:sparse,chords:busy,chords:busy,chords:busy,chords:default,chords:default,chords:default,chords:sparse,chords:sparse,hats:busy,hats:busy,hats:busy,hats:default,hats:default,hats:default,hats:sparse,hats:sparse,kick:busy,kick:busy,kick:busy,kick:default,kick:default,kick:default,kick:sparse,kick:sparse,lead:busy,lead:busy,lead:busy,snare:busy,snare:busy,snare:busy,snare:default,snare:default",
+      "code": "// rock — 128 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → verse(8) → chorus(8) → bridge(8) → chorus(8) → outro(8)\n// Прогрессия: rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv | rock-minor-i-v-vi-iv\n// Зерно: 38\n\nsetCpm(128/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst KICK_0 = s(\"bd ~ bd ~\")\nconst KICK_1 = s(\"bd ~ bd ~\")\nconst KICK_2 = s(\"bd*4\")\nconst KICK_3 = s(\"bd*2 bd*2\")\nconst KICK_4 = s(\"bd*4\")\nconst KICK_5 = s(\"bd*4\")\nconst KICK_5_TAIL = s(\"bd*4\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst KICK_6 = s(\"bd*4\")\nconst KICK_7 = s(\"bd ~ bd ~\")\nconst HATS_0 = s(\"hh*4\")\nconst HATS_1 = s(\"hh*8\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_3 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_4 = s(\"hh*8\")\nconst HATS_5 = s(\"hh*4\")\nconst HATS_5_TAIL = s(\"hh*4\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst HATS_6 = s(\"hh*8\")\nconst HATS_7 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst BASS_0 = n(\"<0 4 5 3>\").scale(key).slow(2).s(\"sawtooth\")\nconst BASS_1 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(3).s(\"sawtooth\")\nconst BASS_2 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_3 = n(\"<0 4 5 3>\").scale(key).slow(2).s(\"sawtooth\")\nconst BASS_4 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_5 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(3).s(\"sawtooth\")\nconst BASS_5_TAIL = n(\"<0 4 5 3>\").scale(key).slow(2).ply(3).s(\"sawtooth\").gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst BASS_6 = n(\"<0 4 5 3>\").scale(key).slow(2).ply(4).s(\"sawtooth\")\nconst BASS_7 = n(\"<0 4 5 3>\").scale(key).slow(2).s(\"sawtooth\")\nconst CHORDS_0 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_1 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_2 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_3 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_4 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_5 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst CHORDS_5_TAIL = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35).gain(sine.slow(2).range(0.35, 0.85)).lpf(sine.slow(2).range(400, 3000))\nconst CHORDS_6 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).ply(2).s(\"square\").room(0.35)\nconst CHORDS_7 = stack(n(\"<0 4 5 3>\"), n(\"<2 6 7 5>\"), n(\"<4 8 9 7>\")).scale(key).slow(2).s(\"square\").room(0.35)\nconst SNARE_1 = s(\"~ sd ~ ~\")\nconst SNARE_2 = s(\"~ sd ~ sd\")\nconst SNARE_3 = s(\"~ sd ~ sd\")\nconst SNARE_4 = s(\"~ sd ~ sd\")\nconst SNARE_6 = s(\"~ sd ~ sd\")\nconst LEAD_2 = n(\"<4 8 9 7>\").scale(key).slow(2).s(\"square\").room(0.4)\nconst LEAD_4 = n(\"<4 8 9 7>\").scale(key).slow(2).s(\"square\").room(0.4)\nconst LEAD_6 = n(\"<4 8 9 7>\").scale(key).slow(2).s(\"square\").room(0.4)\nconst ARP_4 = n(\"0 2 4\").fast(2).add(n(\"<0 4 5 3>\").slow(2)).scale(key).s(\"square\").delay(0.3)\nconst ARP_6 = n(\"0 2 4\").fast(2).add(n(\"<0 4 5 3>\").slow(2)).scale(key).s(\"square\").delay(0.3)\n\n// --- партии ---\n$KICK: arrange([8, KICK_0], [8, KICK_1], [8, KICK_2], [8, KICK_3], [8, KICK_4], [6, KICK_5], [2, KICK_5_TAIL], [8, KICK_6], [8, KICK_7]).gain(0.9)._scope()\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [8, HATS_3], [8, HATS_4], [6, HATS_5], [2, HATS_5_TAIL], [8, HATS_6], [8, HATS_7]).gain(0.45)._scope()\n$BASS: arrange([8, BASS_0], [8, BASS_1], [8, BASS_2], [8, BASS_3], [8, BASS_4], [6, BASS_5], [2, BASS_5_TAIL], [8, BASS_6], [8, BASS_7]).gain(0.7)._pianoroll()\n$CHORDS: arrange([8, CHORDS_0], [8, CHORDS_1], [8, CHORDS_2], [8, CHORDS_3], [8, CHORDS_4], [6, CHORDS_5], [2, CHORDS_5_TAIL], [8, CHORDS_6], [8, CHORDS_7]).gain(0.5)._pianoroll()\n$SNARE: arrange([8, SNARE_1], [8, SNARE_2], [8, SNARE_3], [8, SNARE_4], [8, SNARE_6]).gain(0.7)._scope()\n$LEAD: arrange([8, LEAD_2], [8, LEAD_4], [8, LEAD_6]).gain(0.55)._pianoroll()\n$ARP: arrange([8, ARP_4], [8, ARP_6]).gain(0.4)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "rock",
+          "bpm": 128,
+          "key": "c:minor",
+          "seed": 38
+        },
+        "harmony": {
+          "progressionId": "rock-minor-i-v-vi-iv",
+          "mode": "minor",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.4,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.55,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "snare": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.9,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "snare": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.95,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "bridge",
+            "bars": 8,
+            "energy": 0.5,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            },
+            "transition": {
+              "into": "chorus",
+              "type": "build"
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 1,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              },
+              "arp": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    },
+    {
+      "id": "corpus-18",
+      "style": "jazz",
+      "score": 67.9,
+      "grade": "B",
+      "bars": 48,
+      "sections": 6,
+      "fingerprint": "intro:8:0.3,verse:8:0.55,chorus:8:0.8,verse:8:0.6,chorus:8:0.85,outro:8:0.25|jazz-dorian-ii-v-i|bass+chords+hats+kick+lead+perc+snare|bass:busy,bass:busy,bass:default,bass:default,bass:sparse,bass:sparse,chords:busy,chords:busy,chords:default,chords:default,chords:sparse,hats:busy,hats:busy,hats:default,hats:default,hats:sparse,kick:busy,kick:busy,kick:default,kick:default,kick:sparse,kick:sparse,lead:busy,lead:default,perc:busy,perc:busy,perc:default,perc:default,snare:busy,snare:busy",
+      "code": "// jazz — 118 BPM, c:minor\n// Форма: intro(8) → verse(8) → chorus(8) → verse(8) → chorus(8) → outro(8)\n// Прогрессия: jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i | jazz-dorian-ii-v-i\n// Зерно: 47\n\nsetCpm(118/4)\nconst key = \"c:minor\"\n\n// --- константы секций ---\nconst KICK_0 = s(\"bd ~ ~ bd\")\nconst KICK_1 = s(\"bd*4\")\nconst KICK_2 = s(\"bd*4\")\nconst KICK_3 = s(\"bd ~ bd ~\")\nconst KICK_4 = s(\"bd*4\")\nconst KICK_5 = s(\"bd ~ bd ~\")\nconst HATS_0 = s(\"~ hh ~ hh ~ hh ~ hh\")\nconst HATS_1 = s(\"hh*8\")\nconst HATS_2 = s(\"hh*8\")\nconst HATS_3 = s(\"hh*4\")\nconst HATS_4 = s(\"hh*8\")\nconst BASS_0 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst BASS_1 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst BASS_2 = n(\"<1 4 0>\").scale(key).slow(2).ply(4).s(\"triangle\")\nconst BASS_3 = n(\"<1 4 0>\").scale(key).slow(2).ply(3).s(\"triangle\")\nconst BASS_4 = n(\"<1 4 0>\").scale(key).slow(2).ply(4).s(\"triangle\")\nconst BASS_5 = n(\"<1 4 0>\").scale(key).slow(2).s(\"triangle\")\nconst PERC_1 = s(\"~ perc ~ perc\")\nconst PERC_2 = s(\"~ perc ~ perc\")\nconst PERC_3 = s(\"~ perc ~ perc\")\nconst PERC_4 = s(\"~ perc ~ perc\")\nconst CHORDS_1 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst CHORDS_2 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).ply(2).s(\"piano\").room(0.35)\nconst CHORDS_3 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst CHORDS_4 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).ply(2).s(\"piano\").room(0.35)\nconst CHORDS_5 = stack(n(\"<1 4 0>\"), n(\"<3 6 2>\"), n(\"<5 8 4>\")).scale(key).slow(2).s(\"piano\").room(0.35)\nconst SNARE_2 = s(\"rim ~ rim ~\")\nconst SNARE_4 = s(\"sd ~ sd ~\")\nconst LEAD_3 = n(\"<5 8 4>\").scale(key).slow(2).s(\"organ\").room(0.4)\nconst LEAD_4 = n(\"<5 8 4>\").scale(key).slow(2).s(\"organ\").room(0.4)\n\n// --- партии ---\n$KICK: arrange([8, KICK_0], [8, KICK_1], [8, KICK_2], [8, KICK_3], [8, KICK_4], [8, KICK_5]).gain(0.9)._scope()\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [8, HATS_3], [8, HATS_4]).gain(0.45)._scope()\n$BASS: arrange([8, BASS_0], [8, BASS_1], [8, BASS_2], [8, BASS_3], [8, BASS_4], [8, BASS_5]).gain(0.7)._pianoroll()\n$PERC: arrange([8, PERC_1], [8, PERC_2], [8, PERC_3], [8, PERC_4]).gain(0.5)._scope()\n$CHORDS: arrange([8, CHORDS_1], [8, CHORDS_2], [8, CHORDS_3], [8, CHORDS_4], [8, CHORDS_5]).gain(0.5)._pianoroll()\n$SNARE: arrange([8, SNARE_2], [8, SNARE_4]).gain(0.7)._scope()\n$LEAD: arrange([8, LEAD_3], [8, LEAD_4]).gain(0.55)._pianoroll()\n",
+      "spec": {
+        "meta": {
+          "style": "jazz",
+          "bpm": 118,
+          "key": "c:minor",
+          "seed": 47
+        },
+        "harmony": {
+          "progressionId": "jazz-dorian-ii-v-i",
+          "mode": "dorian",
+          "barsPerChord": 2
+        },
+        "form": [
+          {
+            "kind": "intro",
+            "bars": 8,
+            "energy": 0.3,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "hats": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.55,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.8,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "verse",
+            "bars": 8,
+            "energy": 0.6,
+            "roles": {
+              "kick": {
+                "recipe": "default"
+              },
+              "hats": {
+                "recipe": "default"
+              },
+              "perc": {
+                "recipe": "default"
+              },
+              "bass": {
+                "recipe": "default"
+              },
+              "chords": {
+                "recipe": "default"
+              },
+              "lead": {
+                "recipe": "default"
+              }
+            }
+          },
+          {
+            "kind": "chorus",
+            "bars": 8,
+            "energy": 0.85,
+            "roles": {
+              "kick": {
+                "recipe": "busy"
+              },
+              "snare": {
+                "recipe": "busy"
+              },
+              "hats": {
+                "recipe": "busy"
+              },
+              "perc": {
+                "recipe": "busy"
+              },
+              "bass": {
+                "recipe": "busy"
+              },
+              "chords": {
+                "recipe": "busy"
+              },
+              "lead": {
+                "recipe": "busy"
+              }
+            }
+          },
+          {
+            "kind": "outro",
+            "bars": 8,
+            "energy": 0.25,
+            "roles": {
+              "kick": {
+                "recipe": "sparse"
+              },
+              "bass": {
+                "recipe": "sparse"
+              },
+              "chords": {
+                "recipe": "sparse"
+              }
+            }
+          }
+        ],
+        "reasoning": "Запасной план: форма и прогрессия взяты из библиотеки знаний."
+      },
+      "humanPick": null
+    }
+  ]
+}

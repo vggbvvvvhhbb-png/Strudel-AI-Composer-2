@@ -1,0 +1,316 @@
+// Разнообразие на уровне спеки: отпечаток, расстояние и порог отсечения.
+//
+// Зачем это отдельным модулем: компилятор отвечает за ЗВУК спеки, а здесь мы
+// отвечаем на вопрос «а это вообще другой трек?». Разные варианты должны
+// отличаться структурно (форма, гармония, состав партий), иначе «ещё вариант»
+// будет тем же треком с другим зерном.
+//
+// Метрика расстояния — взвешенная доля различий по пяти независимым
+// составляющим. Каждая составляющая лежит в [0, 1], веса в сумме дают 1,
+// поэтому расстояние тоже лежит в [0, 1] и читается как «доля несхожести».
+// Расстояние НЕ метрика в строгом смысле (не симметрично-транзитивно по
+// построению через выравнивание по индексу), но для отсечения повторов это
+// и не требуется: нужен порядок «похоже / не похоже», а не метрика.
+//
+// Отпечаток — по ТЗ ровно три составляющие: форма, прогрессия, рецепты ролей.
+// Это «скелет» варианта: если он совпал, вариант отличается только мелочами
+// (мотив, энергия) и как отдельный трек не считается.
+
+/**
+ * Устойчивый хэш строки (FNV-1a) — тот же алгоритм, что в компиляторе.
+ *
+ * Хэш, а не PRNG: результат best-of-N обязан воспроизводиться по зерну
+ * (D-018). Кроме того, хэш не зависит от порядка обхода — добавление
+ * кандидата не сдвигает остальные.
+ *
+ * @param {string} text
+ * @returns {number} 32-битное беззнаковое число
+ */
+export function hashText(text) {
+  let hash = 2166136261;
+  const str = String(text ?? '');
+  for (let i = 0; i < str.length; i += 1) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+/**
+ * Веса составляющих расстояния. Сумма = 1, иначе расстояние вышло бы
+ * за [0, 1].
+ *
+ * form     — самая крупная составляющая: смена формы меняет сам трек;
+ * harmony  — смена прогрессии меняет гармонический материал;
+ * roles    — состав партий и их рецепты (то, что слышно как аранжировка);
+ * motif    — мелодический материал: у лида свой рисунок;
+ * energy   — арка энергии секций (влияет на плотность через D-017).
+ */
+export const DISTANCE_WEIGHTS = {
+  form: 0.3,
+  harmony: 0.22,
+  roles: 0.28,
+  energy: 0.08,
+  motif: 0.12,
+};
+
+/**
+ * Порог отсечения «это тот же трек».
+ *
+ * Выбран по смыслу составляющих: единичная смена рецепта в одной секции
+ * даёт ≈0.01–0.02 расстояния (одна запись из ~25), а смена прогрессии —
+ * ≈0.15, смена формы — ≈0.3 и выше. Порог 0.10 отсекает первое и
+ * пропускает второе. Обоснование расчёта — в docs/DIVERSITY.md.
+ */
+export const MIN_DISTANCE = 0.1;
+
+/** Глубокая копия спеки: дальше всё работает с копией, оригинал не трогаем. */
+export function cloneSpec(spec) {
+  return JSON.parse(JSON.stringify(spec));
+}
+
+/**
+ * Канонический JSON: ключи объектов отсортированы.
+ *
+ * Нужен для честного сравнения «спека изменилась»: порядок ключей после
+ * разбора JSON не значим, а сравнение строк без сортировки давало бы
+ * ложные различия.
+ *
+ * @param {*} value
+ * @returns {string}
+ */
+export function canonicalJson(value) {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value ?? null);
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  const keys = Object.keys(value).filter((key) => value[key] !== undefined).sort();
+  return `{${keys.map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(',')}}`;
+}
+
+/**
+ * Две спеки совпадают по содержанию (порядок ключей не учитывается).
+ * @param {object} a
+ * @param {object} b
+ */
+export function sameSpec(a, b) {
+  return canonicalJson(a) === canonicalJson(b);
+}
+
+/** Подпись секционного переопределения прогрессии. */
+function overrideSignature(override) {
+  if (!override) return '-';
+  const parts = [];
+  if (override.progressionId) parts.push(`id:${override.progressionId}`);
+  if (override.degrees) parts.push(`deg:${override.degrees.join(',')}`);
+  if (override.mode) parts.push(`mode:${override.mode}`);
+  if (override.barsPerChord) parts.push(`bpc:${override.barsPerChord}`);
+  return parts.join('/') || '-';
+}
+
+/** Подпись гармонии трека: библиотечная прогрессия или свои степени. */
+function harmonySignature(spec) {
+  const harmony = spec.harmony || {};
+  if (harmony.progressionId) return `id:${harmony.progressionId}`;
+  if (harmony.degrees && harmony.degrees.length) return `deg:${harmony.degrees.join(',')}`;
+  return 'none';
+}
+
+/** Подпись роли в секции: имя + рецепт + вариант рисунка. */
+function roleSignature(role, choice) {
+  const recipe = choice?.recipe ?? 'default';
+  const variant = choice?.variant ? `:${choice.variant}` : '';
+  return `${role}=${recipe}${variant}`;
+}
+
+/**
+ * Декомпозиция спеки на три составляющие отпечатка.
+ *
+ * Отдельная функция, чтобы объяснять пользователю, ЧЕМ именно вариант
+ * отличается от исходного, а не просто «другим хэшем».
+ *
+ * @param {object} spec
+ * @returns {{form: string, harmony: string, recipes: string}}
+ */
+export function specFingerprintParts(spec) {
+  const safe = spec || { form: [], harmony: {} };
+  const form = (safe.form || [])
+    .map((section) => `${section.kind}:${section.bars}:${round2(section.energy)}`)
+    .join('|');
+  const overrides = (safe.form || [])
+    .map((section) => overrideSignature(section.progressionOverride))
+    .join('|');
+  const recipes = (safe.form || [])
+    .map((section) =>
+      Object.keys(section.roles || {})
+        .sort()
+        .map((role) => roleSignature(role, section.roles[role]))
+        .join(','),
+    )
+    .join('|');
+  return {
+    form,
+    harmony: `${harmonySignature(safe)}#${overrides}`,
+    recipes,
+  };
+}
+
+/**
+ * Отпечаток спеки: короткая строка по трём составляющим ТЗ
+ * (форма + прогрессия + рецепты ролей).
+ *
+ * @param {object} spec
+ * @returns {string} например `fp-1a2b3c`
+ */
+export function specFingerprint(spec) {
+  const parts = specFingerprintParts(spec);
+  const text = `${parts.form}||${parts.harmony}||${parts.recipes}`;
+  return `fp-${hashText(text).toString(36)}`;
+}
+
+/** Округление до двух знаков — чтобы 0.3 и 0.30 не считались различием. */
+function round2(value) {
+  return Math.round((Number(value) || 0) * 100) / 100;
+}
+
+/**
+ * Различие форм: доля секций, которые не совпали, плюс разница длин.
+ *
+ * Секции выравниваются по индексу: сравнение «по смыслу» (например, intro
+ * с intro) дало бы слишком мягкую метрику — трек с переставленными
+ * секциями это другой трек.
+ */
+function formDistance(a, b) {
+  const formA = a.form || [];
+  const formB = b.form || [];
+  const max = Math.max(formA.length, formB.length);
+  if (!max) return 0;
+  let diff = Math.abs(formA.length - formB.length);
+  const common = Math.min(formA.length, formB.length);
+  for (let i = 0; i < common; i += 1) {
+    if (formA[i].kind !== formB[i].kind || formA[i].bars !== formB[i].bars) diff += 1;
+  }
+  return Math.min(1, diff / max);
+}
+
+/**
+ * Различие гармонии: базовая прогрессия трека плюс переопределения по
+ * секциям. Базовая прогрессия весит больше: она слышна в каждой секции.
+ */
+function harmonyDistance(a, b) {
+  const base = harmonySignature(a) === harmonySignature(b) ? 0 : 1;
+  const formA = a.form || [];
+  const formB = b.form || [];
+  const max = Math.max(formA.length, formB.length) || 1;
+  let diff = 0;
+  for (let i = 0; i < max; i += 1) {
+    const sa = formA[i]?.progressionOverride ? overrideSignature(formA[i].progressionOverride) : null;
+    const sb = formB[i]?.progressionOverride ? overrideSignature(formB[i].progressionOverride) : null;
+    if (sa !== sb) diff += 1;
+  }
+  return 0.7 * base + 0.3 * (diff / max);
+}
+
+/**
+ * Различие состава партий и их рецептов.
+ *
+ * Считается по объединению ключей «секция:роль»: и исчезновение роли, и
+ * смена рецепта дают одно и то же различие, а не две разные метрики.
+ */
+function rolesDistance(a, b) {
+  const mapA = new Map();
+  const mapB = new Map();
+  (a.form || []).forEach((section, index) => {
+    for (const [role, choice] of Object.entries(section.roles || {})) {
+      mapA.set(`${index}:${role}`, roleSignature(role, choice));
+    }
+  });
+  (b.form || []).forEach((section, index) => {
+    for (const [role, choice] of Object.entries(section.roles || {})) {
+      mapB.set(`${index}:${role}`, roleSignature(role, choice));
+    }
+  });
+  const keys = new Set([...mapA.keys(), ...mapB.keys()]);
+  if (!keys.size) return 0;
+  let diff = 0;
+  for (const key of keys) {
+    if (mapA.get(key) !== mapB.get(key)) diff += 1;
+  }
+  return diff / keys.size;
+}
+
+/** Различие арки энергии: среднее расстояние энергий по секциям. */
+function energyDistance(a, b) {
+  const formA = a.form || [];
+  const formB = b.form || [];
+  const max = Math.max(formA.length, formB.length);
+  if (!max) return 0;
+  let sum = 0;
+  for (let i = 0; i < max; i += 1) {
+    const ea = Number(formA[i]?.energy ?? 0.5);
+    const eb = Number(formB[i]?.energy ?? 0.5);
+    sum += Math.abs(ea - eb);
+  }
+  return sum / max;
+}
+
+/** Различие мелодического материала: набор трансформаций и степени мотива. */
+function motifDistance(a, b) {
+  const motifA = a.motif || null;
+  const motifB = b.motif || null;
+  if (!motifA && !motifB) return 0;
+  if (!motifA || !motifB) return 1;
+  const transformsA = [...(motifA.transforms || [])].sort().join(',');
+  const transformsB = [...(motifB.transforms || [])].sort().join(',');
+  const degreesA = (motifA.degrees || []).join(',');
+  const degreesB = (motifB.degrees || []).join(',');
+  if (transformsA === transformsB && degreesA === degreesB) return 0;
+  if (transformsA === transformsB) return 0.5;
+  return 1;
+}
+
+/**
+ * Разложение расстояния по составляющим — для объяснений и отладки.
+ * @param {object} a
+ * @param {object} b
+ * @returns {{form: number, harmony: number, roles: number, energy: number, motif: number, total: number}}
+ */
+export function distanceBreakdown(a, b) {
+  const parts = {
+    form: formDistance(a, b),
+    harmony: harmonyDistance(a, b),
+    roles: rolesDistance(a, b),
+    energy: energyDistance(a, b),
+    motif: motifDistance(a, b),
+  };
+  let total = 0;
+  for (const [key, weight] of Object.entries(DISTANCE_WEIGHTS)) {
+    total += weight * parts[key];
+  }
+  parts.total = Math.max(0, Math.min(1, total));
+  return parts;
+}
+
+/**
+ * Расстояние между двумя спеками: 0 — совпадают, 1 — не имеют ничего
+ * общего.
+ *
+ * @param {object} a
+ * @param {object} b
+ * @returns {number} число в [0, 1]
+ */
+export function specDistance(a, b) {
+  if (!a || !b) return 1;
+  if (sameSpec(a, b)) return 0;
+  return distanceBreakdown(a, b).total;
+}
+
+/**
+ * Слишком ли похожи две спеки.
+ *
+ * @param {object} a
+ * @param {object} b
+ * @param {number} [threshold] по умолчанию MIN_DISTANCE
+ * @returns {boolean}
+ */
+export function tooSimilar(a, b, threshold = MIN_DISTANCE) {
+  return specDistance(a, b) < threshold;
+}
