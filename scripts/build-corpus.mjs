@@ -21,8 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 import { compile } from '../server/music/compiler/index.js';
 import { checkSpec } from '../server/music/spec/check.js';
-import { fallbackSpec } from '../server/music/compose/pipeline.js';
-import { FORMS, formsForStyle, progressionsForStyle } from '../server/music/knowledge/index.js';
+import { fallbackSpec, detectSpecStyle, SPEC_STYLES } from '../server/music/compose/pipeline.js';
 import { analyzeTrack } from '../server/music/features.js';
 import { scoreTrack } from '../server/music/score.js';
 import { resolveProfile } from '../server/music/references.js';
@@ -50,51 +49,23 @@ function parseArgs(argv) {
  * выглядел код. Поэтому именно отпечаток решает, что «разные».
  */
 export function fingerprint(spec) {
-  const form = (spec.form || [])
-    .map((s) => `${s.kind}:${s.bars}:${s.energy}`)
-    .join(',');
-  const harmony = spec.harmony?.progressionId || (spec.harmony?.degrees || []).join('-');
-  const roles = (spec.form || [])
-    .flatMap((s) => Object.keys(s.roles || {}).sort())
-    .filter((r, i, a) => a.indexOf(r) === i)
-    .sort()
-    .join('+');
-  const recipes = (spec.form || [])
-    .flatMap((s) => Object.entries(s.roles || {}).map(([r, c]) => `${r}:${c.recipe}`))
-    .sort()
-    .join(',');
-  return `${form}|${harmony}|${roles}|${recipes}`;
+  const sections = spec.structure.sections;
+  const roles = Object.entries(spec.parts.roles).sort(([a], [b]) => a.localeCompare(b));
+  // Четыре компонента остаются публичным контрактом distanceBetween.
+  // JSON экранирует разделитель, даже если он встречается в mini-нотации.
+  const encode = (value) => JSON.stringify(value).replaceAll('|', '\\u007c');
+  return [
+    sections.map(({ name, cycles, energy }) => ({ name, cycles, energy })),
+    sections.map(({ harmony }) => harmony),
+    roles.map(([role, part]) => [role, [...part.activeIn].sort()]),
+    roles.map(([role, { pattern, sound, effects }]) => [role, pattern, sound, effects || []]),
+  ].map(encode).join('|');
 }
 
-/**
- * Спека из формы библиотеки: берём форму и насыщаем её ролями.
- * @param {string} style
- * @param {number} index номер формы
- */
-function specFromForm(style, index) {
-  const forms = formsForStyle(style);
-  if (!forms.length) return null;
-  const form = forms[index % forms.length];
-  const progressions = progressionsForStyle(style);
-  const progression = progressions.length ? progressions[index % progressions.length] : null;
-
-  const spec = fallbackSpec(style, index);
-  if (!progression) return spec;
-
-  spec.form = form.sections.map((section) => {
-    const recipe = section.energy >= 0.75 ? 'busy' : section.energy <= 0.4 ? 'sparse' : 'default';
-    const roles = {};
-    for (const role of section.roles || []) roles[role] = { recipe };
-    const out = { kind: section.kind, bars: section.bars, energy: section.energy, roles };
-    if (section.transition) out.transition = section.transition;
-    return out;
-  });
-  spec.harmony = {
-    progressionId: progression.id,
-    mode: progression.mode,
-    barsPerChord: progression.barsPerChord,
-  };
-  return spec;
+/** Библиотечный план строится тем же каноническим генератором, что приложение. */
+export function specFromForm(style, index) {
+  const canonicalStyle = SPEC_STYLES.includes(style) ? style : detectSpecStyle(style);
+  return fallbackSpec(canonicalStyle, index);
 }
 
 /**
@@ -145,7 +116,7 @@ export function distanceBetween(a, b) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const styles = Object.keys(FORMS);
+  const styles = SPEC_STYLES;
   console.log(`Стилей: ${styles.length}, целевой объём: ${args.count}, оставить: ${args.keep}`);
 
   // 1. Генерация кандидатов.
@@ -181,8 +152,8 @@ async function main() {
       code: compiled.code,
       score: score.total,
       grade: score.grade,
-      bars: candidate.spec.form.reduce((sum, s) => sum + s.bars, 0),
-      sections: candidate.spec.form.length,
+      bars: candidate.spec.structure.sections.reduce((sum, s) => sum + s.cycles, 0),
+      sections: candidate.spec.structure.sections.length,
       print: fingerprint(candidate.spec),
     });
   }
@@ -240,4 +211,4 @@ if (invokedDirectly) {
   });
 }
 
-export { specFromForm };
+

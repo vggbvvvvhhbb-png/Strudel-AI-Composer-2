@@ -32,15 +32,18 @@ for (const code of [
 
 console.log('\n=== скомпилированный трек: ключи и вариативность ===');
 const SPEC = {
-  meta: { style: 'techno', bpm: 128, key: 'c:minor', seed: 42 },
-  harmony: { progressionId: 'techno-minor-i-vi-iv-v' },
-  form: [
-    { kind: 'intro', bars: 8, energy: 0.3, roles: { kick: { recipe: 'default' }, bass: { recipe: 'default' } } },
-    { kind: 'build', bars: 16, energy: 0.65, roles: { kick: { recipe: 'default' }, hats: { recipe: 'default' }, bass: { recipe: 'default' } }, transition: { into: 'drop', type: 'riser' } },
-    { kind: 'drop', bars: 16, energy: 1.0, roles: { kick: { recipe: 'default' }, snare: { recipe: 'default' }, hats: { recipe: 'default' }, bass: { recipe: 'default' }, arp: { recipe: 'default' } } },
-    { kind: 'outro', bars: 8, energy: 0.2, roles: { kick: { recipe: 'default' } } },
-  ],
-  reasoning: 'x',
+  meta: { style: 'techno', bpm: 128, key: 'Cmin' },
+  structure: { sections: [
+    { name: 'intro', cycles: 8, energy: 0.3, harmony: 'Cm Ab Fm Gm' },
+    { name: 'build', cycles: 16, energy: 0.65, harmony: 'Fm Cm Ab Gm', parameters: { cutoff: [300, 7000] } },
+    { name: 'drop', cycles: 16, energy: 1, harmony: 'Cm Ab Fm Gm', parameters: { gain: [0.5, 1] } },
+    { name: 'outro', cycles: 8, energy: 0.2, harmony: 'Cm Ab Fm Gm' },
+  ] },
+  parts: { roles: {
+    kick: { activeIn: ['intro', 'build', 'drop', 'outro'], pattern: 'bd*4', sound: 's' },
+    bass: { activeIn: ['intro', 'build', 'drop'], pattern: '0 ~ 2 4', sound: 'sawtooth' },
+    hats: { activeIn: ['build', 'drop'], pattern: 'hh*8', sound: 's' },
+  } },
 };
 const { code } = compile(SPEC);
 const res = await runStrudel(code, { cycles: 48 });

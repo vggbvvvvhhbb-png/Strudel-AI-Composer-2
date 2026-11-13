@@ -6,6 +6,11 @@
 import { describe, it, expect } from 'vitest';
 import { signTest, effectSize, analyze, extractPairs } from '../../eval/analyze-ab.mjs';
 import { fingerprint, distanceBetween, selectDiverse } from '../../scripts/build-corpus.mjs';
+import { readFile } from 'node:fs/promises';
+import { TrackSpecSchema } from '../../src/schemas/track-spec.schema.js';
+import { checkSpec } from '../../server/music/spec/check.js';
+import { compileTrackSpec } from '../../server/music/compiler/index.js';
+import { detectSpecStyle, fallbackSpec, SPEC_STYLES } from '../../server/music/compose/pipeline.js';
 
 describe('фаза 7: знаковый критерий', () => {
   it('одинаковые пары дают p = 1', () => {
@@ -73,26 +78,70 @@ describe('фаза 7: анализ A/B', () => {
   });
 });
 
+describe('фаза 7: жанры eval и канонические запасные планы', () => {
+  it.each([
+    ['Спокойный lo-fi с пианино', 'lo-fi'],
+    ['Драм-н-бейс 174 BPM', 'techno'],
+    ['DNB с двумя разными дропами', 'techno'],
+    ['Медитативный эмбиент', 'ambient'],
+    ['Дабстеп 140 BPM', 'dubstep'],
+  ])('%s: распознавание даёт допустимый стиль %s', (text, expected) => {
+    expect(detectSpecStyle(text)).toBe(expected);
+    const spec = fallbackSpec(detectSpecStyle(text), 1);
+    expect(spec.meta.style).toBe(expected);
+    expect(checkSpec(spec).ok).toBe(true);
+    expect(typeof compileTrackSpec(spec)).toBe('string');
+  });
+
+  it('все исходные промпты eval получают валидный fallback без расширения enum', async () => {
+    const source = JSON.parse(await readFile(new URL('../../eval/prompts.json', import.meta.url), 'utf8'));
+    expect(source.prompts).toHaveLength(40);
+    expect(SPEC_STYLES).toEqual(TrackSpecSchema.shape.meta.shape.style.options);
+    expect(SPEC_STYLES).not.toContain('dnb');
+    const dnb = source.prompts.filter((item) => item.style === 'dnb');
+    expect(dnb).toHaveLength(4);
+    for (const item of source.prompts) {
+      const style = detectSpecStyle(item.text);
+      expect(SPEC_STYLES, item.id).toContain(style);
+      const spec = fallbackSpec(style, item.id.length);
+      expect(TrackSpecSchema.safeParse(spec).success, item.id).toBe(true);
+      const checked = checkSpec(spec);
+      expect(checked.ok, `${item.id}: ${checked.errors.join('; ')}`).toBe(true);
+      expect(compileTrackSpec(spec), item.id).toContain('setCpm(');
+      if (item.style === 'dnb') expect(spec.meta.style, item.id).toBe('techno');
+      if (item.style === 'lofi') expect(spec.meta.style, item.id).toBe('lo-fi');
+    }
+  });
+});
+
 describe('фаза 7: отпечаток спеки', () => {
   const specA = {
-    harmony: { progressionId: 'p1' },
-    form: [
-      { kind: 'intro', bars: 8, energy: 0.3, roles: { kick: { recipe: 'sparse' }, bass: { recipe: 'sparse' } } },
-      { kind: 'drop', bars: 16, energy: 1, roles: { kick: { recipe: 'busy' } } },
-    ],
+    meta: { style: 'techno', bpm: 132, key: 'Cmin' },
+    structure: { sections: [
+      { name: 'intro', cycles: 8, energy: 0.3, harmony: 'Cm Ab Fm Gm' },
+      { name: 'drop', cycles: 16, energy: 1, harmony: 'Cm Ab Fm Gm' },
+    ] },
+    parts: { roles: {
+      kick: { activeIn: ['intro', 'drop'], pattern: 'bd*4', sound: 's' },
+      bass: { activeIn: ['intro'], pattern: '0 ~ 2 4', sound: 'sawtooth' },
+    } },
   };
 
   it('одинаковые спеки дают одинаковый отпечаток', () => {
+    expect(TrackSpecSchema.safeParse(specA).success).toBe(true);
+    expect(checkSpec(specA).ok).toBe(true);
     expect(fingerprint(specA)).toBe(fingerprint(JSON.parse(JSON.stringify(specA))));
   });
 
   it('разная форма или гармония меняет отпечаток', () => {
     const other = JSON.parse(JSON.stringify(specA));
-    other.form[0].bars = 4;
+    other.structure.sections[0].cycles = 4;
+    expect(TrackSpecSchema.safeParse(other).success).toBe(true);
     expect(fingerprint(specA)).not.toBe(fingerprint(other));
 
     const otherHarmony = JSON.parse(JSON.stringify(specA));
-    otherHarmony.harmony.progressionId = 'p2';
+    otherHarmony.structure.sections[0].harmony = 'Fm Cm Ab Gm';
+    expect(checkSpec(otherHarmony).ok).toBe(true);
     expect(fingerprint(specA)).not.toBe(fingerprint(otherHarmony));
   });
 
@@ -103,10 +152,16 @@ describe('фаза 7: отпечаток спеки', () => {
 
   it('расстояние растёт с различиями', () => {
     const near = fingerprint(specA);
-    const far = fingerprint({
-      harmony: { progressionId: 'other' },
-      form: [{ kind: 'outro', bars: 8, energy: 0.1, roles: { pad: { recipe: 'sparse' } } }],
-    });
+    const other = {
+      meta: { style: 'ambient', bpm: 64, key: 'Cmin' },
+      structure: { sections: [
+        { name: 'verse', cycles: 8, energy: 0.4, harmony: 'Ab Fm Cm Gm' },
+        { name: 'outro', cycles: 8, energy: 0.1, harmony: 'Fm Ab Gm Cm' },
+      ] },
+      parts: { roles: { pad: { activeIn: ['verse', 'outro'], pattern: '0,2,4', sound: 'sine' } } },
+    };
+    expect(checkSpec(other).ok).toBe(true);
+    const far = fingerprint(other);
     expect(distanceBetween(near, far)).toBeGreaterThan(0.5);
   });
 

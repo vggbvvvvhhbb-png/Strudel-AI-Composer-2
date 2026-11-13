@@ -14,15 +14,18 @@
 // без PRNG. Один и тот же seed — один и тот же набор кандидатов.
 
 import { checkSpec } from './spec/check.js';
-import { ANGLE_NAMES, applyAngle } from './angles.js';
+import { compileTrackSpec } from './compiler/index.js';
 import { MUTATION_NAMES, applyMutation } from './mutations.js';
+import { ANGLE_NAMES, applyAngle } from './angles.js';
 import {
   MIN_DISTANCE,
+  cloneSpec,
   hashText,
   sameSpec,
   specDistance,
   specFingerprint,
 } from './diversity.js';
+
 
 /**
  * Подробный отбор кандидатов: спека + метаданные (угол, мутация,
@@ -54,7 +57,7 @@ export function generateCandidateDetails(spec, options = {}) {
 
       const angleName = ANGLE_NAMES[hashText(`${seed}|angle|${index}`) % ANGLE_NAMES.length];
       const angled = applyAngle(spec, angleName, seed + index);
-      if (!angled) continue;
+      if (!angled || !checkSpec(angled).ok) continue;
 
       let candidate = angled;
       let mutationName = null;
@@ -72,10 +75,15 @@ export function generateCandidateDetails(spec, options = {}) {
 
       const checked = checkSpec(candidate);
       if (!checked.ok) continue;
+      try {
+        compileTrackSpec(candidate);
+      } catch {
+        continue;
+      }
       if (sameSpec(candidate, spec)) continue;
 
       const fingerprint = specFingerprint(candidate);
-      // Одинаковый «скелет» (форма + прогрессия + рецепты) — это повтор
+      // Одинаковый «скелет» (форма + гармония + рисунки) — это повтор
       // варианта, даже если отличается мотив или энергия.
       if (cores.has(fingerprint)) continue;
       if (specDistance(spec, candidate) < pass) continue;

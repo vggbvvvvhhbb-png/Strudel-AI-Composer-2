@@ -1,157 +1,85 @@
-// Пайплайн структурной композиции: спека → код → проверка → оценка.
-//
-// Ключевая идея цикла: LLM выбирает ИДЕИ (гармония, форма, роли, энергия),
-// а детерминированный компилятор превращает их в код. Поэтому валидность
-// достигается по построению: спека проверяется Zod и checkSpec, код —
-// настоящим исполнением в Strudel, а не разбором текста.
-//
-// Пайплайн не бросает исключений на невалидной спеке: он её чинит
-// (один retry с моделью), а если не вышло — детерминированно собирает
-// запасную спеку из форм библиотеки. Трек должен получиться всегда.
-
-import { compile } from '../compiler/index.js';
+// План → validateTrackSpec/checkSpec → синхронная компиляция → оценка/refine.
+import { TrackSpecSchema, validateTrackSpec } from '../../../src/schemas/track-spec.schema.js';
 import { checkSpec } from '../spec/check.js';
-import { jsonSchemaForSpec, SPEC_STYLES, SPEC_ROLES, SECTION_KINDS } from '../spec/schema.js';
-import { progressionsForStyle, formsForStyle, roleFor } from '../knowledge/index.js';
+import { formsForStyle, roleFor, selectPattern } from '../knowledge/index.js';
 import { detectStyle } from '../references.js';
+import { compileForProtocol } from './compiled.js';
+import { compileTrackSpec } from '../compiler/index.js';
 
-/**
- * Стиль из свободного текста — для спеки нужен один из SPEC_STYLES.
- *
- * Профили стилей (references.js) и стили спеки (schema.js) — разные
- * списки: в профилях есть hiphop, в спеке — jazz, rock, cinematic.
- * Поэтому стиль спеки выводится отдельно.
- *
- * Подсказки разложены на два уровня:
- *   • ЯВНЫЕ — название жанра. Если в тексте несколько жанров, берётся
- *     тот, который встретился РАНЬШЕ: «спокойный lo-fi» — это lo-fi,
- *     а не ambient, хотя «спокойный» и тянет в сторону ambient.
- *   • НАСТРОЕНИЕ — слово без жанра. Работает, только если явных нет.
- */
+const SPEC_STYLES = TrackSpecSchema.shape.meta.shape.style.options;
+const SPEC_ROLES = TrackSpecSchema.shape.parts.shape.roles.keySchema.options;
+const SECTION_KINDS = TrackSpecSchema.shape.structure.shape.sections.element.shape.name.options;
+
 const STYLE_HINTS = [
-  ['dnb', ['dnb', 'drum n bass', 'drum and bass', 'drum & bass', 'днб', 'драм-н-бейс', 'нейрофанк', 'neurofunk']],
-  ['techno', ['techno', 'техно', 'club', 'клэб', 'industrial', 'индастриал', 'rave', 'рейв']],
-  ['house', ['house', 'хаус', 'disco', 'диско', 'deep house', 'tech house', 'afro house']],
-  ['synthwave', ['synthwave', 'синтвейв', 'retrowave', 'ретроволн', 'outrun']],
-  ['trap', ['trap', 'трэп', 'трейп', 'drill', 'дрилл']],
-  ['lofi', ['lo-fi', 'lofi', 'лоу-фай', 'лофай', 'boom bap', 'бум-бэп']],
-  ['jazz', ['jazz', 'джаз', 'swing', 'свинг', 'blues', 'блюз']],
+  ['techno', ['techno', 'техно', 'industrial', 'рейв']],
+  ['house', ['house', 'хаус', 'disco', 'диско']],
+  ['synthwave', ['synthwave', 'синтвейв', 'retrowave']],
+  ['trap', ['trap', 'трэп', 'drill', 'дрилл']],
+  ['lo-fi', ['lo-fi', 'lofi', 'лоу-фай', 'лофай', 'boom bap']],
+  ['dubstep', ['dubstep', 'дабстеп']],
+  ['jazz', ['jazz', 'джаз', 'swing', 'blues']],
   ['rock', ['rock', 'рок', 'гитар', 'guitar', 'indie']],
   ['ambient', ['ambient', 'эмбиент', 'drone', 'дрон']],
-  ['cinematic', ['cinematic', 'кинематограф', 'кино', 'film score', 'soundtrack']],
+  ['cinematic', ['cinematic', 'кинематограф', 'soundtrack', 'film score']],
 ];
 
-/** Слова без жанра: работают, только если явного жанра в тексте нет. */
-const MOOD_HINTS = [
-  ['ambient', ['спокойн', 'calm', 'медитац', 'meditat', 'тих', 'расслаб']],
-  ['cinematic', ['эпик', 'epic', 'тревожн', 'драматич', 'монумент']],
-  ['jazz', ['chill', 'чилл', 'уютн']],
-  ['lofi', ['уютн', 'ностальг', 'nostalg']],
-];
-
-/**
- * Определяет стиль спеки по тексту запроса.
- * @param {string} text
- * @returns {string} id из SPEC_STYLES
- */
 export function detectSpecStyle(text) {
   const hay = String(text ?? '').toLowerCase();
-  if (!hay.trim()) return 'techno';
-
-  // Явный жанр: побеждает тот, что встретился раньше.
   let best = null;
   for (const [id, needles] of STYLE_HINTS) {
     for (const needle of needles) {
       const at = hay.indexOf(needle);
-      if (at < 0) continue;
-      if (!best || at < best.at) best = { id, at };
-      break; // для одного жанра достаточно первого совпадения
+      if (at >= 0 && (!best || at < best.at)) best = { id, at };
     }
   }
   if (best) return best.id;
-
-  // Явного жанра нет — ищем по настроению.
-  for (const [id, needles] of MOOD_HINTS) {
-    if (needles.some((n) => hay.includes(n))) return id;
-  }
-
-  // Ничего не нашли — берём стиль профиля (может дать 'generic').
+  if (/спокойн|calm|медитац|meditat|тих|расслаб/.test(hay)) return 'ambient';
+  if (/эпик|epic|тревожн|драматич|монумент/.test(hay)) return 'cinematic';
+  if (/chill|чилл|уютн/.test(hay)) return 'jazz';
+  if (/ностальг|nostalg/.test(hay)) return 'lo-fi';
   const profile = detectStyle(text);
-  if (SPEC_STYLES.includes(profile)) return profile;
-  return 'techno';
+  return SPEC_STYLES.includes(profile) ? profile : 'techno';
 }
 
-/**
- * Описание библиотеки для промпта: что модели разрешено выбирать.
- *
- * Без этого модель выдумывает свои id прогрессий и роли — и спека
- * не проходит checkSpec. Список прогрессий, форм и ролей подаётся
- * как данные, а не как «придумай что-нибудь».
- */
-function libraryBrief(style) {
-  const progressions = progressionsForStyle(style)
-    .map((p) => `- ${p.id}: степени [${p.degrees.join(', ')}], лад ${p.mode}, аккорд ${p.barsPerChord} такт, характер «${p.feel}»`)
-    .join('\n');
-  const forms = formsForStyle(style)
-    .map((f) => `- ${f.id}: ${f.sections.map((s) => `${s.kind}(${s.bars})`).join(' → ')}`)
-    .join('\n');
-  const roles = SPEC_ROLES.filter((role) => roleFor(style, role))
-    .map((role) => role)
-    .join(', ');
-  return { progressions, forms, roles };
+// Имена библиотеки не являются альтернативным входным контрактом TrackSpec.
+function knowledgeStyle(style) {
+  return style === 'lo-fi' ? 'lofi' : style === 'dubstep' ? 'trap' : style;
 }
 
-/**
- * Текст промпта для генерации спеки.
- * @param {string} prompt запрос пользователя
- * @param {string} style стиль спеки
- */
+function validatePlan(raw) {
+  try {
+    const checked = checkSpec(validateTrackSpec(raw));
+    // Zod проверяет форму, но не исполнимость mini-нотации и эффектов.
+    if (checked.ok) compileTrackSpec(checked.spec);
+    return checked;
+  } catch (err) {
+    return { ok: false, spec: null, errors: [err.message || String(err)], warnings: [] };
+  }
+}
+
 function specMessages(prompt, style) {
-  const brief = libraryBrief(style);
-  const schema = jsonSchemaForSpec();
   const system = [
-    'Ты — композитор. Твоя задача — спланировать трек, а не писать код.',
-    'Ответ — строго один JSON-объект по схеме ниже. Никакого текста вокруг.',
-    '',
-    'Что ты выбираешь:',
-    '- meta.style — стиль трека.',
-    '- meta.bpm — темп 50..190.',
-    '- meta.key — тональность в формате "c:minor" (полное имя лада одним словом: major, minor, dorian, phrygian, lydian, mixolydian).',
-    '- harmony — прогрессия из списка ниже (progressionId) или свои степени (degrees, 0..6).',
-    '- form — массив секций трека: kind (тип секции), bars (длина в тактах, 4..32), energy (0..1), roles (какие партии играют).',
-    '- roles в секции — объект: роль → {recipe, variant}. recipe: default/busy/sparse (плотность рисунка). variant: A/B/C (рисунок партии).',
-    '- progressionOverride в секции — если в этой секции нужна другая гармония.',
-    '- transition — переход В эту секцию: {into: "drop", type: "riser"}.',
-    '- motif — {degrees, rhythm, transforms}: ритм мотива строками "x ~ x x".',
-    '- reasoning — одно-два предложения: почему такой план.',
-    '',
-    'Правила плана:',
-    '- Суммарная длина трека 16..96 тактов, минимум 2 секции.',
-    '- Секции различаются: у интро энергия ниже, у дропа — выше. Одинаковая энергия у всех секций — плохой план.',
-    '- В каждой секции 2..6 ролей, и роли секций отличаются: не пиши один и тот же набор ролей везде.',
-    '- Гармония меняется: одна и та же прогрессия на весь трек — плохой план.',
-    '- Роли и прогрессии бери из списка библиотеки для этого стиля.',
-    '',
-    `Стиль: ${style}`,
-    '',
-    'Прогрессии (progressionId):',
-    brief.progressions || '(нет)',
-    '',
-    'Формы (образец длины и набора секций):',
-    brief.forms || '(нет)',
-    '',
-    `Доступные роли: ${brief.roles}`,
-    '',
-    'JSON Schema ответа:',
-    JSON.stringify(schema.schema),
+    'Ты — композитор. Спланируй трек, не пиши JavaScript или Strudel-код.',
+    'Верни строго один JSON-объект TrackSpec без текста вокруг.',
+    `meta: {style, bpm, key, schemaVersion?}; style: ${SPEC_STYLES.join(', ')}; bpm 60..180.`,
+    'key: заглавная нота A..G, необязательный #/b, затем строчные буквы лада; например Cmin, Am, F#minor. Двоеточие в key запрещено.',
+    `structure: {sections: [{name, cycles, energy, harmony, parameters?}]}; name: ${SECTION_KINDS.join(', ')}.`,
+    'cycles — целое число циклов >=1; energy 0..1; harmony — строка аккордов, например "Cm Fm Gm Cm".',
+    'parameters?: {cutoff?: [число, число], gain?: [число, число]}.',
+    `parts: {roles: {роль: {activeIn, pattern, sound, effects?}}}; роли: ${SPEC_ROLES.join(', ')}.`,
+    'Имена секций могут повторяться; порядок и длительности задаёт structure.sections.',
+    'activeIn — массив имён существующих секций; партия играет во всех секциях с указанным именем.',
+    'pattern — mini-нотация, не код: ударные "bd*4", "~ sd ~ sd", "hh*8"; тональные партии — степени "0 ~ 2 4".',
+    'sound — имя сэмпла или синтезатора: bd, sd, hh, sine, triangle, sawtooth, square, piano.',
+    'effects?: [{name, params}]; поддерживаются room, delay, gain, lpf, hpf с одним числовым аргументом. Не придумывай методы.',
+    'reasoning? — короткое объяснение плана.',
+    'План: 2..12 секций, всего 16..96 циклов; энергия и набор активных ролей различаются; гармония развивается.',
+    'Никаких верхнеуровневых harmony, form, motif, automation; никаких recipe/variant.',
+    `Стиль запроса: ${style}. Пример канонической структуры:`,
+    JSON.stringify(fallbackSpec(style, 1)),
   ].join('\n');
-
-  return [
-    { role: 'system', content: system },
-    { role: 'user', content: `Запрос: ${prompt}` },
-  ];
+  return [{ role: 'system', content: system }, { role: 'user', content: `Запрос: ${prompt}` }];
 }
-
 /**
  * Достаёт JSON-объект из ответа модели.
  *
@@ -215,38 +143,45 @@ export function extractJson(text) {
  * @returns {object} спека, проходящая checkSpec
  */
 export function fallbackSpec(style, seed = 1) {
-  const forms = formsForStyle(style);
-  const progressions = progressionsForStyle(style);
-  const form = forms.length ? forms[seed % forms.length] : null;
-  const progression = progressions.length ? progressions[seed % progressions.length] : null;
-
-  const sections = (form?.sections || []).map((section) => {
-    // Энергия секции → плотность рисунка: интро разреженнее, дроп плотнее.
-    const recipe = section.energy >= 0.75 ? 'busy' : section.energy <= 0.4 ? 'sparse' : 'default';
-    const roles = {};
+  const canonicalStyle = SPEC_STYLES.includes(style) ? style : 'techno';
+  const libraryStyle = knowledgeStyle(canonicalStyle);
+  const forms = formsForStyle(libraryStyle);
+  const index = Math.abs(Math.trunc(seed)) % Math.max(1, forms.length);
+  const form = forms[index];
+  const source = form?.sections || [
+    { kind: 'intro', bars: 8, energy: 0.3, roles: ['pad', 'hats'] },
+    { kind: 'drop', bars: 16, energy: 0.9, roles: ['kick', 'hats', 'bass', 'pad'] },
+    { kind: 'outro', bars: 8, energy: 0.25, roles: ['pad', 'hats'] },
+  ];
+  const harmonies = ['Cm Fm Gm Cm', 'Ab Bb Cm Gm', 'Fm Cm Ab Gm'];
+  const sections = source.map((section, i) => ({
+    name: section.kind,
+    cycles: section.bars,
+    energy: section.energy,
+    harmony: harmonies[(index + i) % harmonies.length],
+  }));
+  const roles = {};
+  source.forEach((section) => {
     for (const role of section.roles || []) {
-      roles[role] = { recipe };
+      if (!SPEC_ROLES.includes(role)) continue;
+      if (!roles[role]) {
+        const info = roleFor(libraryStyle, role);
+        roles[role] = {
+          activeIn: [],
+          pattern: selectPattern(info, 'default', index, seed) || '0 ~ 2 4',
+          sound: info?.synth || info?.sounds?.[0] || 'sine',
+        };
+      }
+      if (!roles[role].activeIn.includes(section.kind)) roles[role].activeIn.push(section.kind);
     }
-    const out = {
-      kind: section.kind,
-      bars: section.bars,
-      energy: section.energy,
-      roles,
-    };
-    if (section.transition) out.transition = section.transition;
-    return out;
   });
-
-  const bpm = { techno: 132, house: 122, dnb: 174, lofi: 78, ambient: 64, synthwave: 100, trap: 140, jazz: 118, rock: 128, cinematic: 90 }[style] || 120;
-
-  return {
-    meta: { style, bpm, key: 'c:minor', seed },
-    harmony: progression
-      ? { progressionId: progression.id, mode: progression.mode, barsPerChord: progression.barsPerChord }
-      : { degrees: [0, 5, 2, 6], mode: 'minor', barsPerChord: 2 },
-    form: sections,
-    reasoning: 'Запасной план: форма и прогрессия взяты из библиотеки знаний.',
-  };
+  const bpm = { techno: 132, house: 122, 'lo-fi': 78, ambient: 64, dubstep: 140, synthwave: 100, trap: 140, jazz: 118, rock: 128, cinematic: 90 }[canonicalStyle];
+  return validateTrackSpec({
+    meta: { style: canonicalStyle, bpm, key: 'Cmin' },
+    structure: { sections },
+    parts: { roles },
+    reasoning: 'Запасной план: секции и партии взяты из библиотеки знаний.',
+  });
 }
 
 /**
@@ -265,10 +200,7 @@ async function askModel({ prompt, style, completeChat, seed, signal, onUsage }) 
     temperature: 0.4,
     signal,
     onUsage,
-    responseFormat: {
-      type: 'json_schema',
-      json_schema: { name: 'track_spec_v2', strict: true, schema: jsonSchemaForSpec().schema },
-    },
+    responseFormat: { type: 'json_object' },
   });
   return { raw: extractJson(text), text };
 }
@@ -277,7 +209,7 @@ async function askModel({ prompt, style, completeChat, seed, signal, onUsage }) 
  * Полный проход пайплайна без оценки и refine.
  *
  * Шаги: спросить модель → проверить → (retry с замечаниями) → (fallback) →
- * скомпилировать → проверить код исполнением.
+ * скомпилировать. Оценка и исполнение выполняются вызывающим кодом.
  *
  * @param {object} options
  * @param {string} options.prompt
@@ -328,7 +260,7 @@ export async function buildTrack({
       continue;
     }
 
-    const check = checkSpec(raw);
+    const check = validatePlan(raw);
     if (check.ok) {
       spec = check.spec;
       break;
@@ -362,14 +294,11 @@ export async function buildTrack({
           temperature: 0.2,
           signal,
           onUsage,
-          responseFormat: {
-            type: 'json_schema',
-            json_schema: { name: 'track_spec_v2', strict: true, schema: jsonSchemaForSpec().schema },
-          },
+          responseFormat: { type: 'json_object' },
         });
         const fixedRaw = extractJson(fixed);
         if (fixedRaw) {
-          const fixedCheck = checkSpec(fixedRaw);
+          const fixedCheck = validatePlan(fixedRaw);
           if (fixedCheck.ok) {
             spec = fixedCheck.spec;
             break;
@@ -389,14 +318,16 @@ export async function buildTrack({
     usedFallback = true;
     const fallback = fallbackSpec(trackStyle, seed);
     const check = checkSpec(fallback);
-    spec = check.ok ? check.spec : fallback;
+    if (!check.ok) throw new Error(`Запасной план не прошёл проверку: ${check.errors.join('; ')}`);
+    spec = validateTrackSpec(check.spec);
     emit('fallback', { message: 'Модель не дала валидную спеку — собран запасной план из библиотеки' });
   }
 
   emit('spec', { spec, attempts: modelCalls, usedFallback, errors: lastErrors });
 
   // Компиляция — чистая детерминированная функция.
-  const compiled = compile(spec);
+  spec = validateTrackSpec(spec);
+  const compiled = compileForProtocol(spec);
   emit('compiled', {
     code: compiled.code,
     sections: compiled.sections,

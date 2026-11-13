@@ -16,66 +16,44 @@ import { checkSpec } from '../../server/music/spec/check.js';
 import { compile } from '../../server/music/compiler/index.js';
 import { runStrudel } from '../../server/music/strudel-runtime.mjs';
 
-/** Рабочая спека: 4 секции, разная энергия, переход в дроп. */
+/** Канонические входы создаются здесь, независимо от fallback. */
 function goodSpec() {
   return {
-    meta: { style: 'techno', bpm: 132, key: 'f:minor', seed: 42 },
-    harmony: { progressionId: 'techno-minor-i-vi-iv-v', barsPerChord: 2 },
-    form: [
-      {
-        kind: 'intro',
-        bars: 8,
-        energy: 0.25,
-        roles: { hats: { recipe: 'sparse' }, bass: { recipe: 'sparse' } },
-      },
-      {
-        kind: 'build',
-        bars: 8,
-        energy: 0.6,
-        roles: { kick: { recipe: 'default' }, hats: { recipe: 'default' }, bass: { recipe: 'default' } },
-        transition: { into: 'drop', type: 'riser' },
-      },
-      {
-        kind: 'drop',
-        bars: 16,
-        energy: 1.0,
-        roles: {
-          kick: { recipe: 'busy' },
-          snare: { recipe: 'busy' },
-          hats: { recipe: 'busy' },
-          bass: { recipe: 'busy' },
-          arp: { recipe: 'busy' },
-        },
-      },
-      {
-        kind: 'outro',
-        bars: 8,
-        energy: 0.2,
-        roles: { hats: { recipe: 'sparse' }, texture: { recipe: 'sparse' } },
-      },
-    ],
-    motif: { degrees: [4, 2, 0, 2], rhythm: 'x ~ x x' },
-    reasoning: 'Плотный техно с дропом на 16 тактов.',
+    meta: { style: 'techno', bpm: 132, key: 'Fmin' },
+    structure: { sections: [
+      { name: 'intro', cycles: 8, energy: 0.25, harmony: 'Fm Db Bbm Cm' },
+      { name: 'build', cycles: 8, energy: 0.6, harmony: 'Db Bbm Cm Fm', parameters: { cutoff: [300, 6000] } },
+      { name: 'drop', cycles: 16, energy: 1, harmony: 'Bbm Fm Db Cm', parameters: { gain: [0.6, 1] } },
+      { name: 'outro', cycles: 8, energy: 0.2, harmony: 'Fm Db Bbm Cm' },
+    ] },
+    parts: { roles: {
+      hats: { activeIn: ['intro', 'build', 'drop', 'outro'], pattern: 'hh*8', sound: 's' },
+      bass: { activeIn: ['intro', 'build', 'drop'], pattern: '0 ~ 2 4', sound: 'sawtooth' },
+      kick: { activeIn: ['build', 'drop'], pattern: 'bd*4', sound: 's' },
+      snare: { activeIn: ['drop'], pattern: '~ sd ~ sd', sound: 's' },
+      arp: { activeIn: ['drop'], pattern: '0 2 4 6', sound: 'triangle' },
+      texture: { activeIn: ['outro'], pattern: '0 ~ 2 ~', sound: 'sine' },
+    } },
+    reasoning: 'Плотный техно с дропом на 16 циклов.',
   };
 }
 
-/** Спека с намеренными дефектами: плоская энергия, нет перехода, одна роль. */
 function flatSpec() {
   return {
-    meta: { style: 'techno', bpm: 132, key: 'f:minor' },
-    harmony: { progressionId: 'techno-minor-i-vi-iv-v', barsPerChord: 2 },
-    form: [
-      { kind: 'intro', bars: 8, energy: 0.5, roles: { kick: { recipe: 'default' } } },
-      { kind: 'drop', bars: 8, energy: 0.5, roles: { kick: { recipe: 'default' } } },
-    ],
+    meta: { style: 'techno', bpm: 132, key: 'Fmin' },
+    structure: { sections: [
+      { name: 'intro', cycles: 8, energy: 0.3, harmony: 'Fm Db Bbm Cm' },
+      { name: 'drop', cycles: 8, energy: 0.3, harmony: 'Fm Db Bbm Cm' },
+    ] },
+    parts: { roles: { kick: { activeIn: ['intro', 'drop'], pattern: 'bd*4', sound: 's' } } },
   };
 }
 
 describe('фаза 3: определение стиля', () => {
   it('явный жанр побеждает слово настроения', () => {
-    expect(detectSpecStyle('спокойный lo-fi с пианино')).toBe('lofi');
+    expect(detectSpecStyle('спокойный lo-fi с пианино')).toBe('lo-fi');
     expect(detectSpecStyle('жёсткий техно 132')).toBe('techno');
-    expect(detectSpecStyle('drum and bass нейрофанк')).toBe('dnb');
+    expect(detectSpecStyle('drum and bass нейрофанк')).toBe('techno');
   });
 
   it('без явного жанра работает настроение', () => {
@@ -85,7 +63,7 @@ describe('фаза 3: определение стиля', () => {
 
   it('стиль всегда из списка SPEC_STYLES', () => {
     for (const text of ['что-то', 'lofi', 'хаус', 'рок', 'jazz', '']) {
-      expect(['lofi', 'techno', 'house', 'ambient', 'dnb', 'synthwave', 'trap', 'jazz', 'rock', 'cinematic']).toContain(
+      expect(['lo-fi', 'techno', 'house', 'ambient', 'dubstep', 'synthwave', 'trap', 'jazz', 'rock', 'cinematic']).toContain(
         detectSpecStyle(text),
       );
     }
@@ -173,7 +151,7 @@ describe('фаза 3: пайплайн', () => {
   });
 
   it('запасная спека валидна для каждого стиля', () => {
-    for (const style of ['lofi', 'techno', 'house', 'ambient', 'dnb', 'synthwave', 'trap', 'jazz', 'rock', 'cinematic']) {
+    for (const style of ['lo-fi', 'techno', 'house', 'ambient', 'dubstep', 'synthwave', 'trap', 'jazz', 'rock', 'cinematic']) {
       const check = checkSpec(fallbackSpec(style, 3));
       expect(check.ok, `${style}: ${check.errors.join('; ')}`).toBe(true);
     }
@@ -187,7 +165,7 @@ describe('фаза 3: пайплайн', () => {
 
 describe('фаза 5: замечания к спеке', () => {
   it('энергия плоская — замечание есть', () => {
-    const profile = energyProfile(flatSpec().form);
+    const profile = energyProfile(flatSpec().structure.sections);
     expect(profile.flat).toBe(true);
     const remarks = collectRemarks(flatSpec());
     expect(remarks.some((r) => r.kind === REMARK_KINDS.FLAT_ENERGY)).toBe(true);
@@ -216,17 +194,19 @@ describe('фаза 5: замечания к спеке', () => {
     const spec = flatSpec();
     const remark = collectRemarks(spec).find((r) => r.kind === REMARK_KINDS.FLAT_ENERGY);
     const patched = applyRemark(spec, remark);
-    const energies = patched.form.map((s) => s.energy);
+    const energies = patched.structure.sections.map((s) => s.energy);
     expect(Math.max(...energies) - Math.min(...energies)).toBeGreaterThan(0.4);
     expect(checkSpec(patched).ok).toBe(true);
   });
 
-  it('правка партии меняет вариант рисунка', () => {
+  it('правка партии меняет активность, не опустошая тихую секцию', () => {
     const spec = flatSpec();
+    spec.parts.roles.pad = { activeIn: ['intro', 'drop'], pattern: '0 ~ 2 ~', sound: 'sine' };
     const remark = collectRemarks(spec).find((r) => r.kind === REMARK_KINDS.REPEATED_PART);
     const patched = applyRemark(spec, remark);
-    const variants = patched.form.map((s) => s.roles.kick?.variant);
-    expect(new Set(variants).size).toBeGreaterThan(1);
+    expect(patched.parts.roles.kick.activeIn).toEqual(['drop']);
+    expect(patched.parts.roles.pad.activeIn).toContain('intro');
+    expect(spec.parts.roles.kick.activeIn).toEqual(['intro', 'drop']);
     expect(checkSpec(patched).ok).toBe(true);
   });
 
@@ -234,7 +214,8 @@ describe('фаза 5: замечания к спеке', () => {
     const spec = flatSpec();
     const remark = collectRemarks(spec).find((r) => r.kind === REMARK_KINDS.MISSING_TRANSITION);
     const patched = applyRemark(spec, remark);
-    expect(patched.form[0].transition).toBeTruthy();
+    expect(patched.structure.sections[1].parameters.gain).toEqual([0.6, 1]);
+    expect(spec.structure.sections[1].parameters).toBeUndefined();
     expect(checkSpec(patched).ok).toBe(true);
   });
 });

@@ -23,18 +23,7 @@ const completeChat = async () => {
       form: [{ kind: 'intro', bars: 8, energy: 0.5, roles: { kick: { recipe: 'default' } } }],
     });
   }
-  return JSON.stringify({
-    meta: { style: 'techno', bpm: 132, key: 'f:minor', seed: 42 },
-    harmony: { progressionId: 'techno-minor-i-vi-iv-v', barsPerChord: 2 },
-    form: [
-      { kind: 'intro', bars: 8, energy: 0.25, roles: { hats: { recipe: 'sparse' }, bass: { recipe: 'sparse' } } },
-      { kind: 'build', bars: 8, energy: 0.6, roles: { kick: { recipe: 'default' }, hats: { recipe: 'default' }, bass: { recipe: 'default' } }, transition: { into: 'drop', type: 'riser' } },
-      { kind: 'drop', bars: 16, energy: 1.0, roles: { kick: { recipe: 'busy' }, snare: { recipe: 'busy' }, hats: { recipe: 'busy' }, bass: { recipe: 'busy' }, arp: { recipe: 'busy' } } },
-      { kind: 'outro', bars: 8, energy: 0.2, roles: { hats: { recipe: 'sparse' }, texture: { recipe: 'sparse' } } },
-    ],
-    motif: { degrees: [4, 2, 0, 2], rhythm: 'x ~ x x' },
-    reasoning: 'Плотный техно с дропом на 16 тактов.',
-  });
+  return JSON.stringify(fallbackSpec('techno', 42));
 };
 
 console.log('--- 1. определение стиля ---');
@@ -78,12 +67,12 @@ console.log(`  исполняется: ok=${fbRun.ok} партий=${fbRun.order
 
 console.log('--- 6. замечания к спеке ---');
 const flatSpec = {
-  meta: { style: 'techno', bpm: 132, key: 'f:minor' },
-  harmony: { progressionId: 'techno-minor-i-vi-iv-v', barsPerChord: 2 },
-  form: [
-    { kind: 'intro', bars: 8, energy: 0.5, roles: { kick: { recipe: 'default' } } },
-    { kind: 'drop', bars: 8, energy: 0.5, roles: { kick: { recipe: 'default' } } },
-  ],
+  meta: { style: 'techno', bpm: 132, key: 'Fmin' },
+  structure: { sections: [
+    { name: 'intro', cycles: 8, energy: 0.5, harmony: 'Fm Db Bbm Cm' },
+    { name: 'drop', cycles: 8, energy: 0.5, harmony: 'Fm Db Bbm Cm' },
+  ] },
+  parts: { roles: { kick: { activeIn: ['intro', 'drop'], pattern: 'bd*4', sound: 's' } } },
 };
 const remarks = collectRemarks(flatSpec);
 console.log(`  замечаний: ${remarks.length}`);
@@ -91,7 +80,7 @@ for (const r of remarks) console.log(`    [${r.kind}] ${r.label}: ${r.hint}`);
 
 console.log('--- 7. применение замечания ---');
 const patched = applyRemark(flatSpec, remarks.find((r) => r.kind === 'flat-energy'));
-console.log(`  энергии после правки: ${patched.form.map((s) => s.energy).join(', ')}`);
+console.log(`  энергии после правки: ${patched.structure.sections.map((s) => s.energy).join(', ')}`);
 console.log(`  валидна: ${checkSpec(patched).ok}`);
 
 console.log('--- 8. refine-цикл по спеке ---');

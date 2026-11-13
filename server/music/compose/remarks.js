@@ -1,317 +1,151 @@
-// Замечания к спеке: конкретные, локальные, пригодные для правки.
-//
-// Почему отдельный файл: формулировки замечаний — это контракт между
-// метриками и моделью. Если метрика изменилась, меняется и текст
-// замечания; держать их рядом значит держать согласованными.
-//
-// Каждое замечание отвечает на два вопроса:
-//   • ЧТО не так — с точностью до тактов и ролей;
-//   • ЧТО сделать — конкретное действие со спекой (recipe, variant,
-//     энергия, переход, прогрессия), а не «сделай лучше».
-//
-// Формулировки покрыты тестами: у каждой есть проверка, что текст
-// упоминает проблему и действие.
+// Локальные правки канонического TrackSpec: новые поля не добавляются.
+import { validateTrackSpec } from '../../../src/schemas/track-spec.schema.js';
 
-/**
- * Типы замечаний. `kind` — по нему refine выбирает, КАК править спеку.
- */
 export const REMARK_KINDS = {
-  /** Одна и та же гармония слишком долго. */
   HARMONY_WALL: 'harmony-wall',
-  /** Энергия трека плоская: секции не различаются. */
   FLAT_ENERGY: 'flat-energy',
-  /** Партия повторяет саму себя: рисунок не меняется от секции к секции. */
   REPEATED_PART: 'repeated-part',
-  /** Секция без перехода — трек «рвётся» на части. */
   MISSING_TRANSITION: 'missing-transition',
-  /** Слишком мало партий: трек пустой. */
   THIN_ARRANGEMENT: 'thin-arrangement',
-  /** Мотив не задан: мелодической линии нет. */
   NO_MOTIF: 'no-motif',
 };
 
-/**
- * Оценка «плоскости» энергии по спекам.
- *
- * Плоскость — это когда секции не различаются по энергии: размах
- * (максимум − минимум) мал, а разница между соседними секциями
- * почти нулевая. Треку без формы нужен размах.
- *
- * @param {object[]} form секции спеки
- * @returns {{range: number, maxJump: number, flat: boolean}}
- */
-export function energyProfile(form) {
-  const energies = (form || []).map((s) => Number(s.energy) || 0);
+export function energyProfile(sections) {
+  const energies = (sections || []).map((section) => Number(section.energy) || 0);
   if (energies.length < 2) return { range: 0, maxJump: 0, flat: true };
   const range = Math.max(...energies) - Math.min(...energies);
   let maxJump = 0;
   for (let i = 1; i < energies.length; i += 1) {
     maxJump = Math.max(maxJump, Math.abs(energies[i] - energies[i - 1]));
   }
-  // Размах меньше 0.25 — секции неразличимы; скачок меньше 0.1 между
-  // соседями — переходов нет даже при общем размахе.
   return { range, maxJump, flat: range < 0.25 || maxJump < 0.1 };
 }
 
-/**
- * Собирает замечания к спеке.
- *
- * @param {object} spec спека (уже прошедшая checkSpec)
- * @param {object} [context] дополнительные данные (например, метрики v2)
- * @returns {Array<{id:string, kind:string, label:string, hint:string, action:object}>}
- */
-export function collectRemarks(spec, context = {}) {
+export function collectRemarks(input, context = {}) {
+  const spec = validateTrackSpec(input);
+  const sections = spec.structure.sections;
+  const roles = spec.parts.roles;
   const remarks = [];
-  if (!spec || !Array.isArray(spec.form) || !spec.form.length) return remarks;
-
-  const form = spec.form;
-  const totalBars = form.reduce((sum, s) => sum + s.bars, 0);
-
-  // --- 1. Гармоническая «обои» ---
-  // Одна и та же прогрессия во всех секциях = гармония не меняется.
-  // Ключ сравнения — id прогрессии и степени.
-  const harmonyKey = (section) => {
-    const override = section.progressionOverride;
-    if (override?.progressionId) return override.progressionId;
-    if (override?.degrees) return override.degrees.join('-');
-    return null;
-  };
-  const globalKey = spec.harmony?.progressionId
-    || (spec.harmony?.degrees ? spec.harmony.degrees.join('-') : null);
-  const sameHarmony = form.filter((s) => {
-    const key = harmonyKey(s);
-    return key === null ? true : key === globalKey;
-  }).length;
-  if (form.length >= 3 && sameHarmony === form.length) {
-    const barsInOneHarmony = totalBars;
+  if (!sections.length) return remarks;
+  const total = sections.reduce((sum, section) => sum + section.cycles, 0);
+  if (sections.length >= 3 && new Set(sections.map((section) => section.harmony)).size === 1) {
     remarks.push({
-      id: 'harmony-wall',
-      kind: REMARK_KINDS.HARMONY_WALL,
+      id: 'harmony-wall', kind: REMARK_KINDS.HARMONY_WALL,
       label: 'Гармония не меняется',
-      hint:
-        `Одна и та же гармония ${barsInOneHarmony} тактов подряд — это «обои». ` +
-        'Задай в одной-двух секциях progressionOverride с другими степенями, ' +
-        'чтобы гармония двигалась.',
-      action: { type: 'change-progression', sectionIndex: Math.min(1, form.length - 1) },
+      hint: `Одна гармония ${total} тактов подряд. Измени harmony одной из секций, чтобы гармония двигалась.`,
+      action: { type: 'change-progression', sectionIndex: 1 },
     });
   }
-
-  // --- 2. Плоская энергия ---
-  const energy = energyProfile(form);
-  if (energy.flat) {
-    // Ищем тихую и громкую секции. Если ни одной нет (все секции на
-    // одном уровне) — назначаем по краям: начало тише, конец громче.
-    let quiet = form.findIndex((s) => (Number(s.energy) || 0) < 0.45);
-    let loud = form.findIndex((s) => (Number(s.energy) || 0) > 0.8);
-    if (quiet < 0 && loud < 0) {
-      quiet = 0;
-      loud = form.length - 1;
-    }
+  const energy = energyProfile(sections);
+  if (sections.length > 1 && energy.flat) {
     remarks.push({
-      id: 'flat-energy',
-      kind: REMARK_KINDS.FLAT_ENERGY,
+      id: 'flat-energy', kind: REMARK_KINDS.FLAT_ENERGY,
       label: 'Энергия плоская',
-      hint:
-        `Размах энергии ${energy.range.toFixed(2)} — секции почти неразличимы. ` +
-        (quiet >= 0
-          ? `Сделай секцию «${form[quiet].kind}» тише (энергия 0.3). `
-          : 'Опусти энергию первой секции до 0.3. ') +
-        (loud >= 0
-          ? `Подними «${form[loud].kind}» до 0.9.`
-          : 'Подними энергию кульминационной секции до 0.9.'),
-      action: { type: 'reshape-energy', quietIndex: quiet, loudIndex: loud },
+      hint: `Размах энергии ${energy.range.toFixed(2)}. Опусти энергию первой секции до 0.3 и подними кульминацию до 0.9.`,
+      action: { type: 'reshape-energy', quietIndex: 0, loudIndex: sections.length - 1 },
     });
   }
-
-  // --- 3. Повторяющаяся партия ---
-  // Роль, рисунок которой не меняется от секции к секции: если во всех
-  // секциях у роли один и тот же recipe и нет явного variant — партия
-  // звучит как один длинный цикл.
-  const roleRecipes = new Map();
-  form.forEach((section, sectionIndex) => {
-    for (const [role, choice] of Object.entries(section.roles || {})) {
-      const key = `${choice.recipe || 'default'}|${choice.variant || ''}`;
-      if (!roleRecipes.has(role)) roleRecipes.set(role, []);
-      roleRecipes.get(role).push({ section, sectionIndex, key });
-    }
-  });
-  for (const [role, entries] of roleRecipes.entries()) {
-    if (entries.length < 2) continue;
-    const variants = new Set(entries.map((e) => e.key));
-    if (variants.size === 1) {
-      const first = entries[0].section;
-      const last = entries[entries.length - 1].section;
+  for (const [role, part] of Object.entries(roles)) {
+    if (sections.length > 1 && sections.every((section) => part.activeIn.includes(section.name))) {
       remarks.push({
-        id: `repeated-part:${role}`,
-        kind: REMARK_KINDS.REPEATED_PART,
+        id: `repeated-part:${role}`, kind: REMARK_KINDS.REPEATED_PART,
         label: `Партия «${role}» не меняется`,
-        hint:
-          `«${role}» играет один и тот же рисунок от «${first.kind}» до «${last.kind}». ` +
-          `Задай другой variant (A/B/C) в следующих секциях или смени recipe на busy/sparse.`,
-        // Правка начинается со секции ПОСЛЕ первой: первая задаёт
-        // рисунок, дальше — отличия от него.
-        action: { type: 'vary-part', role, fromSection: entries[0].sectionIndex },
+        hint: `«${role}» повторяется во всех секциях. Измени activeIn: убери партию из тихой секции, оставив остальные партии.`,
+        action: { type: 'vary-part', role },
       });
     }
   }
-
-  // --- 4. Секции без перехода ---
-  const transitionKinds = new Set(['drop', 'chorus', 'breakdown']);
-  for (let i = 0; i < form.length - 1; i += 1) {
-    const section = form[i];
-    const next = form[i + 1];
-    if (section.transition) continue;
-    if (!transitionKinds.has(next.kind)) continue;
+  for (let i = 1; i < sections.length; i += 1) {
+    const section = sections[i];
+    if (!['drop', 'chorus', 'breakdown'].includes(section.name)) continue;
+    if (section.parameters?.gain || section.parameters?.cutoff) continue;
     remarks.push({
-      id: `missing-transition:${i}`,
-      kind: REMARK_KINDS.MISSING_TRANSITION,
-      label: `Нет перехода в «${next.kind}»`,
-      hint:
-        `Секция «${section.kind}» переходит в «${next.kind}» без перехода — ` +
-        `трек распадается на куски. Добавь transition: {into: "${next.kind}", type: "riser"}.`,
-      action: { type: 'add-transition', sectionIndex: i, into: next.kind },
+      id: `missing-transition:${i - 1}`, kind: REMARK_KINDS.MISSING_TRANSITION,
+      label: `Нет перехода в «${section.name}»`,
+      hint: `Добавь переход в «${section.name}» через parameters.gain: плавное изменение громкости секции.`,
+      action: { type: 'add-transition', sectionIndex: i },
     });
   }
-
-  // --- 5. Мало партий ---
-  const thin = form.findIndex((s) => Object.keys(s.roles || {}).length < 2);
+  const thin = sections.findIndex((section) => Object.values(roles).filter((part) => part.activeIn.includes(section.name)).length < 2);
   if (thin >= 0) {
     remarks.push({
-      id: 'thin-arrangement',
-      kind: REMARK_KINDS.THIN_ARRANGEMENT,
+      id: 'thin-arrangement', kind: REMARK_KINDS.THIN_ARRANGEMENT,
       label: 'Секция почти пустая',
-      hint:
-        `Секция «${form[thin].kind}» играет ${Object.keys(form[thin].roles || {}).length} партии. ` +
-        'Добавь вторую партию — иначе трек проваливается в пустоту.',
+      hint: `В секции «${sections[thin].name}» мало партий. Добавь вторую партию в parts.roles и её имя секции в activeIn.`,
       action: { type: 'add-role', sectionIndex: thin },
     });
   }
-
-  // --- 6. Мотив не задан ---
-  if (!spec.motif && form.some((s) => s.roles && (s.roles.lead || s.roles.arp))) {
-    remarks.push({
-      id: 'no-motif',
-      kind: REMARK_KINDS.NO_MOTIF,
-      label: 'Нет мелодического мотива',
-      hint:
-        'В треке есть лид или арпеджио, но не задан мотив — мелодия вырождается ' +
-        'в повтор верхних ступеней аккорда. Задай motif: {degrees: [...], rhythm: "x ~ x x"}.',
-      action: { type: 'add-motif' },
-    });
+  for (const role of ['lead', 'arp']) {
+    if (roles[role] && !roles[role].pattern.trim()) {
+      remarks.push({
+        id: 'no-motif', kind: REMARK_KINDS.NO_MOTIF,
+        label: 'Нет мелодического мотива',
+        hint: `В партии «${role}» пустой pattern. Задай мотив степенями лада: "4 ~ 2 0 2".`,
+        action: { type: 'add-motif', role },
+      });
+    }
   }
-
-  // Замечания из метрик v2 (если они есть) — дополняют разбор спеки.
-  if (Array.isArray(context.extraRemarks)) {
-    remarks.push(...context.extraRemarks);
-  }
-
+  if (Array.isArray(context.extraRemarks)) remarks.push(...context.extraRemarks);
   return remarks;
 }
 
-/**
- * Применяет замечание к спеке — возвращает НОВУЮ спеку.
- *
- * Правки детерминированные: одно замечание — одно конкретное изменение.
- * Так же, как и смена рецепта, выбор варианта делается по индексу
- * секции, а не случайно.
- *
- * @param {object} spec спека
- * @param {object} remark замечание из collectRemarks
- * @returns {object} новая спека
- */
-export function applyRemark(spec, remark) {
-  if (!spec || !remark) return spec;
-  const next = {
-    ...spec,
-    meta: { ...spec.meta },
-    harmony: { ...spec.harmony },
-    form: spec.form.map((section) => ({
-      ...section,
-      roles: { ...(section.roles || {}) },
-      ...(section.transition ? { transition: { ...section.transition } } : {}),
-      ...(section.progressionOverride
-        ? { progressionOverride: { ...section.progressionOverride } }
-        : {}),
-    })),
-  };
-
-  switch (remark.action?.type) {
+export function applyRemark(input, remark) {
+  if (!input || !remark) return input;
+  // parse создаёт новую вложенную структуру, не меняя исходный план.
+  const next = validateTrackSpec(input);
+  const sections = next.structure.sections;
+  const roles = next.parts.roles;
+  const action = remark.action || {};
+  switch (action.type) {
     case 'change-progression': {
-      const index = remark.action.sectionIndex;
-      const section = next.form[index];
+      const section = sections[action.sectionIndex];
       if (!section) break;
-      // Сдвиг на две ступени по кругу лада — гарантированно в ладу.
-      const base = spec.harmony?.degrees || [0, 5, 2, 6];
-      const shifted = base.map((d) => (d + 2) % 7);
-      section.progressionOverride = {
-        degrees: shifted,
-        mode: spec.harmony?.mode || 'minor',
-        barsPerChord: spec.harmony?.barsPerChord || 2,
-      };
+      const chords = section.harmony.trim().split(/\s+/);
+      // Циклический сдвиг гармонии сохраняет выбранные аккорды и лад.
+      if (chords.length > 1) section.harmony = [...chords.slice(1), chords[0]].join(' ');
       break;
     }
-
     case 'reshape-energy': {
-      const quiet = remark.action.quietIndex;
-      const loud = remark.action.loudIndex;
-      if (quiet >= 0 && next.form[quiet]) next.form[quiet].energy = 0.3;
-      if (loud >= 0 && next.form[loud]) next.form[loud].energy = 0.9;
+      if (sections[action.quietIndex]) sections[action.quietIndex].energy = 0.3;
+      if (sections[action.loudIndex]) sections[action.loudIndex].energy = 0.9;
       break;
     }
-
     case 'vary-part': {
-      const role = remark.action.role;
-      const from = remark.action.fromSection;
-      // Начиная со секции ПОСЛЕ указанной — другой вариант рисунка.
-      for (let i = from + 1; i < next.form.length; i += 1) {
-        const choice = next.form[i].roles?.[role];
-        if (!choice) continue;
-        const current = String(choice.variant || '').toUpperCase();
-        const order = ['A', 'B', 'C'];
-        const index = order.indexOf(current);
-        next.form[i].roles[role] = {
-          ...choice,
-          variant: order[(index + 1) % order.length],
-        };
-      }
+      const part = roles[action.role];
+      if (!part) break;
+      const quiet = sections.find((section) => section.energy < 0.5
+        && part.activeIn.includes(section.name)
+        && Object.entries(roles).some(([role, other]) => role !== action.role && other.activeIn.includes(section.name)));
+      if (quiet) part.activeIn = part.activeIn.filter((name) => name !== quiet.name);
       break;
     }
-
     case 'add-transition': {
-      const index = remark.action.sectionIndex;
-      const section = next.form[index];
-      if (!section) break;
-      section.transition = {
-        into: remark.action.into,
-        type: 'riser',
+      const section = sections[action.sectionIndex];
+      if (section) section.parameters = {
+        ...section.parameters,
+        gain: section.name === 'breakdown' ? [1, 0.5] : [0.6, 1],
       };
       break;
     }
-
     case 'add-role': {
-      const index = remark.action.sectionIndex;
-      const section = next.form[index];
+      const section = sections[action.sectionIndex];
       if (!section) break;
-      const used = new Set(Object.keys(section.roles || {}));
-      const candidate = ['hats', 'pad', 'texture', 'perc'].find((role) => !used.has(role));
-      if (candidate) {
-        section.roles[candidate] = { recipe: 'default' };
-      }
-      break;
-    }
-
-    case 'add-motif': {
-      next.motif = {
-        degrees: [4, 2, 0, 2],
-        rhythm: 'x ~ x x',
-        transforms: ['sequence'],
+      const candidate = ['hats', 'pad', 'texture', 'perc'].find((role) => !roles[role]?.activeIn.includes(section.name));
+      if (!candidate) break;
+      if (roles[candidate]) roles[candidate].activeIn.push(section.name);
+      else roles[candidate] = {
+        activeIn: [section.name],
+        pattern: candidate === 'hats' ? 'hh*8' : candidate === 'perc' ? '~ perc ~ perc' : '0 ~ 2 ~',
+        sound: candidate === 'hats' ? 'hh' : candidate === 'perc' ? 'perc' : 'sine',
       };
       break;
     }
-
-    default:
+    case 'add-motif': {
+      const part = roles[action.role || 'lead'];
+      if (part) part.pattern = '4 ~ 2 0 2';
       break;
+    }
+    default: break;
   }
-
-  return next;
+  return validateTrackSpec(next);
 }

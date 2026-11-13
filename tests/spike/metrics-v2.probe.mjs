@@ -8,66 +8,18 @@ import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { compile } from '../../server/music/compiler/index.js';
+import { fallbackSpec } from '../../server/music/compose/pipeline.js';
 import { scoreTrackV2 } from '../../server/music/score-v2.js';
 import { analyzeProgression } from '../../server/music/metrics/progression.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 
-// Эталон: трек, собранный компилятором из нормальной спеки.
-//
-// Партий ровно шесть — профиль стиля требует 4–6, и лишние партии были бы
-// штрафом за аранжировку, не связанным с проверяемым дефектом.
-const referenceSpec = {
-  meta: { style: 'techno', bpm: 132, key: 'f:minor', seed: 42 },
-  harmony: { progressionId: 'techno-minor-i-vi-iv-v', barsPerChord: 2 },
-  form: [
-    { kind: 'intro', bars: 8, energy: 0.25, roles: { hats: { recipe: 'sparse' }, bass: { recipe: 'sparse' } } },
-    {
-      kind: 'build',
-      bars: 8,
-      energy: 0.6,
-      roles: { kick: { recipe: 'default' }, hats: { recipe: 'default' }, bass: { recipe: 'default' } },
-      transition: { into: 'drop', type: 'riser' },
-    },
-    {
-      kind: 'drop',
-      bars: 16,
-      energy: 1.0,
-      roles: {
-        kick: { recipe: 'busy' },
-        snare: { recipe: 'busy' },
-        hats: { recipe: 'busy' },
-        bass: { recipe: 'busy' },
-        arp: { recipe: 'busy' },
-        pad: { recipe: 'sparse' },
-      },
-    },
-    { kind: 'breakdown', bars: 8, energy: 0.3, roles: { hats: { recipe: 'sparse' }, pad: { recipe: 'sparse' } } },
-    {
-      kind: 'build',
-      bars: 8,
-      energy: 0.75,
-      roles: { kick: { recipe: 'busy' }, hats: { recipe: 'busy' }, bass: { recipe: 'busy' } },
-      transition: { into: 'drop', type: 'riser' },
-    },
-    {
-      kind: 'drop',
-      bars: 16,
-      energy: 1.0,
-      roles: {
-        kick: { recipe: 'busy' },
-        snare: { recipe: 'busy' },
-        hats: { recipe: 'busy' },
-        bass: { recipe: 'busy' },
-        arp: { recipe: 'busy' },
-        pad: { recipe: 'sparse' },
-      },
-    },
-    { kind: 'outro', bars: 8, energy: 0.2, roles: { hats: { recipe: 'sparse' }, bass: { recipe: 'sparse' } } },
-  ],
-  motif: { degrees: [4, 2, 0, 2], rhythm: 'x ~ x x', transforms: ['sequence'] },
-};
+// Эталон строится каноническим генератором приложения, не конвертером старых спек.
+const referenceSpec = fallbackSpec('techno', 42);
+referenceSpec.structure.sections.forEach((section) => {
+  section.parameters = { cutoff: [300, 6000], gain: [0.5, 1] };
+});
 
 async function report(label, code, style) {
   const metrics = await analyzeProgression(code, { cycles: 64, style });

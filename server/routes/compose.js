@@ -26,9 +26,10 @@ import { buildTrack, detectSpecStyle } from '../music/compose/pipeline.js';
 import { refineSpec } from '../music/compose/refine.js';
 import { scoreWithV2 } from '../music/compose/score-adapter.js';
 import { checkSpec } from '../music/spec/check.js';
-import { generateCandidateDetails } from '../music/diversity.js';
+import { validateTrackSpec } from '../../src/schemas/track-spec.schema.js';
+import { generateCandidateDetails } from '../music/best-of.js';
 import { applyMutation, MUTATION_NAMES } from '../music/mutations.js';
-import { compile } from '../music/compiler/index.js';
+import { compileForProtocol } from '../music/compose/compiled.js';
 
 const router = Router();
 
@@ -52,6 +53,15 @@ const mutateSchema = z.object({
   mutation: z.string().max(40).optional(),
   seed: z.number().int().min(0).max(2 ** 31 - 1).optional(),
 });
+
+function checkedCanonicalSpec(raw) {
+  try {
+    const spec = validateTrackSpec(raw);
+    return checkSpec(spec);
+  } catch (err) {
+    return { ok: false, spec: null, errors: [err.message || String(err)] };
+  }
+}
 
 /**
  * Оценка кода: скор v1 по своему парсеру + скор v2 по событиям Strudel.
@@ -136,8 +146,9 @@ router.post('/api/music/compose', async (req, res) => {
     });
 
     let spec = built.spec;
-    let code = built.compiled.code;
-    let score = await scoreCode(code, style, body.prompt);
+    let compiled = built.compiled;
+    let code = compiled.code;
+    let score = await scoreCode(code, built.style, body.prompt);
 
     send('scored', { score, spec });
 
@@ -146,11 +157,12 @@ router.post('/api/music/compose', async (req, res) => {
     if (body.refine) {
       const refined = await refineSpec({
         spec,
-        scoreFn: async (candidateCode) => scoreCode(candidateCode, style, body.prompt),
+        scoreFn: async (candidateCode) => scoreCode(candidateCode, built.style, body.prompt),
         maxIterations: body.iterations,
         onEvent: (event, payload) => send(event, payload),
       });
       spec = refined.spec;
+      compiled = refined.compiled;
       code = refined.code;
       score = {
         total: refined.after.total,
@@ -167,7 +179,7 @@ router.post('/api/music/compose', async (req, res) => {
       });
     }
 
-    send('done', { code, spec, score, sections: built.compiled.sections, mode: 'structured' });
+    send('done', { code, spec, score, sections: compiled.sections, mode: 'structured' });
   } catch (err) {
     if (!upstream.signal.aborted) {
       send('error', { message: err?.message || 'Ошибка композиции' });
@@ -193,7 +205,7 @@ router.post('/api/music/compose/variants', async (req, res) => {
   }
   const { spec: rawSpec, count, seed } = parsed.data;
 
-  const check = checkSpec(rawSpec);
+  const check = checkedCanonicalSpec(rawSpec);
   if (!check.ok) {
     res.status(400).json({ error: `Спека не прошла проверку: ${check.errors.join('; ')}` });
     return;
@@ -204,12 +216,14 @@ router.post('/api/music/compose/variants', async (req, res) => {
   try {
     const candidates = generateCandidateDetails(spec, {
       count,
-      seed: seed ?? spec.meta.seed ?? 0,
+      seed: seed ?? 0,
     });
 
     const variants = [];
     for (const candidate of candidates) {
-      const compiled = compile(candidate.spec);
+      const candidateCheck = checkSpec(candidate.spec);
+      if (!candidateCheck.ok) throw new Error(`Вариант не прошёл проверку: ${candidateCheck.errors.join('; ')}`);
+      const compiled = compileForProtocol(candidateCheck.spec);
       const score = await scoreCode(compiled.code, style, '');
       variants.push({
         angle: candidate.angle,
@@ -217,7 +231,7 @@ router.post('/api/music/compose/variants', async (req, res) => {
         distance: candidate.distance,
         fingerprint: candidate.fingerprint,
         code: compiled.code,
-        spec: candidate.spec,
+        spec: candidateCheck.spec,
         sections: compiled.sections,
         score,
       });
@@ -232,7 +246,7 @@ router.post('/api/music/compose/variants', async (req, res) => {
 
     res.json({
       variants,
-      original: { code: compile(spec).code, spec },
+      original: { code: compileForProtocol(spec).code, spec },
       mutations: MUTATION_NAMES,
     });
   } catch (err) {
@@ -270,7 +284,7 @@ router.post('/api/music/compose/mutate', async (req, res) => {
       res.status(422).json({ error: `Мутация «${name}» дала невалидную спеку: ${mutatedCheck.errors.join('; ')}` });
       return;
     }
-    const compiled = compile(mutatedCheck.spec);
+    const compiled = compileForProtocol(mutatedCheck.spec);
     const score = await scoreCode(compiled.code, spec.meta.style, '');
     res.json({
       mutation: name,

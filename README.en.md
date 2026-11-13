@@ -67,11 +67,16 @@ Keys live on the server only: requests go through the Vite proxy (`/api/generate
 
 | Mode | What the model does | What you get |
 |---|---|---|
-| **Structured** (default) | picks ideas: harmony, form, roles, energy, motif | a track with sections that develops; the code is valid by construction |
+| **Structured** (default) | plans sections, harmony, energy and role patterns in TrackSpec | the validated spec is deterministically compiled into Strudel code |
 | **Free** | writes the whole code itself | maximum freedom, no guarantee of form |
 
-The switch sits under the "Command" field. Both modes go through the same
-validation, and both feed the analysis and improvement panels.
+The switch sits under the "Command" field. The structured path is plan →
+`validateTrackSpec` → synchronous `compileTrackSpec(spec)` → score/refine,
+with validation and compilation repeated for every accepted refinement.
+The compiler returns a code string. The single schema lives in
+`src/schemas/track-spec.schema.js`: `meta`, `structure.sections`, `parts.roles`.
+The old top-level `harmony/form` format is not supported. Free mode validates
+model-generated code; both modes retain analysis and improvement.
 
 ### Hotkeys
 
@@ -124,7 +129,7 @@ validation, and both feed the analysis and improvement panels.
 ## Checks
 
 ```bash
-npm test              # 106 unit tests (vitest)
+npm test              # unit and integration tests (vitest); current count is reported by the run
 npm run check:presets # preset mini-notation checked by Strudel's own parser
 npm run check:secrets # no keys committed to the repo
 npm run build         # production build into dist/

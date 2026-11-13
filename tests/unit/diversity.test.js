@@ -9,7 +9,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { checkSpec } from '../../server/music/spec/check.js';
-import { formsForStyle, progressionsForStyle } from '../../server/music/knowledge/index.js';
+import { formsForStyle } from '../../server/music/knowledge/index.js';
+import { TrackSpecSchema } from '../../src/schemas/track-spec.schema.js';
+import { detectSpecStyle, fallbackSpec } from '../../server/music/compose/pipeline.js';
 import { compile } from '../../server/music/compiler/index.js';
 import { runStrudel } from '../../server/music/strudel-runtime.mjs';
 import {
@@ -25,51 +27,31 @@ import { ANGLE_NAMES, applyAngle } from '../../server/music/angles.js';
 import { MUTATION_NAMES, applyMutation } from '../../server/music/mutations.js';
 import { generateCandidateDetails, generateCandidates } from '../../server/music/best-of.js';
 
-const STYLES = [
-  'lofi', 'techno', 'house', 'ambient', 'dnb',
-  'synthwave', 'trap', 'jazz', 'rock', 'cinematic',
-];
+const STYLES = TrackSpecSchema.shape.meta.shape.style.options;
+const knowledgeStyle = (style) => style === 'lo-fi' ? 'lofi' : style === 'dubstep' ? 'trap' : style;
 
-/**
- * Спека из библиотеки знаний: форма + прогрессия одного стиля.
- *
- * Берём данные из библиотеки, а не пишем руками: тогда тест покрывает
- * ровно те формы, которыми пользуется приложение.
- *
- * @param {string} style
- * @param {number} [formIndex] номер формы стиля
- */
+/** Канонический запасной план использует те же формы, что приложение. */
 function librarySpec(style, formIndex = 0) {
-  const form = formsForStyle(style)[formIndex];
-  const progression = progressionsForStyle(style)[0];
-  return {
-    meta: { style, bpm: 120, key: 'a:minor', seed: 1 },
-    harmony: {
-      progressionId: progression.id,
-      mode: progression.mode,
-      barsPerChord: progression.barsPerChord,
-    },
-    form: form.sections.map((section) => ({
-      kind: section.kind,
-      bars: section.bars,
-      energy: section.energy,
-      roles: Object.fromEntries((section.roles || []).map((role) => [role, { recipe: 'default' }])),
-      ...(section.transition ? { transition: { ...section.transition } } : {}),
-    })),
-  };
+  return fallbackSpec(detectSpecStyle(style), formIndex);
 }
 
 /** Рукописная спека — чтобы property-тест не зависел только от библиотеки. */
 const MANUAL_SPEC = {
-  meta: { style: 'techno', bpm: 128, key: 'c:minor', seed: 42 },
-  harmony: { progressionId: 'techno-minor-i-vi-iv-v' },
-  form: [
-    { kind: 'intro', bars: 8, energy: 0.3, roles: { kick: { recipe: 'default' }, bass: { recipe: 'default' } } },
-    { kind: 'build', bars: 16, energy: 0.65, roles: { kick: { recipe: 'default' }, hats: { recipe: 'default' }, bass: { recipe: 'default' } }, transition: { into: 'drop', type: 'riser' } },
-    { kind: 'drop', bars: 16, energy: 1.0, roles: { kick: { recipe: 'default' }, snare: { recipe: 'default' }, hats: { recipe: 'default' }, bass: { recipe: 'default' }, arp: { recipe: 'default' } } },
-    { kind: 'outro', bars: 8, energy: 0.2, roles: { kick: { recipe: 'default' } } },
-  ],
-  motif: { degrees: [0, 2, 4], rhythm: 'x ~ x x', transforms: ['sequence'] },
+  meta: { style: 'techno', bpm: 128, key: 'Cmin' },
+  structure: { sections: [
+    { name: 'intro', cycles: 8, energy: 0.3, harmony: 'Cm Ab Fm Gm' },
+    { name: 'build', cycles: 16, energy: 0.65, harmony: 'Fm Cm Ab Gm' },
+    { name: 'drop', cycles: 16, energy: 1, harmony: 'Cm Ab Fm Gm' },
+    { name: 'outro', cycles: 8, energy: 0.2, harmony: 'Ab Fm Gm Cm' },
+  ] },
+  parts: { roles: {
+    kick: { activeIn: ['intro', 'build', 'drop', 'outro'], pattern: 'bd*4', sound: 's' },
+    snare: { activeIn: ['drop'], pattern: '~ sd ~ sd', sound: 's' },
+    hats: { activeIn: ['build', 'drop'], pattern: 'hh*8', sound: 's' },
+    bass: { activeIn: ['intro', 'build', 'drop'], pattern: '0 ~ 2 4', sound: 'sawtooth' },
+    arp: { activeIn: ['drop'], pattern: '0 2 4 6', sound: 'triangle' },
+    lead: { activeIn: ['drop'], pattern: '4 ~ 2 0', sound: 'sine' },
+  } },
 };
 
 describe('фаза 6: отпечаток спеки', () => {
@@ -81,23 +63,24 @@ describe('фаза 6: отпечаток спеки', () => {
   });
 
   it('разные спеки дают разные отпечатки', () => {
-    expect(specFingerprint(librarySpec('techno'))).not.toBe(specFingerprint(librarySpec('lofi')));
+    expect(specFingerprint(librarySpec('techno'))).not.toBe(specFingerprint(librarySpec('lo-fi')));
   });
 
-  it('отпечаток зависит от формы, прогрессии и рецептов ролей', () => {
+  it('отпечаток зависит от формы, строковой гармонии и рисунков ролей', () => {
     const base = librarySpec('techno');
     const parts = specFingerprintParts(base);
     expect(parts.form).toContain('drop');
-    expect(parts.harmony).toContain('techno-minor-i-vi-iv-v');
-    expect(parts.recipes).toContain('kick=default');
+    expect(checkSpec(base).ok).toBe(true);
+    expect(parts.harmony).toContain(base.structure.sections[0].harmony);
+    expect(parts.recipes).toContain(`kick=${base.parts.roles.kick.pattern}`);
 
     // Смена формы меняет отпечаток.
     const other = librarySpec('techno', 1);
     expect(specFingerprint(other)).not.toBe(specFingerprint(base));
 
-    // Смена рецепта меняет отпечаток.
+    // Смена рисунка партии меняет отпечаток.
     const withRecipe = JSON.parse(JSON.stringify(base));
-    withRecipe.form[0].roles.kick.recipe = 'busy';
+    withRecipe.parts.roles.kick.pattern = 'bd*8';
     expect(specFingerprint(withRecipe)).not.toBe(specFingerprint(base));
   });
 });
@@ -112,7 +95,7 @@ describe('фаза 6: расстояние между спеками', () => {
   it('разные спеки: расстояние больше нуля и в диапазоне 0..1', () => {
     for (const style of STYLES) {
       const a = librarySpec(style);
-      const b = librarySpec(style === 'lofi' ? 'techno' : 'lofi');
+      const b = librarySpec(style === 'lo-fi' ? 'techno' : 'lo-fi');
       const distance = specDistance(a, b);
       expect(distance, style).toBeGreaterThan(0);
       expect(distance, style).toBeLessThanOrEqual(1);
@@ -129,10 +112,10 @@ describe('фаза 6: расстояние между спеками', () => {
     const base = librarySpec('techno');
 
     const oneRecipe = JSON.parse(JSON.stringify(base));
-    oneRecipe.form[0].roles.kick.recipe = 'busy';
+    oneRecipe.parts.roles.kick.pattern = 'bd*8';
 
     const otherProgression = JSON.parse(JSON.stringify(base));
-    otherProgression.harmony = { progressionId: 'techno-phrygian-i-bII' };
+    otherProgression.structure.sections.forEach((section) => { section.harmony = 'Cm Db Cm Db'; });
 
     const otherForm = librarySpec('techno', 1);
 
@@ -147,21 +130,38 @@ describe('фаза 6: расстояние между спеками', () => {
   it('разложение расстояния объясняет, чем именно различаются спеки', () => {
     const base = librarySpec('techno');
     const other = JSON.parse(JSON.stringify(base));
-    other.harmony = { progressionId: 'techno-phrygian-i-bII' };
+    other.structure.sections.forEach((section) => { section.harmony = 'Cm Db Cm Db'; });
     const parts = distanceBreakdown(base, other);
     expect(parts.harmony).toBeGreaterThan(0);
     expect(parts.form).toBe(0);
     expect(parts.total).toBeCloseTo(specDistance(base, other), 10);
   });
 
+  it('одноимённые секции различаются позицией, а не схлопываются по имени', () => {
+    const base = librarySpec('techno');
+    const drops = base.structure.sections.map((section, index) => section.name === 'drop' ? index : -1)
+      .filter((index) => index >= 0);
+    expect(drops).toHaveLength(2);
+    const other = JSON.parse(JSON.stringify(base));
+    other.structure.sections[drops[1]].harmony = 'Cm Db Cm Db';
+    expect(other.structure.sections[drops[0]]).toEqual(base.structure.sections[drops[0]]);
+    expect(checkSpec(other).ok).toBe(true);
+    expect(specFingerprint(other)).not.toBe(specFingerprint(base));
+    const parts = distanceBreakdown(base, other);
+    expect(parts.harmony).toBeGreaterThan(0);
+    expect(parts.form).toBe(0);
+    expect(parts.roles).toBe(0);
+    expect(parts.total).toBeGreaterThan(0);
+  });
+
   it('порог отсечения отличает «тот же трек» от другого', () => {
     const base = librarySpec('techno');
     const near = JSON.parse(JSON.stringify(base));
-    near.form[0].roles.kick.recipe = 'busy';
+    near.parts.roles.kick.pattern = 'bd*8';
     expect(tooSimilar(base, near)).toBe(true);
 
     const other = JSON.parse(JSON.stringify(base));
-    other.harmony = { progressionId: 'techno-phrygian-i-bII' };
+    other.structure.sections.forEach((section) => { section.harmony = 'Cm Db Cm Db'; });
     expect(tooSimilar(base, other)).toBe(false);
   });
 });
@@ -173,7 +173,8 @@ describe('фаза 6: углы дают структурно другой вар
       const result = applyAngle(spec, angle, 3);
       const checked = checkSpec(result);
       expect(checked.ok, `${style}/${angle}: ${checked.errors.join('; ')}`).toBe(true);
-      expect(sameSpec(result, spec), `${style}/${angle}: спека не изменилась`).toBe(false);
+      expect(result).toEqual(checked.spec);
+      expect(sameSpec(checked.spec, spec), `${style}/${angle}: каноническая спека не изменилась`).toBe(false);
     }
   });
 
@@ -193,7 +194,8 @@ describe('фаза 6: углы дают структурно другой вар
       const result = applyAngle(MANUAL_SPEC, angle, 5);
       const checked = checkSpec(result);
       expect(checked.ok, `${angle}: ${checked.errors.join('; ')}`).toBe(true);
-      expect(sameSpec(result, MANUAL_SPEC)).toBe(false);
+      expect(result).toEqual(checked.spec);
+      expect(sameSpec(checked.spec, MANUAL_SPEC)).toBe(false);
     }
   });
 });
@@ -214,7 +216,8 @@ describe('фаза 6: мутации без LLM', () => {
   });
 
   it.each(STYLES)('стиль %s: property — любая валидная спека остаётся валидной после мутации', (style) => {
-    const forms = formsForStyle(style);
+    const forms = formsForStyle(knowledgeStyle(style));
+    expect(forms.length).toBeGreaterThan(0);
     for (let formIndex = 0; formIndex < forms.length; formIndex += 1) {
       const base = librarySpec(style, formIndex);
       const checkedBase = checkSpec(base);

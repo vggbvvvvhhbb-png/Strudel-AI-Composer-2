@@ -64,6 +64,12 @@ export function initCompose({ getCode, setCode, applyCode, log } = {}) {
   });
 }
 
+// Один путь применения для композиции, мутации и выбранного варианта.
+async function applyCode(code) {
+  if (hooks.applyCode) await hooks.applyCode(code);
+  else if (hooks.setCode) hooks.setCode(code);
+}
+
 /* --- Запуск пайплайна --- */
 
 async function runCompose() {
@@ -231,6 +237,11 @@ function handleEvent(event) {
       if (event.spec) lastSpec = event.spec;
       break;
     case 'done':
+      if (event.spec) {
+        lastSpec = event.spec;
+        renderSpec({ spec: event.spec });
+        renderTimeline(event.sections || []);
+      }
       traceRow('Готово', event.mode === 'free' ? 'свободный режим' : 'структурный режим', 'ok');
       break;
     case 'error':
@@ -278,9 +289,7 @@ function renderSpec(event) {
   if (!spec) return;
   const parts = [];
   parts.push(`${spec.meta?.style} · ${spec.meta?.bpm} BPM · ${spec.meta?.key}`);
-  const harmony = spec.harmony?.progressionId
-    ? spec.harmony.progressionId
-    : (spec.harmony?.degrees || []).join('-');
+  const harmony = [...new Set((spec.structure?.sections || []).map((section) => section.harmony))].join(' → ');
   parts.push(`гармония: ${harmony}`);
   traceRow('Спека', parts.join(' · '));
   if (event.usedFallback) {
@@ -291,9 +300,9 @@ function renderSpec(event) {
   if (spec.reasoning) traceNote(spec.reasoning);
 
   // Форма — списком секций с их ролями.
-  if (!els.sections || !Array.isArray(spec.form)) return;
+  if (!els.sections || !Array.isArray(spec.structure?.sections)) return;
   els.sections.replaceChildren();
-  for (const section of spec.form) {
+  for (const section of spec.structure.sections) {
     const item = document.createElement('div');
     item.className = 'compose-section';
 
@@ -302,11 +311,11 @@ function renderSpec(event) {
 
     const kind = document.createElement('span');
     kind.className = 'compose-section-kind';
-    kind.textContent = section.kind;
+    kind.textContent = section.name;
 
     const bars = document.createElement('span');
     bars.className = 'compose-section-bars';
-    bars.textContent = `${section.bars} такт`;
+    bars.textContent = `${section.cycles} такт`;
 
     const energy = document.createElement('span');
     energy.className = 'compose-section-energy';
@@ -317,7 +326,9 @@ function renderSpec(event) {
 
     const roles = document.createElement('div');
     roles.className = 'compose-section-roles';
-    roles.textContent = Object.keys(section.roles || {}).join(' · ');
+    roles.textContent = Object.entries(spec.parts?.roles || {})
+      .filter(([, part]) => part.activeIn.includes(section.name))
+      .map(([role]) => role).join(' · ');
     item.appendChild(roles);
 
     els.sections.appendChild(item);

@@ -1,4 +1,4 @@
-﻿// Референсные профили стилей: что считать «хорошим» для конкретного жанра.
+// Референсные профили стилей: что считать «хорошим» для конкретного жанра.
 //
 // Профили задают целевые диапазоны метрик. Скор считается прозрачно: видно,
 // какая метрика не попала в цель и сколько баллов она стоила.
@@ -173,6 +173,8 @@ export function detectStyle(text) {
  * Подбирает профиль: явный id важнее угаданного по тексту.
  */
 export function resolveProfile(styleId, fallbackText = '') {
+  // Каноническое имя TrackSpec и исторический id профиля обозначают один жанр.
+  if (styleId === 'lo-fi') return PROFILES.lofi;
   if (styleId && PROFILES[styleId]) return PROFILES[styleId];
   return PROFILES[detectStyle(fallbackText)] || PROFILES.generic;
 }

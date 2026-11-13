@@ -8,7 +8,8 @@
 // Цикл: замечание → правка спеки → компиляция → оценка → повтор.
 // Стоп: три итерации или прирост меньше двух баллов.
 
-import { compile } from '../compiler/index.js';
+import { validateTrackSpec } from '../../../src/schemas/track-spec.schema.js';
+import { compileForProtocol } from './compiled.js';
 import { checkSpec } from '../spec/check.js';
 import { collectRemarks, applyRemark } from './remarks.js';
 
@@ -27,7 +28,10 @@ import { collectRemarks, applyRemark } from './remarks.js';
  * @returns {Promise<{code:string, compiled:object, score:object}>}
  */
 export async function evaluateSpec(spec, scoreFn) {
-  const compiled = compile(spec);
+  const canonical = validateTrackSpec(spec);
+  const check = checkSpec(canonical);
+  if (!check.ok) throw new Error(`Спека не прошла проверку: ${check.errors.join('; ')}`);
+  const compiled = compileForProtocol(check.spec);
   const score = await scoreFn(compiled.code);
   return { code: compiled.code, compiled, score };
 }
@@ -45,7 +49,7 @@ export async function evaluateSpec(spec, scoreFn) {
  */
 export function refineOnce(spec, remarks) {
   for (const remark of remarks) {
-    const next = applyRemark(spec, remark);
+    const next = validateTrackSpec(applyRemark(spec, remark));
     if (JSON.stringify(next) === JSON.stringify(spec)) continue; // правка ничего не дала
     const check = checkSpec(next);
     if (!check.ok) continue; // правка сломала валидность — берём следующую
@@ -76,7 +80,7 @@ export async function refineSpec({
     if (typeof onEvent === 'function') onEvent(event, payload);
   };
 
-  let current = spec;
+  let current = validateTrackSpec(spec);
   let currentEval = await evaluateSpec(current, scoreFn);
   const before = currentEval.score;
   const steps = [];

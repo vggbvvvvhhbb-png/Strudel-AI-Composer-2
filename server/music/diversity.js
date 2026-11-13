@@ -12,7 +12,7 @@
 // построению через выравнивание по индексу), но для отсечения повторов это
 // и не требуется: нужен порядок «похоже / не похоже», а не метрика.
 //
-// Отпечаток — по ТЗ ровно три составляющие: форма, прогрессия, рецепты ролей.
+// Отпечаток — три составляющие: форма, гармония и рисунки ролей.
 // Это «скелет» варианта: если он совпал, вариант отличается только мелочами
 // (мотив, энергия) и как отдельный трек не считается.
 
@@ -41,8 +41,8 @@ export function hashText(text) {
  * за [0, 1].
  *
  * form     — самая крупная составляющая: смена формы меняет сам трек;
- * harmony  — смена прогрессии меняет гармонический материал;
- * roles    — состав партий и их рецепты (то, что слышно как аранжировка);
+ * harmony  — смена строк гармонии меняет гармонический материал;
+ * roles    — состав партий и рисунки (то, что слышно как аранжировка);
  * motif    — мелодический материал: у лида свой рисунок;
  * energy   — арка энергии секций (влияет на плотность через D-017).
  */
@@ -57,10 +57,8 @@ export const DISTANCE_WEIGHTS = {
 /**
  * Порог отсечения «это тот же трек».
  *
- * Выбран по смыслу составляющих: единичная смена рецепта в одной секции
- * даёт ≈0.01–0.02 расстояния (одна запись из ~25), а смена прогрессии —
- * ≈0.15, смена формы — ≈0.3 и выше. Порог 0.10 отсекает первое и
- * пропускает второе. Обоснование расчёта — в docs/DIVERSITY.md.
+ * Сохраняем прежний порог и веса при переходе на канонические поля;
+ * калибровка значения под новые рисунки партий — отдельная задача.
  */
 export const MIN_DISTANCE = 0.1;
 
@@ -95,30 +93,20 @@ export function sameSpec(a, b) {
   return canonicalJson(a) === canonicalJson(b);
 }
 
-/** Подпись секционного переопределения прогрессии. */
-function overrideSignature(override) {
-  if (!override) return '-';
-  const parts = [];
-  if (override.progressionId) parts.push(`id:${override.progressionId}`);
-  if (override.degrees) parts.push(`deg:${override.degrees.join(',')}`);
-  if (override.mode) parts.push(`mode:${override.mode}`);
-  if (override.barsPerChord) parts.push(`bpc:${override.barsPerChord}`);
-  return parts.join('/') || '-';
+/** Упорядоченные секции; индекс различает одноимённые секции. */
+function sectionsOf(spec) {
+  return spec?.structure?.sections || [];
 }
 
-/** Подпись гармонии трека: библиотечная прогрессия или свои степени. */
-function harmonySignature(spec) {
-  const harmony = spec.harmony || {};
-  if (harmony.progressionId) return `id:${harmony.progressionId}`;
-  if (harmony.degrees && harmony.degrees.length) return `deg:${harmony.degrees.join(',')}`;
-  return 'none';
+/** Состав партии, действующий во всех секциях с указанным именем. */
+function roleSignature(role, part) {
+  return `${role}=${part.pattern}:${part.sound}:${canonicalJson(part.effects || [])}`;
 }
 
-/** Подпись роли в секции: имя + рецепт + вариант рисунка. */
-function roleSignature(role, choice) {
-  const recipe = choice?.recipe ?? 'default';
-  const variant = choice?.variant ? `:${choice.variant}` : '';
-  return `${role}=${recipe}${variant}`;
+function rolesInSection(spec, section) {
+  return Object.entries(spec?.parts?.roles || {})
+    .filter(([, part]) => part.activeIn.includes(section.name))
+    .sort(([a], [b]) => a.localeCompare(b, 'en'));
 }
 
 /**
@@ -131,31 +119,21 @@ function roleSignature(role, choice) {
  * @returns {{form: string, harmony: string, recipes: string}}
  */
 export function specFingerprintParts(spec) {
-  const safe = spec || { form: [], harmony: {} };
-  const form = (safe.form || [])
-    .map((section) => `${section.kind}:${section.bars}:${round2(section.energy)}`)
+  const sections = sectionsOf(spec);
+  const form = sections
+    .map((section) => `${section.name}:${section.cycles}:${round2(section.energy)}`)
     .join('|');
-  const overrides = (safe.form || [])
-    .map((section) => overrideSignature(section.progressionOverride))
+  const harmony = sections.map((section) => section.harmony).join('|');
+  const recipes = sections
+    .map((section) => rolesInSection(spec, section)
+      .map(([role, part]) => roleSignature(role, part)).join(','))
     .join('|');
-  const recipes = (safe.form || [])
-    .map((section) =>
-      Object.keys(section.roles || {})
-        .sort()
-        .map((role) => roleSignature(role, section.roles[role]))
-        .join(','),
-    )
-    .join('|');
-  return {
-    form,
-    harmony: `${harmonySignature(safe)}#${overrides}`,
-    recipes,
-  };
+  return { form, harmony, recipes };
 }
 
 /**
  * Отпечаток спеки: короткая строка по трём составляющим ТЗ
- * (форма + прогрессия + рецепты ролей).
+ * (форма + гармония + рисунки ролей).
  *
  * @param {object} spec
  * @returns {string} например `fp-1a2b3c`
@@ -179,53 +157,53 @@ function round2(value) {
  * секциями это другой трек.
  */
 function formDistance(a, b) {
-  const formA = a.form || [];
-  const formB = b.form || [];
+  const formA = sectionsOf(a);
+  const formB = sectionsOf(b);
   const max = Math.max(formA.length, formB.length);
   if (!max) return 0;
   let diff = Math.abs(formA.length - formB.length);
   const common = Math.min(formA.length, formB.length);
   for (let i = 0; i < common; i += 1) {
-    if (formA[i].kind !== formB[i].kind || formA[i].bars !== formB[i].bars) diff += 1;
+    if (formA[i].name !== formB[i].name || formA[i].cycles !== formB[i].cycles) diff += 1;
   }
   return Math.min(1, diff / max);
 }
 
 /**
- * Различие гармонии: базовая прогрессия трека плюс переопределения по
- * секциям. Базовая прогрессия весит больше: она слышна в каждой секции.
+ * Различие гармонии: общая последовательность и строки отдельных секций.
+ * Совпадающие имена секций различаются позицией в последовательности.
  */
 function harmonyDistance(a, b) {
-  const base = harmonySignature(a) === harmonySignature(b) ? 0 : 1;
-  const formA = a.form || [];
-  const formB = b.form || [];
+  const formA = sectionsOf(a);
+  const formB = sectionsOf(b);
   const max = Math.max(formA.length, formB.length) || 1;
   let diff = 0;
   for (let i = 0; i < max; i += 1) {
-    const sa = formA[i]?.progressionOverride ? overrideSignature(formA[i].progressionOverride) : null;
-    const sb = formB[i]?.progressionOverride ? overrideSignature(formB[i].progressionOverride) : null;
-    if (sa !== sb) diff += 1;
+    if (formA[i]?.harmony !== formB[i]?.harmony) diff += 1;
   }
+  // Общая гармония доминирует, локальное отличие секции учитывается отдельно.
+  const base = formA.map((section) => section.harmony).join('|') ===
+    formB.map((section) => section.harmony).join('|') ? 0 : 1;
   return 0.7 * base + 0.3 * (diff / max);
 }
 
 /**
  * Различие состава партий и их рецептов.
  *
- * Считается по объединению ключей «секция:роль»: и исчезновение роли, и
- * смена рецепта дают одно и то же различие, а не две разные метрики.
+ * Считается по объединению ключей «индекс секции:роль»: и исчезновение роли,
+ * и смена рисунка дают одно и то же различие, а не две разные метрики.
  */
 function rolesDistance(a, b) {
   const mapA = new Map();
   const mapB = new Map();
-  (a.form || []).forEach((section, index) => {
-    for (const [role, choice] of Object.entries(section.roles || {})) {
-      mapA.set(`${index}:${role}`, roleSignature(role, choice));
+  sectionsOf(a).forEach((section, index) => {
+    for (const [role, part] of rolesInSection(a, section)) {
+      mapA.set(`${index}:${role}`, roleSignature(role, part));
     }
   });
-  (b.form || []).forEach((section, index) => {
-    for (const [role, choice] of Object.entries(section.roles || {})) {
-      mapB.set(`${index}:${role}`, roleSignature(role, choice));
+  sectionsOf(b).forEach((section, index) => {
+    for (const [role, part] of rolesInSection(b, section)) {
+      mapB.set(`${index}:${role}`, roleSignature(role, part));
     }
   });
   const keys = new Set([...mapA.keys(), ...mapB.keys()]);
@@ -239,8 +217,8 @@ function rolesDistance(a, b) {
 
 /** Различие арки энергии: среднее расстояние энергий по секциям. */
 function energyDistance(a, b) {
-  const formA = a.form || [];
-  const formB = b.form || [];
+  const formA = sectionsOf(a);
+  const formB = sectionsOf(b);
   const max = Math.max(formA.length, formB.length);
   if (!max) return 0;
   let sum = 0;
@@ -252,19 +230,14 @@ function energyDistance(a, b) {
   return sum / max;
 }
 
-/** Различие мелодического материала: набор трансформаций и степени мотива. */
+/** Различие мелодического материала по рисунку канонической партии lead. */
 function motifDistance(a, b) {
-  const motifA = a.motif || null;
-  const motifB = b.motif || null;
-  if (!motifA && !motifB) return 0;
-  if (!motifA || !motifB) return 1;
-  const transformsA = [...(motifA.transforms || [])].sort().join(',');
-  const transformsB = [...(motifB.transforms || [])].sort().join(',');
-  const degreesA = (motifA.degrees || []).join(',');
-  const degreesB = (motifB.degrees || []).join(',');
-  if (transformsA === transformsB && degreesA === degreesB) return 0;
-  if (transformsA === transformsB) return 0.5;
-  return 1;
+  const leadA = a?.parts?.roles?.lead?.pattern;
+  const leadB = b?.parts?.roles?.lead?.pattern;
+  if (!leadA && !leadB) return 0;
+  if (!leadA || !leadB) return 1;
+  if (leadA === leadB) return 0;
+  return leadA.split(/\s+/).length === leadB.split(/\s+/).length ? 0.5 : 1;
 }
 
 /**

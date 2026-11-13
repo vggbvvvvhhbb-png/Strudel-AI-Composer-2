@@ -21,7 +21,6 @@
 //   Нужен, чтобы проверить сам харнесс (и CI) без трат токенов.
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -32,12 +31,11 @@ import { analyzeTrack } from '../server/music/features.js';
 import { scoreTrack } from '../server/music/score.js';
 import { resolveProfile } from '../server/music/references.js';
 import { stripCodeFences } from '../server/music/extract.js';
-import { buildTrack, detectSpecStyle } from '../server/music/compose/pipeline.js';
+import { buildTrack, detectSpecStyle, fallbackSpec, SPEC_STYLES } from '../server/music/compose/pipeline.js';
 import { refineSpec } from '../server/music/compose/refine.js';
 import { scoreWithV2 } from '../server/music/compose/score-adapter.js';
-import { checkSpec } from '../server/music/spec/check.js';
-import { compile } from '../server/music/compiler/index.js';
-import { fallbackSpec } from '../server/music/compose/pipeline.js';
+import { validateTrackSpec } from '../src/schemas/track-spec.schema.js';
+import { compileTrackSpec } from '../server/music/compiler/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
@@ -82,24 +80,17 @@ async function measure(code, style, promptText) {
  * Метрики формы по спеке: сколько секций, какой размах энергии,
  * менялась ли гармония.
  */
-function formMetrics(spec) {
-  if (!spec || !Array.isArray(spec.form)) return null;
-  const energies = spec.form.map((s) => Number(s.energy) || 0);
+export function formMetrics(spec) {
+  const sections = spec?.structure?.sections;
+  if (!Array.isArray(sections)) return null;
+  const energies = sections.map((s) => s.energy);
   const range = energies.length ? Math.max(...energies) - Math.min(...energies) : 0;
-  const harmonyKeys = new Set(
-    spec.form.map((s) => {
-      const o = s.progressionOverride;
-      if (o?.progressionId) return o.progressionId;
-      if (o?.degrees) return o.degrees.join('-');
-      return spec.harmony?.progressionId || (spec.harmony?.degrees || []).join('-');
-    }),
-  );
-  const totalBars = spec.form.reduce((sum, s) => sum + (s.bars || 0), 0);
+  const harmonies = new Set(sections.map((s) => s.harmony));
   return {
-    sections: spec.form.length,
-    bars: totalBars,
+    sections: sections.length,
+    bars: sections.reduce((sum, s) => sum + s.cycles, 0),
     energyRange: Math.round(range * 100) / 100,
-    harmonyChanges: harmonyKeys.size - 1,
+    harmonyChanges: Math.max(0, harmonies.size - 1),
   };
 }
 
@@ -225,13 +216,13 @@ async function runB(item, options) {
   };
 
   try {
-    const style = item.style || detectSpecStyle(item.text);
+    const style = SPEC_STYLES.includes(item.style) ? item.style : detectSpecStyle(item.text);
     let built;
     if (options.dry) {
       // Без модели: запасная спека из библиотеки.
       const spec = fallbackSpec(style, item.id.length);
-      const check = checkSpec(spec);
-      built = { spec: check.spec, compiled: compile(check.spec), usedFallback: true, attempts: 0 };
+      const checked = validateTrackSpec(spec);
+      built = { spec: checked, compiled: { code: compileTrackSpec(checked) }, usedFallback: true, attempts: 0 };
     } else {
       built = await buildTrack({
         prompt: item.text,
@@ -403,7 +394,7 @@ async function main() {
   const summaryA = summarize(results.map((r) => r.a).filter(Boolean), 'a');
   const summaryB = summarize(results.map((r) => r.b), 'b');
 
-  const report = [
+  let report = [
     '# Eval: A (старый пайплайн) против B (структурный)',
     '',
     `Дата: ${new Date().toISOString().slice(0, 10)}`,
@@ -426,7 +417,7 @@ async function main() {
     const winsB = results.filter((r) => (r.b?.measured?.total ?? 0) > (r.a?.measured?.total ?? 0)).length;
     const winsA = results.filter((r) => (r.a?.measured?.total ?? 0) > (r.b?.measured?.total ?? 0)).length;
     const ties = results.length - winsB - winsA;
-    report.push(
+    report += [
       '## Побед по совокупному скору',
       '',
       `B лучше: ${winsB}, A лучше: ${winsA}, ничья: ${ties}.`,
@@ -435,7 +426,7 @@ async function main() {
         ? 'Структурный пайплайн показывает лучший результат по совокупному скору.'
         : 'Структурный пайплайн НЕ показывает преимущества по совокупному скору на этом наборе.',
       '',
-    );
+    ].join('\n');
   }
 
   await mkdir(args.out, { recursive: true });
@@ -459,10 +450,12 @@ async function main() {
         b: flip ? a : b,
       };
     });
-  await writeFile(join(here, 'ab-pairs.json'), JSON.stringify({ createdAt: new Date().toISOString(), pairs: abPairs }, null, 2), 'utf8');
+  const pairsPath = args.out === join(here, 'results')
+    ? join(here, 'ab-pairs.json') : join(args.out, 'ab-pairs.json');
+  await writeFile(pairsPath, JSON.stringify({ createdAt: new Date().toISOString(), pairs: abPairs }, null, 2), 'utf8');
 
   console.log(`\nОтчёт: ${join(args.out, 'report.md')}`);
-  console.log(`Пары для слепого теста: ${join(here, 'ab-pairs.json')}`);
+  console.log(`Пары для слепого теста: ${pairsPath}`);
   console.log(markdownTable(summaryA, summaryB));
 }
 

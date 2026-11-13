@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Strudel Track Specification",
+  "type": "object",
+  "properties": {
+    "meta": {
+      "type": "object",
+      "properties": {
+        "style": { "type": "string", "enum": ["lo-fi", "techno", "house", "ambient", "dubstep", "synthwave", "trap", "jazz", "rock", "cinematic"] },
+        "bpm": { "type": "number", "minimum": 60, "maximum": 180 },
+        "key": { "type": "string", "pattern": "^[A-G][#b]?:?[a-z]*$" },
+        "schemaVersion": { "type": "string", "pattern": "^\\d+\\.\\d+$" }
+      },
+      "required": ["style", "bpm", "key"]
+    },
+    "structure": {
+      "type": "object",
+      "properties": {
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "enum": ["intro", "build", "drop", "breakdown", "fill", "outro", "verse", "chorus", "bridge"] },
+              "cycles": { "type": "integer", "minimum": 1 },
+              "energy": { "type": "number", "minimum": 0, "maximum": 1 },
+              "harmony": { "type": "string" },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "cutoff": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+                  "gain": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+                }
+              }
+            },
+            "required": ["name", "cycles", "energy", "harmony"]
+          }
+        }
+      }
+    },
+    "parts": {
+      "type": "object",
+      "properties": {
+        "roles": {
+          "type": "object",
+          "patternProperties": {
+            "^(kick|snare|hats|perc|sub|bass|pad|chords|lead|arp|fx|texture)$": {
+              "type": "object",
+              "properties": {
+                "activeIn": { "type": "array", "items": { "type": "string" } },
+                "pattern": { "type": "string" },
+                "sound": { "type": "string" },
+                "effects": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": { "type": "string" },
+                      "params": { "type": "array" }
+                    }
+                  }
+                }
+              },
+              "required": ["pattern", "sound", "activeIn"]
+            }
+          }
+        }
+      }
+    },
+    "reasoning": { "type": "string" }
+  },
+  "required": ["meta", "structure", "parts"]
+}

@@ -24,6 +24,7 @@ import {
 import { analyzeTrackFromEvents } from '../../server/music/metrics/events.js';
 import { scoreTrackV2, V2_CRITERIA, MIN_FORM_BARS } from '../../server/music/score-v2.js';
 import { compile } from '../../server/music/compiler/index.js';
+import { checkSpec } from '../../server/music/spec/check.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
@@ -37,60 +38,31 @@ async function fixture(name) {
  * Шесть партий — столько требует профиль стиля.
  */
 const referenceSpec = {
-  meta: { style: 'techno', bpm: 132, key: 'f:minor', seed: 42 },
-  harmony: { progressionId: 'techno-minor-i-vi-iv-v', barsPerChord: 2 },
-  form: [
-    { kind: 'intro', bars: 8, energy: 0.25, roles: { hats: { recipe: 'sparse' }, bass: { recipe: 'sparse' } } },
-    {
-      kind: 'build',
-      bars: 8,
-      energy: 0.6,
-      roles: { kick: { recipe: 'default' }, hats: { recipe: 'default' }, bass: { recipe: 'default' } },
-      transition: { into: 'drop', type: 'riser' },
-    },
-    {
-      kind: 'drop',
-      bars: 16,
-      energy: 1.0,
-      roles: {
-        kick: { recipe: 'busy' },
-        snare: { recipe: 'busy' },
-        hats: { recipe: 'busy' },
-        bass: { recipe: 'busy' },
-        arp: { recipe: 'busy' },
-        pad: { recipe: 'sparse' },
-      },
-    },
-    { kind: 'breakdown', bars: 8, energy: 0.3, roles: { hats: { recipe: 'sparse' }, pad: { recipe: 'sparse' } } },
-    {
-      kind: 'build',
-      bars: 8,
-      energy: 0.75,
-      roles: { kick: { recipe: 'busy' }, hats: { recipe: 'busy' }, bass: { recipe: 'busy' } },
-      transition: { into: 'drop', type: 'riser' },
-    },
-    {
-      kind: 'drop',
-      bars: 16,
-      energy: 1.0,
-      roles: {
-        kick: { recipe: 'busy' },
-        snare: { recipe: 'busy' },
-        hats: { recipe: 'busy' },
-        bass: { recipe: 'busy' },
-        arp: { recipe: 'busy' },
-        pad: { recipe: 'sparse' },
-      },
-    },
-    { kind: 'outro', bars: 8, energy: 0.2, roles: { hats: { recipe: 'sparse' }, bass: { recipe: 'sparse' } } },
-  ],
-  motif: { degrees: [4, 2, 0, 2], rhythm: 'x ~ x x', transforms: ['sequence'] },
+  meta: { style: 'techno', bpm: 132, key: 'Fmin' },
+  structure: { sections: [
+    { name: 'intro', cycles: 8, energy: 0.25, harmony: 'Fm Db Bbm Cm', parameters: { cutoff: [400, 1800], gain: [0.3, 0.5] } },
+    { name: 'build', cycles: 8, energy: 0.6, harmony: 'Bbm Fm Db Cm', parameters: { cutoff: [800, 4000], gain: [0.5, 0.8] } },
+    { name: 'drop', cycles: 16, energy: 1, harmony: 'Fm Db Bbm Cm', parameters: { cutoff: [1200, 6000], gain: [0.7, 0.95] } },
+    { name: 'breakdown', cycles: 8, energy: 0.3, harmony: 'Db Bbm Cm Fm', parameters: { cutoff: [400, 1600], gain: [0.3, 0.5] } },
+    { name: 'build', cycles: 8, energy: 0.75, harmony: 'Cm Bbm Db Fm', parameters: { cutoff: [1000, 5000], gain: [0.6, 0.9] } },
+    { name: 'drop', cycles: 16, energy: 1, harmony: 'Fm Bbm Db Cm', parameters: { cutoff: [1200, 6000], gain: [0.7, 0.95] } },
+    { name: 'outro', cycles: 8, energy: 0.2, harmony: 'Db Bbm Cm Fm', parameters: { cutoff: [1600, 400], gain: [0.5, 0.2] } },
+  ] },
+  parts: { roles: {
+    kick: { activeIn: ['intro', 'build', 'drop'], pattern: 'bd*4', sound: 's' },
+    snare: { activeIn: ['intro', 'drop'], pattern: '~ sd ~ sd', sound: 's' },
+    hats: { activeIn: ['intro', 'build', 'drop', 'breakdown', 'outro'], pattern: 'hh*8', sound: 's' },
+    bass: { activeIn: ['intro', 'build', 'drop', 'outro'], pattern: '0 ~ 0 [2 4]', sound: 'sawtooth' },
+    arp: { activeIn: ['intro', 'drop'], pattern: '0 2 4 6', sound: 'triangle' },
+    pad: { activeIn: ['intro', 'drop', 'breakdown'], pattern: '0,2,4', sound: 'sine', effects: [{ name: 'room', params: [0.5] }] },
+  } },
 };
 
 const referenceCode = compile(referenceSpec).code;
 
 describe('фаза 4: метрики по событиям Strudel', () => {
   it('эталонный трек исполняется и даёт события', async () => {
+    expect(checkSpec(referenceSpec).ok).toBe(true);
     const metrics = await analyzeProgression(referenceCode, { cycles: 64, style: 'techno' });
     expect(metrics.ok).toBe(true);
     expect(metrics.bars).toBe(64);
@@ -191,14 +163,24 @@ describe('фаза 4: скор v2', () => {
   });
 
   it('трек короче 16 тактов: новые критерии не применяются, но есть замечание', async () => {
-    const shortSpec = {
-      ...referenceSpec,
-      form: [
-        { kind: 'intro', bars: 4, energy: 0.3, roles: { kick: { recipe: 'default' } } },
-        { kind: 'drop', bars: 8, energy: 1, roles: { kick: { recipe: 'busy' }, bass: { recipe: 'busy' } } },
-      ],
-    };
-    const score = await scoreTrackV2(compile(shortSpec).code, 'techno');
+    const shortSpec = JSON.parse(JSON.stringify(referenceSpec));
+    shortSpec.structure.sections = [
+      { name: 'intro', cycles: 4, energy: 0.3, harmony: 'Fm Db Bbm Cm' },
+      { name: 'drop', cycles: 8, energy: 1, harmony: 'Fm Bbm Db Cm' },
+    ];
+    for (const part of Object.values(shortSpec.parts.roles)) part.activeIn = ['intro', 'drop'];
+    expect(shortSpec.structure.sections.reduce((sum, section) => sum + section.cycles, 0)).toBeLessThan(MIN_FORM_BARS);
+    // Компилятор обязан отвергнуть короткую спеку. Скорер принимает также
+    // свободный код, поэтому его правило <16 проверяем настоящим arrange.
+    expect(checkSpec(shortSpec).ok).toBe(false);
+    expect(() => compile(shortSpec)).toThrow();
+    const shortCode = [
+      'setCpm(132/4)',
+      'const key = "f:minor"',
+      '$KICK: arrange([4, s("bd*2")], [8, s("bd*4")])',
+      '$BASS: arrange([4, n("0 ~").scale(key).s("sawtooth")], [8, n("0 2 4 2").scale(key).s("sawtooth")])',
+    ].join('\n');
+    const score = await scoreTrackV2(shortCode, 'techno');
     expect(score.hasForm).toBe(false);
     expect(score.newTotal).toBe(0);
     expect(score.issues.some((i) => i.id === 'no-form')).toBe(true);
