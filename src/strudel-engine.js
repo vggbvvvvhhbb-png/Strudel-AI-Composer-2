@@ -29,6 +29,7 @@ import { accentOf } from './accents.js';
 import { createStudioGraph } from './audio/graph.js';
 import { createEngineAdapter } from './audio/engine/adapter.js';
 import { masterPresetFor } from './audio/master-presets.js';
+import { renderAndMeasure, audioBufferToChannels } from './audio/render/offline.js';
 
 export { visualPlan };
 
@@ -40,6 +41,9 @@ let lastError = null;
 let planCache = [];
 // На тихом прогоне (валидация) визуализации не создаются.
 let suppressVisuals = false;
+// Последний исполненный код — нужен, чтобы после офлайн-рендера вернуть
+// живой трек на место.
+let currentCode = null;
 
 // Студийная шина: контекст, мастер-цепочка, метры.
 let context = null;
@@ -271,8 +275,7 @@ export async function evaluateCode(code) {
   await waitForSamples();
   planCache = visualPlan(code);
   if (visualRoot) visualRoot.replaceChildren();
-  drawSeq = 0;
-  lastError = null;
+  drawSeq = 0;  lastError = null;
   resetMeters();
 
   // Исполняем счётчики партий: они не трогают звук, но дают живые метры.
@@ -280,6 +283,7 @@ export async function evaluateCode(code) {
   try {
     const result = await evaluate(runnable);
     if (lastError) throw lastError?.error || lastError;
+    currentCode = code;
     return { ok: true, result };
   } catch (err) {
     // Инструментация могла не подойти к конкретному коду — пробуем чистый вариант.
@@ -300,6 +304,55 @@ export function stop() {
   if (!initialized) return;
   hush();
   resetMeters();
+}
+
+/**
+ * Офлайн-рендер трека и отчёт о звучании (фаза 3).
+ *
+ * Рендер идёт в отдельном OfflineAudioContext (H3) и считается тем же
+ * DSP-ядром, что звучит в реалтайме. Отчёт несёт паспорт происхождения:
+ * версию движка, способ рендера и повторяемость (два прогона).
+ *
+ * Честное ограничение: офлайн-рендер пересоздаёт контроллер superdough, поэтому
+ * после рендера живой трек возвращается на место повторной оценкой кода.
+ * Соло-рендеры партий требуют разметки партий в коде — это фаза 4.
+ *
+ * @param {{code?:string, bars?:[number,number], sampleRate?:number, cps?:number, runs?:number}} [options]
+ * @returns {Promise<{report:object, renderMs:number, comparison:object|null}>}
+ */
+export async function renderTrackOffline({ code, bars = [0, 16], sampleRate = 48000, cps = 0.5, runs = 2 } = {}) {
+  await initPromise;
+  if (!initialized) throw new Error('Струдия не инициализирована');
+  const target = code ?? currentCode;
+  if (!target) throw new Error('Нет кода для рендера');
+  const restore = currentCode && currentCode !== target ? currentCode : null;
+
+  try {
+    return await renderAndMeasure({
+      render: async ({ fromCycle, toCycle, sampleRate: sr, cps: c }) => {
+        const buffer = await adapter.renderCodeOffline({
+          code: target,
+          fromCycle,
+          toCycle,
+          sampleRate: sr,
+          cps: c,
+        });
+        return { channels: audioBufferToChannels(buffer), sampleRate: sr };
+      },
+      bars,
+      sampleRate,
+      cps,
+      runs,
+    });
+  } finally {
+    if (restore) {
+      try {
+        await evaluateCode(restore);
+      } catch (error) {
+        console.warn('Живой трек не восстановлен после рендера:', error?.message || error);
+      }
+    }
+  }
 }
 
 export function reset() {

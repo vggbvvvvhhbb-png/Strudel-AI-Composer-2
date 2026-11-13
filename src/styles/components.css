@@ -1004,6 +1004,69 @@ input[type='range']::-moz-range-thumb {
   overflow-wrap: anywhere;
 }
 
+/* --- Звуковой разбор: числа рендера и замечания по нему --- */
+.music-audio {
+  margin-top: var(--sp-2);
+}
+
+.music-audio-box {
+  padding: var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+}
+
+.music-audio-head {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--mint);
+  margin-bottom: var(--sp-1);
+}
+
+.music-audio-line {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.music-audio-findings {
+  margin-top: var(--sp-2);
+  border-top: 1px solid var(--border);
+  padding-top: var(--sp-1);
+}
+
+.music-audio-finding {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+}
+
+.music-audio-finding-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.music-audio-finding-hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+.music-audio-error {
+  border-left: 3px solid var(--danger);
+  padding-left: var(--sp-2);
+}
+
+.music-audio-warn {
+  border-left: 3px solid var(--warn);
+  padding-left: var(--sp-2);
+}
+
 /* --- Сводка улучшения (было → стало) --- */
 .music-refine-box {
   padding: var(--sp-2);

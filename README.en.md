@@ -6,6 +6,7 @@ A web app that turns a text description of music into [Strudel](https://strudel.
 - **Structured composition** — the model picks ideas (harmony, form, roles, energy), a deterministic compiler turns them into code. The track develops over time: sections, harmony changes, transitions
 - **Trace and timeline** — see how the track was built: spec, score, refinement steps; above the editor — section blocks and the energy curve
 - **Music analysis** — the generated code is measured against objective metrics (tempo, density, groove, scale fit, range, register separation) and gets a transparent 0–100 score with a per-criterion breakdown
+- **Audio analysis** — the track is rendered in the browser by the same DSP core that you hear: loudness (LUFS), true peak, spectral bands, silence, render repeatability. The audio block is 20% of the score, and its findings are machine-readable ("bass quieter" → a command, not a sentence)
 - **Feedback loop** — "✨ Improve from analysis": the model rewrites the track against concrete findings ("tempo 90, target 124–142", "too few onsets", "bass and melody in the same octave")
 - **A/B variants** — best-of-N: several variants generated from different angles, each scored, best on top
 - **Live score** — every `$PART:` gets a large piano roll or oscilloscope with the part's code above it
@@ -18,6 +19,7 @@ A web app that turns a text description of music into [Strudel](https://strudel.
 - **Samples** — `dirt-samples` (bd, sd, hh, cp, 808*, breaks* …) and `shabda:piano`, loaded on demand, names without `.bank(...)`
 
 Details on the analysis and the feedback loop: [docs/MUSIC-ANALYSIS.md](docs/MUSIC-ANALYSIS.md).
+Render metrics and acceptance: [docs/AUDIO-QA.md](docs/AUDIO-QA.md).
 How structured composition works: [docs/COMPOSE.md](docs/COMPOSE.md).
 Russian version of this README: [README.md](README.md).
 

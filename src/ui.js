@@ -1,5 +1,5 @@
 // Интерфейс: промпт, стриминг кода с живой печатью, исполнение, лог.
-import { evaluateCode, stop, reset, unlockAudio } from './strudel-engine.js';
+import { evaluateCode, stop, reset, unlockAudio, renderTrackOffline } from './strudel-engine.js';
 import { generateCode, fixCode } from './api/client.js';
 import { staticValidate, dryValidate } from './core/validator.js';
 import { initMixer, syncMixer } from './mixer.js';
@@ -183,6 +183,11 @@ export function initUI({ editor: editorApi } = {}) {
       else log(`Ошибка: ${res.error}`, 'error');
     },
     log,
+    // Звуковой разбор: рендер трека в браузере → отчёт о громкости и пике.
+    renderAudio: async (code) => {
+      const { report } = await renderTrackOffline({ code, bars: [0, 16] });
+      return { report };
+    },
   });
 
   // Структурная композиция: спека → код. Тот же путь применения,

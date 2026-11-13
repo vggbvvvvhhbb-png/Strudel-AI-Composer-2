@@ -62,11 +62,12 @@ export async function fetchMusicStyles(signal) {
 }
 
 // Разбор кода по референсу стиля: метрики, оценка 0–100, замечания.
-export async function analyzeMusic({ code, style, signal }) {
+// audioReport — отчёт о рендере из браузера: он добавляет аудио-блок (20%).
+export async function analyzeMusic({ code, style, audioReport, signal }) {
   const res = await fetch('/api/music/analyze', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code, style }),
+    body: JSON.stringify({ code, style, audioReport }),
     signal,
   });
   return jsonOrThrow(res);

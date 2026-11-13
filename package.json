@@ -22,6 +22,7 @@
     "spike:audio": "node tests/spike/audio-api.probe.mjs",
     "spike:browser": "node tests/spike/browser/master-spike.mjs",
     "spike:master": "node tests/spike/browser/master-live-spike.mjs",
+    "spike:offline": "node tests/spike/browser/offline-render-spike.mjs",
     "sync:samples": "node scripts/sync-sample-banks.mjs",
     "validate:loudness": "node scripts/validate-loudness.mjs",
     "validate:master": "node scripts/validate-master.mjs",

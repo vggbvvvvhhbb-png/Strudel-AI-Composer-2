@@ -30,6 +30,8 @@ import { validateTrackSpec } from '../../src/schemas/track-spec.schema.js';
 import { generateCandidateDetails } from '../music/best-of.js';
 import { applyMutation, MUTATION_NAMES } from '../music/mutations.js';
 import { compileForProtocol } from '../music/compose/compiled.js';
+import { scoreAudioReport, combineScores } from '../music/compose/audio-score.js';
+import { parseMetricsReport } from '../../src/audio/metrics-report.js';
 
 const router = Router();
 
@@ -40,6 +42,12 @@ const composeSchema = z.object({
   seed: z.number().int().min(0).max(2 ** 31 - 1).optional(),
   refine: z.boolean().default(true),
   iterations: z.number().int().min(1).max(3).default(2),
+  // Отчёт о рендере (Audio QA). Приходит из браузера: на сервере аудио нет.
+  // Форма проверяется, числа не проверяются — их честность обеспечивает
+  // браузерный код тем же DSP-ядром, что и реалтайм.
+  audioReport: z.unknown().optional(),
+  // Аудио-блок в скоре переключаем: без отчёта он и так не участвует.
+  useAudio: z.boolean().default(true),
 });
 
 const variantsSchema = z.object({
@@ -64,23 +72,50 @@ function checkedCanonicalSpec(raw) {
 }
 
 /**
- * Оценка кода: скор v1 по своему парсеру + скор v2 по событиям Strudel.
+ * Готовит отчёт о рендере для скора.
+ *
+ * Отчёт приходит из браузера, поэтому сервер проверяет только форму: битый
+ * отчёт не ломает композицию — аудио-блок просто не участвует, а причина
+ * отклонения возвращается клиенту.
+ *
+ * @param {unknown} raw
+ * @param {boolean} useAudio
+ * @returns {{report:object|null, error:string|null}}
+ */
+function prepareAudio(raw, useAudio) {
+  if (!useAudio || !raw) return { report: null, error: null };
+  const parsed = parseMetricsReport(raw);
+  if (!parsed.ok) return { report: null, error: parsed.error };
+  return { report: parsed.report, error: null };
+}
+
+/**
+ * Оценка кода: скор v1 по своему парсеру + скор v2 по событиям Strudel
+ * + аудио-блок по рендеру (20%, переключаемый).
  *
  * v1 нужен всегда (он даёт привычные критерии и замечания), v2 —
- * развитие во времени. Для refine важна сумма: правка спеки должна
- * поднимать общий балл, а не только новые метрики.
+ * развитие во времени. Аудио-блок приходит из браузера: рендер живёт в
+ * AudioContext, на сервере аудио нет. Для refine важна сумма: правка спеки
+ * должна поднимать общий балл, а не только новые метрики.
+ *
+ * @param {string} code
+ * @param {string} [style]
+ * @param {string} [fallbackText]
+ * @param {object|null} [audioReport] MetricsReport рендера
  */
-async function scoreCode(code, style, fallbackText = '') {
+async function scoreCode(code, style, fallbackText = '', audioReport = null) {
   const profile = resolveProfile(style, fallbackText);
   const analysis = analyzeTrack(code);
   const v1 = scoreTrack(analysis, profile);
   const v2 = await scoreWithV2(code, style, fallbackText);
-  const total = v2 ? Math.round((v1.total * 0.6 + v2.total * 0.4) * 10) / 10 : v1.total;
+  const audio = audioReport ? scoreAudioReport(audioReport) : null;
+  const total = combineScores(v1.total, v2?.total ?? null, audio?.total ?? null);
   return {
     total,
     v1,
     v2,
-    issues: [...(v1.issues || []), ...(v2?.issues || [])],
+    audio,
+    issues: [...(v1.issues || []), ...(v2?.issues || []), ...(audio?.issues || [])],
   };
 }
 
@@ -92,6 +127,7 @@ router.post('/api/music/compose', async (req, res) => {
     return;
   }
   const body = parsed.data;
+  const audio = prepareAudio(body.audioReport, body.useAudio);
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream; charset=utf-8',
@@ -126,8 +162,8 @@ router.post('/api/music/compose', async (req, res) => {
         res.end();
         return;
       }
-      const score = await scoreCode(code, body.style, body.prompt);
-      send('scored', { score });
+      const score = await scoreCode(code, body.style, body.prompt, audio.report);
+      send('scored', { score, audioRejected: audio.error });
       send('done', { code, score, mode: 'free' });
       res.end();
       return;
@@ -148,16 +184,16 @@ router.post('/api/music/compose', async (req, res) => {
     let spec = built.spec;
     let compiled = built.compiled;
     let code = compiled.code;
-    let score = await scoreCode(code, built.style, body.prompt);
+    let score = await scoreCode(code, built.style, body.prompt, audio.report);
 
-    send('scored', { score, spec });
+    send('scored', { score, spec, audioRejected: audio.error });
 
     // Refine правит спеку и перекомпилирует. Оценка идёт по той же
     // функции, что и у первого прохода, — иначе прирост несопоставим.
     if (body.refine) {
       const refined = await refineSpec({
         spec,
-        scoreFn: async (candidateCode) => scoreCode(candidateCode, built.style, body.prompt),
+        scoreFn: async (candidateCode) => scoreCode(candidateCode, built.style, body.prompt, audio.report),
         maxIterations: body.iterations,
         onEvent: (event, payload) => send(event, payload),
       });
@@ -168,6 +204,7 @@ router.post('/api/music/compose', async (req, res) => {
         total: refined.after.total,
         v1: refined.after.v1,
         v2: refined.after.v2,
+        audio: refined.after.audio ?? null,
         issues: refined.after.issues,
       };
       send('refined', {

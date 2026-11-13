@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Strudel AI Composer — фаза 3, офлайн-рендер и метрики</title>
+  </head>
+  <body>
+    <h1>Спайк фазы 3: офлайн-рендер → MetricsReport → Audio QA</h1>
+    <p id="status">загрузка…</p>
+    <!-- Движок @strudel/web (UMD) — даёт window.strudel. -->
+    <script src="/bundle.js"></script>
+    <!-- Наш бандл: esbuild собирает src/audio/* (+ zod) в один файл. -->
+    <script src="/offline-bundle.js"></script>
+  </body>
+</html>

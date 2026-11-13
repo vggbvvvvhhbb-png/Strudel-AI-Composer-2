@@ -13,18 +13,41 @@ import { analyzeTrack } from '../music/features.js';
 import { scoreTrack, formatReport } from '../music/score.js';
 import { resolveProfile, PROFILES } from '../music/references.js';
 import { stripCodeFences } from '../music/extract.js';
+import { formatAudioRemarks } from '../music/compose/audio-remarks.js';
+import { scoreAudioReport, combineScores } from '../music/compose/audio-score.js';
+import { parseMetricsReport } from '../../src/audio/metrics-report.js';
+import { runAudioQa } from '../../src/audio/qa.js';
 
 const router = Router();
 
 const analyzeSchema = z.object({
   code: z.string().min(1).max(20000),
   style: z.string().max(40).optional(),
+  // Отчёт о рендере из браузера (Audio QA). Форма проверяется, числа — нет:
+  // аудио на сервере отсутствует.
+  audioReport: z.unknown().optional(),
+  useAudio: z.boolean().default(true),
 });
 
 const refineSchema = z.object({
   code: z.string().min(1).max(20000),
   style: z.string().max(40).optional(),
   iterations: z.number().int().min(1).max(3).default(2),
+  // Замечания по отрендеренному аудио (Audio QA). Приходят из браузера:
+  // рендер живёт в AudioContext, на сервере аудио нет. Текст замечаний —
+  // данные, а не инструкции (см. formatAudioRemarks).
+  audioRemarks: z
+    .array(
+      z.object({
+        code: z.string().min(1).max(60),
+        severity: z.enum(['error', 'warning']).optional(),
+        label: z.string().max(200).optional(),
+        hint: z.string().max(500).optional(),
+        params: z.record(z.any()).optional(),
+      }),
+    )
+    .max(50)
+    .optional(),
 });
 
 const variantsSchema = z.object({
@@ -53,8 +76,12 @@ function analyse(code, styleId, fallbackText = '') {
 }
 
 // Публичное описание разбора для интерфейса: метрики + критерии + замечания.
-function analysisPayload(code, styleId, fallbackText = '') {
+function analysisPayload(code, styleId, fallbackText = '', audioReport = null) {
   const { analysis, score, profile } = analyse(code, styleId, fallbackText);
+  // Аудио-блок: 20% общего скора, если отчёт о рендере пришёл.
+  const audio = audioReport ? scoreAudioReport(audioReport) : null;
+  const total = audio ? combineScores(score.total, null, audio.total) : score.total;
+  const findings = audioReport ? runAudioQa(audioReport) : [];
   return {
     analysis: {
       bpm: analysis.bpm,
@@ -65,9 +92,40 @@ function analysisPayload(code, styleId, fallbackText = '') {
       metrics: analysis.metrics,
       errors: analysis.errors,
     },
-    score,
+    score: {
+      ...score,
+      // Итоговый балл с учётом аудио-блока; v1Total — балл только по разбору кода.
+      v1Total: score.total,
+      total,
+      audio: audio ? { total: audio.total, checks: audio.checks, issues: audio.issues } : null,
+    },
+    audio: audio
+      ? {
+          total: audio.total,
+          findings,
+          report: audioSummary(audioReport),
+        }
+      : null,
     profile: { id: profile.id, name: profile.name, nameRu: profile.nameRu },
     report: formatReport(analysis, score, profile),
+  };
+}
+
+/** Ключевые числа отчёта — без всего подряд, только то, что человек смотрит. */
+function audioSummary(report) {
+  if (!report) return null;
+  const num = (value) => (typeof value === 'number' && Number.isFinite(value) ? Number(value.toFixed(2)) : null);
+  return {
+    engineVersion: report.engineVersion ?? null,
+    renderMode: report.renderMode ?? null,
+    lufsI: num(report.lufsI),
+    truePeakDbtp: num(report.truePeakDbtp),
+    peakDbfs: num(report.peakDbfs),
+    crestDb: num(report.crestDb),
+    clipCount: report.clipCount ?? 0,
+    bands: report.bands ?? null,
+    silence: report.silence ?? null,
+    repeatability: report.repeatability ?? null,
   };
 }
 
@@ -78,8 +136,12 @@ router.post('/api/music/analyze', (req, res) => {
     res.status(400).json({ error: 'Некорректный запрос' });
     return;
   }
-  const { code, style } = parsed.data;
-  res.json(analysisPayload(code, style));
+  const { code, style, audioReport, useAudio } = parsed.data;
+  const audio = useAudio && audioReport ? parseMetricsReport(audioReport) : { ok: false, report: null };
+  res.json({
+    ...analysisPayload(code, style, '', audio.ok ? audio.report : null),
+    audioRejected: useAudio && audioReport && !audio.ok ? audio.error : null,
+  });
 });
 
 // POST /api/music/refine — переписывание кода под замечания разбора.
@@ -89,16 +151,20 @@ router.post('/api/music/refine', async (req, res) => {
     res.status(400).json({ error: 'Некорректный запрос' });
     return;
   }
-  const { code: startCode, style, iterations } = parsed.data;
+  const { code: startCode, style, iterations, audioRemarks } = parsed.data;
 
   try {
     let current = startCode;
     const before = analysisPayload(current, style);
     const steps = [];
 
+    // Замечания по аудио — отдельный вход: они не меняют разбор кода, но
+    // показывают модели, что не так со звучанием (громкость, клиппинг, пик).
+    const audioBlock = formatAudioRemarks(audioRemarks || []);
+
     for (let i = 0; i < iterations; i++) {
       const { analysis, score, profile } = analyse(current, style);
-      if (!score.issues.length) {
+      if (!score.issues.length && !audioBlock) {
         steps.push({ iteration: i + 1, applied: false, reason: 'Замечаний нет', score: score.total });
         break;
       }
@@ -108,7 +174,9 @@ router.post('/api/music/refine', async (req, res) => {
           { role: 'system', content: prompts.critic },
           {
             role: 'user',
-            content: `Текущий код:\n\n${current}\n\n${report}\n\nИсправь замечания и верни полный обновлённый код.`,
+            content:
+              `Текущий код:\n\n${current}\n\n${report}\n\n${audioBlock}\n\n` +
+              'Исправь замечания и верни полный обновлённый код.',
           },
         ],
         temperature: 0.5,

@@ -25,6 +25,9 @@ export function createEngineAdapter(strudel, { maxPolyphony = DEFAULT_MAX_POLYPH
   let controller = null;
   let lastError = null;
   let tempoBpm = 120;
+  // Узел мастер-шины, куда врезан хвост движка. После офлайн-рендера
+  // контроллер superdough пересоздаётся, поэтому хвост надо переподключить.
+  let masterNode = null;
 
   async function ensureController() {
     controller = strudel.getSuperdoughAudioController?.() ?? null;
@@ -64,6 +67,7 @@ export function createEngineAdapter(strudel, { maxPolyphony = DEFAULT_MAX_POLYPH
      * @param {AudioNode} masterIn
      */
     attachMaster(masterIn) {
+      masterNode = masterIn;
       if (!tail) throw new Error('Движок не инициализирован: нет хвоста сигнала');
       try {
         tail.disconnect();
@@ -138,10 +142,30 @@ export function createEngineAdapter(strudel, { maxPolyphony = DEFAULT_MAX_POLYPH
     },
 
     /**
+     * Паттерн из кода — без запуска звука.
+     *
+     * REPL отдаёт паттерн (H3): из него можно вытащить события и разложить их
+     * в офлайн-контексте. Второй аргумент repl.evaluate — «играть» (false),
+     * поэтому живой трек при этом не переключается на звук.
+     *
+     * @param {string} code
+     * @returns {Promise<object|null>} паттерн Strudel
+     */
+    async patternFromCode(code) {
+      if (!code) throw new Error('Нет кода для паттерна');
+      const result = repl ? await repl.evaluate(code, false) : await strudel.evaluate(code);
+      if (lastError) throw lastError?.error || lastError;
+      return result?.pattern ?? result ?? null;
+    },
+
+    /**
      * Офлайн-рендер в отдельном OfflineAudioContext.
      * Схема вызова события — из кода движка (см. docs/SPIKE-AUDIO.md, H3):
      * официальный renderPatternAudio закрывает живой контекст, поэтому своя
      * реализация.
+     *
+     * После рендера живой путь восстанавливается: контроллер superdough
+     * пересоздаётся, хвост переподключается в мастер-шину.
      *
      * @param {{pattern:object, fromCycle:number, toCycle:number, sampleRate:number, cps:number}} options
    * @returns {Promise<AudioBuffer>}
@@ -173,8 +197,35 @@ export function createEngineAdapter(strudel, { maxPolyphony = DEFAULT_MAX_POLYPH
       // Возвращаем живой контекст на место.
       strudel.setAudioContext?.(context);
       strudel.setSuperdoughAudioController?.(null);
-      if (context) await strudel.initAudio({ maxPolyphony });
+      if (context) {
+        await strudel.initAudio({ maxPolyphony });
+        controller = strudel.getSuperdoughAudioController?.() ?? null;
+        tail = controller?.output?.destinationGain ?? null;
+        // Контроллер новый — хвост надо снова врезать в мастер-шину.
+        if (tail && masterNode) {
+          try {
+            tail.disconnect();
+          } catch {
+            /* хвост ещё ни к чему не подключён */
+          }
+          tail.connect(masterNode);
+        }
+      }
       return buffer;
+    },
+
+    /**
+     * Офлайн-рендер прямо из кода: код → паттерн → AudioBuffer.
+     *
+     * @param {{code:string, fromCycle?:number, toCycle?:number, sampleRate?:number, cps?:number}} options
+     * @returns {Promise<AudioBuffer>}
+     */
+    async renderCodeOffline({ code, fromCycle = 0, toCycle = 16, sampleRate = 44100, cps = 0.5 } = {}) {
+      const pattern = await adapter.patternFromCode(code);
+      if (!pattern || typeof pattern.queryArc !== 'function') {
+        throw new Error('Код не дал паттерн — рендер невозможен');
+      }
+      return adapter.renderOffline({ pattern, fromCycle, toCycle, sampleRate, cps });
     },
 
     dispose() {

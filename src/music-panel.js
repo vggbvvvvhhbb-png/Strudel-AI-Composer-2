@@ -13,6 +13,9 @@ const hooks = {
   setCode: null,
   applyCode: null,
   log: () => {},
+  // Рендер трека в браузере: возвращает { report } — отчёт о звучании.
+  // Без него разбор идёт только по коду.
+  renderAudio: null,
 };
 
 let els = null; // DOM-узлы панели (null — панели на странице нет)
@@ -27,11 +30,12 @@ const LABELS = {
 
 /* --- Инициализация --- */
 
-export function initMusicPanel({ getCode, setCode, applyCode, log } = {}) {
+export function initMusicPanel({ getCode, setCode, applyCode, log, renderAudio } = {}) {
   if (getCode) hooks.getCode = getCode;
   if (setCode) hooks.setCode = setCode;
   if (applyCode) hooks.applyCode = applyCode;
   if (log) hooks.log = log;
+  if (renderAudio) hooks.renderAudio = renderAudio;
 
   els = {
     style: $('music-style'),
@@ -54,7 +58,9 @@ export function initMusicPanel({ getCode, setCode, applyCode, log } = {}) {
   els.scoreMain.className = 'music-score-main';
   els.refineBox = document.createElement('div');
   els.refineBox.className = 'music-refine';
-  els.score.append(els.scoreMain, els.refineBox);
+  els.audioBox = document.createElement('div');
+  els.audioBox.className = 'music-audio';
+  els.score.append(els.scoreMain, els.refineBox, els.audioBox);
 
   els.analyze?.addEventListener('click', () => runAnalyze());
   els.refine?.addEventListener('click', () => runRefine());
@@ -152,10 +158,17 @@ async function runAnalyze() {
   }
   pushBusy(els.analyze, '⏳ Разбор…');
   try {
-    const payload = await analyzeMusic({ code, style: styleId });
+    // Сначала звук: рендер в браузере даёт отчёт, без него разбор идёт
+    // только по коду, а с ним — по фактическому звучанию.
+    const audioReport = await renderAudioReport(code);
+    const payload = await analyzeMusic({ code, style: styleId, audioReport });
     renderAnalysis(payload);
+    const audio = payload.audio;
     hooks.log(
-      `Разбор готов: ${payload.score.total}/100 (${payload.score.grade}), профиль «${payload.profile?.nameRu || '—'}»`,
+      audio
+        ? `Разбор готов: ${payload.score.total}/100 (${payload.score.grade}), ` +
+            `звук: ${audio.report?.lufsI ?? '—'} LUFS, ${audio.report?.truePeakDbtp ?? '—'} dBTP`
+        : `Разбор готов: ${payload.score.total}/100 (${payload.score.grade}), профиль «${payload.profile?.nameRu || '—'}»`,
       'ok',
     );
     return payload;
@@ -164,6 +177,26 @@ async function runAnalyze() {
     return null;
   } finally {
     popBusy();
+  }
+}
+
+/**
+ * Рендерит трек и отдаёт отчёт о звучании.
+ *
+ * Рендер не проходит не весь разбор: если звук построить не удалось, разбор
+ * всё равно полезен — по коду. Поэтому ошибка рендера не роняет запрос.
+ *
+ * @param {string} code
+ * @returns {Promise<object|null>} MetricsReport
+ */
+async function renderAudioReport(code) {
+  if (!hooks.renderAudio) return null;
+  try {
+    const rendered = await hooks.renderAudio(code);
+    return rendered?.report ?? null;
+  } catch (err) {
+    hooks.log(`Рендер для разбора не удался: ${err.message || err}`, 'error');
+    return null;
   }
 }
 
@@ -192,6 +225,79 @@ function renderAnalysis(payload) {
 
   renderCriteria(score.criteria || []);
   renderIssues(score.issues || []);
+  renderAudio(payload?.audio || null, payload?.audioRejected || null);
+}
+
+/**
+ * Блок «звук»: числа рендера и замечания по нему.
+ *
+ * Числа — из отчёта о рендере (тот же DSP, что звучит), замечания — из
+ * Audio QA: они машиночитаемые, поэтому подсказка под ними есть всегда.
+ */
+function renderAudio(audio, rejected) {
+  els.audioBox.replaceChildren();
+
+  if (rejected) {
+    els.audioBox.appendChild(note(`Отчёт о звучании не принят: ${rejected}`));
+    return;
+  }
+  if (!audio) {
+    els.audioBox.appendChild(note('Звук не рендерился — разбор только по коду'));
+    return;
+  }
+
+  const box = document.createElement('div');
+  box.className = 'music-audio-box';
+
+  const head = document.createElement('div');
+  head.className = 'music-audio-head';
+  head.textContent = `Звук: ${audio.total ?? '—'}/100 (аудио-блок, 20% скора)`;
+  box.append(head);
+
+  const report = audio.report || {};
+  const lines = [
+    `Громкость: ${fmt(report.lufsI)} LUFS-I (коридор −16…−12)`,
+    `True peak: ${fmt(report.truePeakDbtp)} dBTP (потолок −1.0)`,
+    `Пик: ${fmt(report.peakDbfs)} dBFS · клиппинг: ${report.clipCount ?? 0}`,
+    `Сжатость: ${fmt(report.crestDb)} дБ`,
+    report.repeatability
+      ? `Повторяемость: Δ ${fmt(report.repeatability.lufsDeltaDb)} LU · ${
+          report.repeatability.passed ? 'проходит ✓' : 'НЕ проходит ✗'
+        }`
+      : 'Повторяемость: не измерена',
+  ];
+  for (const text of lines) {
+    const line = document.createElement('div');
+    line.className = 'music-audio-line';
+    line.textContent = text;
+    box.append(line);
+  }
+
+  const findings = audio.findings || [];
+  if (findings.length) {
+    const list = document.createElement('div');
+    list.className = 'music-audio-findings';
+    for (const finding of findings) {
+      const item = document.createElement('div');
+      item.className = `music-audio-finding music-audio-${finding.severity === 'error' ? 'error' : 'warn'}`;
+      const label = document.createElement('span');
+      label.className = 'music-audio-finding-label';
+      label.textContent = finding.label || finding.code || '';
+      const hint = document.createElement('span');
+      hint.className = 'music-audio-finding-hint';
+      hint.textContent = finding.hint || '';
+      item.append(label, hint);
+      list.append(item);
+    }
+    box.append(list);
+  }
+
+  els.audioBox.append(box);
+}
+
+/** Число для показа: с двумя знаками, тире вместо NaN. */
+function fmt(value) {
+  return typeof value === 'number' && Number.isFinite(value) ? value.toFixed(2) : '—';
 }
 
 function renderCriteria(criteria) {

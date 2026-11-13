@@ -1,0 +1,162 @@
+Спайк фазы 3: офлайн-рендер → MetricsReport → Audio QA
+node: v24.14.1, chrome: C:\Program Files\Google\Chrome\Application\chrome.exe
+репозиторий: F:\ГЕНЕРАЦИЯ ФОТОК\Новая папка\Strudel AI Composer
+браузерный бандл: C:\Users\User\AppData\Local\Temp\strudel-offline-spike-rpwiGE\offline-bundle.js (181823 байт)
+статический сервер: http://127.0.0.1:58241
+chrome: 157.0.8103.51
+[offline console] log: %c🌀 @strudel/core loaded 🌀 background-color: black;color:white;border-radius:15px
+[offline console] log: %c[eval] code updated background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[offline console] log: %c[eval] code updated background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[offline console] log: %c[eval] code updated background-color: black;color:white;border-radius:15px
+[offline console] log: %c[cyclist] start background-color: black;color:white;border-radius:15px
+[offline console] log: %c[eval] code updated background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[offline console] warning: [superdough]: cannot schedule sounds in the past (target: 4.01, now: 11.54)
+[offline console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[offline console] log: %c[eval] code updated background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[offline console] warning: [superdough]: cannot schedule sounds in the past (target: 4.51, now: 10.37)
+[offline console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[offline console] log: %c[eval] code updated background-color: black;color:white;border-radius:15px
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: %c[eval] code updated background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[offline console] log: %c[eval] code updated background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[offline console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[offline console] log: %c[eval] code updated background-color: black;color:white;border-radius:15px
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+[offline console] log: skip query: too late
+
+== Общие данные прогона ==
+  user agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36
+  живой контекст до рендеров: running
+  живой контекст после рендеров: running
+  хвост движка после init: true
+  ошибок движка за прогон: 0
+
+== Паттерн: bass — note("c2").s("sawtooth").gain(0.8) ==
+  движок: strudel-web@1.3.0/superdough@1.3.0
+  sampleRate: 48000 Гц, renderMode: offline
+  такты: [0,16], событий в паттерне: 16, из них с началом: 16
+  первые события: [{"begin":0,"dur":1,"note":"c2","s":"sawtooth","gain":0.8},{"begin":1,"dur":1,"note":"c2","s":"sawtooth","gain":0.8},{"begin":2,"dur":1,"note":"c2","s":"sawtooth","gain":0.8},{"begin":3,"dur":1,"note":"c2","s":"sawtooth","gain":0.8}]
+  LUFS-I: -21.91 LU, LUFS-M: -22.03 LU, LUFS-S: -21.93 LU
+  true peak: -12.33 dBTP, peak: -12.83 dBFS
+  crest: 10.11 дБ, clipCount: 0
+  полосы (дБ): sub=-28.85, low=-26.31, lowMid=-30.20, mid=-33.83, highMid=-40.21, high=-43.74
+  тишина (с): head=0.000, tail=0.000, internal=0.000
+  повторяемость: прогонов=2, lufsDeltaDb=0.000, passed=true
+  сравнение двух рендеров: maxAbsDiff=0, rmsDiff=0
+  время рендера (2 прогона + метрики): 959 мс
+  приёмка по метрикам: ПРОЙДЕНА
+  контрольный пересчёт buildMetricsReport: {"lufsI":-21.9098845717287,"truePeakDbtp":-12.327054158705588,"peakDbfs":-12.829352077116882,"crestDb":10.109885923707251,"matchesOrchestrated":true}
+  замечания Audio QA: 1
+    [warning] lufs-below-corridor — Громкость ниже коридора :: LUFS-I -21.91 при коридоре -16…-12. Цель — -14 LUFS.
+  живой контекст после рендера: state=running, currentTime растёт=true, ошибок оценки=нет, пик в живом контексте=0.1940 (-14.24 дБ), хвост движока на месте=true, глобальный контекст = живой: true (state running)
+
+== Паттерн: arp — note("c3 e3 g3 b3").s("square").gain(0.5) ==
+  движок: strudel-web@1.3.0/superdough@1.3.0
+  sampleRate: 48000 Гц, renderMode: offline
+  такты: [0,16], событий в паттерне: 64, из них с началом: 64
+  первые события: [{"begin":0,"dur":0.25,"note":"c3","s":"square","gain":0.5},{"begin":1,"dur":0.25,"note":"c3","s":"square","gain":0.5},{"begin":2,"dur":0.25,"note":"c3","s":"square","gain":0.5},{"begin":3,"dur":0.25,"note":"c3","s":"square","gain":0.5}]
+  LUFS-I: -19.68 LU, LUFS-M: -19.78 LU, LUFS-S: -19.61 LU
+  true peak: -13.63 dBTP, peak: -13.63 dBFS
+  crest: 8.37 дБ, clipCount: 0
+  полосы (дБ): sub=-40.10, low=-27.49, lowMid=-24.88, mid=-30.14, highMid=-36.52, high=-40.04
+  тишина (с): head=0.000, tail=0.000, internal=0.000
+  повторяемость: прогонов=2, lufsDeltaDb=0.000, passed=true
+  сравнение двух рендеров: maxAbsDiff=0, rmsDiff=0
+  время рендера (2 прогона + метрики): 1683 мс
+  приёмка по метрикам: ПРОЙДЕНА
+  контрольный пересчёт buildMetricsReport: {"lufsI":-19.67566164601686,"truePeakDbtp":-13.629396791350096,"peakDbfs":-13.629396791350096,"crestDb":8.371639749311036,"matchesOrchestrated":true}
+  замечания Audio QA: 1
+    [warning] lufs-below-corridor — Громкость ниже коридора :: LUFS-I -19.68 при коридоре -16…-12. Цель — -14 LUFS.
+  живой контекст после рендера: state=running, currentTime растёт=true, ошибок оценки=нет, пик в живом контексте=0.1497 (-16.49 дБ), хвост движока на месте=true, глобальный контекст = живой: true (state running)
+
+== Паттерн: pad — note("c4").s("triangle").gain(0.35) ==
+  движок: strudel-web@1.3.0/superdough@1.3.0
+  sampleRate: 48000 Гц, renderMode: offline
+  такты: [0,16], событий в паттерне: 16, из них с началом: 16
+  первые события: [{"begin":0,"dur":1,"note":"c4","s":"triangle","gain":0.35},{"begin":1,"dur":1,"note":"c4","s":"triangle","gain":0.35},{"begin":2,"dur":1,"note":"c4","s":"triangle","gain":0.35},{"begin":3,"dur":1,"note":"c4","s":"triangle","gain":0.35}]
+  LUFS-I: -26.49 LU, LUFS-M: -26.58 LU, LUFS-S: -26.52 LU
+  true peak: -19.75 dBTP, peak: -19.77 dBFS
+  crest: 8.91 дБ, clipCount: 0
+  полосы (дБ): sub=-54.25, low=-38.85, lowMid=-29.92, mid=-36.55, highMid=-54.22, high=-67.04
+  тишина (с): head=0.000, tail=0.000, internal=0.000
+  повторяемость: прогонов=2, lufsDeltaDb=0.000, passed=true
+  сравнение двух рендеров: maxAbsDiff=0, rmsDiff=0
+  время рендера (2 прогона + метрики): 898 мс
+  приёмка по метрикам: ПРОЙДЕНА
+  контрольный пересчёт buildMetricsReport: {"lufsI":-26.494837610291306,"truePeakDbtp":-19.74925569539235,"peakDbfs":-19.772557896133613,"crestDb":8.914914628524176,"matchesOrchestrated":true}
+  замечания Audio QA: 1
+    [warning] lufs-below-corridor — Громкость ниже коридора :: LUFS-I -26.49 при коридоре -16…-12. Цель — -14 LUFS.
+  живой контекст после рендера: state=running, currentTime растёт=true, ошибок оценки=нет, пик в живом контексте=0.1026 (-19.78 дБ), хвост движока на месте=true, глобальный контекст = живой: true (state running)
+
+============ СВОДКА ФАЗЫ 3 (офлайн-рендер → метрики → QA) ============
+паттерн    |   LUFS-I |   TP dBTP |     peak |  crest |  clip |      тишина h/t/i |   lufsΔ |  maxAbsDiff |      мс |        QA
+-------------------------------------------------------------------------------------------------------------------------------
+bass       |   -21.91 |    -12.33 |   -12.83 |  10.11 |     0 |    0.00/0.00/0.00 |   0.000 |           0 |     959 | 1 (0 err)
+arp        |   -19.68 |    -13.63 |   -13.63 |   8.37 |     0 |    0.00/0.00/0.00 |   0.000 |           0 |    1683 | 1 (0 err)
+pad        |   -26.49 |    -19.75 |   -19.77 |   8.91 |     0 |    0.00/0.00/0.00 |   0.000 |           0 |     898 | 1 (0 err)
+
+детерминизм (maxAbsDiff / rmsDiff двух рендеров): bass: 0 / 0; arp: 0 / 0; pad: 0 / 0
+живой контекст: running -> running
+замечания Audio QA (код / severity / label):
+  bass       lufs-below-corridor / warning / Громкость ниже коридора
+  arp        lufs-below-corridor / warning / Громкость ниже коридора
+  pad        lufs-below-corridor / warning / Громкость ниже коридора
+подробности: tests/spike/browser/out-offline.txt
+=================================================================
