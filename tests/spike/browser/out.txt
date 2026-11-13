@@ -1,0 +1,258 @@
+Спайк фазы 0: Strudel в браузере
+node: v24.14.1, chrome: C:\Program Files\Google\Chrome\Application\chrome.exe
+репозиторий: F:\ГЕНЕРАЦИЯ ФОТОК\Новая папка\Strudel AI Composer
+статический сервер: http://127.0.0.1:53440
+chrome: 157.0.8103.51
+
+== H1 — вставка мастер-цепочки в движок Strudel ==
+[h1 console] log: %c🌀 @strudel/core loaded 🌀 background-color: black;color:white;border-radius:15px
+[h1 console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[h1 console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[h1 console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[h1 console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[h1 console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[h1 console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+структура контроллера: {"controllerCtor":"$5","hasOutput":true,"hasDestinationGain":true,"hasChannelMerger":true,"destinationGainCtor":"GainNode","channelMergerCtor":"ChannelMergerNode","sameContext":true}
+события: [{"begin":0,"dur":0.5,"note":"c3","s":"sawtooth"},{"begin":0.5,"dur":0.5,"note":"c3","s":"sawtooth"},{"begin":1,"dur":0.5,"note":"c3","s":"sawtooth"},{"begin":1.5,"dur":0.5,"note":"c3","s":"sawtooth"},{"begin":2,"dur":0.5,"note":"c3","s":"sawtooth"},{"begin":2.5,"dur":0.5,"note":"c3","s":"sawtooth"},{"begin":3,"dur":0.5,"note":"c3","s":"sawtooth"},{"begin":3.5,"dur":0.5,"note":"c3","s":"sawtooth"}]
+базовый рендер: {"channels":2,"frames":176400,"sampleRate":44100,"rms":0.073035,"peak":0.240892,"rmsDb":-22.729,"peakDb":-12.364}
+masterIn=0.5: {"channels":2,"frames":176400,"sampleRate":44100,"rms":0.036518,"peak":0.120446,"rmsDb":-28.75,"peakDb":-18.384}
+masterIn=1.0: {"channels":2,"frames":176400,"sampleRate":44100,"rms":0.073035,"peak":0.240892,"rmsDb":-22.729,"peakDb":-12.364}
+остаток (bypass − baseline): {"maxAbsDiff":0,"rmsDiff":0,"rmsDiffDb":null} rel=-Infinity dB
+ratio(0.5)=0.500007 ratio(1.0)=1
+
+== H3 — офлайн-рендер: детерминированность и официальный renderPatternAudio ==
+[h3-own console] log: %c🌀 @strudel/core loaded 🌀 background-color: black;color:white;border-radius:15px
+[h3-own console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[h3-own console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[h3-own console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[h3-own console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+свой офлайн-рендер: {"hypothesis":"H3-own","first":{"channels":2,"frames":176400,"sampleRate":44100,"rms":0.073035,"peak":0.240892,"rmsDb":-22.729,"peakDb":-12.364},"second":{"channels":2,"frames":176400,"sampleRate":44100,"rms":0.073035,"peak":0.240892,"rmsDb":-22.729,"peakDb":-12.364},"compare":{"maxAbsDiff":0,"rmsDiff":0,"rmsDiffDb":null},"identical":true,"events":8}
+[h3-official console] log: %c🌀 @strudel/core loaded 🌀 background-color: black;color:white;border-radius:15px
+[h3-official console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[h3-official console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[h3-official console] log: %c[webaudio] preloading background-color: black;color:white;border-radius:15px
+[h3-official console] log: %c[webaudio] start rendering background-color: black;color:white;border-radius:15px
+официальный renderPatternAudio: {"hypothesis":"H3-official","liveCtxStateBefore":"running","returnedType":"undefined","returnedValue":"undefined","liveCtxStateAfter":"closed","liveCtxClosed":true,"globalCtxReplaced":true,"globalCtxState":"running","capturedBuffer":{"frames":88200,"channels":2,"sampleRate":44100},"downloads":[{"href":"blob:http://127.0.0.1:53440/968b3d81-607b-4a85-a269-1e377eda6294","download":"spike-h3.wav"}],"wavBlobType":"audio/wav","wavBlobSize":352844}
+
+== H5 — позиция: scheduler.now() против ctx.currentTime ==
+[h5 console] log: %c🌀 @strudel/core loaded 🌀 background-color: black;color:white;border-radius:15px
+[h5 console] log: %c[cyclist] start background-color: black;color:white;border-radius:15px
+строки замеров: [{"i":0,"state":"running","currentTime":0.32,"schedulerNow":0.13,"baseLatency":0.01,"outputLatency":0.04},{"i":1,"state":"running","currentTime":0.530667,"schedulerNow":0.235333,"baseLatency":0.01,"outputLatency":0.04},{"i":2,"state":"running","currentTime":0.741333,"schedulerNow":0.340667,"baseLatency":0.01,"outputLatency":0.04},{"i":3,"state":"running","currentTime":0.941333,"schedulerNow":0.440667,"baseLatency":0.01,"outputLatency":0.04},{"i":4,"state":"running","currentTime":1.152,"schedulerNow":0.546,"baseLatency":0.01,"outputLatency":0.04},{"i":5,"state":"running","currentTime":1.352,"schedulerNow":0.646,"baseLatency":0.01,"outputLatency":0.04},{"i":6,"state":"running","currentTime":1.56,"schedulerNow":0.75,"baseLatency":0.01,"outputLatency":0.04},{"i":7,"state":"running","currentTime":1.770667,"schedulerNow":0.855333,"baseLatency":0.01,"outputLatency":0.04},{"i":8,"state":"running","currentTime":1.970667,"schedulerNow":0.955333,"baseLatency":0.01,"outputLatency":0.04},{"i":9,"state":"running","currentTime":2.181333,"schedulerNow":1.060667,"baseLatency":0.01,"outputLatency":0.04}]
+итоги: {"diffRaw":{"mean":-0.656,"min":-1.120666,"max":-0.19},"diffConvertedSeconds":{"mean":-0.06,"min":-0.060001,"max":-0.059999},"baseLatency":0.01,"outputLatency":0.04,"cps":0.5,"clockDuration":0.05}
+
+== H8 — банки сэмплов: манифесты, CORS, реальные загрузки ==
+[h8 console] log: %c🌀 @strudel/core loaded 🌀 background-color: black;color:white;border-radius:15px
+[h8 console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[h8 console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+[h8 console] log: %c[sampler] load sound "bd:0:0".. background-color: black;color:white;border-radius:15px
+[h8 console] log: %c[sampler] load sound "bd:0:0"... done! loaded 24.5 KiB in 246ms background-color: black;color:white;border-radius:15px
+[h8 console] log: %c[sampler] load sound "808bd:0:0".. background-color: black;color:white;border-radius:15px
+[h8 console] log: %c[sampler] load sound "808bd:0:0"... done! loaded 21.6 KiB in 217ms background-color: black;color:white;border-radius:15px
+[h8 console] log: %c[sampler] load sound "piano:0:0".. background-color: black;color:white;border-radius:15px
+[h8 console] log: %c[sampler] load sound "piano:0:0"... done! loaded 43.0 KiB in 141ms background-color: black;color:white;border-radius:15px
+сетевые события (сэмплы/ошибки): [
+ {
+  "kind": "request",
+  "url": "https://raw.githubusercontent.com/tidalcycles/dirt-samples/main/strudel.json",
+  "method": "GET",
+  "resourceType": "fetch"
+ },
+ {
+  "kind": "response",
+  "url": "https://raw.githubusercontent.com/tidalcycles/dirt-samples/main/strudel.json",
+  "status": 200,
+  "acao": "*",
+  "contentType": "text/plain; charset=utf-8",
+  "contentLength": "11538"
+ },
+ {
+  "kind": "request",
+  "url": "https://shabda.ndre.gr/piano.json?strudel=1",
+  "method": "GET",
+  "resourceType": "fetch"
+ },
+ {
+  "kind": "response",
+  "url": "https://shabda.ndre.gr/piano.json?strudel=1",
+  "status": 200,
+  "acao": "*",
+  "contentType": "application/json",
+  "contentLength": null
+ },
+ {
+  "kind": "request",
+  "url": "https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master/bd/BT0A0A7.wav",
+  "method": "GET",
+  "resourceType": "fetch"
+ },
+ {
+  "kind": "response",
+  "url": "https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master/bd/BT0A0A7.wav",
+  "status": 200,
+  "acao": "*",
+  "contentType": "audio/wav",
+  "contentLength": "25108"
+ },
+ {
+  "kind": "request",
+  "url": "https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master/808bd/BD0000.WAV",
+  "method": "GET",
+  "resourceType": "fetch"
+ },
+ {
+  "kind": "response",
+  "url": "https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master/808bd/BD0000.WAV",
+  "status": 200,
+  "acao": "*",
+  "contentType": "audio/wav",
+  "contentLength": "22096"
+ },
+ {
+  "kind": "request",
+  "url": "https://shabda.ndre.gr/samples/piano/piano_0.wav",
+  "method": "GET",
+  "resourceType": "fetch"
+ },
+ {
+  "kind": "response",
+  "url": "https://shabda.ndre.gr/samples/piano/piano_0.wav",
+  "status": 200,
+  "acao": "*",
+  "contentType": "application/octet-stream",
+  "contentLength": "44054"
+ }
+]
+
+== H9 — DynamicsCompressorNode против LookaheadLimiter ==
+[h9 console] log: %c🌀 @strudel/core loaded 🌀 background-color: black;color:white;border-radius:15px
+H9: {
+ "hypothesis": "H9",
+ "sampleRate": 48000,
+ "signals": {
+  "sine1k0db": {
+   "label": "ровный синус 1 кГц, пик 0 dBFS",
+   "input": {
+    "peak": 1,
+    "peakDb": 0,
+    "rms": 0.707107,
+    "rmsDb": -3.01
+   },
+   "compressor": {
+    "thresholdDb": -3,
+    "ratio": 20,
+    "attack": 0.001,
+    "release": 0.05,
+    "outPeak": 0.888456,
+    "outPeakDb": -1.027,
+    "outRmsDb": -4.193,
+    "overshootOverThresholdDb": 1.973,
+    "lagSamples": null,
+    "lagMs": null
+   },
+   "lookaheadLimiter": {
+    "ceilingDb": -1,
+    "outPeak": 0.891251,
+    "outPeakDb": -1,
+    "outRmsDb": -4.032,
+    "overshootOverCeilingDb": 0,
+    "gainReductionDb": -1,
+    "lagSamples": null,
+    "lagMs": null,
+    "lookaheadSamples": 240,
+    "lookaheadMs": 5
+   }
+  },
+  "bursts": {
+   "label": "всплески 1 кГц 20 мс раз в 250 мс, пик 0 dBFS",
+   "input": {
+    "peak": 1,
+    "peakDb": 0,
+    "rms": 0.2,
+    "rmsDb": -13.979
+   },
+   "compressor": {
+    "thresholdDb": -3,
+    "ratio": 20,
+    "attack": 0.001,
+    "release": 0.05,
+    "outPeak": 0.930574,
+    "outPeakDb": -0.625,
+    "outRmsDb": -15.933,
+    "overshootOverThresholdDb": 2.375,
+    "lagSamples": null,
+    "lagMs": null
+   },
+   "lookaheadLimiter": {
+    "ceilingDb": -1,
+    "outPeak": 0.891251,
+    "outPeakDb": -1,
+    "outRmsDb": -14.979,
+    "overshootOverCeilingDb": 0,
+    "gainReductionDb": -1,
+    "lagSamples": null,
+    "lagMs": null,
+    "lookaheadSamples": 240,
+    "lookaheadMs": 5
+   }
+  },
+  "singleBurst": {
+   "label": "один всплеск 1 кГц 20 мс (непериодичный — для замера задержки)",
+   "input": {
+    "peak": 1,
+    "peakDb": 0,
+    "rms": 0.141421,
+    "rmsDb": -16.99
+   },
+   "compressor": {
+    "thresholdDb": -3,
+    "ratio": 20,
+    "attack": 0.001,
+    "release": 0.05,
+    "outPeak": 0.607595,
+    "outPeakDb": -4.328,
+    "outRmsDb": -24.784,
+    "overshootOverThresholdDb": -1.328,
+    "lagSamples": 288,
+    "lagMs": 6
+   },
+   "lookaheadLimiter": {
+    "ceilingDb": -1,
+    "outPeak": 0.891251,
+    "outPeakDb": -1,
+    "outRmsDb": -17.99,
+    "overshootOverCeilingDb": 0,
+    "gainReductionDb": -1,
+    "lagSamples": 240,
+    "lagMs": 5,
+    "lookaheadSamples": 240,
+    "lookaheadMs": 5
+   }
+  }
+ },
+ "verdict": {
+  "compressorIsBrickwall": false,
+  "limiterIsBrickwall": true
+ }
+}
+
+== H12 — autoplay: состояние контекста с флагом и без него ==
+[h12-click console] log: %c🌀 @strudel/core loaded 🌀 background-color: black;color:white;border-radius:15px
+[h12-click console] log: %c[superdough] AudioWorklets loaded background-color: black;color:white;border-radius:15px
+[h12-click console] log: %c[superdough] ready background-color: black;color:white;border-radius:15px
+H12: {"withFlag":{"before":"running","after":"running","currentTime":0.18133333333333335,"currentTimeLater":0.5013333333333333,"advanced":true},"withoutFlag":{"before":"running","after":"running","currentTime":0.2,"currentTimeLater":0.512,"advanced":true},"policy_user-gesture-required":{"before":"running","after":"running","currentTime":0.18133333333333335,"currentTimeLater":0.5013333333333333,"advanced":true},"policy_document-user-activation-required":{"before":"running","after":"running","currentTime":0.18133333333333335,"currentTimeLater":0.49066666666666664,"advanced":true},"firstClick":{"before":"running","afterClick":"running","resolvedBeforeClick":false,"resolvedAfterClick":true}}
+
+================ СВОДКА ФАЗЫ 0 (браузерный спайк) ================
+H1    | ПОДТВЕРЖДЕНА (рецепт работает)
+      | RMS(baseline)=0.073035 (-22.729 dBFS), RMS(g=0.5)=0.036518 (-28.75 dBFS), RMS(g=1.0)=0.073035 (-22.729 dBFS); ratio(0.5)=0.500007 (цель 0.5±10% -> ok), остаток bypass−baseline=-Infinity dBFS (-Infinity dBrel, цель ≤−40 dB -> ok)
+H3    | ПОДТВЕРЖДЕНА (офлайн-рендер детерминирован)
+      | два рендера: maxAbsDiff=0, RMS(diff)=0 (-Infinity dBFS); официальный renderPatternAudio: возвращает undefined, WAV-блоб audio/wav 352844 байт через <a download>, текущий AudioContext закрыт: true (running -> closed), глобальный контекст заменён: true, AudioBuffer можно перехватить патчем startRendering: 88200 кадров
+H5    | ПОДТВЕРЖДЕНА (scheduler.now() — циклы, не секунды)
+      | scheduler.now()−ctx.currentTime: среднее -0.656, мин -1.120666, макс -0.19 (now() в циклах, cps=0.5); в секундах (now()/cps−currentTime): среднее -0.06, мин -0.060001, макс -0.059999 с; baseLatency=0.01 с, outputLatency=0.04 с, clock.duration=0.05
+H8    | ПОДТВЕРЖДЕНА (банки грузятся)
+      | github:tidalcycles/dirt-samples: манифест загружен за 274.7 мс; shabda:piano: манифест загружен за 179.7 мс; ответов 200: 9, манифестов: 3, аудиофайлов: 3, сетевых ошибок: 0; палитра проекта: доступно 42 из 44, отсутствуют: oh,sh
+H9    | ПОДТВЕРЖДЕНА (DynamicsCompressorNode — не brickwall)
+      | синус 0 dBFS: компрессор на выходе -1.027 dBFS (превышение порога −3 dB на 1.973 dB); наш лимитер: -1 dBFS (потолок −1 dB, превышение 0 dB). Всплески: компрессор -0.625 dBFS (превышение 2.375 дБ), лимитер -1 dBFS. Задержка (один всплеск): компрессор 6 мс, наш лимитер 5 мс (lookahead 5 мс)
+H12   | НЕ ПОДТВЕРЖДЕНА (состояния не различаются)
+      | с флагом: running -> running (currentTime растёт: true); без флага: running -> running (currentTime растёт: true); с --autoplay-policy=document-user-activation-required: running -> running (currentTime растёт: true); initAudioOnFirstClick: до клика resolved=false, после клика resolved=true, состояние running
+===============================================================
+подробности: F:\ГЕНЕРАЦИЯ ФОТОК\Новая папка\Strudel AI Composer\tests\spike\browser\out.txt

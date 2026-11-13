@@ -17,6 +17,8 @@
     "spike": "node tests/spike/probe.mjs",
     "spike:compose": "node tests/spike/compose-pipeline.probe.mjs",
     "spike:audio": "node tests/spike/audio-api.probe.mjs",
+    "spike:browser": "node tests/spike/browser/master-spike.mjs",
+    "sync:samples": "node scripts/sync-sample-banks.mjs",
     "validate:loudness": "node scripts/validate-loudness.mjs",
     "eval": "node eval/run.mjs",
     "eval:dry": "node eval/run.mjs --dry",

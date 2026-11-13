@@ -3,7 +3,7 @@
 
 ## Жёсткие правила
 - Используй только функции Strudel. Запрещены: fetch, import, eval, document, window, localStorage и любые обращения к сети или DOM.
-- Сэмплы — только из загруженных наборов, по имени без `.bank(...)` (банков нет, звук с банком молчит). Рабочие имена: `bd`, `sd`, `hh`, `hh27`, `cp`, `oh`, `perc`, `808`, `808bd`, `808sd`, `808oh`, `808mc`, `808ht`, `808lc`, `909`, `bass`, `bass0`, `bass1`, `bass2`, `bass3`, `pluck`, `stab`, `jazz`, `juno`, `moog`, `sax`, `trump`, `sitar`, `house`, `dr`, `dr2`, `dr55`, `breaks125`, `breaks152`, `breaks157`, `breaks165`, `realclaps`, `sh`, `rave`, `gab`, `industrial`, `jungle`, `techno`, `piano`. Строку `samples(...)` не пиши — сэмплы приложение подгружает само.
+- Сэмплы — только из загруженных наборов, по имени без `.bank(...)` (банков нет, звук с банком молчит). Рабочие имена: `bd`, `sd`, `hh`, `hh27`, `cp`, `perc`, `808`, `808bd`, `808sd`, `808oh`, `808mc`, `808ht`, `808lc`, `909`, `bass`, `bass0`, `bass1`, `bass2`, `bass3`, `pluck`, `stab`, `jazz`, `juno`, `moog`, `sax`, `trump`, `sitar`, `house`, `dr`, `dr2`, `dr55`, `breaks125`, `breaks152`, `breaks157`, `breaks165`, `realclaps`, `rave`, `gab`, `industrial`, `jungle`, `techno`, `piano`. Строку `samples(...)` не пиши — сэмплы приложение подгружает само. Имена, которых нет в списке, не пиши: сэмпл без файла молчит.
 - Верхнеуровневый код: только вызовы Strudel и объявления `const` для тональности. Никаких своих функций, циклов и DOM.
 
 ## Структура трека — строго в этом порядке

@@ -9,11 +9,14 @@ import { parseKey, noteToMidi, degreeToMidi, chordToMidi } from './notes.js';
 import { getBpm, getKey } from '../../src/core/code-model.js';
 
 // Сэмплы ударных: по ним партия опознаётся как барабаны.
+// Список сверён с манифестами банков (server/music/data/sample-banks.json):
+// имен, которых нет в банке, здесь быть не должно — такой сэмпл молчит.
+// (Раньше здесь стояли clap/rim/tom/cowbell/oh/sh — таких имён в банках нет.)
 const DRUM_NAMES = new Set([
-  'bd', 'sd', 'hh', 'hh27', 'cp', 'oh', 'perc', 'clap', 'rim', 'tom', 'cowbell',
+  'bd', 'sd', 'hh', 'hh27', 'cp', 'perc', 'rm', 'cb', 'odx', 'ho',
   '808', '808bd', '808sd', '808oh', '808mc', '808ht', '808lc', '909',
   'breaks125', 'breaks152', 'breaks157', 'breaks165', 'realclaps',
-  'sh', 'rave', 'gab', 'industrial', 'jungle', 'techno', 'dr', 'dr2', 'dr55', 'house',
+  'rave', 'gab', 'industrial', 'jungle', 'techno', 'dr', 'dr2', 'dr55', 'house',
 ]);
 
 // Синтезаторы Strudel — если s() содержит их, партия мелодическая, а не ударная.

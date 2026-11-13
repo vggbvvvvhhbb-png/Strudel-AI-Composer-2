@@ -100,4 +100,17 @@ describe('публичный API @strudel/web', () => {
     const comp = api.s('bd').compressor(-20).queryArc(0, 1);
     expect(comp[0].value.compressor).toBe(-20);
   });
+
+  it('.duck(n) — алиас .duckorbit(n), а не отдельный эффект', async () => {
+    // В @strudel/web 1.3.0 `duck` задан как A("duckorbit", "duck"):
+    // оба метода пишут ОДНО и то же поле duckorbit. Рисерч утверждал обратное
+    // («.duck() — сам эффект, .duckorbit() — его цель»), поэтому это зафиксировано
+    // контрактным тестом: иначе компилятор будет генерировать бессмысленный код.
+    const api = await loadStrudel();
+    const viaDuck = api.s('bd').duck(3).queryArc(0, 1);
+    const viaDuckOrbit = api.s('bd').duckorbit(3).queryArc(0, 1);
+    expect(viaDuck[0].value.duckorbit).toBe(3);
+    expect(viaDuckOrbit[0].value.duckorbit).toBe(3);
+    expect(Object.keys(viaDuck[0].value).sort()).toEqual(Object.keys(viaDuckOrbit[0].value).sort());
+  });
 });
