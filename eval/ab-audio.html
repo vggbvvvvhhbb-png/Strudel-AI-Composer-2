@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ru" data-theme="jade">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Слепой A/B — микс и мастер</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0f0e;
+        --panel: #131918;
+        --line: #24302d;
+        --text: #e8f1ec;
+        --muted: #93a6a0;
+        --jade: #3fbf8f;
+        --danger: #e0605a;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.5 "JetBrains Mono", ui-monospace, monospace;
+      }
+      h1 { font-size: 18px; margin: 0 0 4px; }
+      p.hint { color: var(--muted); margin: 0 0 20px; }
+      .pair { border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 14px; background: var(--panel); }
+      .pair h2 { font-size: 14px; margin: 0 0 12px; color: var(--muted); font-weight: 400; }
+      .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+      button {
+        background: var(--panel); color: var(--text); border: 1px solid var(--line);
+        border-radius: 8px; padding: 8px 14px; cursor: pointer; font: inherit;
+      }
+      button:hover { border-color: var(--jade); }
+      button[aria-pressed="true"] { border-color: var(--jade); color: var(--jade); }
+      .votes { display: flex; gap: 8px; margin-left: auto; }
+      .votes button.chosen { border-color: var(--jade); color: var(--jade); }
+      .result { margin-top: 10px; color: var(--muted); font-size: 13px; }
+      .summary { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 16px; }
+      table { border-collapse: collapse; width: 100%; margin-top: 12px; font-size: 13px; }
+      th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; }
+      a { color: var(--jade); }
+      @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+    </style>
+  </head>
+  <body>
+    <h1>Слепой A/B: «до микса и мастера» ↔ «после»</h1>
+    <p class="hint">
+      Пары загружаются из <code>eval/ab-audio/pairs.json</code>. Порядок проигрывания внутри пары
+      случаен и не показывается слушателю. Итог — знаковый критерий: доля предпочтений «после».
+    </p>
+
+    <div class="row" style="margin-bottom: 18px">
+      <button id="btn-reload">Перезагрузить пары</button>
+      <button id="btn-export">Экспорт результатов</button>
+      <span id="status" class="hint"></span>
+    </div>
+
+    <div id="pairs"></div>
+
+    <div class="summary">
+      <h2 style="font-size:15px">Итог</h2>
+      <div id="summary"></div>
+    </div>
+
+    <script type="module">
+      const PAIRS_URL = new URL('./ab-audio/pairs.json', import.meta.url);
+      const votes = new Map(); // pairId → 'a' | 'b' | 'tie'
+      let pairs = [];
+      let order = [];
+
+      const status = document.getElementById('status');
+
+      function shuffle(list) {
+        const out = list.slice();
+        for (let i = out.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [out[i], out[j]] = [out[j], out[i]];
+        }
+        return out;
+      }
+
+      async function load() {
+        status.textContent = 'Загрузка…';
+        try {
+          const res = await fetch(PAIRS_URL);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          pairs = data.pairs || [];
+          order = shuffle(pairs.map((pair) => pair.id));
+          render();
+          status.textContent = `Пар: ${pairs.length}`;
+        } catch (error) {
+          status.textContent = `Не удалось загрузить пары: ${error.message}. Сгенерируйте пары: node eval/audio-eval.mjs`;
+        }
+      }
+
+      function render() {
+        const box = document.getElementById('pairs');
+        box.replaceChildren();
+        for (const id of order) {
+          const pair = pairs.find((item) => item.id === id);
+          if (!pair) continue;
+          const card = document.createElement('section');
+          card.className = 'pair';
+
+          const title = document.createElement('h2');
+          title.textContent = `Пара ${pair.id} — ${pair.title || 'трек'}`;
+          card.append(title);
+
+          const row = document.createElement('div');
+          row.className = 'row';
+
+          const buttons = [];
+          for (const side of ['a', 'b']) {
+            const play = document.createElement('button');
+            play.type = 'button';
+            play.textContent = `▶ Вариант ${side.toUpperCase()}`;
+            play.addEventListener('click', () => new Audio(pair[side].url).play());
+            row.append(play);
+            buttons.push(play);
+          }
+
+          const votesRow = document.createElement('div');
+          votesRow.className = 'votes';
+          const voteButtons = {};
+          for (const [value, label] of [['a', 'Лучше A'], ['b', 'Лучше B'], ['tie', 'Одинаково']]) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = label;
+            button.addEventListener('click', () => {
+              votes.set(pair.id, value);
+              for (const key of Object.keys(voteButtons)) voteButtons[key].classList.remove('chosen');
+              button.classList.add('chosen');
+              renderSummary();
+            });
+            voteButtons[value] = button;
+            votesRow.append(button);
+          }
+          row.append(votesRow);
+          card.append(row);
+
+          const result = document.createElement('div');
+          result.className = 'result';
+          result.textContent = votes.has(pair.id) ? 'Голос учтён' : 'Ещё не оценено';
+          card.append(result);
+
+          box.append(card);
+        }
+        renderSummary();
+      }
+
+      function renderSummary() {
+        const box = document.getElementById('summary');
+        const total = votes.size;
+        let a = 0;
+        let b = 0;
+        let tie = 0;
+        for (const value of votes.values()) {
+          if (value === 'a') a += 1;
+          else if (value === 'b') b += 1;
+          else tie += 1;
+        }
+        // Знаковый критерий: доля предпочтений «после» (вариант B) от всех
+        // решённых сравнений. Значимость при n=20 — двусторонний критерий
+        // знака (p < 0.05) достигается при ≥15 предпочтениях в одну сторону.
+        const decided = a + b;
+        const shareB = decided ? b / decided : 0;
+        const significant = decided >= 20 && (b >= 15 || b <= 5);
+        box.innerHTML = `
+          <p>Оценено пар: ${total} из ${pairs.length}. Предпочтений B: ${b}, A: ${a}, ничьих: ${tie}.</p>
+          <p>Доля «после» среди решённых: <strong>${(shareB * 100).toFixed(0)}%</strong>.
+          ${significant ? '<strong>Различие статистически значимо</strong> (критерий знака, p &lt; 0.05).' : 'Различие не достигает значимости при такой выборке.'}</p>
+        `;
+      }
+
+      document.getElementById('btn-reload').addEventListener('click', load);
+      document.getElementById('btn-export').addEventListener('click', () => {
+        const payload = { at: new Date().toISOString(), votes: Object.fromEntries(votes) };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'ab-audio-results.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+
+      load();
+    </script>
+  </body>
+</html>

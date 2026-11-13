@@ -11,13 +11,18 @@ import transcribeRoute from './routes/transcribe.js';
 import musicRoute from './routes/music.js';
 import composeRoute from './routes/compose.js';
 import healthRoute from './routes/health.js';
+import statsRoute from './routes/stats.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const distDir = join(here, '../dist');
 
+// Мок-режим LLM (MOCK_LLM=1): ответы детерминированные, сеть не нужна.
+// В этом режиме ключ не требуется — иначе сервер не поднялся бы в CI.
+const mockLlm = process.env.MOCK_LLM === '1';
+
 // Без ключа LLM сервер принимает запросы и падает на каждом из них —
 // лучше не стартовать вовсе и объяснить, что поправить.
-if (!hasAnyProvider()) {
+if (!hasAnyProvider() && !mockLlm) {
   console.error('[config] Не настроен ни один провайдер LLM.');
   console.error('Заполните .env: задайте ключ и модель хотя бы для одного провайдера');
   console.error(`(доступны: ${config.llmProviders.join(', ')}) и перезапустите сервер.`);
@@ -87,6 +92,7 @@ app.use(transcribeRoute);
 app.use(musicRoute);
 app.use(composeRoute);
 app.use(healthRoute);
+app.use(statsRoute);
 
 if (existsSync(distDir)) {
   app.use(express.static(distDir, { maxAge: '1h' }));

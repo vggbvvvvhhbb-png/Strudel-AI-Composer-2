@@ -1,0 +1,25 @@
+# Контекст сборки: только то, что нужно образу.
+# Без этого `COPY . .` тащит в образ node_modules (а на Windows он ещё и
+# сломанный в linux-контейнере) и .env с ключами.
+
+node_modules
+dist
+.git
+.github
+.sharrowkin
+eval
+corpus
+docs
+tests
+
+# Секреты в образ попадать не должны.
+.env
+.env.*
+!.env.example
+
+# Служебное.
+server.log
+server.log.err
+*.log
+.vscode
+.idea

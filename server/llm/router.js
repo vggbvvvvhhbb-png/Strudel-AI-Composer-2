@@ -6,8 +6,13 @@
 // запрос, а просто передаёт его следующему.
 
 import { config } from '../config.js';
+import { mockCompletion, mockStream } from './mock.js';
 
 const TIMEOUT_MS = 120_000;
+
+// Мок-режим: ни сети, ни ключей. Ответ детерминированный, но проходит те же
+// схемы, что и настоящий ответ модели. Включается MOCK_LLM=1 (CI, smoke).
+const MOCK_LLM = process.env.MOCK_LLM === '1';
 
 /**
  * Кандидаты для запроса: провайдер + конкретная модель.
@@ -200,6 +205,10 @@ async function* readAnthropicStream(res) {
  * @param {{messages:Array, temperature?:number, signal?:AbortSignal, providerId?:string}} options
  */
 export async function* streamChat({ messages, temperature = 0.8, signal, providerId, maxTokens } = {}) {
+  if (MOCK_LLM) {
+    yield* mockStream({ messages, responseFormat: null });
+    return;
+  }
   let lastError = null;
   const chain = providerChain().filter((p) => !providerId || p.id === providerId);
   if (!chain.length) throw new Error('Нет доступных провайдеров LLM');
@@ -248,6 +257,9 @@ export async function completeChat({
   onUsage,
   responseFormat,
 } = {}) {
+  if (MOCK_LLM) {
+    return mockCompletion({ messages, responseFormat });
+  }
   let lastError = null;
   const chain = providerChain().filter((p) => !providerId || p.id === providerId);
   if (!chain.length) throw new Error('Нет доступных провайдеров LLM');

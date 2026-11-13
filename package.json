@@ -23,6 +23,9 @@
     "eval": "node eval/run.mjs",
     "eval:dry": "node eval/run.mjs --dry",
     "eval:ab": "node eval/analyze-ab.mjs",
+    "lint": "node scripts/lint-syntax.mjs",
+    "bundle:budget": "node scripts/bundle-budget.mjs",
+    "smoke": "node tests/smoke/smoke.mjs",
     "corpus": "node scripts/build-corpus.mjs"
   },
   "dependencies": {
