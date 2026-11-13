@@ -8,6 +8,10 @@ dist/
 .DS_Store
 Thumbs.db
 
+# Сгенерированный мастер-worklet: собирается из src/audio/worklet/* через
+# esbuild (npm run build:worklet). В репозитории исходники, не артефакт.
+public/worklets/master-processor.js
+
 # Артефакты проб spike: воспроизводятся командой node tests/spike/probe.mjs
 tests/spike/*.out.txt
 

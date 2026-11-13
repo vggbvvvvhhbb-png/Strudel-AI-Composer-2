@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "concurrently -k -n server,web -c blue,green \"node --watch server/index.js\" \"vite\"",
     "dev:server": "node --watch server/index.js",
+    "build:worklet": "node scripts/build-worklet.mjs",
+    "prebuild": "node scripts/build-worklet.mjs",
+    "predev": "node scripts/build-worklet.mjs",
     "build": "vite build",
     "start": "node server/index.js",
     "test": "vitest run",
@@ -18,8 +21,10 @@
     "spike:compose": "node tests/spike/compose-pipeline.probe.mjs",
     "spike:audio": "node tests/spike/audio-api.probe.mjs",
     "spike:browser": "node tests/spike/browser/master-spike.mjs",
+    "spike:master": "node tests/spike/browser/master-live-spike.mjs",
     "sync:samples": "node scripts/sync-sample-banks.mjs",
     "validate:loudness": "node scripts/validate-loudness.mjs",
+    "validate:master": "node scripts/validate-master.mjs",
     "eval": "node eval/run.mjs",
     "eval:dry": "node eval/run.mjs --dry",
     "eval:ab": "node eval/analyze-ab.mjs",
@@ -40,6 +45,7 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.5",
+    "esbuild": "0.21.5",
     "ffmpeg-static": "5.2.0",
     "playwright-core": "1.49.1",
     "vite": "^5.4.0",

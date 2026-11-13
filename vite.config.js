@@ -15,4 +15,14 @@ export default defineConfig({
   build: {
     target: 'es2022',
   },
+  test: {
+    // --expose-gc нужен тесту «в аудиопотоке нет аллокаций»: без принудительной
+    // сборки мусора измеряется не работа кода, а очередь сборщика.
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        execArgv: ['--expose-gc'],
+      },
+    },
+  },
 });

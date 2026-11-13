@@ -38,13 +38,21 @@ export class GlueCompressor {
 
   /**
    * Обрабатывает стерео-блок.
+   *
+   * Если outL/outR переданы, результат пишется в них (без аллокаций) —
+   * так вызывается мастер-worklet. Если не переданы, возвращаются новые
+   * массивы — так вызывают Node-тесты.
+   *
    * @param {Float32Array|Float64Array} left
    * @param {Float32Array|Float64Array} right
+   * @param {Float32Array|Float64Array} [outL]
+   * @param {Float32Array|Float64Array} [outR]
+   * @returns {[Float64Array, Float64Array]}
    */
-  process(left, right) {
+  process(left, right, outL, outR) {
     const n = Math.min(left.length, right.length);
-    const outL = new Float64Array(n);
-    const outR = new Float64Array(n);
+    const resL = outL ?? new Float64Array(n);
+    const resR = outR ?? new Float64Array(n);
     for (let i = 0; i < n; i += 1) {
       const peak = Math.max(Math.abs(left[i]), Math.abs(right[i]));
       const levelDb = toDb(peak);
@@ -69,9 +77,9 @@ export class GlueCompressor {
       }
 
       const gain = toLin(this.grDb + this.makeupDb);
-      outL[i] = left[i] * gain;
-      outR[i] = right[i] * gain;
+      resL[i] = left[i] * gain;
+      resR[i] = right[i] * gain;
     }
-    return [outL, outR];
+    return [resL, resR];
   }
 }

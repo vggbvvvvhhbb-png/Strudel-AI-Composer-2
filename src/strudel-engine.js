@@ -1,12 +1,34 @@
 // Обёртка над @strudel/web: инициализация, исполнение кода, визуализация.
 // Визуализации перенаправлены в наш контейнер: каждая партия получает свой блок
 // с подписью и нефритовым пианороллом (активные ноты подсвечиваются).
-import { initStrudel, evaluate, hush, getAudioContext, Pattern, samples } from '@strudel/web';
+//
+// Сигнальный путь студии:
+//
+//   движок (superdough) ─► masterIn ─► [worklet: EQ→glue→лимитер→метры] ─► выход
+//
+// Контекст и мастер принадлежат студии (src/audio/graph.js), движок — гость.
+import {
+  initStrudel,
+  evaluate,
+  hush,
+  getAudioContext,
+  setAudioContext,
+  getSuperdoughAudioController,
+  setSuperdoughAudioController,
+  initAudio,
+  registerSynthSounds,
+  superdough,
+  Pattern,
+  samples,
+} from '@strudel/web';
 import { highlightBlock } from './core/highlight.js';
 import { visualPlan } from './core/visual-plan.js';
 import { installJadeVisuals } from './pianoroll.js';
 import { instrumentCode, resetMeters } from './meters.js';
 import { accentOf } from './accents.js';
+import { createStudioGraph } from './audio/graph.js';
+import { createEngineAdapter } from './audio/engine/adapter.js';
+import { masterPresetFor } from './audio/master-presets.js';
 
 export { visualPlan };
 
@@ -18,6 +40,28 @@ let lastError = null;
 let planCache = [];
 // На тихом прогоне (валидация) визуализации не создаются.
 let suppressVisuals = false;
+
+// Студийная шина: контекст, мастер-цепочка, метры.
+let context = null;
+let graph = null;
+let adapter = null;
+// true, если мастер-шина не поднялась и звук идёт напрямую в выход.
+let directOutput = false;
+
+/** Модуль @strudel/web в виде объекта — так его ждёт адаптер движка. */
+const strudelApi = {
+  initStrudel,
+  evaluate,
+  hush,
+  getAudioContext,
+  setAudioContext,
+  getSuperdoughAudioController,
+  setSuperdoughAudioController,
+  initAudio,
+  registerSynthSounds,
+  superdough,
+  samples,
+};
 
 function dpr() {
   return Math.min(window.devicePixelRatio || 1, 2);
@@ -81,20 +125,45 @@ export function initEngine(container) {
   if (container) visualRoot = container;
   if (initPromise) return initPromise;
   initPromise = (async () => {
-    await initStrudel({
-      // Сэмплы барабанов (dirt-samples) тянутся с GitHub лениво — при первом
-      // исполнении кода (см. ensureSamples), чтобы не блокировать загрузку страницы
-      // внешними запросами; при их недоступности синтезаторы всё равно работают.
-      //
-      // Важно: именно onEvalError, а не onError. Strudel проглатывает исключение
-      // внутри evaluate() и сам его не бросает — без этого хука сломанный код
-      // выглядел бы как успешно исполненный.
+    // 1. Контекст и мастер-шина — принадлежат студии.
+    await setupStudioGraph();
+
+    // 2. Движок — гость: садится в наш контекст.
+    adapter = createEngineAdapter(strudelApi, {
       onEvalError: (err) => {
         lastError = err;
       },
     });
+    await adapter.init(context);
+
+    // 3. Хвост движка врезаем в мастер-шину (точка вставки H1).
+    if (!directOutput) {
+      adapter.attachMaster(graph.masterIn);
+    } else {
+      // Запасной путь: мастер недоступен — звук идёт прямо в выход.
+      adapter.outputNode()?.connect(context.destination);
+    }
+
     installJadeVisuals({ drawTarget: nextDrawTarget });
     initialized = true;
+
+    // Отладочная ручка: граф, адаптер и живые метры. Используется браузерным
+    // спайком (tests/spike/browser) и будущей GUI-панелью студии.
+    window.strudelStudio = {
+      get graph() {
+        return graph;
+      },
+      get adapter() {
+        return adapter;
+      },
+      get meters() {
+        return graph?.meters ?? null;
+      },
+      get directOutput() {
+        return directOutput;
+      },
+    };
+
     // Прогреваем сэмплы заранее: к моменту первого нажатия «play»
     // манифест уже загружен, и звук есть с первой ноты.
     ensureSamples();
@@ -107,6 +176,46 @@ export function initEngine(container) {
     return true;
   })();
   return initPromise;
+}
+
+/**
+ * Поднимает студийную шину: контекст + мастер-worklet.
+ *
+ * Если worklet не загрузился (старый браузер, битая сборка) — не падаем:
+ * звук идёт напрямую в выход, приложение остаётся рабочим. Об этом честно
+ * сообщаем в консоль: «мастер-цепочка выключена» — не «всё в порядке».
+ */
+async function setupStudioGraph() {
+  try {
+    context = new AudioContext({ latencyHint: 'interactive' });
+    const created = await createStudioGraph({
+      context,
+      masterParams: masterPresetFor('flat').params,
+    });
+    graph = created.graph;
+    directOutput = false;
+    console.info(
+      `[studio] Мастер-цепочка включена: задержка ${graph.latencySamples} отсчётов ` +
+        `(${(graph.latencySeconds * 1000).toFixed(1)} мс)`,
+    );
+  } catch (error) {
+    directOutput = true;
+    context = new AudioContext({ latencyHint: 'interactive' });
+    console.warn(
+      '[studio] Мастер-цепочка недоступна, звук идёт напрямую:',
+      error?.message || error,
+    );
+  }
+}
+
+/** Граф студии (контекст, мастер, метры) — null, если шина не поднялась. */
+export function studioGraph() {
+  return graph;
+}
+
+/** Адаптер движка — для позиции, темпа и офлайн-рендера. */
+export function engineAdapter() {
+  return adapter;
 }
 
 let samplesPromise = null;
@@ -202,7 +311,7 @@ export function reset() {
 
 // Разблокировка звука: браузеры разрешают AudioContext только после жеста пользователя.
 export async function unlockAudio() {
-  const ctx = getAudioContext?.();
+  const ctx = context ?? getAudioContext?.();
   if (ctx && ctx.state !== 'running') {
     try {
       await ctx.resume();

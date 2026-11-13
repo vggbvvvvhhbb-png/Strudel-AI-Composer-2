@@ -7,6 +7,10 @@
 // DynamicsCompressorNode (у него нет предпрослушивания — H9).
 //
 // Стереосвязанный: пик ищется по максимуму каналов, изображение не разъезжается.
+//
+// В аудиопотоке (AudioWorklet) process() не имеет права выделять память:
+// поэтому выходные буферы можно передать снаружи, а очередь максимумов
+// хранится в типизированных массивах, а не в массиве объектов.
 
 export class LookaheadLimiter {
   constructor(sampleRate, { ceilingDb = -1, lookaheadMs = 5, releaseMs = 80, attackMs = 0.5 } = {}) {
@@ -25,7 +29,12 @@ export class LookaheadLimiter {
     this.writeIndex = 0;
     this.sampleIndex = 0;
     this.gain = 1;
-    this.maxQueue = [];
+    // Монотонная очередь максимума: значения и индексы в кольцевых массивах.
+    this.queueCapacity = this.lookaheadSamples + 8;
+    this.queueValues = new Float64Array(this.queueCapacity);
+    this.queueIndices = new Float64Array(this.queueCapacity);
+    this.queueHead = 0;
+    this.queueTail = 0;
     this.grDb = 0;
     return this;
   }
@@ -37,13 +46,21 @@ export class LookaheadLimiter {
 
   /**
    * Обрабатывает стерео-блок.
+   *
+   * Если outL/outR переданы, результат пишется в них (без аллокаций) —
+   * так вызывается мастер-worklet. Если не переданы, возвращаются новые
+   * массивы — так вызывают Node-тесты.
+   *
    * @param {Float32Array|Float64Array} left
    * @param {Float32Array|Float64Array} right
+   * @param {Float32Array|Float64Array} [outL]
+   * @param {Float32Array|Float64Array} [outR]
+   * @returns {[Float64Array, Float64Array]}
    */
-  process(left, right) {
+  process(left, right, outL, outR) {
     const n = Math.min(left.length, right.length);
-    const outL = new Float64Array(n);
-    const outR = new Float64Array(n);
+    const resL = outL ?? new Float64Array(n);
+    const resR = outR ?? new Float64Array(n);
     const bufL = this.bufL;
     const bufR = this.bufR;
     const len = this.bufferLength;
@@ -59,12 +76,12 @@ export class LookaheadLimiter {
       this.pushMax(abs, peak);
 
       // Выходной отсчёт задержан на L: абсолютный индекс abs - L.
-      const outSlot = ((abs - L) % len + len) % len;
+      const outSlot = (((abs - L) % len) + len) % len;
       const delayedL = bufL[outSlot];
       const delayedR = bufR[outSlot];
 
       // Пик на отрезке [abs-L, abs] — тот, что определит громкость выходного отсчёта.
-      const windowPeak = this.maxQueue.length ? this.maxQueue[0].value : peak;
+      const windowPeak = this.queueHead !== this.queueTail ? this.queueValues[this.queueHead] : peak;
       const instantGain = windowPeak > this.ceiling ? this.ceiling / windowPeak : 1;
       const target = Math.min(1, instantGain);
 
@@ -75,21 +92,44 @@ export class LookaheadLimiter {
       const applied = Math.min(this.gain, target);
       this.grDb = applied < 1 ? 20 * Math.log10(applied) : 0;
 
-      outL[i] = delayedL * applied;
-      outR[i] = delayedR * applied;
+      resL[i] = delayedL * applied;
+      resR[i] = delayedR * applied;
 
       this.writeIndex = (w + 1) % len;
       this.sampleIndex += 1;
     }
-    return [outL, outR];
+    return [resL, resR];
   }
 
-  /** Монотонная очередь максимума скользящего окна (индексы — абсолютные). */
+  /**
+   * Монотонная очередь максимума скользящего окна (индексы — абсолютные).
+   * Хранится в кольцевых типизированных массивах: ни одной аллокации на отсчёт.
+   */
   pushMax(index, value) {
-    const queue = this.maxQueue;
-    while (queue.length && queue[queue.length - 1].value <= value) queue.pop();
-    queue.push({ index, value });
+    const values = this.queueValues;
+    const indices = this.queueIndices;
+    const capacity = this.queueCapacity;
+
+    // Хвост: убираем всё, что не больше нового значения.
+    while (this.queueTail !== this.queueHead) {
+      const prev = (this.queueTail - 1 + capacity) % capacity;
+      if (values[prev] <= value) this.queueTail = prev;
+      else break;
+    }
+
+    if ((this.queueTail + 1) % capacity === this.queueHead) {
+      // Переполнение невозможно при корректном окне, но лучше потерять старый
+      // элемент, чем писать за границу.
+      this.queueHead = (this.queueHead + 1) % capacity;
+    }
+    values[this.queueTail] = value;
+    indices[this.queueTail] = index;
+    this.queueTail = (this.queueTail + 1) % capacity;
+
+    // Голова: выкидываем всё, что старше окна.
     const oldest = index - this.lookaheadSamples;
-    while (queue.length && queue[0].index < oldest) queue.shift();
+    while (this.queueHead !== this.queueTail && indices[this.queueHead] < oldest) {
+      this.queueHead = (this.queueHead + 1) % capacity;
+    }
   }
 }

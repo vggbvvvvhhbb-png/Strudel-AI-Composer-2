@@ -9,11 +9,14 @@
 //
 // Сверка с эталоном (ffmpeg/libebur128) — отдельный прогон:
 //   npm run validate:loudness
+//   npm run validate:master
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { libebur128TruePeak } from '../../scripts/libebur128-reference.mjs';
 
 import {
   kWeightingCoefficients,
@@ -219,6 +222,36 @@ describe('полосы', () => {
     const levels = measureBands([l], SR);
     expect(levels.low).toBeGreaterThan(levels.mid);
     expect(levels.low).toBeGreaterThan(levels.highMid);
+  });
+});
+
+describe('true peak совпадает с эталоном EBU R 128 (libebur128)', () => {
+  it('наши числа совпадают с референсной реализацией', () => {
+    // Эталон — буквальная транскрипция libebur128 (scripts/libebur128-reference.mjs).
+    // Если наш фильтр разойдётся с ним, метрика перестанет быть сопоставимой
+    // с той, чем считают стриминговые платформы.
+    const cases = [
+      sine(SR, 1000, 0.5),
+      sine(SR, 12000, 0.707),
+      sine(SR, 11000, 0.5),
+      sine(SR, 20000, 0.5),
+    ];
+    for (const signal of cases) {
+      const ours = measureTruePeak([signal], SR).truePeakDb;
+      const reference = 20 * Math.log10(libebur128TruePeak(signal));
+      expect(Math.abs(ours - reference)).toBeLessThan(0.001);
+    }
+  });
+
+  it('расхождение с ffmpeg объясняется его ресемплером, а не ошибкой', () => {
+    // ffmpeg меряет true peak ресемплером libswresample (до 192 кГц), а не
+    // фильтром приложения 2 стандарта. На широкополосном сигнале он завышает
+    // пик — поэтому сверять надо с libebur128, а расхождение с ffmpeg
+    // показывать как справочную величину, не как ошибку.
+    const signal = sine(SR, 12000, 0.707);
+    const ours = measureTruePeak([signal], SR).truePeakDb;
+    const reference = 20 * Math.log10(libebur128TruePeak(signal));
+    expect(Math.abs(ours - reference)).toBeLessThan(0.001);
   });
 });
 
