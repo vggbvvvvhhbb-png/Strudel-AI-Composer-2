@@ -170,6 +170,8 @@ function describePattern(p) {
     ', событий в паттерне: ' + (p.events ?? 'н/д') +
     ', из них с началом: ' + (p.onsets ?? 'н/д'));
   say('  первые события: ' + JSON.stringify(p.firstEvents || []));
+  say('  размещение событий (whole.begin → part.begin): ' + JSON.stringify(p.placement || []));
+  say('  атаки в рендере, с: ' + JSON.stringify((p.envelope || {}).onsets || []));
   say('  LUFS-I: ' + fmt(report.lufsI) + ' LU, LUFS-M: ' + fmt(report.lufsM) + ' LU, LUFS-S: ' + fmt(report.lufsS) + ' LU');
   say('  true peak: ' + fmt(report.truePeakDbtp) + ' dBTP, peak: ' + fmt(report.peakDbfs) + ' dBFS');
   say('  crest: ' + fmt(report.crestDb) + ' дБ, clipCount: ' + (report.clipCount ?? 'н/д'));
@@ -378,6 +380,10 @@ async function main() {
   } else {
     console.log('Все паттерны отрендерены, метрики и замечания получены — код выхода 0.');
   }
+
+  // Явный выход: после закрытия браузера остаются висящие дескрипторы
+  // (chrome, сокеты статического сервера), из-за которых процесс не завершался.
+  process.exit(process.exitCode || 0);
 }
 
 main().catch((err) => {
@@ -385,5 +391,5 @@ main().catch((err) => {
   try {
     writeFileSync(OUT_FILE, lines.join('\n') + '\n\nFATAL: ' + String(err && err.stack || err) + '\n', 'utf8');
   } catch (_) { /* ignore */ }
-  process.exitCode = 1;
+  process.exit(1);
 });

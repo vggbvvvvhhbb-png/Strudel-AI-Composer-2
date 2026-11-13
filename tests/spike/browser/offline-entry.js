@@ -124,6 +124,33 @@ async function liveCheck(adapter, code, ctx) {
   return res;
 }
 
+/**
+ * Огибающая сигнала и моменты атак: проверяем, что события попали в рендер
+ * на свои места (а не все в начало такта).
+ */
+function envelopeOnsets(channels, sampleRate, { windowMs = 50, thresholdDb = -45, riseDb = 6, maxOnsets = 8, limitSeconds = 8 } = {}) {
+  const frames = Math.min(...channels.map((ch) => ch.length));
+  const win = Math.max(1, Math.round((windowMs * sampleRate) / 1000));
+  const limit = Math.min(frames, Math.round(limitSeconds * sampleRate));
+  const threshold = Math.pow(10, thresholdDb / 20);
+  const levels = [];
+  for (let from = 0; from + win <= limit; from += win) {
+    let sum = 0;
+    for (const ch of channels) {
+      for (let i = from; i < from + win; i += 1) sum += ch[i] * ch[i];
+    }
+    const rms = Math.sqrt(sum / (win * channels.length));
+    levels.push({ t: Number((from / sampleRate).toFixed(3)), db: rms > 0 ? Number((20 * Math.log10(rms)).toFixed(2)) : null });
+  }
+  const onsets = [];
+  for (let i = 1; i < levels.length && onsets.length < maxOnsets; i += 1) {
+    const prev = levels[i - 1].db === null ? -120 : levels[i - 1].db;
+    const cur = levels[i].db === null ? -120 : levels[i].db;
+    if (cur > thresholdDb && cur - prev > riseDb) onsets.push(levels[i].t);
+  }
+  return { windowMs, thresholdDb, levels: levels.slice(0, 40), onsets };
+}
+
 /** Один паттерн: код → офлайн-рендер ×2 → метрики → замечания QA → проверка живого пути. */
 async function measurePattern(adapter, spec, ctx) {
   const rec = { id: spec.id, label: spec.label, code: spec.code, bars: spec.bars };
@@ -141,6 +168,15 @@ async function measurePattern(adapter, spec, ctx) {
     note: hap.value?.note ?? null,
     s: hap.value?.s ?? null,
     gain: hap.value?.gain ?? null,
+  }));
+  // Куда адаптер ставит событие (whole.begin) и где оно лежит на самом деле
+  // (part.begin) — расхождение означает, что события схлопываются в начало такта.
+  rec.placement = haps.slice(0, 8).map((hap) => ({
+    wholeBegin: Number(hap.whole.begin.valueOf()),
+    partBegin: hap.part ? Number(hap.part.begin.valueOf()) : null,
+    scheduledSec: Number(((hap.whole.begin.valueOf() - 0) / CPS).toFixed(3)),
+    trueSec: hap.part ? Number(((hap.whole.begin.valueOf() + hap.part.begin.valueOf()) / CPS).toFixed(3)) : null,
+    note: hap.value?.note ?? null,
   }));
 
   // 2. Два офлайн-рендера: renderAndMeasure сам считает повторяемость
@@ -164,6 +200,8 @@ async function measurePattern(adapter, spec, ctx) {
   rec.renderMs = measured.renderMs;
   rec.comparison = measured.comparison;
   rec.report = measured.report;
+  // Огибающая рендера: где реально стоят атаки.
+  rec.envelope = envelopeOnsets(measured.channels, measured.sampleRate);
 
   // 3. Контрольный MetricsReport из сырых каналов (buildMetricsReport напрямую):
   //    значения должны совпасть с отчётом оркестратора.
