@@ -13,6 +13,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3001"
+      # Внутри контейнера слушаем все адреса: до 127.0.0.1 обратный прокси
+      # в соседнем контейнере не достучится. Порт наружу не публикуется.
+      HOST: ${HOST:-0.0.0.0}
       LLM_PROVIDERS: ${LLM_PROVIDERS:-openai}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}

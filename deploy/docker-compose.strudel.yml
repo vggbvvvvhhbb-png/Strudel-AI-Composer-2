@@ -1,0 +1,30 @@
+# Сервис студии в общем compose-проекте сервера (рядом с Caddy).
+#
+# Отдельный файл, чтобы не трогать основной docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.strudel.yml up -d strudel
+#
+# Сервис попадает в ту же docker-сеть, где работает Caddy, поэтому прокси
+# обращается к нему по имени (strudel:3001) — порт наружу не публикуется.
+services:
+  strudel:
+    build:
+      context: /opt/strudel
+      dockerfile: Dockerfile
+    image: strudel-ai-composer:local
+    env_file:
+      - /opt/strudel/.env
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      # Слушаем все адреса контейнера: до 127.0.0.1 обратный прокси из
+      # соседнего контейнера не достучится.
+      HOST: "0.0.0.0"
+    expose:
+      - "3001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

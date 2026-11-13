@@ -58,6 +58,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: \"3001\"
+      HOST: \"0.0.0.0\"
     expose:
       - \"3001\"
     restart: unless-stopped
