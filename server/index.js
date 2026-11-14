@@ -3,7 +3,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { config, hasAnyProvider, providerIds } from './config.js';
 import generateRoute from './routes/generate.js';
 import fixRoute from './routes/fix.js';
@@ -106,13 +106,30 @@ app.use(statsRoute);
 app.use(deepdiveRoute);
 
 if (existsSync(distDir)) {
-  app.use(express.static(distDir, { maxAge: '1h' }));
+  // index.html — без кэша: сборка кладёт в assets файлы с хэшем в имени, и
+  // старый index.html после деплоя ссылается на удалённые файлы (404 в
+  // консоли, пустая страница). Хэшированные assets кэшируются на час — их
+  // имя и есть версия.
+  app.get('/', (_req, res) => {
+    res.set('Cache-Control', 'no-cache');
+    res.sendFile(join(distDir, 'index.html'));
+  });
+  app.use(express.static(distDir, { maxAge: '1h', index: false }));
   app.get('*', (req, res) => {
     if (req.path.startsWith('/api/')) {
       res.status(404).json({ error: 'Не найдено' });
       return;
     }
-    res.sendFile(join(distDir, 'index.html'));
+    // Внутренние страницы (tinder.html и подобные) — тоже без кэша.
+    res.set('Cache-Control', 'no-cache');
+    // Путь разрешаем внутрь dist: иначе «../» в URL ушёл бы за пределы
+    // каталога сборки.
+    const requested = resolve(distDir, `.${req.path}`);
+    const inside = requested.startsWith(resolve(distDir));
+    const target = inside && existsSync(requested) && requested.endsWith('.html')
+      ? requested
+      : join(distDir, 'index.html');
+    res.sendFile(target);
   });
 }
 

@@ -153,6 +153,13 @@ main.app-grid[data-view='dive'] > .col-right {
   accent-color: var(--jade);
 }
 
+/* Атрибут hidden должен побеждать display из .btn: иначе кнопка
+   «Прервать» видна до начала разбора (а .btn задаёт display: inline-flex,
+   и авторское правило сильнее браузерного [hidden] { display: none }). */
+.dive-panel .btn[hidden] {
+  display: none;
+}
+
 /* Подопция «высокое качество» — вложена в основную галочку разделения. */
 .dive-check-sub {
   margin-left: var(--sp-4);

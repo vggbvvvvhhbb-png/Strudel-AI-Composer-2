@@ -110,6 +110,22 @@ function sse(res, payload) {
 }
 
 /**
+ * Пинг потока: разбор может молчать десятки минут (Demucs не отдаёт
+ * событий), и без пинга соединение рвут — прокси по таймауту, клиент по
+ * таймауту тела ответа. SSE-комментарий клиенту не виден, но любой байт
+ * сбрасывает таймаут соединения.
+ */
+const KEEPALIVE_MS = 20_000;
+
+function startKeepalive(res) {
+  const timer = setInterval(() => {
+    if (!res.writableEnded) res.write(': keepalive\n\n');
+  }, KEEPALIVE_MS);
+  timer.unref?.();
+  return timer;
+}
+
+/**
  * Метка «разбор идёт».
  *
  * Файл-маркер в общем с хостом каталоге: деплой перед сборкой образа
@@ -181,6 +197,8 @@ router.post('/api/deepdive/analyze', (req, res) => {
     // Идентификатор и ссылка приходят сразу: по ним можно вернуться к
     // разбору позже, даже если вкладку закрыть.
     sse(res, { type: 'job', id: jobId, permalink: permalinkFor(jobId), separate, model });
+
+    const keepalive = startKeepalive(res);
 
     // Оценка времени: длительность трека известна только после анализа, но
     // браузер считает свою по файлу. Серверная оценка приходит с паспортом.
@@ -297,6 +315,7 @@ router.post('/api/deepdive/analyze', (req, res) => {
         message: err?.message || 'Разбор не удался',
       });
     } finally {
+      clearInterval(keepalive);
       await clearRunning(jobId);
       const lock = await lockPromise;
       await lock?.handle?.release?.();
@@ -324,6 +343,7 @@ router.post('/api/deepdive/refine', async (req, res) => {
     Connection: 'keep-alive',
     'X-Accel-Buffering': 'no',
   });
+  const keepalive = startKeepalive(res);
 
   try {
     // Оригинал для сравнения читаем с диска — те же файлы, что и в разборе.
@@ -378,6 +398,7 @@ router.post('/api/deepdive/refine', async (req, res) => {
   } catch (err) {
     sse(res, { type: 'error', stage: 'refine', message: err?.message || 'Итерации не удались' });
   } finally {
+    clearInterval(keepalive);
     res.end();
   }
 });
