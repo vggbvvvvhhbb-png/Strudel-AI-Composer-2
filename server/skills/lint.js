@@ -92,14 +92,15 @@ export function scanForbidden(code) {
 }
 
 /**
- * Читает числовой аргумент контрола: `.delayfeedback(.35)` → 0.35.
+ * Читает числовой аргумент контрола: `.delayfeedback(.35)` → 0.35,
+ * `.delayfeedback(0.35)` → 0.35. В Strudel часто пишут с ведущей точкой.
  * @param {string} code
  * @param {string} control имя контрола
  * @returns {number[]}
  */
 function controlValues(code, control) {
   const values = [];
-  const re = new RegExp(`\\.${control}\\s*\\(\\s*(-?\\d+(?:\\.\\d+)?)`, 'g');
+  const re = new RegExp(`\\.${control}\\s*\\(\\s*(-?(?:\\d+(?:\\.\\d+)?|\\.\\d+))`, 'g');
   let match = re.exec(String(code ?? ''));
   while (match) {
     values.push(Number(match[1]));

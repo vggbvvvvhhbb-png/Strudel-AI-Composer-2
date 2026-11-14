@@ -78,23 +78,46 @@ function parseGroove(text) {
 
 /**
  * Ищет в тексте карты «arc: <имя>».
+ *
  * Поддерживается условная форма «arc: song-64 (или club-64 для «фестиваля»)»:
  * если запрос содержит указанное слово — берётся альтернативная арка.
+ *
+ * Слово-триггер сравнивается по основе: в карте стоит «фестиваля», в запросе
+ * обычно «фестиваль» — поэтому у обеих сторон снимается окончание.
+ *
+ * Экспортируется наружу: тест матрицы активации обязан считать арку тем же
+ * кодом, что и компилятор, иначе проверка расходится с поведением.
+ *
  * @param {string} text
  * @param {string} prompt
  * @returns {string|null}
  */
-function parseArc(text, prompt) {
+export function parseArc(text, prompt) {
   const source = String(text ?? '');
   const match = /\barc\s*[:=]\s*([A-Za-z0-9_-]+)/i.exec(source);
   if (!match) return null;
   const primary = match[1].toLowerCase();
-  const tail = source.slice(match.index + match[0].length, match.index + match[0].length + 120);
-  const alt = /\(\s*или\s+([A-Za-z0-9_-]+)\s+для\s+«([^»]+)»\s*\)/i.exec(tail);
-  if (alt && String(prompt).toLowerCase().includes(alt[2].toLowerCase())) {
+  const tail = source.slice(match.index + match[0].length, match.index + match[0].length + 160);
+  const alt = /\(\s*или\s+([A-Za-z0-9_-]+)\s+для\s+«([^»]+)»\s*[.)]?\s*\)/i.exec(tail);
+  if (alt && mentions(prompt, alt[2])) {
     return alt[1].toLowerCase();
   }
   return primary;
+}
+
+/**
+ * Слово-триггер и запрос сравниваются по основе: «фестиваля» в карте и
+ * «фестиваль» в запросе — одно и то же слово.
+ * @param {string} prompt
+ * @param {string} trigger
+ * @returns {boolean}
+ */
+function mentions(prompt, trigger) {
+  const haystack = String(prompt ?? '').toLowerCase();
+  const needle = String(trigger ?? '').toLowerCase().trim();
+  if (!needle) return false;
+  const stem = needle.replace(/[яюаеи]$/, '');
+  return haystack.includes(needle) || (stem.length >= 4 && haystack.includes(stem));
 }
 
 /**
