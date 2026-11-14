@@ -1,33 +1,29 @@
 // Дорожка H: очередь пар, запись меток, надёжность рецензента, приватность.
 //
-// Метки пишутся в server/data/preferences.jsonl — файл вне git. Тест работает
-// с временным файлом, чтобы не трогать настоящие метки владельца.
+// Метки пишутся в server/data/preferences.jsonl — файл вне git. Тест
+// работает в своём временном каталоге (STRUDEL_DATA_DIR), чтобы не трогать
+// настоящие метки владельца и не мешать параллельным тестовым файлам.
 
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import express from 'express';
 import { once } from 'node:events';
-import { existsSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
-const labelsFile = join(root, 'server', 'data', 'preferences.jsonl');
+const dataDir = mkdtempSync(join(tmpdir(), 'strudel-preference-'));
+process.env.STRUDEL_DATA_DIR = dataDir;
+const labelsFile = join(dataDir, 'preferences.jsonl');
 
 import router, { buildQueue, hashCode, PreferenceSchema } from '../../server/routes/preference.js';
 
 let server;
 let base;
-let backup = null;
 
 beforeAll(async () => {
-  // Настоящие метки владельца не трогаем: сохраняем и восстановим.
-  if (existsSync(labelsFile)) {
-    backup = join(root, 'server', 'data', `preferences.backup-${Date.now()}.jsonl`);
-    const { copyFileSync } = await import('node:fs');
-    copyFileSync(labelsFile, backup);
-    rmSync(labelsFile, { force: true });
-  }
   const app = express();
   app.use(express.json());
   app.use('/api/preference', router);
@@ -37,18 +33,14 @@ beforeAll(async () => {
 });
 
 afterEach(() => {
-  if (existsSync(labelsFile)) rmSync(labelsFile, { force: true });
+  rmSync(labelsFile, { force: true });
 });
 
 afterAll(async () => {
   if (server) {
     await new Promise((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
   }
-  if (backup && existsSync(backup)) {
-    const { copyFileSync } = await import('node:fs');
-    copyFileSync(backup, labelsFile);
-    rmSync(backup, { force: true });
-  }
+  rmSync(dataDir, { recursive: true, force: true });
 });
 
 async function get(path) {
