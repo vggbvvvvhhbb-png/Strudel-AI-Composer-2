@@ -34,7 +34,7 @@ async function ffmpegCandidates() {
 
 /** Ищет рабочий ffmpeg. Возвращает путь или null. */
 export async function findFfmpeg() {
-  for (const candidate of ffmpegCandidates()) {
+  for (const candidate of await ffmpegCandidates()) {
     if (candidate === 'ffmpeg' || existsSync(candidate)) {
       try {
         await execFileAsync(candidate, ['-version'], { timeout: 10000 });
