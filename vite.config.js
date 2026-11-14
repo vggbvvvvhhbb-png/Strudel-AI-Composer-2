@@ -33,5 +33,10 @@ export default defineConfig({
         execArgv: ['--expose-gc'],
       },
     },
+    // Клон донора `.scratch/shveyka-igolka` — чужой монорепо без наших
+    // зависимостей. Без этого исключения vitest подхватывает его тесты
+    // и роняет прогон: 26 файлов, 20 упавших тестов, все — не наши.
+    // Каталог в .gitignore, но vitest смотрит на диск, а не на git.
+    exclude: ['**/node_modules/**', '**/dist/**', '.scratch/**'],
   },
 });
