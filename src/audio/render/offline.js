@@ -6,7 +6,8 @@
 // кодом и в реалтайме, и в CI, и в офлайн-рендерере.
 //
 // Один такт = один цикл Strudel (4 доли), поэтому bars и cycles совпадают:
-//   длительность = (toBar − fromBar) / cps секунд, cps = bpm / 4.
+//   длительность = (toBar − fromBar) / cps секунд. Внимание: cps — это циклы
+//   в секунду, то есть cps = bpm / 240 (bpm / 4 — это cpm, другое имя).
 
 import { buildMetricsReport, ACCEPTANCE } from '../metrics-report.js';
 import { measureLoudness } from '../dsp/loudness.js';
