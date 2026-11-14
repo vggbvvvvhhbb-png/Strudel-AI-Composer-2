@@ -16,6 +16,23 @@ import { acquireLock, tryAcquireLock, lockPath, readLockOwner } from '../../serv
 
 let dir;
 
+/**
+ * Ждём условие, а не фиксированную паузу.
+ *
+ * ЗАЧЕМ. Тесты мьютекса стоят на таймерах: пока первый претендент держит лок,
+ * второй должен ждать. Фиксированная пауза («40 мс и проверим») — источник
+ * флака: на загруженной машине таймер отстаёт, и условие ещё не наступило.
+ * Ожидание условия с дедлайном проверяет то же самое, но без гонки.
+ */
+async function waitFor(condition, { timeoutMs = 5000, stepMs = 5 } = {}) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await condition()) return true;
+    await new Promise((resolve) => setTimeout(resolve, stepMs));
+  }
+  throw new Error('условие не наступило за ' + timeoutMs + ' мс');
+}
+
 beforeEach(async () => {
   dir = await mkdtemp(path.join(tmpdir(), 'dd-lock-'));
 });
@@ -145,8 +162,9 @@ describe('Мьютекс (файловый лок)', () => {
       pollMs: 10,
       onWait: (info) => waits.push(info),
     });
-    await new Promise((resolve) => setTimeout(resolve, 40));
-    expect(waits.length).toBeGreaterThan(0);
+    // Ждём условие, а не фиксированную паузу: на загруженной машине таймер может
+    // отстать, и 40 мс иногда не хватает на первый опрос лока (тест был флаком).
+    await waitFor(() => waits.length > 0);
     expect(waits[0].owner).toContain('разбор 1234');
     await first.release();
     await (await second).release();
