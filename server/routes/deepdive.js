@@ -18,10 +18,11 @@ import { existsSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { runDeepDive } from '../deepdive/pipeline.js';
+import { runDeepDive, buildReference, bassNotesFromPlan } from '../deepdive/pipeline.js';
 import { buildMidi } from '../deepdive/midi.js';
 import { workerHealth } from '../deepdive/analysis/client.js';
-import { closeRenderWorker } from '../deepdive/render/pool.js';
+import { closeRenderWorker, enqueueRender, getRenderWorker } from '../deepdive/render/pool.js';
+import { refineTwin, createWorkerRenderer } from '../deepdive/refine.js';
 
 const router = Router();
 
@@ -181,19 +182,51 @@ router.post('/api/deepdive/refine', async (req, res) => {
   });
 
   try {
-    const refine = await import('../deepdive/refine.js');
-    const run = refine.refineTwin ?? refine.default;
-    if (typeof run !== 'function') throw new Error('Модуль цикла самоулучшения не найден');
-    const outcome = await run({
+    // Оригинал для сравнения читаем с диска — те же файлы, что и в разборе.
+    const reference = await buildReference({
+      originalWavPath: job.artifacts?.originalWavPath,
+      stemPaths: job.artifacts?.stemPaths,
+    });
+
+    // Рендеры строго последовательные: движок переключает глобальный аудиоконтекст.
+    const worker = await getRenderWorker();
+    const queuedWorker = { render: (args) => enqueueRender(() => worker.render(args)) };
+    const totalBars = job.artifacts?.totalBars ?? 16;
+    const bpm = Number(job.result.code_twin.plan?.meta?.bpm) || 120;
+    const renderCandidate = createWorkerRenderer(queuedWorker, {
+      fromCycle: 0,
+      toCycle: totalBars,
+      cps: bpm / 240,
+    });
+
+    const outcome = await refineTwin({
       plan: job.result.code_twin.plan,
       code: job.result.code_twin.code,
       metrics: job.result.code_twin.metrics?.[0] ?? null,
       measurements: job.result.measurements,
-      iterations,
-      onStage: (event) => sse(res, { type: 'stage', ...event }),
+      stem_descriptors: job.result.stem_descriptors,
+      options: {
+        render: renderCandidate,
+        reference,
+        referenceBassNotes: job.result.stem_descriptors?.bass?.pitch?.notes ?? null,
+        referenceSwing: job.result.stem_descriptors?.drums?.onsets?.swing ?? null,
+        candidateBassNotes: (plan) => bassNotesFromPlan(plan),
+        iterations,
+        onIteration: (entry) => sse(res, {
+          type: 'stage',
+          stage: `refine-${entry.iteration}`,
+          label: entry.status === 'ok'
+            ? `Итерация ${entry.iteration}: ${entry.changes?.join('; ') || 'без изменений'}`
+            : `Итерация ${entry.iteration}: ${entry.error || 'без изменений'}`,
+          progress: Math.min(0.95, 0.1 + 0.8 * (entry.iteration / iterations)),
+          detail: entry.delta ? `общая оценка ${entry.delta.overall > 0 ? '+' : ''}${entry.delta.overall}` : undefined,
+        }),
+      },
     });
     job.result.code_twin.iterations = outcome?.iterations ?? [];
     if (outcome?.best?.code) job.result.code_twin.code = outcome.best.code;
+    job.result.code_twin.refine_log = outcome?.log ?? [];
+    job.result.code_twin.stop_reason = outcome?.stopReason ?? null;
     sse(res, { type: 'result', payload: job.result });
   } catch (err) {
     sse(res, { type: 'error', stage: 'refine', message: err?.message || 'Итерации не удались' });
