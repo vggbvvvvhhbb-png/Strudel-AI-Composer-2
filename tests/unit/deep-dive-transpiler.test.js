@@ -212,6 +212,45 @@ describe('транспайлер: дескрипторы → план → код
     expect(Object.keys(spec.parts.roles)).toHaveLength(0);
     expect(report.honesty.overall_confidence).toBe('low');
   });
+
+  it('редкие удары не выбивают роль из плана: пустой такт не побеждает', () => {
+    const base = fixture();
+    const barSec = 240 / 140;
+    // Удары только в первом такте каждой секции: три такта из четырёх пустые.
+    // Раньше «доминирующим» выбирался пустой такт (их просто больше), роль
+    // выпадала, а вместе с ней обрывалась сборка всего плана.
+    const sparse = base.stem_descriptors.drums.onsets.hits.filter(
+      (hit) => Math.floor(hit.time_s / barSec) % 4 === 0,
+    );
+    expect(sparse.length).toBeGreaterThan(0);
+
+    const { spec } = descriptorsToSpec(fixture({
+      stem_descriptors: {
+        ...base.stem_descriptors,
+        drums: {
+          ...base.stem_descriptors.drums,
+          onsets: { ...base.stem_descriptors.drums.onsets, hits: sparse },
+        },
+      },
+    }));
+
+    const roles = Object.keys(spec.parts.roles ?? {});
+    expect(roles).toContain('kick');
+  });
+
+  it('без стемов, но с запасным ритмом из микса, двойник всё равно строится', () => {
+    const base = fixture();
+    const rhythm = base.stem_descriptors.drums;
+    const { spec } = descriptorsToSpec(fixture({
+      stem_descriptors: {},
+      rhythm: { source: 'mix', activity: rhythm.activity, onsets: rhythm.onsets },
+    }));
+
+    const roles = Object.keys(spec.parts.roles ?? {});
+    expect(roles).toContain('kick');
+    // Бас без измеренного питч-трека не выдумывается.
+    expect(roles).not.toContain('bass');
+  });
 });
 
 describe('вспомогательные функции транспайлера', () => {

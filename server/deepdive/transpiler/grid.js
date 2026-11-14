@@ -59,9 +59,16 @@ export function buildGroupsForSection(roleHits, section, barSec, gridSteps) {
   }
   if (!bars.length) return { groups: [], barSignature: '', stepCount: gridSteps };
 
-  // Доминирующий такт: самый частый рисунок (по подписи из шагов и сэмплов).
+  // Доминирующий такт: самый частый НЕПУСТОЙ рисунок (по подписи из шагов и сэмплов).
+  //
+  // ПОЧЕМУ ТОЛЬКО НЕПУСТЫЕ. Раньше в подсчёт шли и пустые такты, и секция, где
+  // удары есть в двух тактах из десяти, выбирала «доминирующим» пустой такт: его
+  // больше просто потому, что тактов больше. Роль без рисунка выпадала из плана,
+  // а это обрывало сборку всего плана. Пустой такт — не рисунок, в голосование
+  // за «доминирующий» он не идёт.
   const signatures = new Map();
   bars.forEach((cells, index) => {
+    if (!cells.size) return;
     const signature = [...cells.entries()]
       .sort((a, b) => a[0] - b[0])
       .map(([step, cell]) => `${step}:${cell.sample}`)
@@ -73,7 +80,7 @@ export function buildGroupsForSection(roleHits, section, barSec, gridSteps) {
   for (const entry of signatures.values()) {
     if (!best || entry.count > best.count) best = entry;
   }
-  const chosen = bars[best.index] ?? new Map();
+  const chosen = best ? (bars[best.index] ?? new Map()) : new Map();
 
   // Группировка по (сэмпл, динамика, сдвиг): внутри группы шаги стоят на своих
   // местах, разные группы несут разные веса.
