@@ -6,6 +6,7 @@ import { initMixer, syncMixer } from './mixer.js';
 import { initTransport, syncTransport } from './transport.js';
 import { initImprove } from './improve.js';
 import { initMusicPanel, analyzeCurrent } from './music-panel.js';
+import { initIrPanel } from './ir-panel.js';
 import { initCompose } from './compose.js';
 import { makeShareLink } from './core/share.js';
 import { pushHistory } from './core/storage.js';
@@ -188,6 +189,18 @@ export function initUI({ editor: editorApi } = {}) {
       const { report } = await renderTrackOffline({ code, bars: [0, 16] });
       return { report };
     },
+  });
+
+  // План композиции: описание → IR → код, правки плана, поиск вариантов.
+  initIrPanel({
+    applyCode: async (code) => {
+      codeEl.value = code;
+      const res = await runValidated(code, (s) => setStatus(s));
+      codeEl.value = res.code;
+      if (res.ok) log('Играет ✓', 'ok');
+      else log(`Ошибка: ${res.error}`, 'error');
+    },
+    log,
   });
 
   // Структурная композиция: спека → код. Тот же путь применения,

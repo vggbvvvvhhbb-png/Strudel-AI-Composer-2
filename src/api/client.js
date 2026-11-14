@@ -178,3 +178,49 @@ export async function composeMutate({ spec, mutation, seed, signal }) {
   });
   return jsonOrThrow(res);
 }
+
+/* --- IR-путь: описание → план → код, правки плана, поиск вариантов --- */
+
+// Собрать план по описанию: { prompt } → { ir, code, report }.
+export async function irPlan({ prompt, seed, genre, bpm, signal }) {
+  const res = await fetch('/api/music/ir/plan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, seed, genre, bpm }),
+    signal,
+  });
+  return jsonOrThrow(res);
+}
+
+// Правка плана: «сделай мрачнее» и прочие типизированные операции.
+export async function irTransform({ ir, transform, amount, role, steps, mode, sectionId, signal }) {
+  const res = await fetch('/api/music/ir/transform', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ir, transform, amount, role, steps, mode, sectionId }),
+    signal,
+  });
+  return jsonOrThrow(res);
+}
+
+// Поиск best-of-N по мутациям плана (символьный оракул, без звука).
+export async function irSearch({ prompt, ir, n, topK, seed, signal }) {
+  const res = await fetch('/api/music/ir/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, ir, n, topK, seed }),
+    signal,
+  });
+  return jsonOrThrow(res);
+}
+
+// Критик-цикл: замечания линтера → правки → новый скор, с откатом.
+export async function irCritique({ ir, signal }) {
+  const res = await fetch('/api/music/ir/critique', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ir }),
+    signal,
+  });
+  return jsonOrThrow(res);
+}
