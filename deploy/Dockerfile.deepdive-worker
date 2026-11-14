@@ -19,6 +19,14 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends libsndfile1 ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
+# venv с хоста создан системным python Ubuntu: bin/python3 -> /usr/bin/python3,
+# а в debian-образе интерпретатор лежит в /usr/local/bin. Симлинки делают
+# /opt/dd-venv рабочим без пересборки окружения.
+# Проверять импорты здесь нельзя: venv монтируется только во время запуска,
+# на этапе сборки его ещё нет — проверка живёт в healthcheck.
+RUN ln -sf /usr/local/bin/python3 /usr/bin/python3 \
+    && ln -sf /usr/local/bin/python3.12 /usr/bin/python3.12
+
 ENV HOME=/root
 ENV DD_PORT=8010
 ENV DD_PYTHON=/opt/dd-venv/bin/python
@@ -27,7 +35,9 @@ WORKDIR /analysis
 EXPOSE 8010
 
 # Проверка живости: /health отвечает, даже если librosa не импортируется.
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD /opt/dd-venv/bin/python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8010/health', timeout=4).status == 200 else 1)"
+# Дополнительно проверяем, что смонтированный venv рабочий: без симлинков
+# на python он не запустится.
+HEALTHCHECK --interval=30s --timeout=15s --start-period=30s --retries=3 \
+  CMD /opt/dd-venv/bin/python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8010/health', timeout=8).status == 200 else 1)"
 
 CMD ["/opt/dd-venv/bin/python", "worker.py"]

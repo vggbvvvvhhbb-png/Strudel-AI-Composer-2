@@ -13,17 +13,17 @@ async function serverError(res) {
 }
 
 /**
- * POST /api/deepdive/analyze — файл → измерения → код-двойник.
- * onEvent получает каждое событие потока (stage/result/error).
+ * Единый разбор SSE-потока режима «Разбор».
+ *
+ * Поток всегда заканчивается одним из двух событий: `result` (есть payload)
+ * или `error` (есть причина). Если поток закрылся молча — это тоже ошибка,
+ * просто без текста: так пользователь узнает, что разбор не состоялся.
+ *
+ * @param {Response} res ответ с потоком
+ * @param {(event: object) => void} onEvent колбэк на каждое событие
+ * @param {string} emptyMessage текст, если поток закрылся без результата
  */
-export async function analyzeTrack({ file, separate = false, onEvent, signal }) {
-  const form = new FormData();
-  form.append('file', file, file.name);
-  form.append('separate', separate ? '1' : '0');
-
-  const res = await fetch('/api/deepdive/analyze', { method: 'POST', body: form, signal });
-  if (!res.ok || !res.body) throw new Error(await serverError(res));
-
+async function consumeResultStream(res, onEvent, emptyMessage) {
   let payload = null;
   let streamError = null;
 
@@ -38,8 +38,23 @@ export async function analyzeTrack({ file, separate = false, onEvent, signal }) 
   });
 
   if (streamError) throw streamError;
-  if (!payload) throw new Error('Сервер закрыл поток без результата разбора');
+  if (!payload) throw new Error(emptyMessage);
   return payload;
+}
+
+/**
+ * POST /api/deepdive/analyze — файл → измерения → код-двойник.
+ * onEvent получает каждое событие потока (stage/result/error).
+ */
+export async function analyzeTrack({ file, separate = false, onEvent, signal }) {
+  const form = new FormData();
+  form.append('file', file, file.name);
+  form.append('separate', separate ? '1' : '0');
+
+  const res = await fetch('/api/deepdive/analyze', { method: 'POST', body: form, signal });
+  if (!res.ok || !res.body) throw new Error(await serverError(res));
+
+  return consumeResultStream(res, onEvent, 'Сервер закрыл поток без результата разбора');
 }
 
 /**
@@ -55,22 +70,7 @@ export async function refineTrack({ job, iterations = 3, onEvent, signal }) {
   });
   if (!res.ok || !res.body) throw new Error(await serverError(res));
 
-  let payload = null;
-  let streamError = null;
-
-  await consumeSSE(res, (event) => {
-    if (!event || typeof event !== 'object') return;
-    if (event.type === 'error') {
-      streamError = new Error(event.message || 'Улучшение прервано');
-      return;
-    }
-    if (event.type === 'result') payload = event.payload ?? payload;
-    onEvent?.(event);
-  });
-
-  if (streamError) throw streamError;
-  if (!payload) throw new Error('Сервер закрыл поток без результата улучшения');
-  return payload;
+  return consumeResultStream(res, onEvent, 'Сервер закрыл поток без результата улучшения');
 }
 
 /**

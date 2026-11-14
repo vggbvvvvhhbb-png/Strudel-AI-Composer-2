@@ -39,7 +39,7 @@ services:
   # разделение на стемы (Demucs). Python-окружение — общий venv с хоста.
   deepdive-worker:
     build:
-      context: .
+      context: /opt/strudel/deploy
       dockerfile: Dockerfile.deepdive-worker
     image: strudel-deepdive-worker:local
     volumes:
