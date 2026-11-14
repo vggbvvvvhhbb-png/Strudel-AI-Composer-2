@@ -38,22 +38,56 @@ function chordRoots(harmony, key) {
   return roots.every((degree) => degree >= 0) ? roots : null;
 }
 
-function effectsFor(part) {
+function effectsFor(part, { skipGain = false } = {}) {
   return (part.effects || []).map((effect) => {
     if (!EFFECTS.has(effect.name) || effect.params.length !== 1 ||
       typeof effect.params[0] !== 'number' || !Number.isFinite(effect.params[0])) {
       throw new Error(`effects: неподдерживаемый эффект «${effect.name}» или его параметры`);
     }
+    if (skipGain && effect.name === 'gain') return '';
     return `.${effect.name}(${effect.params[0]})`;
   }).join('');
 }
 
+/**
+ * Группы измеренных ударов -> `stack(...)`.
+ *
+ * Список шагов через .beat("0,4,8,12",16), динамика через .gain(),
+ * микротайминг через .late(ms(x)). Это тот же приём, что и в IR-компиляторе
+ * (src/ir/compiler.js), и он же единственно верный: swingBy в Strudel 1.3.0
+ * ДУБЛИРУЕТ события, а swing(x) без второго аргумента — no-op
+ * (проверено пробой tests/spike/swing-semantics.probe.mjs).
+ */
+function groupsExpression(part, role) {
+  const groups = part.groups ?? [];
+  if (!groups.length) return null;
+  const parts = groups.map((group) => {
+    if (!group.sample || !/^[\w:-]+$/.test(group.sample)) {
+      throw new Error(`${role}.groups.sample: неподдерживаемое имя сэмпла`);
+    }
+    const steps = group.steps.map((step) => Math.round(step)).join(',');
+    if (!steps) throw new Error(`${role}.groups: пустой список шагов`);
+    const gain = Number.isFinite(group.gain) ? Number(group.gain.toFixed(4)) : 1;
+    const late = Number.isFinite(group.lateMs) && Math.abs(group.lateMs) > 0.01
+      ? `.late(ms(${Number(group.lateMs.toFixed(3))}))`
+      : '';
+    return `s(${JSON.stringify(group.sample)}).beat(${JSON.stringify(steps)},16).gain(${gain})${late}`;
+  });
+  return parts.length === 1 ? parts[0] : `stack(${parts.join(', ')})`;
+}
+
 function sectionBody(part, role, section, scale, key) {
+  // Переопределения по секции: у каждой секции свой рисунок (двойник).
+  const override = part.sections?.[section.name] ?? {};
+  const pattern = override.pattern ?? part.pattern;
+  const sound = override.sound ?? part.sound;
+  const gainPattern = override.gainPattern ?? part.gainPattern;
+  const groups = override.groups ?? part.groups;
   const sampled = SAMPLED.has(role);
-  const notation = mini(part.pattern, `${role}.pattern`);
+  const notation = mini(pattern, `${role}.pattern`);
   // Буквенные ноты уже содержат высоту; числовые ступени читаются через лад.
-  const explicitNotes = !sampled && /[a-g](?:#|b)?-?\d/.test(part.pattern);
-  let body = sampled ? `s(${notation})` : explicitNotes ? `note(${notation})` : `n(${notation})`;
+  const explicitNotes = !sampled && /[a-g](?:#|b)?-?\d/.test(pattern);
+  let body = sampled ? (groupsExpression({ ...part, groups }, role) ?? `s(${notation})`) : explicitNotes ? `note(${notation})` : `n(${notation})`;
   if (!sampled) {
     if (!explicitNotes) {
       const roots = chordRoots(section.harmony, key);
@@ -64,23 +98,28 @@ function sectionBody(part, role, section, scale, key) {
       body += `.scale(${JSON.stringify(scale)})`;
     }
     if (TRANSPOSE[role]) body += `.transpose(${TRANSPOSE[role]})`;
-    body += `.s(${JSON.stringify(part.sound)})`;
+    body += `.s(${JSON.stringify(sound)})`;
   }
   // 's' означает, что имена сэмплов уже указаны в pattern.
-  if (sampled && part.sound !== 's' && part.sound !== 'sample') {
-    if (!/^[\w:-]+$/.test(part.sound)) throw new Error(`${role}.sound: неподдерживаемое имя сэмпла`);
-    body += `.s(${JSON.stringify(part.sound)})`;
+  // При заданных groups имена сэмплов уже внутри групп — .s() перебил бы их.
+  const hasGroups = Boolean(groups?.length);
+  if (sampled && !hasGroups && sound !== 's' && sound !== 'sample') {
+    if (!/^[\w:-]+$/.test(sound)) throw new Error(`${role}.sound: неподдерживаемое имя сэмпла`);
+    body += `.s(${JSON.stringify(sound)})`;
   }
-  body += effectsFor(part);
+  // При группах динамика уже записана в каждой группе — общий gain не дублируем.
+  body += effectsFor(part, { skipGain: hasGroups });
   // Огибающая громкости по шагам сетки (двойник): velocity ударов измерена,
   // а effects.gain принимает только одно число. Если эффект gain уже задан —
   // не дублируем.
-  if (part.gainPattern && !part.effects?.some((effect) => effect.name === 'gain')) {
-    body += `.gain(${mini(part.gainPattern, `${role}.gainPattern`)})`;
+  if (gainPattern && !hasGroups && !part.effects?.some((effect) => effect.name === 'gain')) {
+    body += `.gain(${mini(gainPattern, `${role}.gainPattern`)})`;
   }
-  // Свинг сетки — из измерений (drums.onsets.swing). swingBy есть в реестре
-  // Strudel API (server/music/data/strudel-api.json).
-  if (typeof part.swing === 'number' && Number.isFinite(part.swing) && part.swing > 0.001) {
+  // Свинг сетки — из измерений (drums.onsets.swing). ВНИМАНИЕ: swingBy в
+  // Strudel 1.3.0 ДУБЛИРУЕТ события, а swing(x) без второго аргумента — no-op
+  // (проба tests/spike/swing-semantics.probe.mjs). Поэтому свинг выражен
+  // измеренным микротаймингом в groups (lateMs), а не этим параметром.
+  if (!hasGroups && typeof part.swing === 'number' && Number.isFinite(part.swing) && part.swing > 0.001) {
     body += `.swingBy(${part.swing}, 8)`;
   }
   if (section.parameters?.cutoff) {
@@ -105,8 +144,17 @@ export function compileTrackSpec(input) {
     `// Форма: ${sections.map((s) => `${s.name}(${s.cycles})`).join(' → ')}`,
     `setCpm(${spec.meta.bpm}/4)`,
     `const key = ${JSON.stringify(scale)}`,
-    '',
   ];
+  // Хелпер для микротайминга в миллисекундах — нужен группам с lateMs.
+  const needsMs = Object.values(spec.parts.roles).some((part) => {
+    const all = [...(part.groups ?? [])];
+    for (const override of Object.values(part.sections ?? {})) all.push(...(override.groups ?? []));
+    return all.some((group) => Number.isFinite(group.lateMs) && Math.abs(group.lateMs) > 0.01);
+  });
+  if (needsMs) {
+    lines.push(`const ms = x => x * (${spec.meta.bpm}/4) / 60000`);
+  }
+  lines.push('');
   const constants = [];
   const parts = [];
   for (const [role, part] of roles) {

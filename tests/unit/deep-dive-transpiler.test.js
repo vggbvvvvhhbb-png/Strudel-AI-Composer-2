@@ -31,8 +31,10 @@ function fixture(overrides = {}) {
       const barStart = start + bar * barSec;
       hits.push({ time_s: barStart, gm: 36, velocity: 0.95, label: 'bd' });
       hits.push({ time_s: barStart + barSec / 2, gm: 36, velocity: 0.85, label: 'bd' });
-      hits.push({ time_s: barStart + barSec / 4, gm: 38, velocity: 0.7, label: 'sd' });
-      hits.push({ time_s: barStart + (3 * barSec) / 4, gm: 38, velocity: 0.72, label: 'sd' });
+      // Снейр с опозданием 12 мс — как в реальном lo-fi. Это измеренный
+      // микротайминг, он и должен попасть в код.
+      hits.push({ time_s: barStart + barSec / 4 + 0.012, gm: 38, velocity: 0.7, label: 'sd' });
+      hits.push({ time_s: barStart + (3 * barSec) / 4 + 0.012, gm: 38, velocity: 0.72, label: 'sd' });
       for (const step of [1, 3, 5, 7]) {
         hits.push({ time_s: barStart + (step * barSec) / 8, gm: 42, velocity: 0.4 + step * 0.03, label: 'hh' });
       }
@@ -126,30 +128,48 @@ describe('транспайлер: дескрипторы → план → код
     expect(report.decisions.tempo.shifted).toBe('double_time');
   });
 
-  it('ударные раскладываются по измеренной сетке', () => {
+  it('ударные раскладываются по измеренной сетке (группы шагов)', () => {
     const { spec } = descriptorsToSpec(fixture());
     const kick = spec.parts.roles.kick;
     expect(kick).toBeTruthy();
-    // Сетка 1/8 => 8 шагов в такте; кик на 1 и 3 доли => шаги 0 и 4.
-    const tokens = kick.pattern.split(' ');
-    expect(tokens.length).toBe(8);
-    expect(tokens[0]).toBe('bd');
-    expect(tokens[4]).toBe('bd');
-    expect(tokens[1]).toBe('~');
+    // Кик на 1 и 3 доли => шаги 0 и 8 в сетке 1/16.
+    const kickSteps = kick.sections ? Object.values(kick.sections)[0].groups.flatMap((g) => g.steps) : [];
+    expect(kickSteps.sort((a, b) => a - b)).toEqual([0, 8]);
+    const snare = spec.parts.roles.snare;
+    const snareSteps = Object.values(snare.sections)[0].groups.flatMap((g) => g.steps);
+    expect(snareSteps.sort((a, b) => a - b)).toEqual([4, 12]);
+    const hats = spec.parts.roles.hats;
+    const hatSteps = Object.values(hats.sections)[0].groups.flatMap((g) => g.steps);
+    expect(hatSteps.sort((a, b) => a - b)).toEqual([2, 6, 10, 14]);
   });
 
-  it('velocity измерений попадает в огибающую громкости', () => {
+  it('velocity измерений попадает в динамику групп', () => {
     const { spec } = descriptorsToSpec(fixture());
     const kick = spec.parts.roles.kick;
-    expect(kick.gainPattern).toBeTruthy();
-    const gains = kick.gainPattern.split(' ');
-    expect(gains.length).toBe(8);
-    expect(Number(gains[0])).toBeGreaterThan(Number(gains[1])); // удар громче паузы
+    const groups = Object.values(kick.sections)[0].groups;
+    expect(groups.length).toBeGreaterThan(0);
+    const gains = groups.map((g) => g.gain);
+    expect(Math.max(...gains)).toBeGreaterThan(0.8); // измеренный кик громкий
+    expect(Math.min(...gains)).toBeGreaterThan(0);
   });
 
-  it('свинг из измерений попадает в код', () => {
+  it('микротайминг из измерений выражен сдвигом, а не параметром свинга', () => {
     const { code } = descriptorsToSpec(fixture());
-    expect(code).toMatch(/swingBy\(/);
+    // swingBy в Strudel 1.3.0 дублирует события — использовать нельзя.
+    expect(code).not.toMatch(/swingBy\(/);
+    expect(code).toMatch(/\.beat\("/);
+    // Измеренный сдвиг (снейр позади на 12 мс) попадает в .late(ms(...)).
+    expect(code).toMatch(/\.late\(ms\(/);
+  });
+
+  it('ровные удары не получают лишнего сдвига', () => {
+    const even = fixture();
+    even.stem_descriptors.drums.onsets.hits = even.stem_descriptors.drums.onsets.hits.map((hit) => (
+      hit.gm === 38 ? { ...hit, time_s: hit.time_s - 0.012 } : hit
+    ));
+    const { code } = descriptorsToSpec(even);
+    // Ровные удары лежат точно на сетке — сдвига в коде быть не должно.
+    expect(code).not.toMatch(/\.late\(ms\(/);
   });
 
   it('код исполняется в настоящем движке и даёт события', async () => {

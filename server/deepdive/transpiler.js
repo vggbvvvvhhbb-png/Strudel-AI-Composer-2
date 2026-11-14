@@ -138,10 +138,92 @@ function chordTriad(chord, rootMidi = 60) {
   return intervals.map((interval) => midiToNoteName(base + interval));
 }
 
-/** Порядок шагов сетки в такте: 1/4 → 4, 1/8 → 8, 1/12 → 12, 1/16 → 16, 1/24 → 24, 1/32 → 32. */
+/**
+ * Порядок шагов сетки в такте: 1/4 → 4, 1/8 → 8, 1/12 → 12, 1/16 → 16, 1/24 → 24, 1/32 → 32.
+ */
 function stepsPerBar(gridStep) {
   const map = { '1/4': 4, '1/8': 8, '1/12': 12, '1/16': 16, '1/24': 24, '1/32': 32 };
   return map[gridStep] ?? 16;
+}
+
+/** Шаг сетки, в который попадает удар (доля шага от начала такта). */
+function gridFraction(hitTime, barStart, barSec) {
+  const fraction = (hitTime - barStart) / barSec;
+  return Math.min(0.9999, Math.max(0, fraction));
+}
+
+/**
+ * Группы измеренных ударов для одной секции.
+ *
+ * ОГРАНИЧЕНИЕ ФОРМАТА. Каждая секция в TrackSpec — это ОДИН повторяющийся
+ * паттерн (arrange([cycles, CONST])), а имена секций ограничены девятью
+ * значениями. Значит, внутри секции bar-level вариация не выражается, и мы
+ * берём ДОМИНИРУЮЩИЙ такт секции — самый частый её рисунок. Для монтажей и
+ * фанков с повторяющимся баром это точное попадание; для треков с постоянной
+ * вариацией — приближение. Это записано в отчёт, а не спрятано.
+ *
+ * @returns {{groups:Array, barSignature:string, stepCount:number}}
+ */
+function buildGroupsForSection(roleHits, section, barSec, gridSteps) {
+  const bars = [];
+  for (let bar = 0; bar < section.cycles; bar += 1) {
+    const barStart = section.start_s + bar * barSec;
+    const barEnd = barStart + barSec;
+    const inBar = roleHits.filter((hit) => {
+      const time = hit.time_s ?? hit.time ?? null;
+      return time !== null && time >= barStart && time < barEnd;
+    });
+    const cells = new Map(); // step -> {sample, velocity, offsetMs}
+    for (const hit of inBar) {
+      const time = hit.time_s ?? hit.time;
+      const fraction = gridFraction(time, barStart, barSec);
+      const step = Math.min(15, Math.round(fraction * 16));
+      const offsetMs = (fraction * 16 - step) * (barSec * 1000) / 16;
+      const sample = GM_TO_SAMPLE[hit.gm] ?? hit.label ?? 'perc';
+      const velocity = Number(hit.velocity ?? 0.8);
+      const previous = cells.get(step);
+      // На один шаг — самый громкий удар.
+      if (!previous || velocity > previous.velocity) {
+        cells.set(step, { sample, velocity, offsetMs });
+      }
+    }
+    bars.push(cells);
+  }
+  if (!bars.length) return { groups: [], barSignature: '', stepCount: gridSteps };
+
+  // Доминирующий такт: самый частый рисунок (по подписи из шагов и сэмплов).
+  const signatures = new Map();
+  bars.forEach((cells, index) => {
+    const signature = [...cells.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([step, cell]) => `${step}:${cell.sample}`)
+      .join(',');
+    if (!signatures.has(signature)) signatures.set(signature, { count: 0, index });
+    signatures.get(signature).count += 1;
+  });
+  let best = null;
+  for (const entry of signatures.values()) {
+    if (!best || entry.count > best.count) best = entry;
+  }
+  const chosen = bars[best.index] ?? new Map();
+
+  // Группировка по (сэмпл, динамика, сдвиг): внутри группы шаги стоят на своих
+  // местах, разные группы несут разные веса.
+  const groups = new Map();
+  for (const [step, cell] of [...chosen.entries()].sort((a, b) => a[0] - b[0])) {
+    const velocityBucket = Math.round(cell.velocity * 20) / 20;
+    const offsetBucket = Math.round(cell.offsetMs / 5) * 5;
+    const key = `${cell.sample}|${velocityBucket}|${offsetBucket}`;
+    if (!groups.has(key)) {
+      groups.set(key, { sample: cell.sample, steps: [], gain: velocityBucket, lateMs: offsetBucket });
+    }
+    groups.get(key).steps.push(step);
+  }
+  return {
+    groups: [...groups.values()].filter((group) => group.steps.length),
+    barSignature: best ? [...signatures.keys()].length : 0,
+    stepCount: gridSteps,
+  };
 }
 
 /**
@@ -314,23 +396,12 @@ export function descriptorsToSpec(descriptors) {
 
   for (const [role, roleHits] of Object.entries(drumsByRole)) {
     if (!roleHits.length) continue;
-    const bars = [];
-    const gains = [];
+    const sectionData = [];
     for (const section of sections) {
-      const sectionBars = [];
-      const sectionGains = [];
-      for (let bar = 0; bar < section.cycles; bar += 1) {
-        const barStart = section.start_s + bar * barSec;
-        const built = barFromHits(roleHits, barStart, barStart + barSec, gridSteps, barSec / gridSteps);
-        sectionBars.push(built ? built.tokens : null);
-        sectionGains.push(built ? built.gains : null);
-      }
-      const filled = sectionBars.map((tokens) => tokens ?? new Array(gridSteps).fill('~'));
-      const filledGains = sectionGains.map((values) => values ?? new Array(gridSteps).fill(0.8));
-      bars.push(filled);
-      gains.push(filledGains);
+      const built = buildGroupsForSection(roleHits, section, barSec, gridSteps);
+      sectionData.push(built);
     }
-    roles[role] = { bars, gains, sectionIndex: sections.map((_, i) => i) };
+    roles[role] = { sections: sectionData, sectionIndex: sections.map((_, i) => i) };
   }
 
   // Бас: ноты из питч-трека. Компенсация октавы — см. TRANSPOSE в компиляторе.
@@ -416,12 +487,24 @@ export function descriptorsToSpec(descriptors) {
     const activeIn = [];
     const patterns = [];
     const gainPatterns = [];
+    const sectionOverrides = {};
+    const isDrum = role === 'kick' || role === 'snare' || role === 'hats' || role === 'perc';
     sections.forEach((section, index) => {
       const stemName = role === 'bass' ? 'bass' : role === 'chords' ? 'other' : 'drums';
       const active = activityBySection(stems[stemName], sections, 0.2)[index];
-      const barList = data.bars[index] ?? [];
+      if (!active) return;
+      if (isDrum) {
+        // Ударные: измеренные удары -> группы шагов (шаги, динамика, микротайминг).
+        const built = data.sections[index];
+        if (!built?.groups?.length) return;
+        activeIn.push(section.name);
+        sectionOverrides[section.name] = { groups: built.groups };
+        patterns.push(built.groups.map((group) => group.sample).join(' '));
+        return;
+      }
+      const barList = data.bars?.[index] ?? [];
       const nonEmpty = barList.some((tokens) => tokens.some((token) => token !== '~'));
-      if (!active || !nonEmpty) return;
+      if (!nonEmpty) return;
       activeIn.push(section.name);
       const uniqueBars = [];
       for (const tokens of barList) {
@@ -433,6 +516,7 @@ export function descriptorsToSpec(descriptors) {
         ? chosen[0].tokens.join(' ')
         : `<${chosen.map((bar) => bar.tokens.join(' ')).join(' ')}>`;
       patterns.push(pattern);
+      sectionOverrides[section.name] = { pattern };
       if (data.gains) {
         const chosenGains = [];
         for (const tokens of barList) {
@@ -441,21 +525,20 @@ export function descriptorsToSpec(descriptors) {
             chosenGains.push({ key, gains: data.gains[index][barList.indexOf(tokens)] });
           }
         }
-        gainPatterns.push(chosenGains.slice(0, 8).map((g) => g.gains.join(' ')).join(' '));
+        const gains = chosenGains.slice(0, 8).map((g) => g.gains.join(' ')).join(' ');
+        gainPatterns.push(gains);
+        sectionOverrides[section.name].gainPattern = gains;
       }
     });
     if (!activeIn.length) return;
     const part = {
       activeIn,
-      pattern: patterns[0],
-      sound: role === 'kick' || role === 'snare' || role === 'hats' || role === 'perc' ? 's' : 'sine',
+      pattern: patterns[0] ?? '',
+      sound: isDrum ? 's' : 'sine',
     };
     if (role === 'chords') part.sound = 'sawtooth';
-    if (gainPatterns.length && role !== 'chords') part.gainPattern = gainPatterns[0];
-    const swing = Number(drums?.onsets?.swing ?? 0);
-    if (swing > 0.52 && (role === 'hats' || role === 'kick' || role === 'snare')) {
-      part.swing = Number(((swing - 0.5) * 2).toFixed(3));
-    }
+    if (Object.keys(sectionOverrides).length) part.sections = sectionOverrides;
+    if (gainPatterns.length && role !== 'chords' && !isDrum) part.gainPattern = gainPatterns[0];
     specRoles[role] = part;
   }
 

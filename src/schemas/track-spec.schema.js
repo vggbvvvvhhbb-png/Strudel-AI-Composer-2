@@ -47,7 +47,32 @@ export const TrackSpecSchema = z.object({
         gainPattern: z.string().optional(),
         // Свинг сетки: 0 — ровно, 0.5 — прямолинейно, >0.5 — задержка второй
         // доли. Приходит из измерений (drums.onsets.swing).
-        swing: z.number().min(0).max(1).optional()
+        swing: z.number().min(0).max(1).optional(),
+        // Группы измеренных ударов: сэмпл + шаги сетки + динамика + сдвиг.
+        // Это точный способ выразить РИТМ ИЗ ТРЕКА: список шагов через
+        // .beat("0,4,8,12",16), динамика через .gain(), микротайминг через
+        // .late(ms(x)). Свинг при этом не «параметр», а измеренный сдвиг.
+        // Если groups заданы, они важнее pattern.
+        groups: z.array(z.object({
+          sample: z.string(),
+          steps: z.array(z.number().int().min(0).max(63)),
+          gain: z.number().min(0).max(2),
+          lateMs: z.number().optional()
+        })).optional(),
+        // Переопределения по секциям: имя секции -> свой рисунок.
+        // Нужно двойнику: в разных секциях трека ритм и набор слоёв разные,
+        // а part.activeIn ссылается на имя секции, а не на индекс.
+        sections: z.record(z.string(), z.object({
+          pattern: z.string().optional(),
+          sound: z.string().optional(),
+          groups: z.array(z.object({
+            sample: z.string(),
+            steps: z.array(z.number().int().min(0).max(63)),
+            gain: z.number().min(0).max(2),
+            lateMs: z.number().optional()
+          })).optional(),
+          gainPattern: z.string().optional()
+        })).optional()
       })
     )
   }),
