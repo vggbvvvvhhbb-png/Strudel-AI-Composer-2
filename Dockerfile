@@ -25,6 +25,9 @@ COPY server ./server
 # (src/schemas, src/core). Отдельного "серверного" пакета у проекта нет.
 COPY src ./src
 COPY scripts ./scripts
+# skills/ — скил-карты: сервер читает их при запуске (учебник для LLM,
+# версия пака в отчёте). Без каталога /api/skills и планировщик падают.
+COPY skills ./skills
 
 # Ключи — только через окружение (docker compose env_file), в образе их нет.
 EXPOSE 3001

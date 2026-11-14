@@ -72,6 +72,61 @@ describe('планировщик', () => {
     expect(result.issues.length).toBeGreaterThan(0);
   });
 
+  it('ремонтный ретрай несёт модели текст ошибки и её прошлый ответ', async () => {
+    const ir = planIR('злой быстрый dnb', { seed: 9 });
+    const seen = [];
+    let call = 0;
+    const complete = async (args) => {
+      seen.push(args);
+      call += 1;
+      return call === 1 ? JSON.stringify({ v: 1, seed: 1 }) : JSON.stringify(ir);
+    };
+    await planWithLLM({ prompt: 'злой быстрый dnb', seed: 9, complete });
+
+    expect(seen).toHaveLength(2);
+    const retry = seen[1].messages;
+    // Модель видит свой прошлый ответ...
+    expect(retry.some((message) => message.role === 'assistant')).toBe(true);
+    // ...и список конкретных ошибок.
+    const feedback = retry.at(-1).content;
+    expect(feedback).toMatch(/не принят/);
+    expect(feedback).toMatch(/seed|sections|meta/);
+  });
+
+  it('починка по роли закрывает главный класс ошибок живой модели', async () => {
+    // Живой ответ модели: в enum-поле plan стоит описание, а роль выдумана.
+    const messy = {
+      v: 1,
+      seed: 42,
+      meta: {
+        title: 'Дождь', bpm: 78, meter: '4/4',
+        key: { tonic: 'D', mode: 'minor' },
+        mood: { valence: -0.6, arousal: -0.2, modifiers: [] },
+      },
+      palette: {},
+      motifs: {},
+      sections: [{
+        id: 'intro', kind: 'intro', bars: 8, energy: 0.3, tension: 0.4,
+        harmony: [{ rn: 'i', bars: 8 }],
+        layers: {
+          pad: { plan: 'разреженный тёмный педальный слой', density: 0.5, register: [48, 72], weight: 0.7 },
+          guitar: { plan: 'lead', density: 0.5, register: [60, 84], weight: 1 },
+        },
+      }],
+      groove: { template: 'drunken', amount: 0.5 },
+      mix: { sidechain: [], pan: {}, orbit: {} },
+    };
+    const complete = async () => JSON.stringify(messy);
+    const result = await planWithLLM({ prompt: 'мрачный трип-хоп про дождь', seed: 42, complete });
+
+    // План принят с первого раза — без ремонтного ретрая.
+    expect(result.source).toBe('llm');
+    expect(result.calls).toBe(1);
+    expect(result.ir.sections[0].layers.pad.plan).toBe('pad');
+    expect(result.ir.sections[0].layers.guitar).toBeUndefined();
+    expect(result.repairs.join(' ')).toMatch(/plan/);
+  });
+
   it('не превышает бюджет вызовов и уходит в правила', async () => {
     let call = 0;
     const complete = async () => {

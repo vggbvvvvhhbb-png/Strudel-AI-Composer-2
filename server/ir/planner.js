@@ -23,6 +23,7 @@ import { completeChat } from '../llm/client.js';
 import { compileSkills } from '../skills/compile.js';
 import { safeValidateIR } from '../../src/ir/schema.js';
 import { planIR } from '../../src/ir/intent.js';
+import { normalizeIR } from './normalize.js';
 import { IR_JSON_SCHEMA, IR_SCHEMA_BRIEF, IR_SCHEMA_VERSION } from './schema-json.js';
 
 /** Бюджет вызовов LLM на один compose. */
@@ -77,16 +78,38 @@ export function parseIrJson(text) {
 }
 
 /**
+ * Путь проблемы в виде строки. Принимает и массив (Zod), и строку.
+ * @param {unknown} path
+ * @returns {string}
+ */
+function issuePath(path) {
+  if (Array.isArray(path)) return path.join('.') || 'корень';
+  if (typeof path === 'string' && path) return path;
+  return 'корень';
+}
+
+/**
  * Текст ошибки для ремонтного ретрая: путь и сообщение Zod, по-русски и кратко.
- * @param {import('zod').ZodError} error
+ * @param {{issues?: Array<{path?: unknown, message?: string}>}} error
  * @returns {string}
  */
 export function repairHint(error) {
-  const issues = (error?.issues ?? []).slice(0, 8).map((issue) => {
-    const path = issue.path?.join('.') || 'корень';
-    return `- ${path}: ${issue.message}`;
-  });
+  const issues = (error?.issues ?? []).slice(0, 8).map((issue) => (
+    `- ${issuePath(issue.path)}: ${issue.message ?? 'неизвестная ошибка'}`
+  ));
   return issues.join('\n') || '- неизвестная ошибка';
+}
+
+/**
+ * То же, но в виде массива {path, message} — для отчёта и тестов.
+ * @param {{issues?: Array<{path?: unknown, message?: string}>}} error
+ * @returns {Array<{path:string, message:string}>}
+ */
+export function repairIssues(error) {
+  return (error?.issues ?? []).slice(0, 8).map((issue) => ({
+    path: issuePath(issue.path),
+    message: issue.message ?? 'неизвестная ошибка',
+  }));
 }
 
 /**
@@ -140,16 +163,36 @@ export async function planWithLLM(input = {}) {
   let repaired = false;
   let lastIssues = [];
   let lastReason = null;
+  let lastRaw = null;
+  let repairText = '';
+  const repairs = [];
 
   while (calls < maxCalls) {
     calls += 1;
+
+    // Ремонтный ретрай: модель должна видеть, что именно не так, и свой
+    // прошлый ответ. Без этого повтор — это повтор того же запроса.
+    const messages = [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ];
+    if (lastRaw) {
+      messages.push({ role: 'assistant', content: String(lastRaw).slice(0, 8000) });
+      messages.push({
+        role: 'user',
+        content: [
+          'Твой предыдущий ответ не принят. Ошибки проверки:',
+          repairText,
+          'Исправь ровно эти места и верни ПОЛНЫЙ JSON заново.',
+          'Поля-enum содержат одно слово из списка, а не описание.',
+        ].join('\n'),
+      });
+    }
+
     let content;
     try {
       content = await complete({
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
+        messages,
         temperature: 0.3,
         signal,
         onUsage,
@@ -169,12 +212,19 @@ export async function planWithLLM(input = {}) {
 
     const parsed = parseIrJson(content);
     if (!parsed) {
-      lastIssues = ['ответ не является JSON-объектом'];
+      lastIssues = [{ path: 'корень', message: 'ответ не является JSON-объектом' }];
+      repairText = repairHint({ issues: [{ path: 'корень', message: 'ответ не является JSON-объектом' }] });
+      lastRaw = content;
       lastReason = 'ответ не является JSON-объектом';
+      repaired = true;
       continue;
     }
 
-    const validation = safeValidateIR(parsed);
+    // Детерминированная починка: механика — дело кода, не модели.
+    const { ir: fixed, notes } = normalizeIR(parsed);
+    if (notes.length) repairs.push(...notes);
+
+    const validation = safeValidateIR(fixed);
     if (validation.ok) {
       const result = {
         ir: validation.data,
@@ -185,16 +235,16 @@ export async function planWithLLM(input = {}) {
         tokens: book.tokens,
         bookTokens: book.tokens,
         issues: lastIssues,
+        repairs,
         cached: false,
       };
       plannerCache.set(key, result);
       return result;
     }
 
-    lastIssues = validation.error.issues.slice(0, 8).map((issue) => ({
-      path: issue.path.join('.'),
-      message: issue.message,
-    }));
+    lastIssues = repairIssues(validation.error);
+    repairText = repairHint(validation.error);
+    lastRaw = content;
     lastReason = 'IR не прошёл проверку схемы';
     repaired = true;
   }
@@ -210,6 +260,7 @@ export async function planWithLLM(input = {}) {
     tokens: book.tokens,
     bookTokens: book.tokens,
     issues: lastIssues,
+    repairs,
     reason: lastReason || 'план LLM не принят',
     cached: false,
   };

@@ -129,7 +129,9 @@ try {
 }
 
 Write-Output '==> Соседние сервисы не тронуты'
-& ssh -i $SshKey -o BatchMode=yes $SshHost 'docker ps --format "{{.Names}} {{.Status}}" | grep shveyka'
+# Формат без пробелов: иначе PowerShell разбирает аргументы по пробелам и
+# docker получает "--format {{.Names}}" как два разных аргумента.
+& ssh -i $SshKey -o BatchMode=yes $SshHost 'docker ps --filter=name=shveyka --format={{.Names}}:{{.Status}}'
 
 Remove-Item -Force $archive -ErrorAction SilentlyContinue
 Remove-Item -Force $composeLocal -ErrorAction SilentlyContinue
