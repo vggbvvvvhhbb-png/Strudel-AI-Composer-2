@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Strudel AI Composer — презентация проекта</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#f7f5f0;
+  --card:#ffffff;
+  --line:#e9e3d6;
+  --line-soft:#f0ebe0;
+  --ink:#14171e;
+  --body:#3a4256;
+  --muted:#7c7a72;
+  --primary:#2f6f5e;
+  --primary-soft:rgba(47,111,94,.08);
+  --warn:#c97b3f;
+  --bad:#b06367;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Outfit',sans-serif;
+  --serif:'DM Serif Display',serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--body);
+  font-family:var(--sans);font-size:15.5px;line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(60rem 30rem at 12% -8%, rgba(47,111,94,.07), transparent 60%),
+    radial-gradient(50rem 26rem at 92% 4%, rgba(201,123,63,.06), transparent 60%);
+}
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 28px 100px}
+h1,h2,h3{color:var(--ink);font-family:var(--serif);font-weight:400;letter-spacing:-.005em;line-height:1.18}
+h1{font-size:clamp(34px,5.4vw,54px);margin:0 0 14px}
+h2{font-size:clamp(24px,3vw,31px);margin:0 0 8px}
+h3{font-size:18px;margin:0 0 6px}
+p{margin:0 0 12px}
+a{color:var(--primary)}
+code,.mono{font-family:var(--mono);font-size:.88em}
+section{margin-top:74px}
+.eyebrow{
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--primary);margin:0 0 10px;font-weight:500;
+}
+.lede{font-size:18px;color:var(--body);max-width:70ch;margin:0 0 8px}
+.muted{color:var(--muted)}
+.small{font-size:13.5px}
+.rule{height:1px;background:var(--line);border:0;margin:0}
+
+header.hero{padding:68px 0 8px}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--primary);
+  background:var(--primary-soft);border:1px solid rgba(47,111,94,.18);
+  padding:5px 12px;border-radius:999px;margin-bottom:26px;
+}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--primary);display:inline-block}
+.hero .lede{font-size:19.5px;color:#2c3444;max-width:64ch}
+.statstrip{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:40px;
+}
+.stat{background:var(--card);padding:20px 22px}
+.stat .n{font-family:var(--serif);font-size:31px;color:var(--ink);line-height:1.1}
+.stat .n span{font-size:15px;color:var(--muted);font-family:var(--sans)}
+.stat .l{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.4}
+
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;
+  box-shadow:0 2px 8px rgba(0,0,0,.035);
+}
+.card h3{font-size:17px}
+.card p:last-child{margin-bottom:0}
+
+figure{
+  margin:0;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  overflow:hidden;box-shadow:0 4px 16px -2px rgba(0,0,0,.06);
+}
+figure img{display:block;width:100%;height:auto}
+figcaption{
+  font-size:13px;color:var(--muted);padding:11px 16px;border-top:1px solid var(--line-soft);
+  background:#fcfbf8;
+}
+figcaption b{color:var(--body);font-weight:500}
+
+.bench{display:grid;grid-template-columns:190px 1fr 62px;gap:14px;align-items:center;padding:7px 0}
+.bench-label{font-size:14px;color:var(--body)}
+.bench-track{height:15px;background:var(--line-soft);border-radius:7px;overflow:hidden}
+.bench-fill{height:100%;background:var(--primary);border-radius:7px}
+.bench-fill.warn{background:var(--warn)}
+.bench-fill.bad{background:var(--bad)}
+.bench-val{font-family:var(--mono);font-size:13px;color:var(--ink);text-align:right}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{
+  text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);font-weight:500;padding:0 12px 9px 0;border-bottom:1px solid var(--line);
+}
+td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line-soft);vertical-align:top}
+td:last-child,th:last-child{padding-right:0}
+tbody tr:last-child td{border-bottom:none}
+.pill{
+  display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;
+  padding:3px 8px;border-radius:999px;text-transform:uppercase;white-space:nowrap;
+}
+.p0{background:rgba(176,99,103,.12);color:#8f4d51}
+.p1{background:rgba(201,123,63,.13);color:#96602f}
+.p2{background:rgba(47,111,94,.1);color:var(--primary)}
+td code{font-size:12.5px;background:var(--line-soft);padding:1px 5px;border-radius:4px}
+
+.flow{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 2px 8px rgba(0,0,0,.035)}
+.flow-row{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+.node{
+  flex:1 1 120px;min-width:112px;background:var(--primary-soft);
+  border:1px solid rgba(47,111,94,.2);border-radius:11px;padding:11px 12px;
+}
+.node .t{font-size:13.5px;color:var(--ink);font-weight:500;line-height:1.3}
+.node .s{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.35}
+.node.py{background:rgba(201,123,63,.09);border-color:rgba(201,123,63,.24)}
+.node.acc{background:var(--primary);border-color:var(--primary)}
+.node.acc .t,.node.acc .s{color:#fff}
+.node.acc .s{opacity:.8}
+.arrow{align-self:center;color:var(--muted);font-size:15px;flex:0 0 auto}
+
+.timeline{list-style:none;padding:0;margin:0;position:relative}
+.timeline::before{content:"";position:absolute;left:9px;top:8px;bottom:8px;width:2px;background:var(--primary);opacity:.3}
+.timeline li{position:relative;padding:0 0 20px 34px}
+.timeline li:last-child{padding-bottom:0}
+.timeline li::before{content:"";position:absolute;left:3px;top:5px;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--primary)}
+.timeline strong{color:var(--ink);font-weight:500;font-size:15px}
+.timeline .t{display:inline-block;font-family:var(--mono);font-size:12px;color:var(--primary);margin-left:8px}
+.timeline p{margin:3px 0 0;font-size:13.5px;color:var(--muted)}
+
+.formula{
+  background:#1d2029;color:#dfe3ec;border-radius:14px;padding:20px 22px;
+  font-family:var(--mono);font-size:13px;line-height:1.85;overflow-x:auto;
+  white-space:pre-wrap;
+}
+.formula .hl{color:#7fd1b4}
+.formula .dim{color:#8a90a0}
+
+.verdict{
+  background:var(--card);border:1px solid var(--line);border-radius:18px;padding:30px 32px;
+  display:grid;grid-template-columns:220px 1fr;gap:34px;align-items:center;
+  box-shadow:0 4px 16px -2px rgba(0,0,0,.06);
+}
+.bignum{font-family:var(--serif);font-size:84px;line-height:.95;color:var(--primary)}
+.bignum small{display:block;font-family:var(--sans);font-size:13px;color:var(--muted);margin-top:8px;letter-spacing:.02em}
+.verdict p{margin:0 0 10px}
+.verdict p:last-child{margin-bottom:0}
+
+.note{
+  border-left:3px solid var(--primary);background:var(--primary-soft);
+  padding:15px 20px;border-radius:0 12px 12px 0;font-size:14px;color:#2c3444;
+}
+.note.warn{border-left-color:var(--warn);background:rgba(201,123,63,.08)}
+.note.bad{border-left-color:var(--bad);background:rgba(176,99,103,.07)}
+.note b{color:var(--ink);font-weight:500}
+
+.kv{display:grid;grid-template-columns:120px 1fr;row-gap:9px;column-gap:16px;margin:0;font-size:14px}
+.kv dt{color:var(--muted);border-bottom:1px dashed var(--line);padding-bottom:7px}
+.kv dd{margin:0;border-bottom:1px dashed var(--line);padding-bottom:7px;color:var(--ink)}
+
+footer{margin-top:80px;padding-top:26px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+@media(max-width:900px){
+  .statstrip{grid-template-columns:repeat(2,1fr)}
+  .g3,.g4{grid-template-columns:repeat(2,1fr)}
+  .verdict{grid-template-columns:1fr;gap:20px;text-align:left}
+}
+@media(max-width:640px){
+  body{font-size:15px}
+  .wrap{padding:0 18px 70px}
+  .statstrip,.g2,.g3,.g4{grid-template-columns:1fr}
+  .bench{grid-template-columns:120px 1fr 52px;gap:9px;font-size:13px}
+  section{margin-top:56px}
+  .flow-row{flex-direction:column}
+  .arrow{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="hero-tag"><span class="dot"></span> проверка на живом стенде · 15.11.2026</div>
+  <h1>Strudel AI Composer</h1>
+  <p class="lede">Браузерная студия, где LLM решает <em>что</em> играть, детерминированный код решает <em>как</em>, а измерения решают <em>получилось ли</em>. Плюс режим «Разбор»: чужой трек → измерения → стемы → редактируемый код-двойник с честным отчётом о сходстве.</p>
+  <p class="muted small" style="max-width:66ch">Всё ниже — не пересказ документации. Код, тесты, API и скриншоты проверены на этом коммите (<code class="mono">7e52c22</code>) и на боевом стенде <code class="mono">music.34.88.114.146.sslip.io</code>.</p>
+
+  <div class="statstrip">
+    <div class="stat"><div class="n">966</div><div class="l">тестов в 61 файле — все зелёные на текущем коммите</div></div>
+    <div class="stat"><div class="n">5 <span>с</span></div><div class="l">от команды до готового играющего кода</div></div>
+    <div class="stat"><div class="n">0.634</div><div class="l">сходство двойника с 4-минутным оригиналом</div></div>
+    <div class="stat"><div class="n">56.4 <span>мин</span></div><div class="l">полный разбор трека на 2 vCPU без GPU</div></div>
+  </div>
+</header>
+
+<hr class="rule" />
+
+<section>
+  <p class="eyebrow">01 — суть проекта</p>
+  <h2>Три слоя измерений вместо веры в промты</h2>
+  <p class="lede">Главная инженерная идея проекта: качество проверяется по трём слоям, от дешёвого к дорогому. Слой L1 отсекает мусор за миллисекунды, L0 даёт техника по аудио, L2 — только то, что стоит человеческого времени.</p>
+
+  <div class="grid g3" style="margin-top:26px">
+    <div class="card">
+      <h3>L1 — символьная музыкальность</h3>
+      <p class="small muted">Источник истины — события движка Strudel (<code class="mono">queryArc</code>), а не свой парсер mini-нотации. Считается форма, энергия, мотив, замыкание фразы, лок бас–кик.</p>
+      <p class="small" style="margin-top:8px"><b>Стоимость: миллисекунды</b></p>
+    </div>
+    <div class="card">
+      <h3>L0 — техника</h3>
+      <p class="small muted">Клиппинг, true peak, LUFS-I, повторяемость рендера, null-тест суммы стемов. Свой DSP по BS.1770-4, сверен с <code class="mono">ffmpeg ebur128</code> (|ΔLUFS| ≤ 0.05).</p>
+      <p class="small" style="margin-top:8px"><b>Стоимость: секунды</b></p>
+    </div>
+    <div class="card">
+      <h3>L2 — люди</h3>
+      <p class="small muted">Слепой A/B с выравниванием громкости, порог по нижней границе Wilson, canaries против взлома метрик. Сейчас: <b>0 живых пар</b> — слой честно не включён.</p>
+      <p class="small" style="margin-top:8px"><b>Стоимость: минуты человека</b></p>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:26px">
+    <b>Что делает проект необычным.</b> Правки («сделай мрачнее») идут не по тексту кода, а по типизированному <b>Composition IR</b>: модель отдаёт план, детерминированный компилятор собирает из него валидный по построению Strudel-код. Поэтому «мрачнее» — это измеримая правка, а не перегенерация. Сырой код от LLM живёт только в узкой свободной полосе и проходит валидаторские ворота.
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">02 — архитектура</p>
+  <h2>Два независимых контура на одной кодовой базе</h2>
+  <p class="lede">«Студия» и «Разбор» не делят ни состояния, ни кода исполнения — разбор не ломает композицию, а композиция не знает про стемы. Общее у них только DSP и компилятор.</p>
+
+  <div class="grid g2" style="margin-top:26px">
+    <div class="flow">
+      <h3 style="margin-bottom:14px">Контур «Студия» — текст → играющий код</h3>
+      <div class="flow-row">
+        <div class="node"><div class="t">Запрос</div><div class="s">текст / кнопки</div></div>
+        <span class="arrow">→</span>
+        <div class="node"><div class="t">Planner</div><div class="s">LLM, ≤2 вызова, JSON-schema</div></div>
+        <span class="arrow">→</span>
+        <div class="node acc"><div class="t">TrackSpec v2</div><div class="s">Zod-схема</div></div>
+        <span class="arrow">→</span>
+        <div class="node acc"><div class="t">Компилятор</div><div class="s">чистая функция + seed</div></div>
+      </div>
+      <div class="flow-row" style="margin-top:8px">
+        <div class="node"><div class="t">Strudel-код</div><div class="s">детерминирован, валиден по построению</div></div>
+        <span class="arrow">→</span>
+        <div class="node"><div class="t">Рендер</div><div class="s">OfflineAudioContext в браузере</div></div>
+        <span class="arrow">→</span>
+        <div class="node"><div class="t">Метрики</div><div class="s">L0 + L1</div></div>
+        <span class="arrow">→</span>
+        <div class="node"><div class="t">Refine</div><div class="s">правка спеки, не кода</div></div>
+      </div>
+    </div>
+
+    <div class="flow">
+      <h3 style="margin-bottom:14px">Контур «Разбор» — чужой трек → код-двойник</h3>
+      <div class="flow-row">
+        <div class="node"><div class="t">Файл</div><div class="s">до 100 МБ, TTL 7 дней</div></div>
+        <span class="arrow">→</span>
+        <div class="node py"><div class="t">Python-воркер</div><div class="s">librosa: темп, лад, секции</div></div>
+        <span class="arrow">→</span>
+        <div class="node acc"><div class="t">Паспорт</div><div class="s">приходит за секунды</div></div>
+        <span class="arrow">→</span>
+        <div class="node py"><div class="t">Demucs</div><div class="s">разделение на стемы</div></div>
+      </div>
+      <div class="flow-row" style="margin-top:8px">
+        <div class="node py"><div class="t">Дескрипторы</div><div class="s">активность, питч, аккорды</div></div>
+        <span class="arrow">→</span>
+        <div class="node acc"><div class="t">Транспайлер</div><div class="s">измерения → план → код</div></div>
+        <span class="arrow">→</span>
+        <div class="node"><div class="t">Рендер</div><div class="s">headless Chromium</div></div>
+        <span class="arrow">→</span>
+        <div class="node"><div class="t">Сравнение</div><div class="s">ритм / тембр / грув / LUFS</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid g4" style="margin-top:22px">
+    <div class="card"><h3 style="font-size:15px">Node 24 + Express</h3><p class="small muted">Сервер: SSE, rate-limit, helmet, graceful shutdown.</p></div>
+    <div class="card"><h3 style="font-size:15px">Python 3.12 + Demucs</h3><p class="small muted">Воркер анализа: librosa, Demucs, own DSP-ядро.</p></div>
+    <div class="card"><h3 style="font-size:15px">Vite + Strudel 1.3.0</h3><p class="small muted">Фронт: Web Audio, AudioWorklet-цепочка, 713 КБ движка.</p></div>
+    <div class="card"><h3 style="font-size:15px">Docker Compose</h3><p class="small muted">Сервер, воркер, рендер-контейнер, Caddy на 2 vCPU.</p></div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">03 — живая демонстрация · контур «Студия»</p>
+  <h2>От слова до играющего кода — 5 секунд</h2>
+  <p class="lede">Команда «тёмный ло-фай с пыльным грувом, тёплые пэды, виниловая потрескиваемость, 88 BPM» в структурном режиме. Ниже — реальный экран живого стенда: слева панели, в центре редактор с живой партитурой, справа лог.</p>
+
+  <div class="grid g3" style="margin-top:26px;gap:14px">
+    <figure>
+      <img src="pres/01a-studio-top.png" alt="Панели студии: команда, режим, ход композиции, план композиции" />
+      <figcaption><b>Панели студии.</b> Команда, режим «структурный / свободный», кривая энергии формы, кнопки правки IR и «найти лучший».</figcaption>
+    </figure>
+    <figure>
+      <img src="pres/01b-studio-code.png" alt="Сгенерированный код и редактор" />
+      <figcaption><b>Код.</b> <code class="mono">setCpm(88)</code>, <code class="mono">const key = "c#:minor"</code>, <code class="mono">$BASS: "&lt;c# 0 3 5&gt;*8"</code> — бас транспонирован на <code class="mono">-12</code> строго после <code class="mono">.scale(key)</code>.</figcaption>
+    </figure>
+    <figure>
+      <img src="pres/01c-studio-parts.png" alt="Партии с живыми партитурами и лог сессии" />
+      <figcaption><b>Партии и лог.</b> Семь партий с живыми партитурами по ролям; лог: команда → «Код сгенерирован» → «Играет ✓».</figcaption>
+    </figure>
+  </div>
+
+  <div class="grid g4" style="margin-top:22px">
+    <div class="card"><div class="bench-val" style="font-size:24px;color:var(--primary);font-family:var(--serif)">5 с</div><p class="small muted" style="margin-top:4px">команда → «Код сгенерирован» → звук пошёл</p></div>
+    <div class="card"><div class="bench-val" style="font-size:24px;color:var(--primary);font-family:var(--serif)">88/100</div><p class="small muted" style="margin-top:4px">оценка готовности трека</p></div>
+    <div class="card"><div class="bench-val" style="font-size:24px;color:var(--primary);font-family:var(--serif)">7</div><p class="small muted" style="margin-top:4px">партий собрано компилятором</p></div>
+    <div class="card"><div class="bench-val" style="font-size:24px;color:var(--primary);font-family:var(--serif)">0</div><p class="small muted" style="margin-top:4px">ошибок в консоли страницы</p></div>
+  </div>
+
+  <div class="grid g2" style="margin-top:22px">
+    <div class="card">
+      <h3>Что здесь работает как задумано</h3>
+      <ul class="small muted" style="margin:8px 0 0;padding-left:18px">
+        <li style="margin-bottom:5px">Код написан <b>компилятором</b>, а не моделью: роль → шаблон из библиотеки → <code class="mono">arrange()</code> по секциям. Невалидный код невозможен по построению.</li>
+        <li style="margin-bottom:5px">Бас транспонируется <b>после</b> <code class="mono">.scale(key)</code> — строго <code class="mono">-12</code>, иначе Strudel молча игнорирует значение.</li>
+        <li style="margin-bottom:5px">Партии не сливаются в одну октаву: у каждой роли своя транспозиция.</li>
+        <li>Музыкальный разбор считается по <b>событиям движка</b>, а не по своему парсеру: на <code class="mono">&lt;0 5 2 6&gt;/2</code> свой парсер даёт 1 событие, Strudel — 4.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Сквозной цикл замкнут</h3>
+      <ul class="small muted" style="margin:8px 0 0;padding-left:18px">
+        <li style="margin-bottom:5px">Правки «мрачнее / светлее / энергичнее» — типизированные трансформации IR, не перегенерация текста.</li>
+        <li style="margin-bottom:5px">«Найти лучший (16)» — символьный поиск по 16 кандидатам, рендер только финалистам.</li>
+        <li style="margin-bottom:5px">Правка микшера пишется <b>в текст кода</b> и переоценивается с дебаундом 250 мс.</li>
+        <li>Есть adversarial-фикстуры: эталон обязан набирать больше каждой из них, иначе падает тест.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">04 — живая демонстрация · контур «Разбор»</p>
+  <h2>Чужой трек → измерения → стемы → код-двойник → честный отчёт</h2>
+  <p class="lede">Это главное отличие проекта от обычного «LLM пишет код». Проверено на боевом стенде на задаче <code class="mono">d5bef1ce</code> — 4-минутный трек, полный цикл с разделением на стемы.</p>
+
+  <div class="flow" style="margin-top:24px">
+    <div class="flow-row">
+      <div class="node"><div class="t">Загрузка</div><div class="s">drag&amp;drop, ≤100 МБ</div></div>
+      <span class="arrow">→</span>
+      <div class="node"><div class="t">Паспорт</div><div class="s"><b>37.4 с</b></div></div>
+      <span class="arrow">→</span>
+      <div class="node py"><div class="t">Разделение</div><div class="s"><b>1178.5 с</b> · 19.6 мин</div></div>
+      <span class="arrow">→</span>
+      <div class="node"><div class="t">Сборка кода</div><div class="s">транспайлер</div></div>
+      <span class="arrow">→</span>
+      <div class="node"><div class="t">Рендер</div><div class="s"><b>3:59</b></div></div>
+      <span class="arrow">→</span>
+      <div class="node acc"><div class="t">Сравнение</div><div class="s">0.634 общего сходства</div></div>
+    </div>
+    <p class="small muted" style="margin:12px 0 0">Полный цикл — <b>3386.9 с (56.4 мин)</b>, <code class="mono">errors: []</code>. Оценка времени показывается ДО работы: «2–3 мин» для трека без стемов, диапазон по худшему замеру Demucs для трека со стемами.</p>
+  </div>
+
+  <div class="grid g2" style="margin-top:24px">
+    <figure>
+      <img src="pres/02-deepdive-passport.png" alt="Паспорт трека: темп, тональность, громкость, true peak, стерео, спектральный баланс" />
+      <figcaption><b>Паспорт — до разделения на стемы.</b> 92.28 BPM, C# major, −18.9 LUFS, −0.95 dBTP, 4:00. Спектральный баланс по шести полосам. Пользователь видит результат за секунды, а не через полчаса ожидания.</figcaption>
+    </figure>
+    <figure>
+      <img src="pres/03-deepdive-layers.png" alt="Структура трека и матрица секция × слой с микшером стемов" />
+      <figcaption><b>Структура и слои.</b> Матрица «секция × слой» показывает активность слоя по секциям; <code class="mono">—</code> означает «данных нет», а не ноль. Справа — микшер четырёх разделов.</figcaption>
+    </figure>
+    <figure>
+      <img src="pres/04-deepdive-metrics.png" alt="Код-двойник, A/B-плеер и метрики похожести" />
+      <figcaption><b>Код-двойник и метрики.</b> Сгенерированный Strudel-код (видно <code class="mono">s("808oh")</code>, <code class="mono">beat()</code>, микро-сдвиги <code class="mono">late(ms(...))</code>), A/B-плеер «оригинал ⇄ двойник» и четыре слоя метрик.</figcaption>
+    </figure>
+    <figure>
+      <img src="pres/05-deepdive-caveats.png" alt="Честные оговорки, что измерено, и экспорт JSON, кода и MIDI" />
+      <figcaption><b>Честность отчёта.</b> Отдельный блок «что двойник не воспроизводит» и список «что измерено» — с указанием уверенности. Экспорт: JSON, код, MIDI.</figcaption>
+    </figure>
+  </div>
+
+  <h3 style="margin-top:34px">Что именно измерено на этом треке</h3>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card">
+      <dl class="kv">
+        <dt>Темп</dt><dd>92.28 BPM · уверенность 0.631 (кандидаты: half-time 46.14, double-time 184.57)</dd>
+        <dt>Тональность</dt><dd>C# major · уверенность 0.257</dd>
+        <dt>Громкость</dt><dd>−18.88 LUFS-I · true peak −0.95 dBTP</dd>
+        <dt>Стерео</dt><dd>корреляция 0.9999 · ширина 0.0099</dd>
+        <dt>Структура</dt><dd>1 секция «A», 0:00–4:00, энергия 0.175</dd>
+        <dt>Стемы</dt><dd>drums / bass / vocals / other — все по 240 с</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:12px">Метрики похожести двойника</h3>
+      <div class="bench"><span class="bench-label">Общее сходство</span><div class="bench-track"><div class="bench-fill" style="width:63.4%"></div></div><span class="bench-val">0.634</span></div>
+      <div class="bench"><span class="bench-label">Тембр (cosine)</span><div class="bench-track"><div class="bench-fill" style="width:96.3%"></div></div><span class="bench-val">0.963</span></div>
+      <div class="bench"><span class="bench-label">Ритм (F1)</span><div class="bench-track"><div class="bench-fill warn" style="width:43.7%"></div></div><span class="bench-val">0.437</span></div>
+      <div class="bench"><span class="bench-label">Грув (корреляция)</span><div class="bench-track"><div class="bench-fill bad" style="width:0%"></div></div><span class="bench-val">0</span></div>
+      <div class="bench"><span class="bench-label">Бас</span><div class="bench-track"><div class="bench-fill bad" style="width:0%"></div></div><span class="bench-val">нет данных</span></div>
+      <p class="small muted" style="margin:10px 0 0">Ритм: precision 0.72, recall 0.31 (613 совпадений из 1953 атак). Громкость двойника на 4.08 дБ тише оригинала.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">05 — как считается оценка</p>
+  <h2>Формула, которую можно проверить и оспорить</h2>
+  <p class="lede">Общая оценка — взвешенное среднее по слоям, у которых <b>есть</b> данные. Слой без измерений исключается, а не штрафуется (правило D-080).</p>
+
+  <div class="formula" style="margin-top:20px">
+<span class="dim">// server/deepdive/compare.js</span>
+LAYER_WEIGHTS = { rhythm: <span class="hl">0.35</span>, bass: <span class="hl">0.30</span>, timbre: <span class="hl">0.25</span>, groove: <span class="hl">0.10</span> }
+
+overall = Σ(value × weight) / Σ(weight)   <span class="dim">// только по слоям с данными</span>
+
+<span class="dim">// подстановка фактического прогона:</span>
+overall = (0.4372×0.35 + 0.9629×0.25 + 0.5×0.10) / (0.35 + 0.25 + 0.10)
+        = <span class="hl">0.6339</span>   <span class="dim">// бас выпал → знаменатель 0.70, а не 1.00</span>
+  </div>
+
+  <div class="note warn" style="margin-top:22px">
+    <b>Следствие, которое стоит знать.</b> Бас не измерился, поэтому его вес 0.30 выпал и знаменатель сжался до 0.70 — оставшиеся слои получили повышенный вес. Число 0.634 честное как «сходство по трём слоям», но <b>оно не сравнимо</b> с разбором, где бас измерился: там шкала другая. Это не баг расчёта, но это делает «общее сходство» нестабильной метрикой для сравнения разных треков между собой.
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">06 — чего не хватает</p>
+  <h2>Тринадцать разрывов, каждый с доказательством</h2>
+  <p class="lede">Ниже — не пожелания, а то, что проверено на коде и на стенде. Приоритет: <span class="pill p0">P0 блокеры релиза</span> <span class="pill p1">P1 функциональные</span> <span class="pill p2">P2 качество и UX</span></p>
+
+  <div class="card" style="margin-top:22px;padding:6px 22px 10px">
+  <table>
+    <thead><tr><th style="width:52px">Приор.</th><th>Разрыв</th><th style="width:31%">Доказательство</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="pill p0">P0</span></td>
+        <td><b>Лицензии сэмплов не сверены.</b> 42 сэмпла из 44 тянутся с внешнего CDN, тексты лицензий не собраны и не закоммичены.</td>
+        <td class="small muted"><code class="mono">docs/LICENSES.md</code>, HANDOFF §Блокеры</td>
+      </tr>
+      <tr>
+        <td><span class="pill p0">P0</span></td>
+        <td><b>Выученная цель не допущена.</b> Модель обучена на 60 прокси-парах, живых человеческих — 0. Уникальных промтов закрыто 5 из 50 нужных. Модель не используется в скоре — и это правильное поведение.</td>
+        <td class="small muted"><code class="mono">/api/taste</code> → <code class="mono">nHuman:0</code>; <code class="mono">/api/preference/stats</code> → <code class="mono">uniquePrompts:5</code></td>
+      </tr>
+      <tr>
+        <td><span class="pill p0">P0</span></td>
+        <td><b>Публичная ссылка на разбор без авторизации.</b> Любой, у кого есть URL, видит весь отчёт. TTL 7 дней.</td>
+        <td class="small muted">проверено на стенде: <code class="mono">/razbor/&lt;id&gt;</code> открыт без входа (признано в D-084)</td>
+      </tr>
+      <tr>
+        <td><span class="pill p1">P1</span></td>
+        <td><b>Бас-слой не измеряется.</b> Стем баса доступен на 100% длины, но метрика баса — «нет данных». Второй по весу слой (0.30) выпадает из каждого разбора.</td>
+        <td class="small muted">прод, задача <code class="mono">d5bef1ce</code>: <code class="mono">stems.bass.available=true</code>, <code class="mono">layers.bass</code> отсутствует</td>
+      </tr>
+      <tr>
+        <td><span class="pill p1">P1</span></td>
+        <td><b>Оценка нестабильна между прогонами.</b> Знаменатель зависит от того, какие слои смогли измерить, поэтому баллы разных треков несопоставимы.</td>
+        <td class="small muted"><code class="mono">compare.js:213-215</code> — веса нормируются по фактически посчитанным слоям</td>
+      </tr>
+      <tr>
+        <td><span class="pill p1">P1</span></td>
+        <td><b>Грув даёт половину балла за отсутствие сходства.</b> Нулевая корреляция огибающих нормализуется в 0.5, при этом <code class="mono">swing_delta</code> = null. За то, что грув не воспроизведён, платится 0.5 × 0.10.</td>
+        <td class="small muted"><code class="mono">compare.js:198</code> — <code class="mono">normalized = (corr+1)/2</code></td>
+      </tr>
+      <tr>
+        <td><span class="pill p1">P1</span></td>
+        <td><b>Учёт стоимости LLM не подключён.</b> Функция <code class="mono">recordUsage</code> определена и не вызывается нигде в репозитории. Обвязка <code class="mono">onUsage</code> при этом есть от <code class="mono">completeChat</code> до маршрутов.</td>
+        <td class="small muted">прод <code class="mono">/api/stats</code> → <code class="mono">requests:0, costUsd:0</code></td>
+      </tr>
+      <tr>
+        <td><span class="pill p1">P1</span></td>
+        <td><b>UI-дефект в панели метрик.</b> Объект слоя тембра выводится строкой <code class="mono">[object Object]</code> вместо разбора по слоям.</td>
+        <td class="small muted">скриншот блока «МЕТРИКИ ПОХОЖЕСТИ», прод, «ТЕМБР → per layer»</td>
+      </tr>
+      <tr>
+        <td><span class="pill p1">P1</span></td>
+        <td><b>Разбор студии теряет звук.</b> Аудио-рендер для анализа падает с <code class="mono">InvalidAccessError</code> (узлы разных AudioContext), и панель остаётся без метрик громкости и пика.</td>
+        <td class="small muted">прод, живой прогон: «Рендер для разбора не удался», 8 ошибок в консоли</td>
+      </tr>
+      <tr>
+        <td><span class="pill p2">P2</span></td>
+        <td><b>Нет ограничения длины двойника.</b> 92 такта → 3:59 рендера, полный разбор 56 минут. Оценка «14–27 мин» покрывает только разделение, рендер считается отдельно — пользователь получает двойной сюрприз.</td>
+        <td class="small muted">замер в UI: «Рендер готов (3:59)» на 92 тактах</td>
+      </tr>
+      <tr>
+        <td><span class="pill p2">P2</span></td>
+        <td><b>Первый экран пустой.</b> Нет демо-разбора «посмотри, как это работает, без регистрации» — студия начинается с пустого поля ввода и пустых панелей.</td>
+        <td class="small muted"><code class="mono">docs/AUDIT.md</code> §2, чек-лист «демо без регистрации»</td>
+      </tr>
+      <tr>
+        <td><span class="pill p2">P2</span></td>
+        <td><b>Аудио-фикстур в репозитории нет.</b> Регрессии DSP ловятся только синтетикой; настоящий сигнал не проверяется.</td>
+        <td class="small muted">поиск <code class="mono">*.wav/*.mp3</code> вне <code class="mono">node_modules</code> → пусто</td>
+      </tr>
+      <tr>
+        <td><span class="pill p2">P2</span></td>
+        <td><b>Бандл 713 КБ одним чанком.</b> Код-сплиттинга нет, несмотря на наличие бюджетного гейта.</td>
+        <td class="small muted"><code class="mono">dist/assets/strudel-engine-*.js</code> = 712.9 КБ</td>
+      </tr>
+      <tr>
+        <td><span class="pill p2">P2</span></td>
+        <td><b>CSP ослаблен.</b> В <code class="mono">script-src</code> одновременно <code class="mono">unsafe-eval</code> и <code class="mono">unsafe-inline</code> — при живом исполнении пользовательского кода это заметно расширяет поверхность атаки.</td>
+        <td class="small muted"><code class="mono">server/index.js:52-59</code></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note" style="margin-top:22px">
+    <b>Что здесь НЕ является разрывом.</b> Домен <code class="mono">sslip.io</code> временный, веса Demucs под вопросом лицензии, GPU сознательно отменён владельцем (D-089) — всё это записано в <code class="mono">docs/PARKING.md</code> с причиной и условием открытия. Проект различает «не сделано» и «осознанно отложено», и второе — не дефект.
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">07 — оценка</p>
+  <h2>7.3 из 10: сильный инженерный проект, средний продукт</h2>
+
+  <div class="verdict" style="margin-top:24px">
+    <div class="bignum">7.3<small>из 10 · взвешенная оценка</small></div>
+    <div>
+      <p><b>Это редкий проект, где инженерная культура обгоняет продукт.</b> Решения принимаются по замерам, а не по ощущениям; каждое архитектурное решение записано с причиной; отрицательные результаты считаются поставкой. Такое встречается редко.</p>
+      <p>Но продуктовая сторона отстаёт: первый экран пустой, главный рычаг (человеческие метки) обесточен, а главная функция — разбор — на 4-минутном треке упирается в 56 минут и 2 vCPU. Между «инженерно отличным» и «пользовательским продуктом» остаётся вся дистанция.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:38px">По измерениям</h3>
+  <div class="card" style="margin-top:14px;padding:18px 24px">
+    <div class="bench"><span class="bench-label">Документация и честность</span><div class="bench-track"><div class="bench-fill" style="width:100%"></div></div><span class="bench-val">10.0</span></div>
+    <div class="bench"><span class="bench-label">Инженерная культура и гейты</span><div class="bench-track"><div class="bench-fill" style="width:90%"></div></div><span class="bench-val">9.0</span></div>
+    <div class="bench"><span class="bench-label">Архитектура</span><div class="bench-track"><div class="bench-fill" style="width:90%"></div></div><span class="bench-val">9.0</span></div>
+    <div class="bench"><span class="bench-label">Измеримость и верифицируемость</span><div class="bench-track"><div class="bench-fill" style="width:90%"></div></div><span class="bench-val">9.0</span></div>
+    <div class="bench"><span class="bench-label">Безопасность</span><div class="bench-track"><div class="bench-fill" style="width:70%"></div></div><span class="bench-val">7.0</span></div>
+    <div class="bench"><span class="bench-label">Качество музыкального результата</span><div class="bench-track"><div class="bench-fill warn" style="width:60%"></div></div><span class="bench-val">6.0</span></div>
+    <div class="bench"><span class="bench-label">Продуктовый UX</span><div class="bench-track"><div class="bench-fill warn" style="width:50%"></div></div><span class="bench-val">5.0</span></div>
+    <div class="bench"><span class="bench-label">Производительность и масштаб</span><div class="bench-track"><div class="bench-fill warn" style="width:50%"></div></div><span class="bench-val">5.0</span></div>
+    <div class="bench"><span class="bench-label">Готовность к публичному релизу</span><div class="bench-track"><div class="bench-fill bad" style="width:40%"></div></div><span class="bench-val">4.0</span></div>
+  </div>
+
+  <div class="grid g2" style="margin-top:26px">
+    <div class="card">
+      <h3>Почему высокие баллы</h3>
+      <ul class="small muted" style="margin:8px 0 0;padding-left:18px">
+        <li style="margin-bottom:5px">966 тестов зелёные на текущем коммите, линтер чист, бюджеты и проверки в гейте.</li>
+        <li style="margin-bottom:5px">Свой DSP сверен с <code class="mono">ffmpeg/libebur128</code>, рендер повторяем бит-в-бит, в отчётах <code class="mono">renderFingerprint</code>.</li>
+        <li style="margin-bottom:5px">Каждый дефект, найденный замером, закрыт коммитом с решением в журнале (D-089…D-093).</li>
+        <li>Деградация честная: «нет данных» ≠ ноль, оговорки пишутся в каждый отчёт.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Почему низкие баллы</h3>
+      <ul class="small muted" style="margin:8px 0 0;padding-left:18px">
+        <li style="margin-bottom:5px">Качество музыки не подтверждено слушателем: символьный скор — гипотеза, слой L2 пуст.</li>
+        <li style="margin-bottom:5px">Главный фича упирается в железо: 56 минут на трек — это «фоновый режим», а не «продукт».</li>
+        <li style="margin-bottom:5px">Бас-слой и грув не работают — два слоя из четырёх дают пустой или нулевой вклад.</li>
+        <li>Пустой первый экран, ослабленный CSP, открытая ссылка на разбор, домен временный.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">08 — что делать дальше</p>
+  <h2>Три шага, которые двигают проект сильнее всего</h2>
+
+  <div class="grid g3" style="margin-top:26px">
+    <div class="card">
+      <span class="pill p0">шаг 1</span>
+      <h3 style="margin-top:10px">20 пар в день</h3>
+      <p class="small muted">Открыть <code class="mono">/tinder.html</code> и оставить 20 суждений — около 6 минут. Это единственный путь, который разблокирует выученную цель: сейчас <b>0 живых пар</b>, нужно 50 разных промтов. Пока модель не проверена людьми, её нельзя ставить целью оптимизации — и проект сам это не даёт сделать.</p>
+      <p class="small" style="margin-top:10px"><b>Усилие: 6 минут в день</b></p>
+    </div>
+    <div class="card">
+      <span class="pill p1">шаг 2</span>
+      <h3 style="margin-top:10px">Починить бас, грув и звук разбора</h3>
+      <p class="small muted">Два слоя из четырёх дают ноль или «нет данных» на реальном треке, а аудио-рендер разбора падает на живом контексте. Это самый дешёвый способ поднять качество: измерить питч баса из разделенного стема, научиться считать грув так, чтобы нулевая корреляция давала 0, и гасить живое воспроизведение перед офлайн-рендером.</p>
+      <p class="small" style="margin-top:10px"><b>Усилие: 1–2 дня</b></p>
+    </div>
+    <div class="card">
+      <span class="pill p1">шаг 3</span>
+      <h3 style="margin-top:10px">Подключить учёт LLM</h3>
+      <p class="small muted">Одна строка в <code class="mono">server/llm/router.js</code> — и <code class="mono">/api/stats</code> перестаёт показывать нули. После этого можно честно назвать цену трека, «найди лучший» и ночного прогона, а не считать её на глаз.</p>
+      <p class="small" style="margin-top:10px"><b>Усилие: час</b></p>
+    </div>
+  </div>
+
+  <div class="note bad" style="margin-top:26px">
+    <b>Честное предупреждение.</b> На метриках общая оценка двойника сейчас <b>0.634</b>, ритм F1 — <b>0.437</b>. Это «узнаваемый скелет», а не «похожий трек». Пока честные метрики такие, продавать продукт как «сделает как оригинал» нельзя — и отчёт об этом честно предупреждает в каждом разборе. Это правильное поведение проекта, но это же и ограничение его текущей ценности.
+  </div>
+</section>
+
+<footer>
+  <p><b>Strudel AI Composer</b> · коммит <code class="mono">7e52c22</code> · проверка выполнена 15 ноября 2026</p>
+  <p style="margin-top:6px">Источники: код репозитория, <code class="mono">npm test</code> (966 тестов), живой стенд <code class="mono">music.34.88.114.146.sslip.io</code>, задача разбора <code class="mono">d5bef1ce</code>, <code class="mono">docs/</code> (BRIEF, DECISIONS, AUDIT, HANDOFF, PARKING, SESSION_REPORT).</p>
+</footer>
+
+</div>
+</body>
+</html>
