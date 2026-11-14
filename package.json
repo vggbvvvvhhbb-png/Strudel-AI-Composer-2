@@ -19,6 +19,7 @@
     "check:knowledge": "node scripts/check-knowledge.mjs",
     "check:skills": "node scripts/check-skills.mjs",
     "check:baseline": "node scripts/check-baseline.mjs",
+    "baseline:build": "node scripts/build-baseline.mjs --update",
     "spike": "node tests/spike/probe.mjs",
     "spike:compose": "node tests/spike/compose-pipeline.probe.mjs",
     "spike:audio": "node tests/spike/audio-api.probe.mjs",

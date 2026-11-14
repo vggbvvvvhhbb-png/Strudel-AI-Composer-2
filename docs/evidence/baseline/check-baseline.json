@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-11-14T10:11:28.942Z",
+  "version": "baseline-0.1.0",
+  "prompts": 60,
+  "counts": {
+    "total": 60,
+    "train": 36,
+    "val": 12,
+    "test": 12
+  },
+  "files": {
+    "prompts.json": "aa16ef72902691752494e94e6c559253cc765a9173a6f1031e0103df317b279a",
+    "renders.json": "16b0311a59d1e367d66c6a319a08f9f146824ae3cb876f458b45467d39508766"
+  },
+  "meanScore": 85.1,
+  "lintErrorTracks": 0,
+  "errors": [],
+  "ok": true
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru" class="theme-jade" data-theme="jade">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Суждение · Strudel AI Composer</title>
+    <link rel="stylesheet" href="/fonts/fonts.css" />
+  </head>
+  <body class="tinder-body">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-name">Суждение</span>
+        <span class="brand-sub">две музыки · одно суждение · числа не показываем</span>
+      </div>
+      <div class="header-actions">
+        <span id="progress" class="tinder-progress">0 / 0</span>
+        <a class="btn ghost" href="/">В студию</a>
+      </div>
+    </header>
+
+    <main class="tinder-main">
+      <section class="panel tinder-panel">
+        <h2 class="panel-title">Что слушаем</h2>
+        <p id="prompt" class="tinder-prompt">—</p>
+        <p class="panel-hint">
+          Правила честного сравнения: громкость выровнена по гейну, стороны переставлены
+          случайно, метки скрыты. Слушайте оба варианта целиком и решайте по вкусу,
+          а не по громкоче.
+        </p>
+
+        <div class="tinder-actions">
+          <button id="btn-start" class="btn primary" type="button">Начать</button>
+          <button id="btn-replay" class="btn" type="button" disabled>Ещё раз</button>
+        </div>
+
+        <div id="status" class="tinder-status" aria-live="polite">Нажмите «Начать» — браузер спросит разрешение на звук.</div>
+
+        <div class="tinder-keys">
+          <div class="tinder-key"><kbd>←</kbd><span>лучше A</span></div>
+          <div class="tinder-key"><kbd>→</kbd><span>лучше B</span></div>
+          <div class="tinder-key"><kbd>↓</kbd><span>ничья</span></div>
+          <div class="tinder-key"><kbd>Space</kbd><span>переслушать</span></div>
+        </div>
+
+        <ol id="log" class="tinder-log"></ol>
+      </section>
+    </main>
+
+    <script type="module" src="/src/tinder.js"></script>
+  </body>
+</html>

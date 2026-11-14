@@ -1,0 +1,97 @@
+/* Страница суждения («Тиндер»): минимум интерфейса, максимум честности.
+   Правила оформления: метки A/B не подсвечиваются до ответа, промпт виден,
+   клавиши показаны крупно — человек должен решать быстро и не задумываться
+   над интерфейсом, а только о музыке. */
+
+.tinder-body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-grad);
+  color: var(--text-1, #e8f5ef);
+}
+
+.tinder-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px 64px;
+}
+
+.tinder-panel {
+  width: min(720px, 100%);
+  align-self: flex-start;
+}
+
+.tinder-prompt {
+  font-size: 1.35rem;
+  line-height: 1.35;
+  margin: 4px 0 12px;
+  color: var(--text-1, #e8f5ef);
+}
+
+.tinder-progress {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.9rem;
+  color: var(--jade-bright, #2fe0a0);
+  padding: 0 8px;
+}
+
+.tinder-status {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.tinder-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.tinder-keys {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.tinder-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.9rem;
+}
+
+.tinder-key kbd {
+  font-family: var(--font-mono, monospace);
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.tinder-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+}
+
+.tinder-log li {
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--border);
+  color: var(--text-2, #a9c8bd);
+}

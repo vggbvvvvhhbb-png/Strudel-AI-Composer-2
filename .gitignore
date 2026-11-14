@@ -24,3 +24,7 @@ eval/ab-results.json
 
 # Корпус кандидатов генерируется: node scripts/build-corpus.mjs
 corpus/candidates/*.js
+
+# Человеческие метки: локально, без PII, вне git. Экспорт — GET /api/preference/export,
+# удаление — DELETE /api/preference.
+server/data/preferences.jsonl
