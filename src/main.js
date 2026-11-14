@@ -3,6 +3,7 @@ import './styles/layout.css';
 import './styles/components.css';
 import './styles/compose.css';
 import './styles/animations.css';
+import './styles/steps.css';
 import { initEditor } from './editor.js';
 import { initUI } from './ui.js';
 import { initCompose } from './compose.js';
@@ -15,6 +16,7 @@ import { initVoice } from './voice.js';
 import { applyMixerState } from './core/code-model.js';
 import { codeFromHash } from './core/share.js';
 import { initDeepDive } from './deepdive/panel.js';
+import { initStudioSteps } from './studio-steps.js';
 
 const editor = initEditor();
 
@@ -23,6 +25,9 @@ initEngine(document.getElementById('strudel-container'));
 initLive({ editor });
 initVoice();
 initDeepDive();
+// Шаги студии («Опишите → Слушайте → Правьте») — после разбора,
+// чтобы флаг ?dive=1 уже был разобран и шапка шагов знала про режим.
+initStudioSteps();
 
 // Мобильная шторка микшера
 document.getElementById('mixer-toggle')?.addEventListener('click', () => {

@@ -111,8 +111,13 @@ async function runPrompt() {
     log('Проверяю и исполняю…');
     const outcome = await runValidated(codeEl.value, (status) => setStatus(status));
     codeEl.value = outcome.code;
-    if (outcome.ok) log('Играет ✓', 'ok');
-    else log(`Ошибка: ${outcome.error}`, 'error');
+    if (outcome.ok) {
+      log('Играет ✓', 'ok');
+      // Трек играет — студия переходит на шаг «Слушайте».
+      window.dispatchEvent(new CustomEvent('studio:track-ready'));
+    } else {
+      log(`Ошибка: ${outcome.error}`, 'error');
+    }
     // Разбор нового трека — в фоне, интерфейс не блокируем.
     analyzeCurrent().catch(() => {});
   } catch (err) {

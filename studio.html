@@ -9,18 +9,29 @@
          (style-src 'self') и делал приложение зависимым от чужого домена. -->
     <link rel="stylesheet" href="/fonts/fonts.css" />
   </head>
-  <body>
+  <!-- data-step — состояние шага студии: 1 «Опишите», 2 «Слушайте», 3 «Правьте».
+       Управляет им src/studio-steps.js, оформление — src/styles/steps.css. -->
+  <body data-step="1">
     <header class="app-header">
       <div class="brand">
         <span class="brand-name">Strudel AI Composer</span>
-        <span class="brand-sub">опишите музыку — AI напишет код и исполнит его</span>
+        <span class="brand-sub">опишите музыку — услышите её за 5 секунд</span>
       </div>
+
+      <!-- Шапка шагов: три понятных шага вместо двадцати кнопок. -->
+      <nav id="studio-steps" class="studio-steps" aria-label="Шаги работы">
+        <button class="studio-step is-active" type="button" data-step-btn="1" aria-current="step">1 Опишите</button>
+        <button class="studio-step" type="button" data-step-btn="2">2 Слушайте</button>
+        <button class="studio-step" type="button" data-step-btn="3">3 Правьте</button>
+      </nav>
+
       <div class="header-actions">
         <div class="shortcuts" aria-hidden="true">
           <span><kbd>Space</kbd>play</span>
           <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd>генерация</span>
           <span><kbd>Ctrl</kbd>+<kbd>S</kbd>пресет</span>
         </div>
+        <a class="studio-home" href="/">← На главную</a>
         <button id="theme-toggle" class="btn ghost" type="button" title="Сменить тему">◐ Jade</button>
         <!-- Навигация режима «Разбор». Скрыта, пока режим не включён флагом ?dive=1:
              без флага шапка студии выглядит ровно как раньше. -->
@@ -32,86 +43,108 @@
     </header>
 
     <main class="app-grid">
-      <!-- Левая колонка: промпт, улучшение, история -->
+      <!-- Левая колонка: шаг 1 (описание) и спрятанные инженерные панели шага 3. -->
       <aside class="col-left">
-        <section class="panel" aria-label="Генерация">
-          <label class="field-label" for="prompt-input">Команда</label>
+        <!-- ШАГ 1 — ОПИШИТЕ -->
+        <section id="step-intro" class="panel studio-card" aria-label="Опишите трек">
+          <h2 class="panel-title">Опишите трек</h2>
+          <p class="hint studio-hint">
+            Напишите словами: жанр, настроение, темп, инструменты. Например:
+            „тёмный ло-фай, пыльный грув, тёплые пэды, 88 BPM“.
+          </p>
+
+          <label class="field-label" for="prompt-input">Ваше описание</label>
           <div class="prompt-row">
-            <textarea id="prompt-input" rows="3" placeholder="Например: спокойный lo-fi с пианино и мягким басом"></textarea>
+            <textarea
+              id="prompt-input"
+              rows="4"
+              placeholder="Например: тёмный ло-фай, пыльный грув, тёплые пэды, 88 BPM"
+            ></textarea>
             <button id="btn-voice" class="btn voice-btn" type="button" title="Записать голосовое описание" aria-pressed="false" hidden>🎤</button>
           </div>
-          <label class="field-label" for="compose-mode">Режим</label>
-          <select id="compose-mode">
-            <option value="structured" selected>Структурный — план, затем код</option>
-            <option value="free">Свободный — код пишет модель</option>
-          </select>
-          <button id="btn-run" class="btn primary wide" type="button">▶ Сгенерировать</button>
-          <button id="btn-compose" class="btn wide" type="button">🧩 Спланировать и собрать</button>
-          <div class="row">
-            <button id="btn-compose-mutate" class="btn" type="button">🎲 Ещё вариант</button>
-            <button id="btn-compose-variants" class="btn ghost" type="button">🧬 Варианты плана</button>
+
+          <div class="studio-examples">
+            <span class="studio-examples-label">Примеры — нажмите, чтобы подставить:</span>
+            <div id="example-chips" class="studio-chips">
+              <button class="studio-chip" type="button" data-prompt="тёмный ло-фай с пыльным грувом, 88 BPM">
+                тёмный ло-фай с пыльным грувом, 88 BPM
+              </button>
+              <button class="studio-chip" type="button" data-prompt="энергичный техно 4/4 на 132 BPM">
+                энергичный техно 4/4 на 132 BPM
+              </button>
+              <button class="studio-chip" type="button" data-prompt="спокойное пианино в ля миноре, 70 BPM">
+                спокойное пианино в ля миноре, 70 BPM
+              </button>
+              <button class="studio-chip" type="button" data-prompt="drum and bass, тёмный и быстрый">
+                drum and bass, тёмный и быстрый
+              </button>
+            </div>
           </div>
+
+          <button id="btn-run" class="btn primary wide studio-cta" type="button">✨ Создать трек</button>
+
+          <!-- Другие способы: для продвинутых. Основной путь — кнопка выше. -->
+          <details class="studio-details">
+            <summary>Другие способы</summary>
+            <p class="hint">
+              Для продвинутых: структурная композиция (сначала план, потом код), свободный
+              код с нуля и варианты одного плана.
+            </p>
+            <label class="field-label" for="compose-mode">Режим</label>
+            <select id="compose-mode">
+              <option value="structured" selected>Структурный — план, затем код</option>
+              <option value="free">Свободный — код пишет модель</option>
+            </select>
+            <button id="btn-compose" class="btn wide" type="button">🧩 Спланировать и собрать</button>
+            <div class="row">
+              <button id="btn-compose-mutate" class="btn" type="button">🎲 Ещё вариант</button>
+              <button id="btn-compose-variants" class="btn ghost" type="button">🧬 Варианты плана</button>
+            </div>
+          </details>
         </section>
 
-        <section class="panel" aria-label="Ход композиции">
-          <h2 class="panel-title">◆ Ход композиции</h2>
-          <div id="compose-trace" class="compose-trace" aria-live="polite"></div>
-          <h2 class="panel-title">Форма трека</h2>
-          <div id="compose-sections" class="compose-sections"></div>
-          <div id="compose-variants" class="compose-variants"></div>
-        </section>
+        <!-- ШАГ 3 — инженерные панели (показываются только на шаге «Правьте») -->
+        <div id="step-advanced" class="step-advanced">
+          <details class="panel studio-details">
+            <summary>Ход композиции</summary>
+            <div id="compose-trace" class="compose-trace" aria-live="polite"></div>
+            <h3 class="panel-title panel-title-sub">Форма трека</h3>
+            <div id="compose-sections" class="compose-sections"></div>
+            <div id="compose-variants" class="compose-variants"></div>
+          </details>
 
-        <section class="panel" aria-label="Улучшить трек">
-          <label class="field-label" for="improve-input">Что поправить</label>
-          <textarea id="improve-input" rows="2" placeholder="Например: добавь синкопу в бас"></textarea>
-          <button id="btn-improve" class="btn wide" type="button">✨ Улучшить</button>
-        </section>
+          <details class="panel studio-details">
+            <summary>План композиции</summary>
+            <p class="hint">
+              Описание → план → код. Правки меняют план, а не текст: видно, что стало
+              мрачнее, быстрее или спокойнее.
+            </p>
+            <button id="btn-ir-plan" class="btn wide" type="button">🧩 Собрать план</button>
+            <div class="row" id="ir-transforms"></div>
+            <div class="row">
+              <button id="btn-ir-search" class="btn ghost" type="button">🔍 Найти лучший (16)</button>
+              <button id="btn-ir-critique" class="btn ghost" type="button">🛠 Починить по разбору</button>
+            </div>
+            <div id="ir-panel"><div id="ir-report"></div></div>
+          </details>
 
-        <section class="panel" aria-label="План композиции">
-          <h2 class="panel-title">🧩 План композиции</h2>
-          <p class="panel-hint">
-            Описание → план → код. Правки меняют план, а не текст: видно, что стало
-            мрачнее, быстрее или спокойнее.
-          </p>
-          <button id="btn-ir-plan" class="btn wide" type="button">🧩 Собрать план</button>
-          <div class="row" id="ir-transforms"></div>
-          <div class="row">
-            <button id="btn-ir-search" class="btn ghost" type="button">🔍 Найти лучший (16)</button>
-            <button id="btn-ir-critique" class="btn ghost" type="button">🛠 Починить по разбору</button>
-          </div>
-          <div id="ir-panel"><div id="ir-report"></div></div>
-        </section>
-
-        <section class="panel" aria-label="Музыкальный разбор">
-          <h2 class="panel-title">🎼 Музыкальный разбор</h2>
-          <label class="field-label" for="music-style">Стиль-референс</label>
-          <select id="music-style"></select>
-          <button id="btn-analyze" class="btn wide" type="button">🎼 Разобрать</button>
-          <div id="music-score"></div>
-          <div id="music-criteria"></div>
-          <div id="music-issues"></div>
-          <div class="row">
-            <button id="btn-refine" class="btn" type="button">✨ Улучшить по разбору</button>
-            <button id="btn-variants" class="btn ghost" type="button">🎲 Варианты A/B</button>
-          </div>
-          <div id="music-variants"></div>
-        </section>
-
-        <section class="panel" aria-label="Пресеты и история">
-          <h2 class="panel-title">Пресеты</h2>
-          <div id="preset-list" class="list"></div>
-          <div class="row wrap">
-            <button id="btn-save-preset" class="btn" type="button">💾 Сохранить</button>
-            <button id="btn-export" class="btn ghost" type="button">⬇ Экспорт</button>
-            <label class="btn ghost">⬆ Импорт<input id="btn-import-input" type="file" accept="application/json" hidden /></label>
-            <button id="btn-clear-history" class="btn ghost" type="button">Очистить историю</button>
-          </div>
-          <h2 class="panel-title">История</h2>
-          <div id="history-list" class="list"></div>
-        </section>
+          <details class="panel studio-details">
+            <summary>Пресеты и история</summary>
+            <h3 class="panel-title panel-title-sub">Пресеты</h3>
+            <div id="preset-list" class="list"></div>
+            <div class="row wrap">
+              <button id="btn-save-preset" class="btn" type="button">💾 Сохранить</button>
+              <button id="btn-export" class="btn ghost" type="button">⬇ Экспорт</button>
+              <label class="btn ghost">⬆ Импорт<input id="btn-import-input" type="file" accept="application/json" hidden /></label>
+              <button id="btn-clear-history" class="btn ghost" type="button">Очистить историю</button>
+            </div>
+            <h3 class="panel-title panel-title-sub">История</h3>
+            <div id="history-list" class="list"></div>
+          </details>
+        </div>
       </aside>
 
-      <!-- Центр: редактор кода + живая партитура (пианоролл под каждой $PART:) -->
+      <!-- Центр: визуализация (главный экран шага 2) + редактор (шаг 3). -->
       <section class="col-center">
         <div id="status" class="status" hidden></div>
 
@@ -132,22 +165,41 @@
           <div id="compose-timeline-blocks" class="compose-timeline-blocks"></div>
         </section>
 
-        <label class="field-label" for="code-input">Код Strudel</label>
-        <div class="editor-wrap">
-          <pre id="code-hl" class="code" aria-hidden="true"></pre>
-          <textarea id="code-input" class="code" rows="14" spellcheck="false" placeholder="// Здесь появится сгенерированный код"></textarea>
-        </div>
-
-        <div class="row">
-          <button id="btn-play-code" class="btn" type="button">▶ Играть этот код</button>
-          <button id="btn-share" class="btn ghost" type="button">🔗 Ссылка</button>
-          <button id="btn-clear" class="btn ghost" type="button">⏹ Сброс</button>
-        </div>
-
+        <!-- Живая партитура: всегда на виду (движок Strudel грузится в #strudel-container,
+             контейнер не переносим и не прячем). -->
         <div class="visual-stage">
           <div class="visual-head"><span>◆</span><span>живая партитура</span></div>
           <div id="strudel-container" aria-label="Визуализация партий"></div>
         </div>
+
+        <!-- ШАГ 2 — СЛУШАЙТЕ: оценка трека и понятные действия. -->
+        <section id="step-listen" class="panel studio-card" aria-label="Что получилось">
+          <h2 class="panel-title">Что получилось</h2>
+          <p class="hint studio-hint">
+            Оценка считается по объективным метрикам: темп, плотность, грув, лад, диапазон,
+            регистры.
+          </p>
+
+          <div id="music-score"></div>
+          <div id="music-criteria"></div>
+          <div id="music-issues"></div>
+          <div id="music-variants"></div>
+
+          <details class="studio-details studio-details-inline">
+            <summary>Стиль-референс <span class="studio-summary-hint">(необязательно)</span></summary>
+            <label class="field-label" for="music-style">Стиль-референс</label>
+            <select id="music-style"></select>
+          </details>
+
+          <div class="row studio-actions">
+            <button id="btn-analyze" class="btn" type="button">🎼 Разобрать трек</button>
+            <button id="btn-refine" class="btn" type="button">🛠 Исправить по замечаниям</button>
+            <button id="btn-variants" class="btn ghost" type="button">🎲 Сравнить два варианта</button>
+            <button id="btn-play-code" class="btn" type="button">▶ Играть</button>
+            <button id="btn-share" class="btn ghost" type="button">🔗 Поделиться</button>
+            <button id="btn-show-code" class="btn primary" type="button">👁 Показать код</button>
+          </div>
+        </section>
 
         <section id="diff-panel" class="panel diff" hidden>
           <div class="row spread">
@@ -160,11 +212,36 @@
           <div id="diff-view" class="diff-view"></div>
         </section>
 
-        <h2 class="panel-title">Лог</h2>
-        <div id="log" class="log" aria-live="polite"></div>
+        <!-- ШАГ 3 — ПРАВЬТЕ: код, просьба о правке и журнал. -->
+        <div id="step-code" class="step-advanced">
+          <div class="row spread">
+            <h2 class="panel-title">Код Strudel</h2>
+            <div class="row">
+              <button id="btn-play-code-3" class="btn" type="button">▶ Играть</button>
+              <button id="btn-clear" class="btn ghost" type="button">⏹ Сбросить</button>
+            </div>
+          </div>
+
+          <div class="editor-wrap">
+            <pre id="code-hl" class="code" aria-hidden="true"></pre>
+            <textarea id="code-input" class="code" rows="14" spellcheck="false" placeholder="// Здесь появится сгенерированный код"></textarea>
+          </div>
+
+          <section class="panel studio-card">
+            <h2 class="panel-title">Скажите, что поправить</h2>
+            <label class="field-label" for="improve-input">Что поправить</label>
+            <textarea id="improve-input" rows="2" placeholder="Например: добавь синкопу в бас"></textarea>
+            <button id="btn-improve" class="btn primary wide" type="button">Попросить правку</button>
+          </section>
+
+          <details class="panel studio-details">
+            <summary>Журнал</summary>
+            <div id="log" class="log" aria-live="polite"></div>
+          </details>
+        </div>
       </section>
 
-      <!-- Правая колонка: микшер -->
+      <!-- Правая колонка: микшер (показывается на шаге «Правьте») -->
       <aside class="col-right">
         <section class="panel" aria-label="Микшер">
           <h2 class="panel-title">Микшер</h2>

@@ -1,0 +1,266 @@
+/* ============================================================
+   Шаги студии: «Опишите → Слушайте → Правьте».
+   Здесь только новые элементы страницы и правила показа по
+   data-step на <body>. Базовые классы (.btn, .panel, .row, .hint)
+   берём из components.css и не переопределяем.
+   Все цвета — переменные из tokens.css.
+   ============================================================ */
+
+/* --- Шапка: полоса шагов --- */
+.studio-steps {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin-left: var(--sp-4);
+}
+
+/* Атрибут hidden должен побеждать авторский display (как в deepdive.css):
+   иначе шапка шагов остаётся видимой в режиме разбора. */
+.studio-steps[hidden] {
+  display: none;
+}
+
+.studio-step {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out;
+}
+
+.studio-step:hover {
+  color: var(--mint);
+  border-color: var(--jade);
+  background: rgb(var(--jade-rgb) / 0.1);
+}
+
+.studio-step.is-active {
+  color: var(--ink-on-jade);
+  background: linear-gradient(135deg, var(--jade) 0%, var(--jade-deep) 100%);
+  border-color: transparent;
+  box-shadow: 0 0 0 1px rgb(var(--jade-rgb) / 0.2);
+}
+
+.studio-step:focus-visible {
+  outline: 2px solid var(--jade-bright);
+  outline-offset: 2px;
+}
+
+/* --- Ссылка «← На главную» --- */
+.studio-home {
+  color: var(--text-dim);
+  font-size: 13px;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  padding: 5px 10px;
+  white-space: nowrap;
+  transition: background 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out;
+}
+
+.studio-home:hover {
+  color: var(--mint);
+  border-color: var(--jade);
+  background: rgb(var(--jade-rgb) / 0.1);
+}
+
+.studio-home:focus-visible {
+  outline: 2px solid var(--jade-bright);
+  outline-offset: 2px;
+}
+
+/* --- Карточки шагов --- */
+.studio-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.studio-hint {
+  margin: 0;
+}
+
+/* --- Поле описания: крупное, под обычный текст --- */
+#prompt-input {
+  min-height: 120px;
+  font-size: 16px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.studio-cta {
+  min-height: 52px;
+  font-size: 16px;
+  margin-top: var(--sp-2);
+}
+
+/* --- Примеры: кнопки-«таблетки» --- */
+.studio-examples {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.studio-examples-label {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.studio-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.studio-chip {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out;
+}
+
+.studio-chip:hover {
+  color: var(--mint);
+  border-color: var(--jade);
+  background: rgb(var(--jade-rgb) / 0.1);
+}
+
+.studio-chip:focus-visible {
+  outline: 2px solid var(--jade-bright);
+  outline-offset: 2px;
+}
+
+/* --- Раскрывающиеся блоки (инженерное спрятано под «details») --- */
+.studio-details {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  padding: var(--sp-2) var(--sp-3);
+}
+
+.studio-details > summary {
+  cursor: pointer;
+  color: var(--mint);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  list-style: none;
+}
+
+.studio-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.studio-details > summary::before {
+  content: '▸ ';
+  color: var(--text-dim);
+}
+
+.studio-details[open] > summary::before {
+  content: '▾ ';
+}
+
+.studio-details > summary:focus-visible {
+  outline: 2px solid var(--jade-bright);
+  outline-offset: 2px;
+}
+
+.studio-summary-hint {
+  color: var(--text-dim);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.studio-details-inline {
+  margin-top: var(--sp-2);
+}
+
+.studio-details .hint {
+  margin-bottom: var(--sp-2);
+}
+
+.studio-details .panel-title {
+  margin-top: var(--sp-3);
+}
+
+/* --- Ряд действий шага 2 --- */
+.studio-actions {
+  margin-top: var(--sp-3);
+}
+
+/* --- Показ по шагам (data-step на <body>) ---
+   Шаг 3: редактор, микшер и инженерные панели.
+   Шаг 1: приглашение ввести описание и оценка приглушены. */
+body:not([data-step='3']) .step-advanced {
+  display: none;
+}
+
+body:not([data-step='3']) .col-right {
+  display: none;
+}
+
+body[data-step='3'] #step-intro {
+  display: none;
+}
+
+/* Шаг 1: карточка ввода подсвечена — это единственное, что нужно сейчас. */
+body[data-step='1'] #step-intro {
+  border-color: rgb(var(--jade-rgb) / 0.35);
+  box-shadow: 0 0 0 1px rgb(var(--jade-rgb) / 0.12), var(--shadow);
+}
+
+/* Шаг 1: оценка приглушена, но остаётся доступной — кнопка «Показать код»
+   из неё всё равно нужна пользователю. */
+body[data-step='1'] #step-listen {
+  opacity: 0.45;
+}
+
+/* Движок не прячем — только приглушаем, чтобы он продолжал считать кадры. */
+body[data-step='1'] .visual-stage {
+  opacity: 0.7;
+}
+
+/* Микшер живёт справа только на шаге 3 — на шагах 1–2 отдаём его место
+   центру, чтобы визуализация и оценка были крупнее. Планшет и мобильный
+   не трогаем: там раскладку задаёт layout.css. */
+@media (min-width: 1181px) {
+  body:not([data-step='3']) main.app-grid:not([data-view='dive']) {
+    grid-template-columns: 320px minmax(0, 1fr);
+  }
+}
+
+/* --- Мобильный: шапка переносится, кнопка микшера — только на шаге 3 --- */
+@media (max-width: 860px) {
+  .app-header {
+    flex-wrap: wrap;
+  }
+
+  .studio-steps {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  body:not([data-step='3']) button.mixer-toggle {
+    display: none;
+  }
+}
