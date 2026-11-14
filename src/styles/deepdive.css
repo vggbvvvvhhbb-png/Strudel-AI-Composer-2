@@ -1,0 +1,808 @@
+/* ============================================================
+   Режим «Разбор» (Deep Dive) — панель анализа трека.
+   Все цвета — через переменные из tokens.css.
+   Панель вынесена в отдельную вкладку: в выключенном состоянии
+   её DOM скрыт, поэтому вёрстка студии не меняется.
+   ============================================================ */
+
+/* --- Навигация в шапке --- */
+.dive-nav {
+  display: inline-flex;
+  gap: var(--sp-1);
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.dive-nav[hidden] {
+  display: none;
+}
+
+.dive-tab {
+  appearance: none;
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 10px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease-out, color 0.15s ease-out;
+}
+
+.dive-tab:hover {
+  color: var(--mint);
+  background: rgb(var(--jade-rgb) / 0.1);
+}
+
+.dive-tab[aria-selected='true'] {
+  background: linear-gradient(135deg, var(--jade) 0%, var(--jade-deep) 100%);
+  color: var(--ink-on-jade);
+  font-weight: 700;
+}
+
+/* --- Переключение вида: студия ⇄ разбор ---
+   Селектор по классу, а не по id: новые id в проекте начинаются с dive-. */
+main.app-grid[data-view='dive'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+main.app-grid[data-view='dive'] > .col-left,
+main.app-grid[data-view='dive'] > .col-center,
+main.app-grid[data-view='dive'] > .col-right {
+  display: none;
+}
+
+/* --- Каркас панели --- */
+.dive-panel {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-4) var(--sp-5);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--jade-rgb) / 0.25) transparent;
+}
+
+.dive-panel[hidden] {
+  display: none;
+}
+
+.dive-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.dive-head .hint {
+  margin: 0;
+  max-width: 70ch;
+}
+
+.dive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+.dive-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.dive-card-wide {
+  grid-column: 1 / -1;
+}
+
+/* Ограничения двойника должны быть видны сразу, а не прятаться в подвал. */
+.dive-card-honesty {
+  border-color: rgb(var(--danger-rgb) / 0.45);
+  background: rgb(var(--danger-rgb) / 0.06);
+}
+
+.dive-subtitle {
+  color: var(--mint);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  margin-bottom: var(--sp-2);
+}
+
+/* --- Загрузка --- */
+.dive-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  padding: var(--sp-3);
+  text-align: center;
+  border: 1px dashed rgb(var(--jade-rgb) / 0.45);
+  border-radius: var(--radius-s);
+  background: rgb(var(--bg-deep-rgb) / 0.4);
+  color: var(--text-dim);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease-out, background 0.15s ease-out;
+}
+
+.dive-drop:hover,
+.dive-drop.is-drag {
+  border-color: var(--jade-bright);
+  background: rgb(var(--jade-rgb) / 0.1);
+  color: var(--mint);
+}
+
+.dive-check {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 13px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.dive-check input {
+  accent-color: var(--jade);
+}
+
+/* --- Прогресс по этапам --- */
+.dive-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.dive-progress-wrap[hidden] {
+  display: none;
+}
+
+.dive-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: rgb(var(--white-rgb) / 0.08);
+  overflow: hidden;
+}
+
+.dive-progress-bar {
+  height: 100%;
+  width: 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--jade), var(--jade-bright));
+  box-shadow: 0 0 10px rgb(var(--jade-rgb) / 0.55);
+  transition: width 0.3s ease-out;
+}
+
+.dive-stage {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--mint);
+}
+
+.dive-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dive-stage-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+}
+
+.dive-stage-item.is-done {
+  color: var(--jade-bright);
+}
+
+.dive-stage-item.is-current {
+  color: var(--mint);
+  font-weight: 700;
+}
+
+.dive-stage-dot {
+  font-size: 9px;
+}
+
+.dive-error {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-s);
+  background: rgb(var(--danger-rgb) / 0.1);
+  color: var(--danger-text);
+  font-size: 13px;
+}
+
+.dive-error[hidden] {
+  display: none;
+}
+
+/* --- Паспорт трека --- */
+.dive-passport {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--sp-2);
+}
+
+.dive-metric {
+  padding: var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: rgb(var(--bg-deep-rgb) / 0.4);
+  min-width: 0;
+}
+
+.dive-metric-wide {
+  grid-column: 1 / -1;
+}
+
+.dive-metric-label {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.dive-metric-value {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.dive-metric-num {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--mint);
+  font-family: var(--font-mono);
+}
+
+.dive-metric-unit {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.dive-metric-conf {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.dive-metric-none {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* Спектральный баланс — полоски по полосам. */
+.dive-bands {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--sp-2);
+}
+
+.dive-band {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.dive-band-track {
+  height: 6px;
+  border-radius: 3px;
+  background: rgb(var(--white-rgb) / 0.07);
+  overflow: hidden;
+}
+
+.dive-band-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--jade), var(--jade-bright));
+}
+
+.dive-band-fill.is-empty {
+  width: 0 !important;
+}
+
+.dive-band-value {
+  text-align: right;
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+
+.dive-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.dive-note-label {
+  font-family: var(--font-mono);
+  color: var(--mint);
+}
+
+.dive-note-text {
+  font-family: var(--font-mono);
+}
+
+/* --- Структура: таймлайн секций --- */
+.dive-timeline {
+  display: flex;
+  gap: 2px;
+  height: 56px;
+  margin-bottom: var(--sp-3);
+}
+
+.dive-tl-block {
+  position: relative;
+  flex-basis: 0;
+  min-width: 8px;
+  border-radius: var(--radius-xs);
+  /* Энергия секции задаёт и высоту, и насыщенность: видно, где трек дышит. */
+  background: rgb(var(--jade-rgb) / calc(0.16 + var(--energy, 0.5) * 0.72));
+  height: calc(38% + var(--energy, 0.5) * 62%);
+  align-self: flex-end;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.dive-tl-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--ink-on-jade);
+  padding-bottom: 3px;
+}
+
+.dive-struct-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dive-struct-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto auto;
+  gap: var(--sp-2);
+  align-items: center;
+  padding: 3px var(--sp-2);
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.dive-struct-row:hover {
+  background: rgb(var(--jade-rgb) / 0.07);
+}
+
+.dive-struct-label {
+  color: var(--mint);
+  font-weight: 700;
+}
+
+/* --- Слои: матрица и микшер --- */
+.dive-layers-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--sp-4);
+}
+
+.dive-matrix {
+  overflow-x: auto;
+}
+
+.dive-matrix-grid {
+  display: grid;
+  grid-template-columns: 96px repeat(var(--cols, 1), minmax(38px, 1fr));
+  gap: 3px;
+  min-width: max-content;
+}
+
+.dive-matrix-cell {
+  padding: var(--sp-1);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border);
+  background: rgb(var(--bg-deep-rgb) / 0.35);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  text-align: center;
+  color: var(--text);
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dive-matrix-head {
+  color: var(--mint);
+  font-weight: 700;
+  background: rgb(var(--jade-rgb) / 0.08);
+}
+
+.dive-matrix-rowname {
+  justify-content: flex-start;
+  gap: 6px;
+  color: var(--text);
+}
+
+.dive-matrix-cell:not(.is-empty):not(.dive-matrix-head):not(.dive-matrix-rowname) {
+  background: rgb(var(--jade-rgb) / calc(0.08 + var(--v, 0) * 0.8));
+  color: var(--ink-on-jade);
+  font-weight: 700;
+}
+
+/* Нет данных — это не ноль: ячейка остаётся пустой и полосатой. */
+.dive-matrix-cell.is-empty {
+  background: repeating-linear-gradient(
+    45deg,
+    rgb(var(--white-rgb) / 0.05) 0 4px,
+    transparent 4px 8px
+  );
+  color: var(--text-dim);
+}
+
+.dive-matrix-tag {
+  font-size: 9px;
+  color: var(--text-dim);
+}
+
+.dive-layer-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.dive-layer-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px 70px;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.dive-layer-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dive-layer-title {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.dive-layer-state {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.dive-layer-state.is-missing {
+  color: var(--warn);
+}
+
+.dive-layer-meter {
+  height: 6px;
+  border-radius: 3px;
+  background: rgb(var(--white-rgb) / 0.07);
+  overflow: hidden;
+}
+
+.dive-layer-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--jade), var(--jade-bright));
+}
+
+.dive-layer-fill.is-empty {
+  width: 0 !important;
+}
+
+.dive-layer-value {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* --- Код-двойник --- */
+.dive-twin-status {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.dive-twin-status.is-warn {
+  color: var(--warn);
+}
+
+.dive-code {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--field-bg-strong);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* --- A/B-плеер --- */
+.dive-ab-state {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--mint);
+}
+
+.dive-ab-time {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+}
+
+/* --- Метрики --- */
+.dive-overall {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.dive-overall-num {
+  font-size: 30px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--jade-bright);
+}
+
+.dive-overall-label {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.dive-metric-layers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--sp-2);
+}
+
+.dive-metric-layer {
+  padding: var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: rgb(var(--bg-deep-rgb) / 0.4);
+}
+
+.dive-metric-layer-title {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mint);
+  font-family: var(--font-mono);
+  margin-bottom: var(--sp-1);
+}
+
+.dive-metric-pairs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dive-metric-pair {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  font-size: 12px;
+}
+
+.dive-metric-key {
+  color: var(--text-dim);
+}
+
+.dive-metric-val {
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+
+/* --- Честность --- */
+.dive-honesty-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.dive-honesty-item {
+  list-style: disc;
+}
+
+.dive-honesty-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--warn);
+}
+
+.dive-honesty-claims {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--border);
+}
+
+/* --- Итерации улучшения --- */
+.dive-iterations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.dive-iteration {
+  padding: var(--sp-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--jade);
+  border-radius: var(--radius-s);
+  background: rgb(var(--bg-deep-rgb) / 0.4);
+}
+
+.dive-iteration-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.dive-iteration-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mint);
+  font-family: var(--font-mono);
+}
+
+.dive-iteration-score {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.dive-iteration-before {
+  color: var(--text-dim);
+}
+
+.dive-iteration-after {
+  color: var(--jade-bright);
+  font-weight: 700;
+}
+
+.dive-iteration-delta {
+  color: var(--text-dim);
+}
+
+.dive-iteration-changes,
+.dive-iteration-caveats {
+  margin: var(--sp-1) 0 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.dive-iteration-caveats {
+  color: var(--warn);
+}
+
+/* --- Модальное окно с кодом --- */
+.dive-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+  background: rgb(var(--gate-rgb) / 0.8);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.dive-modal[hidden] {
+  display: none;
+}
+
+.dive-modal-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: min(920px, 100%);
+  max-height: 86vh;
+  padding: var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--glass-strong);
+  box-shadow: var(--shadow);
+}
+
+.dive-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.dive-modal-title {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--mint);
+}
+
+.dive-modal-code {
+  margin: 0;
+  flex: 1;
+  overflow: auto;
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--field-bg-strong);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* --- Мобильный: одна колонка, матрица прокручивается по горизонтали --- */
+@media (max-width: 860px) {
+  .dive-panel {
+    padding: var(--sp-3);
+  }
+
+  .dive-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dive-layers-wrap {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dive-nav {
+    order: 3;
+  }
+
+  .dive-tab {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
+  .dive-metric-num {
+    font-size: 17px;
+  }
+
+  .dive-overall-num {
+    font-size: 24px;
+  }
+}

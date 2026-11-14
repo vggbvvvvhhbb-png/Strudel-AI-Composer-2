@@ -14,6 +14,7 @@ import { initLive } from './live.js';
 import { initVoice } from './voice.js';
 import { applyMixerState } from './core/code-model.js';
 import { codeFromHash } from './core/share.js';
+import { initDeepDive } from './deepdive/panel.js';
 
 const editor = initEditor();
 
@@ -21,6 +22,7 @@ initUI({ editor });
 initEngine(document.getElementById('strudel-container'));
 initLive({ editor });
 initVoice();
+initDeepDive();
 
 // Мобильная шторка микшера
 document.getElementById('mixer-toggle')?.addEventListener('click', () => {

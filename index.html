@@ -22,6 +22,12 @@
           <span><kbd>Ctrl</kbd>+<kbd>S</kbd>пресет</span>
         </div>
         <button id="theme-toggle" class="btn ghost" type="button" title="Сменить тему">◐ Jade</button>
+        <!-- Навигация режима «Разбор». Скрыта, пока режим не включён флагом ?dive=1:
+             без флага шапка студии выглядит ровно как раньше. -->
+        <div id="dive-nav" class="dive-nav" role="tablist" aria-label="Режим работы" hidden>
+          <button id="dive-tab-studio" class="dive-tab" type="button" role="tab" aria-selected="true">🎼 Студия</button>
+          <button id="dive-tab-dive" class="dive-tab" type="button" role="tab" aria-selected="false">🔬 Разбор</button>
+        </div>
       </div>
     </header>
 
@@ -166,6 +172,141 @@
           <p class="hint">M — заглушить партию, S — соло, ползунок — громкость. Индикатор показывает, что партия звучит сейчас.</p>
         </section>
       </aside>
+
+      <!-- Режим «Разбор» (feature flag ?dive=1). Панель скрыта по умолчанию:
+           разметка есть всегда, но hidden + display:none не дают ей влиять
+           на вёрстку студии. -->
+      <section id="dive-panel" class="dive-panel" hidden aria-label="Разбор трека">
+        <div class="dive-inner">
+          <header class="dive-head">
+            <h2 class="panel-title">🔬 Разбор трека</h2>
+            <p class="hint">
+              Загрузите трек: сервер измерит темп, лад, громкость, структуру и слои, соберёт
+              из измеренного скелета код-двойник и сравнит его с оригиналом. Каждое число —
+              измерение, а не догадка.
+            </p>
+          </header>
+
+          <div class="dive-grid">
+            <!-- Загрузка и прогресс по этапам -->
+            <section class="panel dive-card" aria-label="Загрузка трека">
+              <h3 class="panel-title">⬆ Трек</h3>
+              <div
+                id="dive-drop"
+                class="dive-drop"
+                role="button"
+                tabindex="0"
+                aria-label="Перетащите аудиофайл или нажмите, чтобы выбрать файл"
+              >
+                <span id="dive-drop-text">Перетащите аудиофайл сюда или нажмите, чтобы выбрать</span>
+                <input id="dive-file" type="file" accept="audio/*,.wav,.mp3,.ogg,.flac,.m4a" hidden />
+              </div>
+              <label class="dive-check">
+                <input id="dive-separate" type="checkbox" />
+                <span>Разделить на стемы (дольше, но видно слои)</span>
+              </label>
+              <div class="row">
+                <button id="dive-analyze" class="btn primary" type="button" disabled>🔬 Разобрать</button>
+                <button id="dive-abort" class="btn ghost" type="button" hidden>⏹ Прервать</button>
+              </div>
+              <div id="dive-progress-wrap" class="dive-progress-wrap" hidden>
+                <div class="dive-progress"><div id="dive-progress-bar" class="dive-progress-bar"></div></div>
+                <div id="dive-stage" class="dive-stage">ожидание</div>
+                <ol id="dive-stages" class="dive-stages"></ol>
+              </div>
+              <p id="dive-error" class="dive-error" role="alert" hidden></p>
+            </section>
+
+            <!-- Паспорт трека: измерения -->
+            <section class="panel dive-card" aria-label="Паспорт трека">
+              <h3 class="panel-title">🪪 Паспорт трека</h3>
+              <div id="dive-passport" class="dive-passport">
+                <p class="hint">Загрузите трек — здесь появятся измерения.</p>
+              </div>
+            </section>
+
+            <!-- Структура трека -->
+            <section class="panel dive-card dive-card-wide" aria-label="Структура трека">
+              <h3 class="panel-title">🧱 Структура</h3>
+              <div id="dive-structure" class="dive-structure">
+                <p class="hint">Таймлайн секций появится после разбора.</p>
+              </div>
+            </section>
+
+            <!-- Слои: матрица и микшер стемов -->
+            <section class="panel dive-card dive-card-wide" aria-label="Слои трека">
+              <h3 class="panel-title">🎛 Слои</h3>
+              <div class="dive-layers-wrap">
+                <div>
+                  <div class="dive-subtitle">Матрица «секция × слой»</div>
+                  <div id="dive-matrix" class="dive-matrix">
+                    <p class="hint">Активность слоёв по секциям появится после разбора.</p>
+                  </div>
+                </div>
+                <div>
+                  <div class="dive-subtitle">Микшер стемов</div>
+                  <div id="dive-layers" class="dive-layers">
+                    <p class="hint">Состав слоёв появится после разбора.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Код-двойник -->
+            <section class="panel dive-card" aria-label="Код-двойник">
+              <h3 class="panel-title">🧬 Код-двойник</h3>
+              <div id="dive-twin-status" class="dive-twin-status">Рендер не выполнялся</div>
+              <pre id="dive-code" class="dive-code">Код не пришёл — данных нет</pre>
+              <div class="row">
+                <button id="dive-code-show" class="btn" type="button" disabled>👁 Показать код</button>
+                <button id="dive-code-take" class="btn primary" type="button" disabled>📥 Взять в редактор</button>
+              </div>
+            </section>
+
+            <!-- A/B-плеер -->
+            <section class="panel dive-card" aria-label="Сравнение оригинала и двойника">
+              <h3 class="panel-title">🔊 Оригинал ⇄ Двойник</h3>
+              <div class="row">
+                <button id="dive-ab-play" class="btn" type="button">▶ Играть</button>
+                <button id="dive-ab-toggle" class="btn" type="button">Оригинал ⇄ Двойник</button>
+                <span id="dive-ab-state" class="dive-ab-state">сейчас: Оригинал</span>
+                <span id="dive-ab-time" class="dive-ab-time">—</span>
+              </div>
+              <p id="dive-ab-note" class="hint">Громкость оригинала будет измерена в браузере после загрузки файла.</p>
+            </section>
+
+            <!-- Метрики похожести -->
+            <section class="panel dive-card" aria-label="Метрики похожести">
+              <h3 class="panel-title">📐 Метрики похожести</h3>
+              <div id="dive-metrics" class="dive-metrics">
+                <p class="hint">Сравнение появится после разбора.</p>
+              </div>
+            </section>
+
+            <!-- Честность -->
+            <section class="panel dive-card dive-card-honesty" aria-label="Ограничения двойника">
+              <h3 class="panel-title">⚠️ Что двойник не воспроизводит</h3>
+              <div id="dive-honesty" class="dive-honesty">
+                <p class="hint">Список ограничений придёт вместе с разбором.</p>
+              </div>
+            </section>
+
+            <!-- Улучшение и экспорт -->
+            <section class="panel dive-card" aria-label="Улучшение и экспорт">
+              <h3 class="panel-title">✨ Улучшение и экспорт</h3>
+              <div class="row">
+                <button id="dive-refine" class="btn primary" type="button" disabled>✨ Улучшить</button>
+                <button id="dive-export-json" class="btn" type="button" disabled>⬇ JSON</button>
+                <button id="dive-export-code" class="btn" type="button" disabled>⬇ Код</button>
+                <button id="dive-export-midi" class="btn" type="button" disabled>⬇ MIDI</button>
+              </div>
+              <div id="dive-iterations" class="dive-iterations">
+                <p class="hint">Итерации улучшения появятся здесь.</p>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- Нижний транспорт -->
@@ -202,6 +343,17 @@
         <h2>Включить звук</h2>
         <p>Браузеры разрешают воспроизведение звука только после клика пользователя.</p>
         <button id="btn-start-audio" class="btn primary" type="button">Start Audio</button>
+      </div>
+    </div>
+
+    <!-- Модальное окно с кодом-двойником: код в редактор не попадает сам. -->
+    <div id="dive-code-modal" class="dive-modal" hidden role="dialog" aria-modal="true" aria-label="Код-двойник">
+      <div class="dive-modal-card">
+        <div class="dive-modal-head">
+          <span class="dive-modal-title">Код-двойник</span>
+          <button id="dive-code-modal-close" class="btn ghost" type="button">✕ Закрыть</button>
+        </div>
+        <pre id="dive-code-modal-code" class="dive-modal-code"></pre>
       </div>
     </div>
 

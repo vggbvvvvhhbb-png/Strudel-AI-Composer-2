@@ -1,0 +1,519 @@
+// Панель «Разбор» — клиентская часть режима Deep Dive.
+//
+// Режим включается фиче-флагом (?dive=1 или сохранённый выбор) и живёт
+// отдельной вкладкой рядом со студией: студия в выключенном состоянии
+// выглядит и работает ровно как раньше.
+//
+// Модуль ничего не знает про устройство студии: код в редактор кладётся
+// через существующие syncMixer/syncTransport, сообщения — через log.
+import '../styles/deepdive.css';
+import { analyzeTrack, refineTrack, downloadMidi } from './api.js';
+import { createAbPlayer } from './player.js';
+import { $, el, clear, num, fmtTime, downloadBlob } from './dom.js';
+import {
+  renderPassport,
+  renderStructure,
+  renderLayers,
+  renderTwin,
+  renderMetrics,
+  renderHonesty,
+  renderIterations,
+} from './render.js';
+import { syncMixer } from '../mixer.js';
+import { syncTransport } from '../transport.js';
+import { log } from '../ui.js';
+
+const STAGES = ['upload', 'analyze', 'separate', 'stems', 'twin', 'render', 'compare', 'done'];
+const STAGE_TITLES = {
+  upload: 'Загрузка файла',
+  analyze: 'Анализ звука',
+  separate: 'Разделение на стемы',
+  stems: 'Описание слоёв',
+  twin: 'Сборка код-двойника',
+  render: 'Рендер двойника',
+  compare: 'Сравнение с оригиналом',
+  done: 'Готово',
+};
+const STORAGE_KEY = 'strudel.dive';
+
+const state = {
+  file: null,
+  payload: null,
+  jobId: null,
+  abort: null,
+  busy: false,
+  refineBusy: false,
+};
+
+let player = null;
+let timer = 0;
+
+export function initDeepDive() {
+  const panel = $('dive-panel');
+  const nav = $('dive-nav');
+  if (!panel || !nav) return;
+
+  player = createAbPlayer({ onState: syncPlayerUi });
+
+  // Навигация появляется только когда режим включён: без флага вкладок в шапке нет,
+  // поэтому студия выглядит ровно как раньше.
+  nav.hidden = !unlocked();
+  $('dive-tab-studio')?.addEventListener('click', () => setView('studio'));
+  $('dive-tab-dive')?.addEventListener('click', () => setView('dive'));
+
+  wireUpload();
+  wireActions();
+  wireCodeModal();
+
+  // ?dive=1 открывает разбор сразу; иначе — студия, но вкладка «Разбор» доступна.
+  setView(flagFromUrl() ? 'dive' : 'studio');
+}
+
+/* --- Фиче-флаг и переключение вкладок --- */
+
+function flagFromUrl() {
+  const value = new URLSearchParams(window.location.search).get('dive');
+  return value === '1' || value === 'true';
+}
+
+// Режим «разблокирован», если его уже включали: тогда навигация остаётся в шапке,
+// и панель доступна по клику без флага в адресе.
+function unlocked() {
+  if (flagFromUrl()) return true;
+  try {
+    return localStorage.getItem(STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function setView(view) {
+  const main = document.querySelector('main.app-grid');
+  const panel = $('dive-panel');
+  if (!main || !panel) return;
+
+  const next = view === 'dive' ? 'dive' : 'studio';
+  main.dataset.view = next;
+  panel.hidden = next !== 'dive';
+
+  $('dive-tab-studio')?.setAttribute('aria-selected', String(next === 'studio'));
+  $('dive-tab-dive')?.setAttribute('aria-selected', String(next === 'dive'));
+
+  // Открытие разбора «разблокирует» режим: дальше вкладка доступна всегда.
+  if (next === 'dive') {
+    try {
+      localStorage.setItem(STORAGE_KEY, '1');
+    } catch {
+      // приватный режим браузера — просто не запоминаем
+    }
+  }
+
+  if (next === 'dive' && !timer) {
+    timer = setInterval(updatePlayerClock, 200);
+  }
+}
+
+/* --- Загрузка файла --- */
+
+function wireUpload() {
+  const drop = $('dive-drop');
+  const input = $('dive-file');
+
+  drop?.addEventListener('click', () => input?.click());
+  drop?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      input?.click();
+    }
+  });
+
+  input?.addEventListener('change', () => {
+    const file = input.files?.[0];
+    if (file) takeFile(file);
+    input.value = ''; // тот же файл можно выбрать повторно
+  });
+
+  drop?.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    drop.classList.add('is-drag');
+  });
+  drop?.addEventListener('dragleave', () => drop.classList.remove('is-drag'));
+  drop?.addEventListener('drop', (e) => {
+    e.preventDefault();
+    drop.classList.remove('is-drag');
+    const file = e.dataTransfer?.files?.[0];
+    if (file) takeFile(file);
+  });
+
+  $('dive-analyze')?.addEventListener('click', runAnalyze);
+  $('dive-abort')?.addEventListener('click', () => {
+    state.abort?.abort();
+  });
+}
+
+function takeFile(file) {
+  state.file = file;
+  const text = $('dive-drop-text');
+  if (text) text.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} МБ`;
+  const analyze = $('dive-analyze');
+  if (analyze) analyze.disabled = false;
+  hideError();
+
+  // Оригинал декодируем сразу: A/B-плеер должен быть готов к моменту результата.
+  player?.setOriginalFile(file).catch(() => {
+    const note = $('dive-drop-text');
+    if (note) note.textContent = `${file.name} — браузер не смог декодировать этот файл`;
+  });
+}
+
+/* --- Разбор --- */
+
+async function runAnalyze() {
+  if (!state.file || state.busy) return;
+  setBusy(true);
+  hideError();
+  resetProgress();
+
+  const controller = new AbortController();
+  state.abort = controller;
+
+  try {
+    const payload = await analyzeTrack({
+      file: state.file,
+      separate: Boolean($('dive-separate')?.checked),
+      onEvent: handleEvent,
+      signal: controller.signal,
+    });
+    applyPayload(payload);
+  } catch (err) {
+    if (err?.name === 'AbortError') showError('Разбор прерван');
+    else showError(humanError(err));
+  } finally {
+    setBusy(false);
+    state.abort = null;
+  }
+}
+
+function handleEvent(event) {
+  if (!event || typeof event !== 'object') return;
+  if (event.type === 'stage') {
+    updateProgress(event.stage, event.label, event.progress);
+  } else if (event.type === 'result' && event.payload) {
+    applyPayload(event.payload);
+  }
+}
+
+function updateProgress(stage, label, progress) {
+  const wrap = $('dive-progress-wrap');
+  if (wrap) wrap.hidden = false;
+
+  const bar = $('dive-progress-bar');
+  if (bar) {
+    const value = Number(progress);
+    bar.style.width = `${Number.isFinite(value) ? Math.min(1, Math.max(0, value)) * 100 : 0}%`;
+  }
+
+  const stageEl = $('dive-stage');
+  if (stageEl) stageEl.textContent = label || STAGE_TITLES[stage] || stage || 'работаем…';
+
+  const list = $('dive-stages');
+  if (!list) return;
+  clear(list);
+  const currentIndex = STAGES.indexOf(stage);
+  for (const name of STAGES) {
+    const item = el('li', 'dive-stage-item');
+    const index = STAGES.indexOf(name);
+    if (stage === 'done' || (currentIndex >= 0 && index < currentIndex)) item.classList.add('is-done');
+    else if (name === stage) item.classList.add('is-current');
+    item.append(el('span', 'dive-stage-dot', name === stage ? '●' : '○'));
+    item.append(el('span', 'dive-stage-name', STAGE_TITLES[name] ?? name));
+    list.append(item);
+  }
+}
+
+function resetProgress() {
+  const wrap = $('dive-progress-wrap');
+  if (wrap) wrap.hidden = false;
+  const bar = $('dive-progress-bar');
+  if (bar) bar.style.width = '0%';
+  const stageEl = $('dive-stage');
+  if (stageEl) stageEl.textContent = 'загружаем файл…';
+  clear($('dive-stages'));
+}
+
+function setBusy(busy) {
+  state.busy = busy;
+  const analyze = $('dive-analyze');
+  if (analyze) {
+    analyze.disabled = busy || !state.file;
+    analyze.textContent = busy ? '⏳ Разбираем…' : '🔬 Разобрать';
+  }
+  const abort = $('dive-abort');
+  if (abort) abort.hidden = !busy;
+}
+
+/* --- Результат --- */
+
+function applyPayload(payload) {
+  state.payload = payload;
+  state.jobId = payload?.track?.id ?? payload?.job_id ?? payload?.id ?? null;
+
+  renderPassport(payload);
+  renderStructure(payload);
+  renderLayers(payload);
+  renderTwin(payload);
+  renderMetrics(payload);
+  renderHonesty(payload);
+  renderIterations(payload);
+
+  loadTwinAudio(payload);
+
+  const refine = $('dive-refine');
+  if (refine) refine.disabled = !state.jobId;
+  const midi = $('dive-export-midi');
+  if (midi) midi.disabled = !state.jobId;
+  const json = $('dive-export-json');
+  if (json) json.disabled = false;
+  const code = $('dive-export-code');
+  if (code) code.disabled = !payload?.code_twin?.code;
+
+  const stageEl = $('dive-stage');
+  if (stageEl) stageEl.textContent = 'готово';
+  const bar = $('dive-progress-bar');
+  if (bar) bar.style.width = '100%';
+}
+
+// Двойник подгружаем для A/B-сравнения. LUFS берём из метрик рендера;
+// если их нет — считаем уровень двойника по LUFS оригинала и честно это подписываем.
+function loadTwinAudio(payload) {
+  const render = payload?.code_twin?.render || {};
+  const url = render.wav_url;
+  if (!url || render.status !== 'rendered') {
+    player?.setTwin(null, { lufs: null }).catch(() => {});
+    return;
+  }
+
+  const { lufs, estimated } = twinLufs(payload);
+  player?.setTwin(url, { lufs, lufsEstimated: estimated }).catch(() => {});
+}
+
+function twinLufs(payload) {
+  const metrics = Array.isArray(payload?.code_twin?.metrics) ? payload.code_twin.metrics : [];
+  for (let i = metrics.length - 1; i >= 0; i -= 1) {
+    const value = Number(metrics[i]?.layers?.loudness?.twin_lufs_i);
+    if (Number.isFinite(value)) return { lufs: value, estimated: false };
+  }
+  const render = payload?.code_twin?.render || {};
+  const fromRender = Number(render.lufs_i ?? render.lufs_integrated);
+  if (Number.isFinite(fromRender)) return { lufs: fromRender, estimated: false };
+
+  // Луфса двойника нет — считаем его равным измерению оригинала и говорим об этом.
+  const fallback = Number(payload?.measurements?.loudness?.lufs_integrated);
+  if (Number.isFinite(fallback)) return { lufs: fallback, estimated: true };
+  return { lufs: null, estimated: true };
+}
+
+/* --- Действия --- */
+
+function wireActions() {
+  $('dive-code-show')?.addEventListener('click', openCodeModal);
+  $('dive-code-take')?.addEventListener('click', takeCodeToEditor);
+
+  $('dive-export-json')?.addEventListener('click', exportJson);
+  $('dive-export-code')?.addEventListener('click', exportCode);
+  $('dive-export-midi')?.addEventListener('click', exportMidi);
+
+  $('dive-refine')?.addEventListener('click', runRefine);
+
+  $('dive-ab-play')?.addEventListener('click', () => {
+    player?.togglePlay();
+  });
+  $('dive-ab-toggle')?.addEventListener('click', () => {
+    const next = player?.toggleSource();
+    if (next) syncPlayerUi(player.state());
+  });
+}
+
+function wireCodeModal() {
+  $('dive-code-modal-close')?.addEventListener('click', closeCodeModal);
+  $('dive-code-modal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeCodeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeCodeModal();
+  });
+}
+
+function openCodeModal() {
+  const modal = $('dive-code-modal');
+  const pre = $('dive-code-modal-code');
+  if (!modal || !pre) return;
+  pre.textContent = state.payload?.code_twin?.code || 'Код не пришёл — данных нет';
+  modal.hidden = false;
+  $('dive-code-modal-close')?.focus();
+}
+
+function closeCodeModal() {
+  const modal = $('dive-code-modal');
+  if (modal) modal.hidden = true;
+}
+
+// Кладём код в редактор и синхронизируем микшер/транспорт — как это делает
+// история пресетов. Воспроизведение НЕ запускаем: только подготовка.
+function takeCodeToEditor() {
+  const code = state.payload?.code_twin?.code;
+  if (!code) return;
+  const editor = $('code-input');
+  if (!editor) return;
+  editor.value = code;
+  syncMixer(code);
+  syncTransport(code);
+  log('Код-двойник загружен в редактор — нажмите ▶, чтобы послушать', 'ok');
+}
+
+function exportJson() {
+  if (!state.payload) return;
+  downloadBlob(new Blob([JSON.stringify(state.payload, null, 2)], { type: 'application/json' }), 'deepdive-result.json');
+}
+
+function exportCode() {
+  const code = state.payload?.code_twin?.code;
+  if (!code) return;
+  downloadBlob(new Blob([code], { type: 'text/javascript' }), 'twin.js');
+}
+
+async function exportMidi() {
+  if (!state.jobId) return;
+  try {
+    const blob = await downloadMidi(state.jobId);
+    downloadBlob(blob, `twin-${state.jobId}.mid`);
+  } catch (err) {
+    showError(humanError(err));
+  }
+}
+
+/* --- Улучшение --- */
+
+async function runRefine() {
+  if (!state.jobId || state.refineBusy) return;
+  state.refineBusy = true;
+  hideError();
+  const button = $('dive-refine');
+  if (button) {
+    button.disabled = true;
+    button.textContent = '⏳ Улучшаем…';
+  }
+
+  try {
+    const payload = await refineTrack({
+      job: state.jobId,
+      iterations: 3,
+      onEvent: (event) => {
+        if (event?.type === 'stage') {
+          const stageEl = $('dive-stage');
+          if (stageEl) stageEl.textContent = event.label || `итерация ${event.stage ?? ''}`;
+        }
+      },
+    });
+    applyPayload(payload);
+    log('Улучшение завершено — метрики обновлены', 'ok');
+  } catch (err) {
+    showError(humanError(err));
+  } finally {
+    state.refineBusy = false;
+    if (button) {
+      button.disabled = !state.jobId;
+      button.textContent = '✨ Улучшить';
+    }
+  }
+}
+
+/* --- A/B-плеер --- */
+
+function syncPlayerUi(s) {
+  if (!s) return;
+  const stateEl = $('dive-ab-state');
+  if (stateEl) {
+    stateEl.textContent = s.source === 'twin' ? 'сейчас: Двойник' : 'сейчас: Оригинал';
+  }
+
+  const toggle = $('dive-ab-toggle');
+  if (toggle) {
+    toggle.textContent = 'Оригинал ⇄ Двойник';
+    toggle.disabled = !s.hasOriginal || !s.hasTwin;
+    toggle.title = s.hasTwin
+      ? 'Переключить источник (позиция сохраняется)'
+      : 'Двойник недоступен: рендер не выполнен или завершился ошибкой';
+  }
+
+  const play = $('dive-ab-play');
+  if (play) {
+    play.textContent = s.playing ? '⏹ Стоп' : '▶ Играть';
+    play.disabled = !s.hasOriginal && !s.hasTwin;
+  }
+
+  const note = $('dive-ab-note');
+  if (note) note.textContent = loudnessNote(s);
+
+  updatePlayerClock();
+}
+
+function loudnessNote(s) {
+  const parts = [];
+  parts.push(
+    s.originalLufs !== null && s.originalLufs !== undefined
+      ? `оригинал ${num(s.originalLufs, 1)} LUFS (измерено в браузере)`
+      : 'громкость оригинала не измерена',
+  );
+  if (s.twinLufs !== null && s.twinLufs !== undefined) {
+    parts.push(
+      `двойник ${num(s.twinLufs, 1)} LUFS${s.twinLufsEstimated ? ' (оценка по измерениям оригинала)' : ' (из метрик рендера)'}`,
+    );
+  } else {
+    parts.push('громкость двойника неизвестна — уровни не выровнены');
+  }
+  if (s.originalLufs !== null && s.originalLufs !== undefined && s.twinLufs !== null && s.twinLufs !== undefined) {
+    parts.push(`выровнено по LUFS: оригинал ×${num(s.originalGain, 2)}, двойник ×${num(s.twinGain, 2)}`);
+  }
+  return parts.join(' · ');
+}
+
+function updatePlayerClock() {
+  const clock = $('dive-ab-time');
+  if (!clock || !player) return;
+  const s = player.state();
+  clock.textContent = s.duration ? `${fmtTime(s.position)} / ${fmtTime(s.duration)}` : '—';
+}
+
+/* --- Ошибки --- */
+
+function showError(message) {
+  const box = $('dive-error');
+  if (!box) return;
+  box.textContent = message;
+  box.hidden = false;
+}
+
+function hideError() {
+  const box = $('dive-error');
+  if (!box) return;
+  box.hidden = true;
+  box.textContent = '';
+}
+
+// Человекочитаемая ошибка: без стектрейсов и кодов статусов в тексте.
+// Текст сервера (он уже написан для человека) сохраняем; подсказку даём только
+// там, где сервер ответил пустым кодом статуса.
+function humanError(err) {
+  const raw = String(err?.message || err || 'Неизвестная ошибка').split('\n')[0].trim();
+  if (/кодом 413/i.test(raw)) return 'Файл слишком большой — сервер принимает до 100 МБ';
+  if (/кодом 400/i.test(raw)) return 'Сервер не принял файл: это не аудио или формат не поддерживается';
+  if (/кодом 404/i.test(raw)) return 'Сервер не нашёл нужный эндпойнт — режим «Разбор» ещё не развёрнут';
+  if (/Failed to fetch|NetworkError|load failed|fetch failed/i.test(raw)) {
+    return 'Сервер недоступен — проверьте, что он запущен';
+  }
+  if (/NotSupportedError|EncodingError/i.test(raw)) {
+    return 'Браузер не смог декодировать этот файл';
+  }
+  return raw.length > 240 ? `${raw.slice(0, 240)}…` : raw;
+}
