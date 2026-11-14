@@ -12,7 +12,11 @@
 
 const DEFAULT_BASE_URL = process.env.DD_WORKER_URL || 'http://127.0.0.1:8010';
 const DEFAULT_TIMEOUT_MS = Number(process.env.DD_WORKER_TIMEOUT_MS || 120000);
-const SEPARATE_TIMEOUT_MS = Number(process.env.DD_SEPARATE_TIMEOUT_MS || 30 * 60 * 1000);
+// Разделение — тяжёлая операция: на 2 vCPU минута аудио — минуты.
+// Таймаут 30 мин обрывал разбор трека длиннее ~4–5 минут, поэтому он поднят
+// до 3 часов: верхняя оценка для «высокого качества» на длинном треке —
+// порядка полутора часов, и обрывать её таймаутом нельзя.
+const SEPARATE_TIMEOUT_MS = Number(process.env.DD_SEPARATE_TIMEOUT_MS || 3 * 60 * 60 * 1000);
 
 /** Ошибка воркера: понятный текст + стадия, на которой он упал. */
 export class WorkerError extends Error {

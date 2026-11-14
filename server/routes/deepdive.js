@@ -12,6 +12,7 @@
 
 import { Router } from 'express';
 import multer from 'multer';
+import rateLimit from 'express-rate-limit';
 import { randomUUID } from 'node:crypto';
 import { mkdir, rm, readFile, stat, rename, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -20,9 +21,18 @@ import path from 'node:path';
 
 import { runDeepDive, buildReference, bassNotesFromPlan } from '../deepdive/pipeline.js';
 import { buildMidi } from '../deepdive/midi.js';
-import { workerHealth } from '../deepdive/analysis/client.js';
+import { workerHealth, separateStems } from '../deepdive/analysis/client.js';
 import { closeRenderWorker, enqueueRender, getRenderWorker } from '../deepdive/render/pool.js';
 import { refineTwin, createWorkerRenderer } from '../deepdive/refine.js';
+import { createJobStore } from '../deepdive/jobs.js';
+import { separationQueue } from '../deepdive/queue.js';
+import { acquireLock } from '../deepdive/lock.js';
+import {
+  estimateDeepDive,
+  formatEstimate,
+  isKnownModel,
+  DEFAULT_SEPARATION_MODEL,
+} from '../../src/deepdive/estimate.js';
 
 const router = Router();
 
@@ -31,14 +41,38 @@ const JOB_TTL_MS = 7 * 24 * 60 * 60 * 1000; // неделя (D-084)
 // Каталог задач. В Docker это общий том с воркером анализа: пути к файлам
 // должны совпадать у обоих контейнеров, иначе воркер не увидит загрузку.
 const ROOT = process.env.DD_WORKSPACE_DIR || path.join(os.tmpdir(), 'strudel-deepdive');
+// Мьютексы. Общий том с хостом: деплой берёт ТОТ ЖЕ лок, поэтому разбор и
+// сборка образа не могут идти одновременно (см. deploy/deploy-server.sh).
+const LOCK_DIR = process.env.DD_LOCK_DIR || path.join(ROOT, '..', 'locks');
 
 const ALLOWED_MIME = new Set([
   'audio/webm', 'audio/ogg', 'audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/x-wav',
   'audio/aac', 'audio/flac', 'audio/x-flac', 'audio/mp3', 'application/octet-stream',
 ]);
 
-/** Задачи в памяти. Результат разбора не должен жить вечно. */
-const jobs = new Map();
+/**
+ * Хранилище задач: в памяти + на диске.
+ * Готовый результат лежит в `<ROOT>/<job-id>/job.json`, поэтому доступен по
+ * прямой ссылке `/razbor/<job-id>` даже после перезапуска сервера.
+ */
+const jobStore = createJobStore({ root: ROOT, ttlMs: JOB_TTL_MS });
+
+// Свой бюджет запросов для /api/deepdive (D-088): общий лимит /api в 20
+// req/min рассчитан на лёгкие запросы студии, а здесь живёт длинный SSE-поток
+// и опрос состояния задачи после обрыва связи.
+const deepdiveLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 240,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Слишком много запросов к режиму «Разбор». Подождите минуту.' },
+});
+router.use('/api/deepdive', deepdiveLimiter);
+
+/** Прямая ссылка на задачу: без аккаунтов, по идентификатору. */
+function permalinkFor(jobId) {
+  return `/razbor/${jobId}`;
+}
 
 function sanitizeName(name) {
   const base = path.basename(String(name || 'track')).replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -67,19 +101,31 @@ const upload = multer({
 
 /** Убирает старые задачи: и из памяти, и с диска. */
 async function pruneJobs() {
-  const now = Date.now();
-  for (const [id, job] of jobs) {
-    if (now - job.createdAt < JOB_TTL_MS) continue;
-    jobs.delete(id);
-    if (job.workspaceDir) {
-      await rm(job.workspaceDir, { recursive: true, force: true }).catch(() => {});
-    }
-  }
+  await jobStore.prune();
 }
 
 /** Пишет SSE-событие. */
 function sse(res, payload) {
   if (!res.writableEnded) res.write(`data: ${JSON.stringify(payload)}\n\n`);
+}
+
+/**
+ * Метка «разбор идёт».
+ *
+ * Файл-маркер в общем с хостом каталоге: деплой перед сборкой образа
+ * смотрит, есть ли живые маркеры, и не начинает сборку, пока разбор идёт.
+ * Лок защищает тяжёлую часть, а маркер — весь разбор, включая первые
+ * секунды анализа, когда лок ещё не взят.
+ */
+const RUNNING_DIR = path.join(LOCK_DIR, 'running');
+
+async function markRunning(jobId) {
+  await mkdir(RUNNING_DIR, { recursive: true });
+  await writeFile(path.join(RUNNING_DIR, `${jobId}.job`), String(Date.now()), 'utf8');
+}
+
+async function clearRunning(jobId) {
+  await rm(path.join(RUNNING_DIR, `${jobId}.job`), { force: true }).catch(() => {});
 }
 
 router.post('/api/deepdive/analyze', (req, res) => {
@@ -109,17 +155,21 @@ router.post('/api/deepdive/analyze', (req, res) => {
       await writeFile(inputPath, buffer);
     }
 
-    const job = {
+    const separate = String(req.body?.separate ?? '') === '1';
+    const requestedModel = String(req.body?.model || DEFAULT_SEPARATION_MODEL);
+    const model = isKnownModel(requestedModel) ? requestedModel : DEFAULT_SEPARATION_MODEL;
+
+    const job = jobStore.create({
       id: jobId,
       status: 'running',
       progress: 0,
       createdAt: Date.now(),
+      fileName: sanitizeName(req.file.originalname),
+      model,
+      separate,
       workspaceDir,
       inputPath,
-      result: null,
-      artifacts: null,
-    };
-    jobs.set(jobId, job);
+    });
 
     res.writeHead(200, {
       'Content-Type': 'text/event-stream; charset=utf-8',
@@ -128,19 +178,102 @@ router.post('/api/deepdive/analyze', (req, res) => {
       'X-Accel-Buffering': 'no',
     });
     sse(res, { type: 'stage', stage: 'upload', label: 'Файл получен', progress: 0.02 });
+    // Идентификатор и ссылка приходят сразу: по ним можно вернуться к
+    // разбору позже, даже если вкладку закрыть.
+    sse(res, { type: 'job', id: jobId, permalink: permalinkFor(jobId), separate, model });
+
+    // Оценка времени: длительность трека известна только после анализа, но
+    // браузер считает свою по файлу. Серверная оценка приходит с паспортом.
+    let estimate = null;
+
+    // Мьютекс задачи. Берём его сразу, но НЕ ждём перед анализом: паспорт
+    // должен прийти за секунды даже если мьютекс занят. Ждём его только перед
+    // разделением на стемы — до этого момента тяжёлой работы нет.
+    const lockPromise = separate
+      ? acquireLock(LOCK_DIR, {
+        name: 'job',
+        label: `разбор ${jobId.slice(0, 8)}`,
+        timeoutMs: 3 * 60 * 60 * 1000,
+        onWait: (info) => {
+          sse(res, {
+            type: 'stage',
+            stage: 'queue',
+            label: `Ждём мьютекс: занято (${info.owner})`,
+            progress: 0.05,
+          });
+        },
+      }).then((handle) => ({ handle })).catch((err) => ({ error: err }))
+      : Promise.resolve({ handle: null });
+
+    await markRunning(jobId);
+
+    /**
+     * Разделение на стемы — тяжёлая операция. Она идёт через очередь
+     * (одна за раз) и под мьютексом (деплой не может встать на середине).
+     */
+    const queuedSeparation = async (originalWav, stemsDir, options) => separationQueue.run(
+      async () => {
+        const lock = await lockPromise;
+        if (lock?.error) throw lock.error;
+        try {
+          const separation = await separateStems(originalWav, stemsDir, {
+            model: options?.model || model,
+            stage: 'separate',
+          });
+          return separation;
+        } finally {
+          await lock?.handle?.release?.();
+        }
+      },
+      {
+        onQueued: (info) => {
+          if (info.started) return;
+          sse(res, {
+            type: 'stage',
+            stage: 'queue',
+            label: `В очереди на разделение (позиция ${info.position}) — тяжёлая операция идёт по одной`,
+            progress: 0.3,
+          });
+        },
+      },
+    );
 
     try {
-      const separate = String(req.body?.separate ?? '') === '1';
-      const model = String(req.body?.model || 'htdemucs');
       const { result, artifacts } = await runDeepDive({
         workspaceDir,
         inputPath,
         fileName: sanitizeName(req.file.originalname),
         separate,
         model,
+        deps: { separate: queuedSeparation },
         onStage: (event) => {
           job.progress = event.progress ?? job.progress;
-          sse(res, { type: 'stage', ...event });
+          const payload = { type: 'stage', ...event };
+          // Пока идёт разделение — показываем, сколько ждать осталось.
+          if (event.stage === 'separate' && estimate) {
+            payload.eta = { seconds: estimate.secondsMax, label: formatEstimate(estimate) };
+          }
+          sse(res, payload);
+        },
+        onPassport: (passport) => {
+          // Паспорт — измерения, а не обещание качества. Отдаём сразу,
+          // не дожидаясь стемов.
+          estimate = estimateDeepDive({ durationS: passport.durationS, separate, model });
+          sse(res, {
+            type: 'passport',
+            payload: {
+              measurements: passport.measurements,
+              structure: passport.sections,
+              track: passport.track,
+            },
+            estimate: {
+              minutesMin: estimate.minutesMin,
+              minutesMax: estimate.minutesMax,
+              label: formatEstimate(estimate),
+              basis: estimate.basis,
+              separate: estimate.separate,
+            },
+          });
         },
       });
       result.code_twin.render.wav_url = `/api/deepdive/jobs/${jobId}/twin.wav`;
@@ -148,16 +281,25 @@ router.post('/api/deepdive/analyze', (req, res) => {
       job.artifacts = artifacts;
       job.status = 'done';
       job.progress = 1;
-      sse(res, { type: 'result', payload: result });
+      job.finishedAt = Date.now();
+      // Результат уходит на диск: с этого момента он доступен по прямой
+      // ссылке /razbor/<job-id>, даже если вкладку закрыть или сервер перезапустить.
+      await jobStore.save(job);
+      sse(res, { type: 'result', payload: result, permalink: permalinkFor(jobId) });
     } catch (err) {
       job.status = 'error';
       job.error = err?.message || String(err);
+      job.finishedAt = Date.now();
+      await jobStore.save(job);
       sse(res, {
         type: 'error',
         stage: err?.stage || 'analyze',
         message: err?.message || 'Разбор не удался',
       });
     } finally {
+      await clearRunning(jobId);
+      const lock = await lockPromise;
+      await lock?.handle?.release?.();
       res.end();
     }
   });
@@ -169,7 +311,7 @@ router.post('/api/deepdive/analyze', (req, res) => {
  */
 router.post('/api/deepdive/refine', async (req, res) => {
   const jobId = String(req.body?.job || '');
-  const job = jobs.get(jobId);
+  const job = await jobStore.get(jobId);
   if (!job?.result) {
     res.status(404).json({ error: 'Разбор не найден — сначала разберите трек' });
     return;
@@ -229,6 +371,9 @@ router.post('/api/deepdive/refine', async (req, res) => {
     if (outcome?.best?.code) job.result.code_twin.code = outcome.best.code;
     job.result.code_twin.refine_log = outcome?.log ?? [];
     job.result.code_twin.stop_reason = outcome?.stopReason ?? null;
+    // Улучшенный результат тоже уходит на диск: по ссылке должен открыться
+    // именно он, а не версия до итераций.
+    await jobStore.save(job);
     sse(res, { type: 'result', payload: job.result });
   } catch (err) {
     sse(res, { type: 'error', stage: 'refine', message: err?.message || 'Итерации не удались' });
@@ -237,9 +382,15 @@ router.post('/api/deepdive/refine', async (req, res) => {
   }
 });
 
-/** Состояние задачи. */
-router.get('/api/deepdive/jobs/:id', (req, res) => {
-  const job = jobs.get(req.params.id);
+/**
+ * Состояние задачи.
+ *
+ * Отвечает и по памяти, и по диску: готовый разбор доступен по прямой
+ * ссылке даже после перезапуска сервера. Именно этот эндпойнт клиент
+ * опрашивает после обрыва SSE-потока.
+ */
+router.get('/api/deepdive/jobs/:id', async (req, res) => {
+  const job = await jobStore.get(req.params.id);
   if (!job) {
     res.status(404).json({ error: 'Задача не найдена' });
     return;
@@ -249,14 +400,16 @@ router.get('/api/deepdive/jobs/:id', (req, res) => {
     id: job.id,
     status: job.status,
     progress: job.progress,
-    result: job.result,
+    result: job.result ?? null,
     error: job.error ?? null,
+    permalink: permalinkFor(job.id),
+    fromDisk: Boolean(job.fromDisk),
   });
 });
 
 /** WAV двойника — для A/B-плеера. */
 router.get('/api/deepdive/jobs/:id/twin.wav', async (req, res) => {
-  const job = jobs.get(req.params.id);
+  const job = await jobStore.get(req.params.id);
   const file = job?.artifacts?.twinWavPath;
   if (!file || !existsSync(file)) {
     res.status(404).json({ error: 'Рендер двойника недоступен' });
@@ -273,8 +426,8 @@ router.get('/api/deepdive/jobs/:id/twin.wav', async (req, res) => {
 });
 
 /** MIDI двойника: ударные и бас. */
-router.get('/api/deepdive/jobs/:id/midi', (req, res) => {
-  const job = jobs.get(req.params.id);
+router.get('/api/deepdive/jobs/:id/midi', async (req, res) => {
+  const job = await jobStore.get(req.params.id);
   const result = job?.result;
   if (!result) {
     res.status(404).json({ error: 'Задача не найдена' });
@@ -296,7 +449,7 @@ router.get('/api/deepdive/jobs/:id/midi', (req, res) => {
   res.end(midi);
 });
 
-/** Состояние режима: воркер анализа и рендерер. */
+/** Состояние режима: воркер анализа, рендерер и очередь тяжёлых операций. */
 router.get('/api/deepdive/health', async (_req, res) => {
   let worker = { available: false, error: 'не проверен' };
   try {
@@ -305,7 +458,13 @@ router.get('/api/deepdive/health', async (_req, res) => {
     worker = { available: false, error: err?.message || String(err) };
   }
   const render = { available: true, note: 'рендерер поднимается при первом разборе' };
-  res.json({ ok: Boolean(worker.available), worker, render });
+  res.json({
+    ok: Boolean(worker.available),
+    worker,
+    render,
+    queue: separationQueue.stats(),
+    jobs: { inMemory: jobStore.size() },
+  });
 });
 
 // Периодическая уборка. Раз в час — достаточно.

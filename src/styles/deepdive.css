@@ -153,6 +153,62 @@ main.app-grid[data-view='dive'] > .col-right {
   accent-color: var(--jade);
 }
 
+/* Подопция «высокое качество» — вложена в основную галочку разделения. */
+.dive-check-sub {
+  margin-left: var(--sp-4);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.dive-check-sub[hidden] {
+  display: none;
+}
+
+/* Оценка времени: честная, с диапазоном и основанием. */
+.dive-estimate {
+  margin: 0;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+}
+
+.dive-estimate[hidden] {
+  display: none;
+}
+
+/* Ссылка на разбор: результат переживает закрытую вкладку. */
+.dive-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.dive-link[hidden] {
+  display: none;
+}
+
+.dive-link-label {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.dive-link-url {
+  flex: 1 1 220px;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--field-bg);
+  color: var(--text);
+}
+
 /* --- Прогресс по этапам --- */
 .dive-progress-wrap {
   display: flex;

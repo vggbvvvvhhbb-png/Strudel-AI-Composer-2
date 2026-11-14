@@ -53,6 +53,11 @@ export async function runDeepDive(params) {
     separate = false,
     model = 'htdemucs',
     onStage = () => {},
+    // Паспорт приходит сразу после базового анализа — до разделения на стемы.
+    // На CPU разделение занимает десятки минут, и ждать результата, чтобы
+    // увидеть темп и лад, — это ровно то «используешь ли ты продукт»,
+    // которое мы чиним. Подробности — docs/DECISIONS.md (D-090).
+    onPassport = () => {},
     // Зависимости подменяются в тестах: без Python-воркера и без браузера
     // пайплайн всё равно должен собираться и проверяться.
     deps = {},
@@ -76,6 +81,17 @@ export async function runDeepDive(params) {
     convert: convertFn,
     analyze,
     stage,
+  });
+
+  // Паспорт отдаём сразу: измерения уже есть, а впереди — самая долгая
+  // часть (разделение на стемы). Пользователь видит темп, лад и громкость
+  // через секунды, а не через полчаса.
+  const durationS = original.frames / original.sampleRate;
+  onPassport({
+    measurements,
+    sections,
+    durationS,
+    track: { id: path.basename(workspaceDir), duration_s: round(durationS, 3), file_name: fileName },
   });
 
   // --- Этап 2: разделение на стемы ------------------------------------------

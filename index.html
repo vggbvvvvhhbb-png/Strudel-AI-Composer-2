@@ -205,6 +205,11 @@
                 <input id="dive-separate" type="checkbox" />
                 <span>Разделить на стемы (дольше, но видно слои)</span>
               </label>
+              <label class="dive-check dive-check-sub" id="dive-hq-wrap" hidden>
+                <input id="dive-hq" type="checkbox" />
+                <span>Высокое качество разделения — экспериментальный ночной режим</span>
+              </label>
+              <p id="dive-estimate" class="dive-estimate" hidden></p>
               <div class="row">
                 <button id="dive-analyze" class="btn primary" type="button" disabled>🔬 Разобрать</button>
                 <button id="dive-abort" class="btn ghost" type="button" hidden>⏹ Прервать</button>
@@ -213,6 +218,12 @@
                 <div class="dive-progress"><div id="dive-progress-bar" class="dive-progress-bar"></div></div>
                 <div id="dive-stage" class="dive-stage">ожидание</div>
                 <ol id="dive-stages" class="dive-stages"></ol>
+              </div>
+              <div id="dive-link" class="dive-link" hidden>
+                <span class="dive-link-label">Ссылка на разбор</span>
+                <input id="dive-link-url" class="dive-link-url" type="text" readonly />
+                <button id="dive-link-copy" class="btn ghost" type="button">Скопировать</button>
+                <span id="dive-link-note" class="hint"></span>
               </div>
               <p id="dive-error" class="dive-error" role="alert" hidden></p>
             </section>

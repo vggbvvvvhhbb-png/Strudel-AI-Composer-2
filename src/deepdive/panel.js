@@ -7,7 +7,7 @@
 // Модуль ничего не знает про устройство студии: код в редактор кладётся
 // через существующие syncMixer/syncTransport, сообщения — через log.
 import '../styles/deepdive.css';
-import { analyzeTrack, refineTrack, downloadMidi } from './api.js';
+import { analyzeTrack, refineTrack, downloadMidi, fetchJob, waitForJob } from './api.js';
 import { createAbPlayer } from './player.js';
 import { $, el, clear, num, fmtTime, downloadBlob } from './dom.js';
 import {
@@ -19,6 +19,7 @@ import {
   renderHonesty,
   renderIterations,
 } from './render.js';
+import { estimateDeepDive, formatEstimate, formatRemaining } from './estimate.js';
 import { syncMixer } from '../mixer.js';
 import { syncTransport } from '../transport.js';
 import { log } from '../ui.js';
@@ -43,6 +44,11 @@ const state = {
   abort: null,
   busy: false,
   refineBusy: false,
+  durationS: 0,
+  // Отсчёт до конца самого долгого этапа: считается на клиенте, чтобы
+  // «осталось ~N мин» не требовало связи с сервером.
+  eta: null,
+  etaTimer: 0,
 };
 
 let player = null;
@@ -64,9 +70,64 @@ export function initDeepDive() {
   wireUpload();
   wireActions();
   wireCodeModal();
+  updateHqVisibility();
 
   // ?dive=1 открывает разбор сразу; иначе — студия, но вкладка «Разбор» доступна.
   setView(flagFromUrl() ? 'dive' : 'studio');
+
+  // Прямая ссылка /razbor/<job-id>: открываем разбор по идентификатору.
+  const linkedJob = jobIdFromLocation();
+  if (linkedJob) openJobById(linkedJob);
+}
+
+/* --- Прямая ссылка на задачу --- */
+
+function jobIdFromLocation() {
+  const match = /^\/razbor\/([A-Za-z0-9-]+)\/?$/.exec(window.location.pathname);
+  return match ? match[1] : null;
+}
+
+/**
+ * Открыть разбор по ссылке.
+ *
+ * Что обещаем и что проверяем: задача живёт на сервере, её результат лежит
+ * на диске — значит вкладку можно закрыть и вернуться по ссылке. Если задача
+ * ещё идёт — показываем прогресс и доводим до результата.
+ */
+async function openJobById(jobId) {
+  setView('dive');
+  hideError();
+  resetProgress();
+  updateProgress('reconnect', 'Открываем разбор по ссылке…', 0);
+  try {
+    const data = await fetchJob(jobId);
+    state.jobId = jobId;
+    showPermalink(jobId);
+    if (data.status === 'done' && data.result) {
+      applyPayload(data.result);
+      return;
+    }
+    if (data.status === 'error') {
+      showError(data.error || 'Разбор не удался');
+      return;
+    }
+    await waitForJob(jobId, { onEvent: handleEvent });
+  } catch (err) {
+    showError(humanError(err));
+  }
+}
+
+function showPermalink(jobId) {
+  const box = $('dive-link');
+  if (!box) return;
+  const url = `${window.location.origin}/razbor/${jobId}`;
+  const input = $('dive-link-url');
+  const note = $('dive-link-note');
+  box.hidden = false;
+  if (input) input.value = url;
+  if (note) {
+    note.textContent = 'Разбор идёт на сервере — вкладку можно закрыть и вернуться по этой ссылке.';
+  }
 }
 
 /* --- Фиче-флаг и переключение вкладок --- */
@@ -149,6 +210,107 @@ function wireUpload() {
   $('dive-abort')?.addEventListener('click', () => {
     state.abort?.abort();
   });
+  $('dive-separate')?.addEventListener('change', () => {
+    updateHqVisibility();
+    updateEstimate();
+  });
+  $('dive-hq')?.addEventListener('change', () => {
+    updateEstimate();
+  });
+  $('dive-link-copy')?.addEventListener('click', copyPermalink);
+}
+
+/**
+ * Режим «высокое качество» — экспериментальный и ночной: он в 3–6 раз
+ * дороже обычного по времени. Показываем его только когда разделение
+ * включено, иначе он бессмыслен.
+ */
+function updateHqVisibility() {
+  const wrap = $('dive-hq-wrap');
+  if (!wrap) return;
+  const separate = Boolean($('dive-separate')?.checked);
+  wrap.hidden = !separate;
+  if (!separate) {
+    const hq = $('dive-hq');
+    if (hq) hq.checked = false;
+  }
+}
+
+/** Модель разделения: обычная или «высокое качество» (ночной режим). */
+function currentModel() {
+  return $('dive-hq')?.checked ? 'htdemucs_ft' : 'htdemucs';
+}
+
+/**
+ * Оценка времени. Считается по длительности файла — до ответа сервера —
+ * и уточняется серверной оценкой, когда приходит паспорт.
+ */
+function updateEstimate(serverEstimate = null) {
+  const box = $('dive-estimate');
+  if (!box) return;
+  const separate = Boolean($('dive-separate')?.checked);
+  const model = currentModel();
+  const durationS = serverEstimate?.durationS ?? state.durationS;
+
+  if (!serverEstimate && !durationS) {
+    box.hidden = true;
+    return;
+  }
+
+  const estimate = serverEstimate
+    ? {
+      minutesMin: serverEstimate.minutesMin,
+      minutesMax: serverEstimate.minutesMax,
+      separate: serverEstimate.separate ?? separate,
+    }
+    : estimateDeepDive({ durationS, separate, model });
+
+  box.hidden = false;
+  const headline = `Оценка: ${formatEstimate(estimate)}`;
+  const detail = estimate.separate
+    ? 'разделение на стемы на CPU — верхняя граница по худшему замеру'
+    : 'без разделения на стемы';
+  const modelNote = estimate.separate && model === 'htdemucs_ft'
+    ? '· режим «высокое качество» (экспериментальный, ночной)'
+    : '';
+  box.textContent = `${headline} · ${detail}${modelNote}`;
+}
+
+function copyPermalink() {
+  const input = $('dive-link-url');
+  if (!input?.value) return;
+  const done = () => {
+    const note = $('dive-link-note');
+    if (note) note.textContent = 'Ссылка скопирована.';
+  };
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(input.value).then(done).catch(() => {
+      input.select();
+    });
+    return;
+  }
+  input.select();
+}
+
+/** Длительность файла — для оценки до первого ответа сервера. */
+function readDuration(file) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const url = URL.createObjectURL(file);
+    const audio = new Audio();
+    const done = (value) => {
+      if (settled) return;
+      settled = true;
+      URL.revokeObjectURL(url);
+      resolve(value);
+    };
+    audio.addEventListener('loadedmetadata', () => {
+      done(Number.isFinite(audio.duration) ? audio.duration : 0);
+    });
+    audio.addEventListener('error', () => done(0));
+    setTimeout(() => done(0), 4000);
+    audio.src = url;
+  });
 }
 
 function takeFile(file) {
@@ -164,6 +326,12 @@ function takeFile(file) {
     const note = $('dive-drop-text');
     if (note) note.textContent = `${file.name} — браузер не смог декодировать этот файл`;
   });
+
+  // Длительность — для оценки времени: её знает браузер, а сервер ещё нет.
+  readDuration(file).then((duration) => {
+    state.durationS = duration;
+    updateEstimate();
+  });
 }
 
 /* --- Разбор --- */
@@ -173,6 +341,7 @@ async function runAnalyze() {
   setBusy(true);
   hideError();
   resetProgress();
+  updateEstimate();
 
   const controller = new AbortController();
   state.abort = controller;
@@ -181,6 +350,7 @@ async function runAnalyze() {
     const payload = await analyzeTrack({
       file: state.file,
       separate: Boolean($('dive-separate')?.checked),
+      model: currentModel(),
       onEvent: handleEvent,
       signal: controller.signal,
     });
@@ -191,19 +361,45 @@ async function runAnalyze() {
   } finally {
     setBusy(false);
     state.abort = null;
+    stopEta();
   }
 }
 
 function handleEvent(event) {
   if (!event || typeof event !== 'object') return;
   if (event.type === 'stage') {
-    updateProgress(event.stage, event.label, event.progress);
+    updateProgress(event.stage, event.label, event.progress, event.eta);
+  } else if (event.type === 'job') {
+    if (event.id) state.jobId = event.id;
+    showPermalink(event.id);
+  } else if (event.type === 'passport') {
+    // Паспорт приходит до стемов: измерения видны сразу.
+    applyPassport(event.payload, event.estimate);
   } else if (event.type === 'result' && event.payload) {
     applyPayload(event.payload);
   }
 }
 
-function updateProgress(stage, label, progress) {
+/**
+ * Паспорт — измерения трека. Показываем их сразу, не дожидаясь стемов:
+ * на CPU разделение занимает десятки минут, и ждать результата, чтобы
+ * увидеть темп, — это плохой UX.
+ */
+function applyPassport(payload, estimate) {
+  renderPassport(payload);
+  if (payload?.structure) renderStructure(payload);
+  if (estimate) {
+    updateEstimate({ ...estimate, durationS: payload?.track?.duration_s ?? state.durationS });
+  }
+}
+
+/**
+ * Прогресс по этапам.
+ *
+ * Тексты нейтральные: описывают, что происходит, и не обещают ни времени
+ * точнее измеренного, ни качества результата.
+ */
+function updateProgress(stage, label, progress, eta = null) {
   const wrap = $('dive-progress-wrap');
   if (wrap) wrap.hidden = false;
 
@@ -213,21 +409,58 @@ function updateProgress(stage, label, progress) {
     bar.style.width = `${Number.isFinite(value) ? Math.min(1, Math.max(0, value)) * 100 : 0}%`;
   }
 
+  // «В очереди» — это состояние этапа разделения, а не отдельный этап:
+  // в списке подсвечиваем разделение, а текстом говорим, что идёт ожидание.
+  const listStage = stage === 'queue' ? 'separate' : stage;
   const stageEl = $('dive-stage');
-  if (stageEl) stageEl.textContent = label || STAGE_TITLES[stage] || stage || 'работаем…';
+  if (stageEl) stageEl.textContent = label || STAGE_TITLES[listStage] || stage || 'работаем…';
 
   const list = $('dive-stages');
-  if (!list) return;
-  clear(list);
-  const currentIndex = STAGES.indexOf(stage);
-  for (const name of STAGES) {
-    const item = el('li', 'dive-stage-item');
-    const index = STAGES.indexOf(name);
-    if (stage === 'done' || (currentIndex >= 0 && index < currentIndex)) item.classList.add('is-done');
-    else if (name === stage) item.classList.add('is-current');
-    item.append(el('span', 'dive-stage-dot', name === stage ? '●' : '○'));
-    item.append(el('span', 'dive-stage-name', STAGE_TITLES[name] ?? name));
-    list.append(item);
+  if (list) {
+    clear(list);
+    const currentIndex = STAGES.indexOf(listStage);
+    for (const name of STAGES) {
+      const item = el('li', 'dive-stage-item');
+      const index = STAGES.indexOf(name);
+      if (stage === 'done' || (currentIndex >= 0 && index < currentIndex)) item.classList.add('is-done');
+      else if (name === listStage) item.classList.add('is-current');
+      item.append(el('span', 'dive-stage-dot', name === listStage ? '●' : '○'));
+      item.append(el('span', 'dive-stage-name', STAGE_TITLES[name] ?? name));
+      list.append(item);
+    }
+  }
+
+  if (eta?.seconds) startEta(label, eta.seconds);
+  else if (stage !== 'separate') stopEta();
+}
+
+/**
+ * Обратный отсчёт до конца самого долгого этапа.
+ *
+ * Считается на клиенте: сервер не шлёт событий минутами подряд (Demucs молчит),
+ * а «осталось ~12 мин» должно обновляться само.
+ */
+function startEta(label, seconds) {
+  state.eta = { label, deadline: Date.now() + Number(seconds) * 1000 };
+  if (state.etaTimer) return;
+  state.etaTimer = setInterval(() => {
+    if (!state.eta) {
+      stopEta();
+      return;
+    }
+    const left = Math.round((state.eta.deadline - Date.now()) / 1000);
+    const stageEl = $('dive-stage');
+    if (stageEl && left > 0) {
+      stageEl.textContent = `${state.eta.label} — ${formatRemaining(left)}`;
+    }
+  }, 30000);
+}
+
+function stopEta() {
+  state.eta = null;
+  if (state.etaTimer) {
+    clearInterval(state.etaTimer);
+    state.etaTimer = 0;
   }
 }
 
@@ -239,6 +472,7 @@ function resetProgress() {
   const stageEl = $('dive-stage');
   if (stageEl) stageEl.textContent = 'загружаем файл…';
   clear($('dive-stages'));
+  stopEta();
 }
 
 function setBusy(busy) {
@@ -257,6 +491,11 @@ function setBusy(busy) {
 function applyPayload(payload) {
   state.payload = payload;
   state.jobId = payload?.track?.id ?? payload?.job_id ?? payload?.id ?? null;
+  if (state.jobId) showPermalink(state.jobId);
+
+  // Длительность из результата — точнее, чем чтение метаданных в браузере.
+  const durationS = Number(payload?.track?.duration_s);
+  if (Number.isFinite(durationS) && durationS > 0) state.durationS = durationS;
 
   renderPassport(payload);
   renderStructure(payload);
@@ -281,6 +520,9 @@ function applyPayload(payload) {
   if (stageEl) stageEl.textContent = 'готово';
   const bar = $('dive-progress-bar');
   if (bar) bar.style.width = '100%';
+  const estimate = $('dive-estimate');
+  if (estimate) estimate.hidden = true;
+  stopEta();
 }
 
 // Двойник подгружаем для A/B-сравнения. LUFS берём из метрик рендера;
@@ -514,6 +756,12 @@ function humanError(err) {
   }
   if (/NotSupportedError|EncodingError/i.test(raw)) {
     return 'Браузер не смог декодировать этот файл';
+  }
+  if (/Задача не найдена/i.test(raw)) {
+    return 'Задача не найдена: разбор не состоялся или результат удалён по TTL';
+  }
+  if (/Мьютекс занят/i.test(raw)) {
+    return 'Другая тяжёлая операция заняла мьютекс — повторите разбор позже';
   }
   return raw.length > 240 ? `${raw.slice(0, 240)}…` : raw;
 }
