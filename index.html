@@ -4,370 +4,218 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
-    <title>Strudel AI Composer</title>
-    <!-- Шрифт вендорен локально: внешний fonts.googleapis.com ломался CSP
-         (style-src 'self') и делал приложение зависимым от чужого домена. -->
+    <title>Strudel — опишите музыку словами, услышите её за 5 секунд</title>
+    <meta
+      name="description"
+      content="Опишите музыку обычными словами — услышите её через 5 секунд. Не запись из библиотеки, а живой код: его можно править, а оценка трека считается по измерениям, а не по обещаниям."
+    />
+    <meta property="og:title" content="Strudel — опишите музыку словами" />
+    <meta
+      property="og:description"
+      content="Опишите музыку словами — услышите её за 5 секунд. Настоящий код, честные измерения, правки по одной фразе."
+    />
     <link rel="stylesheet" href="/fonts/fonts.css" />
   </head>
-  <body>
-    <header class="app-header">
-      <div class="brand">
-        <span class="brand-name">Strudel AI Composer</span>
-        <span class="brand-sub">опишите музыку — AI напишет код и исполнит его</span>
-      </div>
-      <div class="header-actions">
-        <div class="shortcuts" aria-hidden="true">
-          <span><kbd>Space</kbd>play</span>
-          <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd>генерация</span>
-          <span><kbd>Ctrl</kbd>+<kbd>S</kbd>пресет</span>
-        </div>
-        <button id="theme-toggle" class="btn ghost" type="button" title="Сменить тему">◐ Jade</button>
-        <!-- Навигация режима «Разбор». Скрыта, пока режим не включён флагом ?dive=1:
-             без флага шапка студии выглядит ровно как раньше. -->
-        <div id="dive-nav" class="dive-nav" role="tablist" aria-label="Режим работы" hidden>
-          <button id="dive-tab-studio" class="dive-tab" type="button" role="tab" aria-selected="true">🎼 Студия</button>
-          <button id="dive-tab-dive" class="dive-tab" type="button" role="tab" aria-selected="false">🔬 Разбор</button>
-        </div>
-      </div>
+  <body class="landing-body">
+    <header class="land-header">
+      <a class="land-brand" href="/">
+        <span class="land-brand-mark">◈</span>
+        <span class="land-brand-name">Strudel</span>
+      </a>
+      <nav class="land-nav">
+        <a class="land-link" href="/studio.html">Студия</a>
+        <a class="land-link" href="/studio.html?dive=1">Разбор трека</a>
+        <button id="theme-toggle" class="land-theme" type="button" title="Сменить тему">◐ Jade</button>
+      </nav>
     </header>
 
-    <main class="app-grid">
-      <!-- Левая колонка: промпт, улучшение, история -->
-      <aside class="col-left">
-        <section class="panel" aria-label="Генерация">
-          <label class="field-label" for="prompt-input">Команда</label>
-          <div class="prompt-row">
-            <textarea id="prompt-input" rows="3" placeholder="Например: спокойный lo-fi с пианино и мягким басом"></textarea>
-            <button id="btn-voice" class="btn voice-btn" type="button" title="Записать голосовое описание" aria-pressed="false" hidden>🎤</button>
-          </div>
-          <label class="field-label" for="compose-mode">Режим</label>
-          <select id="compose-mode">
-            <option value="structured" selected>Структурный — план, затем код</option>
-            <option value="free">Свободный — код пишет модель</option>
-          </select>
-          <button id="btn-run" class="btn primary wide" type="button">▶ Сгенерировать</button>
-          <button id="btn-compose" class="btn wide" type="button">🧩 Спланировать и собрать</button>
-          <div class="row">
-            <button id="btn-compose-mutate" class="btn" type="button">🎲 Ещё вариант</button>
-            <button id="btn-compose-variants" class="btn ghost" type="button">🧬 Варианты плана</button>
-          </div>
-        </section>
-
-        <section class="panel" aria-label="Ход композиции">
-          <h2 class="panel-title">◆ Ход композиции</h2>
-          <div id="compose-trace" class="compose-trace" aria-live="polite"></div>
-          <h2 class="panel-title">Форма трека</h2>
-          <div id="compose-sections" class="compose-sections"></div>
-          <div id="compose-variants" class="compose-variants"></div>
-        </section>
-
-        <section class="panel" aria-label="Улучшить трек">
-          <label class="field-label" for="improve-input">Что поправить</label>
-          <textarea id="improve-input" rows="2" placeholder="Например: добавь синкопу в бас"></textarea>
-          <button id="btn-improve" class="btn wide" type="button">✨ Улучшить</button>
-        </section>
-
-        <section class="panel" aria-label="План композиции">
-          <h2 class="panel-title">🧩 План композиции</h2>
-          <p class="panel-hint">
-            Описание → план → код. Правки меняют план, а не текст: видно, что стало
-            мрачнее, быстрее или спокойнее.
+    <main>
+      <!-- Главный экран: обещание + одно действие -->
+      <section class="hero">
+        <div class="hero-inner">
+          <p class="hero-kicker">Музыка по описанию — с настоящим кодом внутри</p>
+          <h1 class="hero-title">
+            Опишите музыку словами —<br />
+            <span class="hero-accent">услышите её через 5 секунд</span>
+          </h1>
+          <p class="hero-sub">
+            Напишите, что хотите услышать: жанр, настроение, темп, инструменты. Сервер
+            соберёт из этого играющий трек прямо в браузере — и даст его не файлом, а
+            кодом, который можно править дальше.
           </p>
-          <button id="btn-ir-plan" class="btn wide" type="button">🧩 Собрать план</button>
-          <div class="row" id="ir-transforms"></div>
-          <div class="row">
-            <button id="btn-ir-search" class="btn ghost" type="button">🔍 Найти лучший (16)</button>
-            <button id="btn-ir-critique" class="btn ghost" type="button">🛠 Починить по разбору</button>
-          </div>
-          <div id="ir-panel"><div id="ir-report"></div></div>
-        </section>
 
-        <section class="panel" aria-label="Музыкальный разбор">
-          <h2 class="panel-title">🎼 Музыкальный разбор</h2>
-          <label class="field-label" for="music-style">Стиль-референс</label>
-          <select id="music-style"></select>
-          <button id="btn-analyze" class="btn wide" type="button">🎼 Разобрать</button>
-          <div id="music-score"></div>
-          <div id="music-criteria"></div>
-          <div id="music-issues"></div>
-          <div class="row">
-            <button id="btn-refine" class="btn" type="button">✨ Улучшить по разбору</button>
-            <button id="btn-variants" class="btn ghost" type="button">🎲 Варианты A/B</button>
-          </div>
-          <div id="music-variants"></div>
-        </section>
+          <form id="hero-form" class="hero-form" autocomplete="off">
+            <label class="visually-hidden" for="hero-input">Опишите трек</label>
+            <textarea
+              id="hero-input"
+              rows="3"
+              placeholder="Например: тёмный ло-фай, пыльный грув, тёплые пэды, 88 BPM"
+            ></textarea>
+            <button id="hero-submit" class="btn primary hero-submit" type="submit">
+              ✨ Создать трек
+            </button>
+          </form>
 
-        <section class="panel" aria-label="Пресеты и история">
-          <h2 class="panel-title">Пресеты</h2>
-          <div id="preset-list" class="list"></div>
-          <div class="row wrap">
-            <button id="btn-save-preset" class="btn" type="button">💾 Сохранить</button>
-            <button id="btn-export" class="btn ghost" type="button">⬇ Экспорт</button>
-            <label class="btn ghost">⬆ Импорт<input id="btn-import-input" type="file" accept="application/json" hidden /></label>
-            <button id="btn-clear-history" class="btn ghost" type="button">Очистить историю</button>
-          </div>
-          <h2 class="panel-title">История</h2>
-          <div id="history-list" class="list"></div>
-        </section>
-      </aside>
-
-      <!-- Центр: редактор кода + живая партитура (пианоролл под каждой $PART:) -->
-      <section class="col-center">
-        <div id="status" class="status" hidden></div>
-
-        <section id="compose-timeline" class="compose-timeline" hidden aria-label="Таймлайн секций">
-          <div class="compose-timeline-head">
-            <span>Таймлайн секций</span>
-            <span id="compose-energy-wrap" class="compose-energy-wrap">
-              <svg
-                id="compose-energy"
-                class="compose-energy-curve"
-                viewBox="0 0 100 32"
-                preserveAspectRatio="none"
-                role="img"
-                aria-label="Кривая энергии трека по секциям"
-              ></svg>
-            </span>
-          </div>
-          <div id="compose-timeline-blocks" class="compose-timeline-blocks"></div>
-        </section>
-
-        <label class="field-label" for="code-input">Код Strudel</label>
-        <div class="editor-wrap">
-          <pre id="code-hl" class="code" aria-hidden="true"></pre>
-          <textarea id="code-input" class="code" rows="14" spellcheck="false" placeholder="// Здесь появится сгенерированный код"></textarea>
-        </div>
-
-        <div class="row">
-          <button id="btn-play-code" class="btn" type="button">▶ Играть этот код</button>
-          <button id="btn-share" class="btn ghost" type="button">🔗 Ссылка</button>
-          <button id="btn-clear" class="btn ghost" type="button">⏹ Сброс</button>
-        </div>
-
-        <div class="visual-stage">
-          <div class="visual-head"><span>◆</span><span>живая партитура</span></div>
-          <div id="strudel-container" aria-label="Визуализация партий"></div>
-        </div>
-
-        <section id="diff-panel" class="panel diff" hidden>
-          <div class="row spread">
-            <h2 class="panel-title">Предложенные правки</h2>
-            <div class="row">
-              <button id="btn-diff-apply" class="btn primary" type="button">✓ Применить</button>
-              <button id="btn-diff-reject" class="btn ghost" type="button">✕ Отклонить</button>
+          <div class="hero-examples">
+            <span class="hero-examples-label">или начните с примера:</span>
+            <div id="hero-chips" class="hero-chips">
+              <button class="chip" type="button" data-prompt="тёмный ло-фай, пыльный грув, тёплые пэды, 88 BPM">
+                тёмный ло-фай
+              </button>
+              <button class="chip" type="button" data-prompt="энергичный техно 4/4 на 132 BPM, тяжёлый бас">
+                техно 4/4
+              </button>
+              <button class="chip" type="button" data-prompt="спокойное пианино в ля миноре, 70 BPM, много воздуха">
+                пианино, ля минор
+              </button>
+              <button class="chip" type="button" data-prompt="drum and bass, тёмный и быстрый, 174 BPM">
+                drum &amp; bass
+              </button>
             </div>
           </div>
-          <div id="diff-view" class="diff-view"></div>
-        </section>
 
-        <h2 class="panel-title">Лог</h2>
-        <div id="log" class="log" aria-live="polite"></div>
+          <p class="hero-note">
+            Звук включится после одного клика — так требует браузер. Ничего не ставится,
+            никуда не отправляется, кроме самого описания.
+          </p>
+        </div>
       </section>
 
-      <!-- Правая колонка: микшер -->
-      <aside class="col-right">
-        <section class="panel" aria-label="Микшер">
-          <h2 class="panel-title">Микшер</h2>
-          <div id="mixer" class="mixer"></div>
-          <p class="hint">M — заглушить партию, S — соло, ползунок — громкость. Индикатор показывает, что партия звучит сейчас.</p>
-        </section>
-      </aside>
-
-      <!-- Режим «Разбор» (feature flag ?dive=1). Панель скрыта по умолчанию:
-           разметка есть всегда, но hidden + display:none не дают ей влиять
-           на вёрстку студии. -->
-      <section id="dive-panel" class="dive-panel" hidden aria-label="Разбор трека">
-        <div class="dive-inner">
-          <header class="dive-head">
-            <h2 class="panel-title">🔬 Разбор трека</h2>
-            <p class="hint">
-              Загрузите трек: сервер измерит темп, лад, громкость, структуру и слои, соберёт
-              из измеренного скелета код-двойник и сравнит его с оригиналом. Каждое число —
-              измерение, а не догадка.
+      <!-- Что внутри -->
+      <section class="section">
+        <h2 class="section-title">Это не mp3 из библиотеки</h2>
+        <p class="section-lead">
+          Обычный генератор отдаёт файл, и всё. Здесь трек — это программа: её видно,
+          её можно править по одной фразе и проверять числами.
+        </p>
+        <div class="cards">
+          <article class="card">
+            <div class="card-icon">◆</div>
+            <h3 class="card-title">Настоящий код</h3>
+            <p class="card-text">
+              Под каждым треком лежит читаемый код: ноты, партии, темп. Его можно
+              открыть, отредактировать и послушать изменения — без перегенерации.
             </p>
-          </header>
+          </article>
+          <article class="card">
+            <div class="card-icon">📐</div>
+            <h3 class="card-title">Оценка по измерениям</h3>
+            <p class="card-text">
+              Темп, лад, плотность, грув, диапазон, баланс — всё считается, а не
+              оценивается на глаз. Трек получает балл и конкретные замечания, а не
+              общие слова.
+            </p>
+          </article>
+          <article class="card">
+            <div class="card-icon">🛠</div>
+            <h3 class="card-title">Правки одной фразой</h3>
+            <p class="card-text">
+              «Сделай бас тяжелее», «добавь синкопу», «убавь темп» — модель переписывает
+              трек под замечание и показывает, что изменилось.
+            </p>
+          </article>
+        </div>
+      </section>
 
-          <div class="dive-grid">
-            <!-- Загрузка и прогресс по этапам -->
-            <section class="panel dive-card" aria-label="Загрузка трека">
-              <h3 class="panel-title">⬆ Трек</h3>
-              <div
-                id="dive-drop"
-                class="dive-drop"
-                role="button"
-                tabindex="0"
-                aria-label="Перетащите аудиофайл или нажмите, чтобы выбрать файл"
-              >
-                <span id="dive-drop-text">Перетащите аудиофайл сюда или нажмите, чтобы выбрать</span>
-                <input id="dive-file" type="file" accept="audio/*,.wav,.mp3,.ogg,.flac,.m4a" hidden />
-              </div>
-              <label class="dive-check">
-                <input id="dive-separate" type="checkbox" />
-                <span>Разделить на стемы (дольше, но видно слои)</span>
-              </label>
-              <label class="dive-check dive-check-sub" id="dive-hq-wrap" hidden>
-                <input id="dive-hq" type="checkbox" />
-                <span>Высокое качество разделения — экспериментальный ночной режим</span>
-              </label>
-              <p id="dive-estimate" class="dive-estimate" hidden></p>
-              <div class="row">
-                <button id="dive-analyze" class="btn primary" type="button" disabled>🔬 Разобрать</button>
-                <button id="dive-abort" class="btn ghost" type="button" hidden>⏹ Прервать</button>
-              </div>
-              <div id="dive-progress-wrap" class="dive-progress-wrap" hidden>
-                <div class="dive-progress"><div id="dive-progress-bar" class="dive-progress-bar"></div></div>
-                <div id="dive-stage" class="dive-stage">ожидание</div>
-                <ol id="dive-stages" class="dive-stages"></ol>
-              </div>
-              <div id="dive-link" class="dive-link" hidden>
-                <span class="dive-link-label">Ссылка на разбор</span>
-                <input id="dive-link-url" class="dive-link-url" type="text" readonly />
-                <button id="dive-link-copy" class="btn ghost" type="button">Скопировать</button>
-                <span id="dive-link-note" class="hint"></span>
-              </div>
-              <p id="dive-error" class="dive-error" role="alert" hidden></p>
-            </section>
+      <!-- Как это работает -->
+      <section class="section">
+        <h2 class="section-title">Три шага</h2>
+        <ol class="steps">
+          <li class="step">
+            <span class="step-num">1</span>
+            <h3 class="step-title">Опишите</h3>
+            <p class="step-text">
+              Словами или голосом: «тёмный ло-фай, пыльный грув, 88 BPM». Можно
+              выбрать готовый пример.
+            </p>
+          </li>
+          <li class="step">
+            <span class="step-num">2</span>
+            <h3 class="step-title">Слушайте</h3>
+            <p class="step-text">
+              Трек играет сразу, партии видно на экране. Рядом — оценка и замечания по
+              измерениям.
+            </p>
+          </li>
+          <li class="step">
+            <span class="step-num">3</span>
+            <h3 class="step-title">Правьте</h3>
+            <p class="step-text">
+              Скажите, что не так, — или откройте код и поменяйте ноты руками. Всё
+              слышно сразу.
+            </p>
+          </li>
+        </ol>
+      </section>
 
-            <!-- Паспорт трека: измерения -->
-            <section class="panel dive-card" aria-label="Паспорт трека">
-              <h3 class="panel-title">🪪 Паспорт трека</h3>
-              <div id="dive-passport" class="dive-passport">
-                <p class="hint">Загрузите трек — здесь появятся измерения.</p>
-              </div>
-            </section>
+      <!-- Второй продукт: разбор чужого трека -->
+      <section class="section section-alt">
+        <div class="split">
+          <div>
+            <p class="hero-kicker">Для продюсеров и битмейкеров</p>
+            <h2 class="section-title">Разберите чужой трек</h2>
+            <p class="section-lead">
+              Загрузите любой трек: сервер измерит темп, лад, громкость, структуру и
+              слои, соберёт из измеренного скелета код-двойник и сравнит его с
+              оригиналом по ритму, басу, тембру и груву. Каждое число — измерение, а не
+              догадка.
+            </p>
+            <p class="section-lead section-lead-dim">
+              Разбор без разделения на стемы занимает около минуты. С разделением
+              слоёв — до получаса: считается честно, по замерам.
+            </p>
+            <a class="btn primary" href="/studio.html?dive=1">🔬 Разобрать трек</a>
+          </div>
+          <ul class="split-list">
+            <li><span class="split-dot"></span> Паспорт трека: темп, лад, LUFS, структура</li>
+            <li><span class="split-dot"></span> Код-двойник, который играет в браузере</li>
+            <li><span class="split-dot"></span> Сравнение по слоям: ритм, бас, тембр, грув</li>
+            <li><span class="split-dot"></span> Экспорт кода и MIDI в ваш DAW</li>
+          </ul>
+        </div>
+      </section>
 
-            <!-- Структура трека -->
-            <section class="panel dive-card dive-card-wide" aria-label="Структура трека">
-              <h3 class="panel-title">🧱 Структура</h3>
-              <div id="dive-structure" class="dive-structure">
-                <p class="hint">Таймлайн секций появится после разбора.</p>
-              </div>
-            </section>
-
-            <!-- Слои: матрица и микшер стемов -->
-            <section class="panel dive-card dive-card-wide" aria-label="Слои трека">
-              <h3 class="panel-title">🎛 Слои</h3>
-              <div class="dive-layers-wrap">
-                <div>
-                  <div class="dive-subtitle">Матрица «секция × слой»</div>
-                  <div id="dive-matrix" class="dive-matrix">
-                    <p class="hint">Активность слоёв по секциям появится после разбора.</p>
-                  </div>
-                </div>
-                <div>
-                  <div class="dive-subtitle">Микшер стемов</div>
-                  <div id="dive-layers" class="dive-layers">
-                    <p class="hint">Состав слоёв появится после разбора.</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <!-- Код-двойник -->
-            <section class="panel dive-card" aria-label="Код-двойник">
-              <h3 class="panel-title">🧬 Код-двойник</h3>
-              <div id="dive-twin-status" class="dive-twin-status">Рендер не выполнялся</div>
-              <pre id="dive-code" class="dive-code">Код не пришёл — данных нет</pre>
-              <div class="row">
-                <button id="dive-code-show" class="btn" type="button" disabled>👁 Показать код</button>
-                <button id="dive-code-take" class="btn primary" type="button" disabled>📥 Взять в редактор</button>
-              </div>
-            </section>
-
-            <!-- A/B-плеер -->
-            <section class="panel dive-card" aria-label="Сравнение оригинала и двойника">
-              <h3 class="panel-title">🔊 Оригинал ⇄ Двойник</h3>
-              <div class="row">
-                <button id="dive-ab-play" class="btn" type="button">▶ Играть</button>
-                <button id="dive-ab-toggle" class="btn" type="button">Оригинал ⇄ Двойник</button>
-                <span id="dive-ab-state" class="dive-ab-state">сейчас: Оригинал</span>
-                <span id="dive-ab-time" class="dive-ab-time">—</span>
-              </div>
-              <p id="dive-ab-note" class="hint">Громкость оригинала будет измерена в браузере после загрузки файла.</p>
-            </section>
-
-            <!-- Метрики похожести -->
-            <section class="panel dive-card" aria-label="Метрики похожести">
-              <h3 class="panel-title">📐 Метрики похожести</h3>
-              <div id="dive-metrics" class="dive-metrics">
-                <p class="hint">Сравнение появится после разбора.</p>
-              </div>
-            </section>
-
-            <!-- Честность -->
-            <section class="panel dive-card dive-card-honesty" aria-label="Ограничения двойника">
-              <h3 class="panel-title">⚠️ Что двойник не воспроизводит</h3>
-              <div id="dive-honesty" class="dive-honesty">
-                <p class="hint">Список ограничений придёт вместе с разбором.</p>
-              </div>
-            </section>
-
-            <!-- Улучшение и экспорт -->
-            <section class="panel dive-card" aria-label="Улучшение и экспорт">
-              <h3 class="panel-title">✨ Улучшение и экспорт</h3>
-              <div class="row">
-                <button id="dive-refine" class="btn primary" type="button" disabled>✨ Улучшить</button>
-                <button id="dive-export-json" class="btn" type="button" disabled>⬇ JSON</button>
-                <button id="dive-export-code" class="btn" type="button" disabled>⬇ Код</button>
-                <button id="dive-export-midi" class="btn" type="button" disabled>⬇ MIDI</button>
-              </div>
-              <div id="dive-iterations" class="dive-iterations">
-                <p class="hint">Итерации улучшения появятся здесь.</p>
-              </div>
-            </section>
+      <!-- Честно -->
+      <section class="section">
+        <h2 class="section-title">Честно о границах</h2>
+        <div class="honesty">
+          <div class="honesty-item">
+            <h3>Нет вокала</h3>
+            <p>
+              Треки собираются из сэмплов и синтезаторов. Человеческого голоса и
+              текстов здесь нет — и честнее сказать это сразу, чем сюрпризом.
+            </p>
+          </div>
+          <div class="honesty-item">
+            <h3>Это не мастеринг</h3>
+            <p>
+              Звук рассчитан на прослушивание в наушниках и в редакторе, а не на
+              отправку в плейлист студии. Финальный лак — ваша работа.
+            </p>
+          </div>
+          <div class="honesty-item">
+            <h3>Оценка — не вкус</h3>
+            <p>
+              Балл считается по объективным метрикам. «Хорошо ли это на слух» — другой
+              вопрос, и мы не делаем вид, что умеем его решать за вас.
+            </p>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- Нижний транспорт -->
-    <button id="mixer-toggle" class="btn mixer-toggle" type="button">🎚 Микшер</button>
-    <footer class="transport" aria-label="Транспорт">
-      <button id="btn-play" class="btn primary btn-play" type="button" aria-pressed="false">▶</button>
-      <button id="btn-stop-transport" class="btn" type="button" title="Остановить звук">⏹</button>
-      <button id="btn-stop" class="btn ghost" type="button">⏹ Стоп генерации</button>
-      <label class="transport-field">BPM
-        <input id="bpm-slider" type="range" min="40" max="220" step="1" value="120" />
-        <span id="bpm-value">120</span>
-      </label>
-      <label class="transport-field">Нота
-        <select id="key-select"></select>
-      </label>
-      <label class="transport-field">Лад
-        <select id="scale-select"></select>
-      </label>
-      <label class="transport-field">Запись
-        <select id="rec-bars">
-          <option value="1">1 такт</option>
-          <option value="4" selected>4 такта</option>
-          <option value="8">8 тактов</option>
-          <option value="16">16 тактов</option>
-          <option value="0">Ручная</option>
-        </select>
-      </label>
-      <button id="btn-record" class="btn" type="button">● Rec</button>
-      <span id="rec-time" class="rec-time"></span>
+    <footer class="land-footer">
+      <div class="land-footer-inner">
+        <span class="land-footer-brand">Strudel AI Composer</span>
+        <nav class="land-footer-nav">
+          <a class="land-link" href="/studio.html">Открыть студию</a>
+          <a class="land-link" href="/studio.html?dive=1">Разбор трека</a>
+          <a class="land-link land-link-dim" href="/tinder.html">Суждение (для рецензентов)</a>
+        </nav>
+        <span class="land-footer-note">LLM пишет код · код исполняется · измерения решают</span>
+      </div>
     </footer>
 
-    <div id="audio-gate" class="audio-gate">
-      <div class="gate-card">
-        <h2>Включить звук</h2>
-        <p>Браузеры разрешают воспроизведение звука только после клика пользователя.</p>
-        <button id="btn-start-audio" class="btn primary" type="button">Start Audio</button>
-      </div>
-    </div>
-
-    <!-- Модальное окно с кодом-двойником: код в редактор не попадает сам. -->
-    <div id="dive-code-modal" class="dive-modal" hidden role="dialog" aria-modal="true" aria-label="Код-двойник">
-      <div class="dive-modal-card">
-        <div class="dive-modal-head">
-          <span class="dive-modal-title">Код-двойник</span>
-          <button id="dive-code-modal-close" class="btn ghost" type="button">✕ Закрыть</button>
-        </div>
-        <pre id="dive-code-modal-code" class="dive-modal-code"></pre>
-      </div>
-    </div>
-
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/landing.js"></script>
   </body>
 </html>
