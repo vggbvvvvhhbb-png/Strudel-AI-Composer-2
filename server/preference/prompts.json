@@ -1,0 +1,488 @@
+{
+  "v": 1,
+  "note": "Пул промтов для очереди человеческих меток. Генерируется из корпуса Baseline-0.",
+  "source": "corpus/baseline0/prompts.json",
+  "sourceHash": "aa16ef72902691752494e94e6c559253cc765a9173a6f1031e0103df317b279a",
+  "prompts": [
+    {
+      "id": "b0-01",
+      "prompt": "радостный трип-хоп, разреженно, много воздуха",
+      "seed": 1001,
+      "quadrant": "joy",
+      "genre": "trip-hop",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-02",
+      "prompt": "на подъёме даунтемпо, ровно",
+      "seed": 1002,
+      "quadrant": "joy",
+      "genre": "trip-hop",
+      "density": "medium"
+    },
+    {
+      "id": "b0-03",
+      "prompt": "праздничный трип-хоп, плотно",
+      "seed": 1003,
+      "quadrant": "joy",
+      "genre": "trip-hop",
+      "density": "dense"
+    },
+    {
+      "id": "b0-04",
+      "prompt": "эйфоричный диско, медленно и пусто",
+      "seed": 1004,
+      "quadrant": "joy",
+      "genre": "synthpop",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-05",
+      "prompt": "весёлый синтипоп, умеренно",
+      "seed": 1005,
+      "quadrant": "joy",
+      "genre": "synthpop",
+      "density": "medium"
+    },
+    {
+      "id": "b0-06",
+      "prompt": " танцевальный диско, на всю мощность",
+      "seed": 1006,
+      "quadrant": "joy",
+      "genre": "synthpop",
+      "density": "dense"
+    },
+    {
+      "id": "b0-07",
+      "prompt": "радостный эмбиент, разреженно, много воздуха",
+      "seed": 1007,
+      "quadrant": "joy",
+      "genre": "ambient",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-08",
+      "prompt": "на подъёме дрон, ровно",
+      "seed": 1008,
+      "quadrant": "joy",
+      "genre": "ambient",
+      "density": "medium"
+    },
+    {
+      "id": "b0-09",
+      "prompt": "праздничный эмбиент, плотно",
+      "seed": 1009,
+      "quadrant": "joy",
+      "genre": "ambient",
+      "density": "dense"
+    },
+    {
+      "id": "b0-10",
+      "prompt": "эйфоричный нейрофанк, медленно и пусто",
+      "seed": 1010,
+      "quadrant": "joy",
+      "genre": "dnb",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-11",
+      "prompt": "весёлый dnb, умеренно",
+      "seed": 1011,
+      "quadrant": "joy",
+      "genre": "dnb",
+      "density": "medium"
+    },
+    {
+      "id": "b0-12",
+      "prompt": " танцевальный нейрофанк, на всю мощность",
+      "seed": 1012,
+      "quadrant": "joy",
+      "genre": "dnb",
+      "density": "dense"
+    },
+    {
+      "id": "b0-13",
+      "prompt": "радостный лоуфай, разреженно, много воздуха",
+      "seed": 1013,
+      "quadrant": "joy",
+      "genre": "lofi",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-14",
+      "prompt": "на подъёме чилл, ровно",
+      "seed": 1014,
+      "quadrant": "joy",
+      "genre": "lofi",
+      "density": "medium"
+    },
+    {
+      "id": "b0-15",
+      "prompt": "праздничный лоуфай, плотно",
+      "seed": 1015,
+      "quadrant": "joy",
+      "genre": "lofi",
+      "density": "dense"
+    },
+    {
+      "id": "b0-16",
+      "prompt": "ностальгический даунтемпо, медленно и пусто",
+      "seed": 1016,
+      "quadrant": "tender",
+      "genre": "trip-hop",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-17",
+      "prompt": "тихий трип-хоп, умеренно",
+      "seed": 1017,
+      "quadrant": "tender",
+      "genre": "trip-hop",
+      "density": "medium"
+    },
+    {
+      "id": "b0-18",
+      "prompt": "кассетный даунтемпо, на всю мощность",
+      "seed": 1018,
+      "quadrant": "tender",
+      "genre": "trip-hop",
+      "density": "dense"
+    },
+    {
+      "id": "b0-19",
+      "prompt": "нежный синтипоп, разреженно, много воздуха",
+      "seed": 1019,
+      "quadrant": "tender",
+      "genre": "synthpop",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-20",
+      "prompt": "ретро диско, ровно",
+      "seed": 1020,
+      "quadrant": "tender",
+      "genre": "synthpop",
+      "density": "medium"
+    },
+    {
+      "id": "b0-21",
+      "prompt": "ласковый синтипоп, плотно",
+      "seed": 1021,
+      "quadrant": "tender",
+      "genre": "synthpop",
+      "density": "dense"
+    },
+    {
+      "id": "b0-22",
+      "prompt": "ностальгический дрон, медленно и пусто",
+      "seed": 1022,
+      "quadrant": "tender",
+      "genre": "ambient",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-23",
+      "prompt": "тихий эмбиент, умеренно",
+      "seed": 1023,
+      "quadrant": "tender",
+      "genre": "ambient",
+      "density": "medium"
+    },
+    {
+      "id": "b0-24",
+      "prompt": "кассетный дрон, на всю мощность",
+      "seed": 1024,
+      "quadrant": "tender",
+      "genre": "ambient",
+      "density": "dense"
+    },
+    {
+      "id": "b0-25",
+      "prompt": "нежный dnb, разреженно, много воздуха",
+      "seed": 1025,
+      "quadrant": "tender",
+      "genre": "dnb",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-26",
+      "prompt": "ретро нейрофанк, ровно",
+      "seed": 1026,
+      "quadrant": "tender",
+      "genre": "dnb",
+      "density": "medium"
+    },
+    {
+      "id": "b0-27",
+      "prompt": "ласковый dnb, плотно",
+      "seed": 1027,
+      "quadrant": "tender",
+      "genre": "dnb",
+      "density": "dense"
+    },
+    {
+      "id": "b0-28",
+      "prompt": "ностальгический чилл, медленно и пусто",
+      "seed": 1028,
+      "quadrant": "tender",
+      "genre": "lofi",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-29",
+      "prompt": "тихий лоуфай, умеренно",
+      "seed": 1029,
+      "quadrant": "tender",
+      "genre": "lofi",
+      "density": "medium"
+    },
+    {
+      "id": "b0-30",
+      "prompt": "кассетный чилл, на всю мощность",
+      "seed": 1030,
+      "quadrant": "tender",
+      "genre": "lofi",
+      "density": "dense"
+    },
+    {
+      "id": "b0-31",
+      "prompt": "меланхоличный трип-хоп, разреженно, много воздуха",
+      "seed": 1031,
+      "quadrant": "dark",
+      "genre": "trip-hop",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-32",
+      "prompt": "тёмный даунтемпо, ровно",
+      "seed": 1032,
+      "quadrant": "dark",
+      "genre": "trip-hop",
+      "density": "medium"
+    },
+    {
+      "id": "b0-33",
+      "prompt": "осенний трип-хоп, плотно",
+      "seed": 1033,
+      "quadrant": "dark",
+      "genre": "trip-hop",
+      "density": "dense"
+    },
+    {
+      "id": "b0-34",
+      "prompt": "мрачный диско, медленно и пусто",
+      "seed": 1034,
+      "quadrant": "dark",
+      "genre": "synthpop",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-35",
+      "prompt": "грустный синтипоп, умеренно",
+      "seed": 1035,
+      "quadrant": "dark",
+      "genre": "synthpop",
+      "density": "medium"
+    },
+    {
+      "id": "b0-36",
+      "prompt": "ночной диско, на всю мощность",
+      "seed": 1036,
+      "quadrant": "dark",
+      "genre": "synthpop",
+      "density": "dense"
+    },
+    {
+      "id": "b0-37",
+      "prompt": "меланхоличный эмбиент, разреженно, много воздуха",
+      "seed": 1037,
+      "quadrant": "dark",
+      "genre": "ambient",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-38",
+      "prompt": "тёмный дрон, ровно",
+      "seed": 1038,
+      "quadrant": "dark",
+      "genre": "ambient",
+      "density": "medium"
+    },
+    {
+      "id": "b0-39",
+      "prompt": "осенний эмбиент, плотно",
+      "seed": 1039,
+      "quadrant": "dark",
+      "genre": "ambient",
+      "density": "dense"
+    },
+    {
+      "id": "b0-40",
+      "prompt": "мрачный нейрофанк, медленно и пусто",
+      "seed": 1040,
+      "quadrant": "dark",
+      "genre": "dnb",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-41",
+      "prompt": "грустный dnb, умеренно",
+      "seed": 1041,
+      "quadrant": "dark",
+      "genre": "dnb",
+      "density": "medium"
+    },
+    {
+      "id": "b0-42",
+      "prompt": "ночной нейрофанк, на всю мощность",
+      "seed": 1042,
+      "quadrant": "dark",
+      "genre": "dnb",
+      "density": "dense"
+    },
+    {
+      "id": "b0-43",
+      "prompt": "меланхоличный лоуфай, разреженно, много воздуха",
+      "seed": 1043,
+      "quadrant": "dark",
+      "genre": "lofi",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-44",
+      "prompt": "тёмный чилл, ровно",
+      "seed": 1044,
+      "quadrant": "dark",
+      "genre": "lofi",
+      "density": "medium"
+    },
+    {
+      "id": "b0-45",
+      "prompt": "осенний лоуфай, плотно",
+      "seed": 1045,
+      "quadrant": "dark",
+      "genre": "lofi",
+      "density": "dense"
+    },
+    {
+      "id": "b0-46",
+      "prompt": "злой даунтемпо, медленно и пусто",
+      "seed": 1046,
+      "quadrant": "anxiety",
+      "genre": "trip-hop",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-47",
+      "prompt": "нервный трип-хоп, умеренно",
+      "seed": 1047,
+      "quadrant": "anxiety",
+      "genre": "trip-hop",
+      "density": "medium"
+    },
+    {
+      "id": "b0-48",
+      "prompt": "яростный даунтемпо, на всю мощность",
+      "seed": 1048,
+      "quadrant": "anxiety",
+      "genre": "trip-hop",
+      "density": "dense"
+    },
+    {
+      "id": "b0-49",
+      "prompt": "тревожный синтипоп, разреженно, много воздуха",
+      "seed": 1049,
+      "quadrant": "anxiety",
+      "genre": "synthpop",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-50",
+      "prompt": "агрессивный диско, ровно",
+      "seed": 1050,
+      "quadrant": "anxiety",
+      "genre": "synthpop",
+      "density": "medium"
+    },
+    {
+      "id": "b0-51",
+      "prompt": "напряжённый синтипоп, плотно",
+      "seed": 1051,
+      "quadrant": "anxiety",
+      "genre": "synthpop",
+      "density": "dense"
+    },
+    {
+      "id": "b0-52",
+      "prompt": "злой дрон, медленно и пусто",
+      "seed": 1052,
+      "quadrant": "anxiety",
+      "genre": "ambient",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-53",
+      "prompt": "нервный эмбиент, умеренно",
+      "seed": 1053,
+      "quadrant": "anxiety",
+      "genre": "ambient",
+      "density": "medium"
+    },
+    {
+      "id": "b0-54",
+      "prompt": "яростный дрон, на всю мощность",
+      "seed": 1054,
+      "quadrant": "anxiety",
+      "genre": "ambient",
+      "density": "dense"
+    },
+    {
+      "id": "b0-55",
+      "prompt": "тревожный dnb, разреженно, много воздуха",
+      "seed": 1055,
+      "quadrant": "anxiety",
+      "genre": "dnb",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-56",
+      "prompt": "агрессивный нейрофанк, ровно",
+      "seed": 1056,
+      "quadrant": "anxiety",
+      "genre": "dnb",
+      "density": "medium"
+    },
+    {
+      "id": "b0-57",
+      "prompt": "напряжённый dnb, плотно",
+      "seed": 1057,
+      "quadrant": "anxiety",
+      "genre": "dnb",
+      "density": "dense"
+    },
+    {
+      "id": "b0-58",
+      "prompt": "злой чилл, медленно и пусто",
+      "seed": 1058,
+      "quadrant": "anxiety",
+      "genre": "lofi",
+      "density": "sparse"
+    },
+    {
+      "id": "b0-59",
+      "prompt": "нервный лоуфай, умеренно",
+      "seed": 1059,
+      "quadrant": "anxiety",
+      "genre": "lofi",
+      "density": "medium"
+    },
+    {
+      "id": "b0-60",
+      "prompt": "яростный чилл, на всю мощность",
+      "seed": 1060,
+      "quadrant": "anxiety",
+      "genre": "lofi",
+      "density": "dense"
+    }
+  ]
+}

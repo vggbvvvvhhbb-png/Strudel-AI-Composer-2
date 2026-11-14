@@ -50,6 +50,8 @@ jobs:
       - run: npm run check:knowledge
       - run: npm run check:skills
       - run: npm run check:baseline
+      - run: npm run check:prompts
+      - run: npm run check:taste
 
   build:
     name: Сборка и бюджет бандла
