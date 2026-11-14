@@ -16,6 +16,7 @@ import preferenceRoute from './routes/preference.js';
 import tasteRoute from './routes/taste.js';
 import healthRoute from './routes/health.js';
 import statsRoute from './routes/stats.js';
+import deepdiveRoute from './routes/deepdive.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const distDir = join(here, '../dist');
@@ -101,6 +102,8 @@ app.use('/api/preference', preferenceRoute);
 app.use('/api/taste', tasteRoute);
 app.use(healthRoute);
 app.use(statsRoute);
+// Режим «Разбор» — отдельный контур, не трогает существующие пути студии.
+app.use(deepdiveRoute);
 
 if (existsSync(distDir)) {
   app.use(express.static(distDir, { maxAge: '1h' }));
