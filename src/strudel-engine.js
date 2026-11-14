@@ -30,6 +30,7 @@ import { createStudioGraph } from './audio/graph.js';
 import { createEngineAdapter } from './audio/engine/adapter.js';
 import { masterPresetFor } from './audio/master-presets.js';
 import { renderAndMeasure, audioBufferToChannels } from './audio/render/offline.js';
+import { allSamplesReady } from './samples-ready.js';
 
 export { visualPlan };
 
@@ -235,14 +236,27 @@ const SAMPLE_SETS = ['github:tidalcycles/dirt-samples', 'shabda:piano'];
 /**
  * Подгружает манифесты сэмплов. Возвращает промис, который можно ждать:
  * после его резолва soundMap готов и первый такт уже со звуком.
+ *
+ * Промис ВСЕГДА резолвится в булево: `true` — оба набора на месте и трек
+ * звучит целиком; `false` — сэмплов не хватает (сеть, CDN), и трек неполный.
+ * Раньше здесь был `undefined` в окне повторной попытки — вызывающий код
+ * принимал это за «сэмплов нет» и портил метки.
+ *
+ * @param {{force?: boolean}} [options]
+ * @returns {Promise<boolean>}
  */
 export function ensureSamples({ force = false } = {}) {
   if (samplesPromise && !force) return samplesPromise;
-  if (!force && Date.now() < samplesRetryAt) return Promise.resolve();
+  // Окно повторной попытки: сэмплы уже не в порядке, и ждать их сейчас
+  // бессмысленно — отвечаем честным «нет» вместо undefined.
+  if (!force && Date.now() < samplesRetryAt) return Promise.resolve(false);
   samplesPromise = Promise.allSettled(SAMPLE_SETS.map((src) => samples(src))).then((results) => {
     const failed = results.filter((r) => r.status === 'rejected');
     for (const f of failed) console.warn('Набор сэмплов недоступен:', f.reason?.message || f.reason);
-    const ok = failed.length < results.length;
+    // Нужен ВЕСЬ набор: без ударных трек теряет ритм, без пианино — мелодию.
+    // Половина набора — это неполный трек, и сравнивать его как цельный
+    // бессмысленно (такая метка помечается degraded и в обучение не идёт).
+    const ok = allSamplesReady(results);
     if (!ok) {
       samplesPromise = null;
       samplesRetryAt = Date.now() + 60_000;
@@ -323,6 +337,10 @@ export function stop() {
 export async function renderTrackOffline({ code, bars = [0, 16], sampleRate = 48000, cps = 0.5, runs = 2 } = {}) {
   await initPromise;
   if (!initialized) throw new Error('Струдия не инициализирована');
+  // Сэмплы нужны ДО рендера: иначе ударные и пианино молчат
+  // («sound piano not found!») и отчёт меряет не тот трек, который слышен.
+  // Живое исполнение делает то же самое (см. evaluateCode).
+  await waitForSamples();
   const target = code ?? currentCode;
   if (!target) throw new Error('Нет кода для рендера');
   const restore = currentCode && currentCode !== target ? currentCode : null;
