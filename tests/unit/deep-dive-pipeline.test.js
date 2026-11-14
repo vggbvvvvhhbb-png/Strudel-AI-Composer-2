@@ -178,6 +178,21 @@ describe('пайплайн разбора', () => {
     ).toBe(true);
   });
 
+  it('запасной ритм доступен экспорту MIDI, даже когда стемов нет', async () => {
+    const jobDir = path.join(workspace, 'job-2c');
+    const { artifacts } = await runDeepDive({
+      workspaceDir: jobDir,
+      inputPath,
+      fileName: 'test.wav',
+      separate: false,
+      deps: makeDeps(),
+    });
+
+    expect(artifacts.rhythm).not.toBeNull();
+    expect(artifacts.rhythm.source).toBe('mix');
+    expect(artifacts.rhythm.onsets.hits.length).toBeGreaterThan(0);
+  });
+
   it('падение разделения не роняет разбор, а попадает в errors', async () => {    const jobDir = path.join(workspace, 'job-3');
     const deps = makeDeps({
       separate: async () => {

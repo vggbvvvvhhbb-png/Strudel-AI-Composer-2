@@ -283,7 +283,9 @@ router.get('/api/deepdive/jobs/:id/midi', (req, res) => {
   const midi = buildMidi({
     bpm: result.measurements?.tempo?.bpm,
     name: result.track?.file_name,
-    drums: result.stem_descriptors?.drums?.onsets,
+    // Ударные: измеренный стем, а если разделения не было — ритм из микса,
+    // по которому построен двойник. Бас — только измеренный питч-трек.
+    drums: result.stem_descriptors?.drums?.onsets ?? job.artifacts?.rhythm?.onsets ?? null,
     bass: result.stem_descriptors?.bass?.pitch,
   });
   res.writeHead(200, {

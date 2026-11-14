@@ -234,6 +234,10 @@ export async function runDeepDive(params) {
       stemPaths,
       separationSeconds: separation?.seconds ?? null,
       renderFingerprints,
+      // Ритм, по которому построен двойник: измеренный стем ударных или,
+      // если разделения не было, — атаки из микса. Нужен экспорту MIDI,
+      // чтобы ударные попали в файл даже без стемов.
+      rhythm: rhythm ? { onsets: rhythm.onsets, source: rhythmSource } : null,
     },
   };
 }
