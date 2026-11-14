@@ -28,3 +28,9 @@ corpus/candidates/*.js
 # Человеческие метки: локально, без PII, вне git. Экспорт — GET /api/preference/export,
 # удаление — DELETE /api/preference.
 server/data/preferences.jsonl
+
+# Реестр пар (нужен для обучения выученной цели) и обученная модель:
+# локальные данные владельца, вне git.
+server/data/pairs.jsonl
+server/data/taste-model.json
+server/data/taste-report.json

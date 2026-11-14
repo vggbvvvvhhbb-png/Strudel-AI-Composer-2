@@ -17,7 +17,8 @@ import './styles/components.css';
 import './styles/tinder.css';
 
 import { initEngine, renderTrackOffline, unlockAudio } from './strudel-engine.js';
-import { measureLoudness } from './audio/dsp/loudness.js';
+import { measureLoudness, measurePeakDbfs, measureCrestDb } from './audio/dsp/loudness.js';
+import { measureTruePeak } from './audio/dsp/truepeak.js';
 
 const els = {
   start: document.getElementById('btn-start'),
@@ -101,9 +102,29 @@ function alignLoudness(a, b) {
 }
 
 /**
- * Рендер кандидата: код → каналы, LUFS и AudioBuffer.
+ * Сколько отсчётов клиппинговалось (|x| ≥ 1).
+ * @param {Float64Array[]} channels
+ * @returns {number}
+ */
+function countClips(channels) {
+  let count = 0;
+  for (const channel of channels) {
+    for (let i = 0; i < channel.length; i += 1) {
+      if (Math.abs(channel[i]) >= 1) count += 1;
+    }
+  }
+  return count;
+}
+
+/**
+ * Рендер кандидата: код → каналы, аудио-признаки и AudioBuffer.
+ *
+ * Признаки (L0) нужны не для показа, а для обучения: без них метка
+ * «победил вот этот» не с чем сравнить, и выученная цель остаётся
+ * невозможной (см. server/preference/ledger.js).
+ *
  * @param {{code:string}} candidate
- * @returns {Promise<{buffer:AudioBuffer, lufs:number}>}
+ * @returns {Promise<{buffer:AudioBuffer, lufs:number, audio:object}>}
  */
 async function renderCandidate(candidate) {
   const result = await renderTrackOffline({
@@ -113,7 +134,16 @@ async function renderCandidate(candidate) {
     runs: 1,
   });
   const loudness = measureLoudness(result.channels, result.sampleRate);
-  return { buffer: toBuffer(result.channels, result.sampleRate), lufs: loudness.lufsI };
+  const peak = measureTruePeak(result.channels, result.sampleRate);
+  const audio = {
+    lufsI: loudness.lufsI,
+    lufsS: loudness.lufsS ?? null,
+    truePeakDbtp: peak.truePeakDb,
+    peakDbfs: measurePeakDbfs(result.channels),
+    crestDb: measureCrestDb(result.channels),
+    clipCount: countClips(result.channels),
+  };
+  return { buffer: toBuffer(result.channels, result.sampleRate), lufs: loudness.lufsI, audio };
 }
 
 /**
@@ -191,6 +221,7 @@ async function showCurrent() {
     ]);
     const gains = alignLoudness(a, b);
     current.buffers = { a: a.buffer, b: b.buffer };
+    current.audio = { a: a.audio, b: b.audio };
     current.gains = gains;
     // Куда уходит A — выпадает случайно при каждом показе пары.
     current.aOnLeft = Math.random() < 0.5;
@@ -223,6 +254,9 @@ async function judge(winner) {
     // надёжность рецензента.
     swapped: Boolean(pair.repeat),
     source: 'explicit',
+    // Аудио-признаки обеих сторон: без них метку нельзя превратить в
+    // обучающий пример (см. server/preference/ledger.js).
+    audio: current.audio ? { a: current.audio.a, b: current.audio.b } : undefined,
   };
   stopPlayback();
   try {
