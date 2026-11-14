@@ -22,6 +22,27 @@ import { encodeWav } from '../../../src/core/wav.js';
 
 const strudel = window.strudel;
 
+/**
+ * Алиасы визуализаций живут в приложении (src/pianoroll.js), а не в Strudel.
+ * Код двойника их содержит (`._scope()`, `._pianoroll()` — их ставит общий
+ * компилятор), поэтому без заглушек рендер падает с
+ * «arrange(...)._scope is not a function». В Node-рантайме студии то же самое
+ * делает installVisualStubs (server/music/strudel-runtime.mjs).
+ */
+function installVisualStubs(api) {
+  const proto = api?.Pattern?.prototype;
+  if (!proto) return;
+  for (const name of ['_pianoroll', '_scope', '_fscope', '_spectrum']) {
+    if (typeof proto[name] !== 'function') {
+      proto[name] = function () {
+        return this;
+      };
+    }
+  }
+}
+
+installVisualStubs(strudel);
+
 // Ровно тот список методов, который ждёт createEngineAdapter (см. src/strudel-engine.js).
 const STRUDEL_METHODS = [
   'initStrudel',
