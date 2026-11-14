@@ -13,6 +13,7 @@ import composeRoute from './routes/compose.js';
 import irRoute from './routes/ir.js';
 import skillsRoute from './routes/skills.js';
 import preferenceRoute from './routes/preference.js';
+import tasteRoute from './routes/taste.js';
 import healthRoute from './routes/health.js';
 import statsRoute from './routes/stats.js';
 
@@ -97,6 +98,7 @@ app.use(composeRoute);
 app.use('/api/music/ir', irRoute);
 app.use('/api/skills', skillsRoute);
 app.use('/api/preference', preferenceRoute);
+app.use('/api/taste', tasteRoute);
 app.use(healthRoute);
 app.use(statsRoute);
 

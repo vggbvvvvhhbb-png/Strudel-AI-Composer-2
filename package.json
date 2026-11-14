@@ -19,6 +19,8 @@
     "check:knowledge": "node scripts/check-knowledge.mjs",
     "check:skills": "node scripts/check-skills.mjs",
     "check:baseline": "node scripts/check-baseline.mjs",
+    "check:taste": "node scripts/check-taste.mjs",
+    "taste:train": "node scripts/train-taste.mjs",
     "baseline:build": "node scripts/build-baseline.mjs --update",
     "spike": "node tests/spike/probe.mjs",
     "spike:compose": "node tests/spike/compose-pipeline.probe.mjs",
