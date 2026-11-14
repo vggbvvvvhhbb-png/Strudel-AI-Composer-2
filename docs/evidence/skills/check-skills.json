@@ -1,0 +1,84 @@
+{
+  "checkedAt": "2026-11-14T09:55:59.423Z",
+  "cards": 11,
+  "skillsVersion": "2f2c3b4a3a6ea9688b394cf2a99a6f98c1b8d7d8c3f16401f8d6f47e1c1b3857",
+  "compactTokens": {
+    "arrangement-arcs": 192,
+    "composer-workflow": 233,
+    "emotion-map": 307,
+    "genre-ambient": 161,
+    "genre-dnb": 158,
+    "genre-lofi": 164,
+    "genre-synthpop": 153,
+    "genre-trip-hop": 144,
+    "groove-templates": 242,
+    "harmony-recipes": 186,
+    "mix-roles": 239
+  },
+  "examples": 12,
+  "examplesOk": 12,
+  "errors": 0,
+  "warnings": 0,
+  "info": 11,
+  "errorList": [],
+  "warningList": [],
+  "infoList": [
+    {
+      "where": "skills/arrangement-arcs",
+      "code": "param-range-unbounded",
+      "message": "paramRanges.totalBars: предел не описан — проверен только порядок границ"
+    },
+    {
+      "where": "skills/emotion-map",
+      "code": "param-range-unbounded",
+      "message": "paramRanges.anchorOctave: предел не описан — проверен только порядок границ"
+    },
+    {
+      "where": "skills/genre-ambient",
+      "code": "param-range-unbounded",
+      "message": "paramRanges.crest: предел не описан — проверен только порядок границ"
+    },
+    {
+      "where": "skills/genre-dnb",
+      "code": "param-range-unbounded",
+      "message": "paramRanges.crest: предел не описан — проверен только порядок границ"
+    },
+    {
+      "where": "skills/genre-lofi",
+      "code": "param-range-unbounded",
+      "message": "paramRanges.crest: предел не описан — проверен только порядок границ"
+    },
+    {
+      "where": "skills/genre-synthpop",
+      "code": "param-range-unbounded",
+      "message": "paramRanges.crest: предел не описан — проверен только порядок границ"
+    },
+    {
+      "where": "skills/genre-trip-hop",
+      "code": "param-range-unbounded",
+      "message": "paramRanges.crest: предел не описан — проверен только порядок границ"
+    },
+    {
+      "where": "skills/harmony-recipes",
+      "code": "param-range-unbounded",
+      "message": "paramRanges.chordChangeBars: предел не описан — проверен только порядок границ"
+    },
+    {
+      "where": "skills/harmony-recipes",
+      "code": "param-range-unbounded",
+      "message": "paramRanges.bassOctave: предел не описан — проверен только порядок границ"
+    },
+    {
+      "where": "skills/harmony-recipes",
+      "code": "param-range-unbounded",
+      "message": "paramRanges.leadMinOctave: предел не описан — проверен только порядок границ"
+    },
+    {
+      "where": "skills/mix-roles",
+      "code": "param-range-unbounded",
+      "message": "paramRanges.duckattack: предел не описан — проверен только порядок границ"
+    }
+  ],
+  "genreForPrompt": "trip-hop",
+  "index": 11
+}

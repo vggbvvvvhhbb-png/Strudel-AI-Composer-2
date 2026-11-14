@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "cards": {
+    "arrangement-arcs": {
+      "version": "1.0.0",
+      "bodyHash": "afddee2add4bd6cbfcd2f11dfd68a8d6b3b640ca0492a4fe55490b72a93b65c3"
+    },
+    "composer-workflow": {
+      "version": "1.0.0",
+      "bodyHash": "8ac7c1783f7811c09a3e3e90a5553fbf80af18a1f10bca2e7302ee3c50c9086f"
+    },
+    "emotion-map": {
+      "version": "1.0.0",
+      "bodyHash": "c34baea828934649d9239e4f99e5361cf6c0f3961b4ade68c10d253beb1997fc"
+    },
+    "genre-ambient": {
+      "version": "1.0.0",
+      "bodyHash": "7869fc1255fc81e56d23ec569b6de941e765a238adb16397bf1c57b1477f9dff"
+    },
+    "genre-dnb": {
+      "version": "1.0.0",
+      "bodyHash": "b409c3713cd1d80f93b61fd416fba650bf0614b603f3a93358cdf56ff38f31b6"
+    },
+    "genre-lofi": {
+      "version": "1.0.0",
+      "bodyHash": "c5e6fad500fd83ee0d3c18ba67d80e682b13f116529db70103f4de038d941237"
+    },
+    "genre-synthpop": {
+      "version": "1.0.0",
+      "bodyHash": "20d3f05ba541bdefe5835d45ec76e93c3947a90db572da679cceef18e6c36cc1"
+    },
+    "genre-trip-hop": {
+      "version": "1.0.0",
+      "bodyHash": "333e4fe92563825853f81a78ce5f694f5c8f8a395513fc946999bcf3a7d61970"
+    },
+    "groove-templates": {
+      "version": "1.0.0",
+      "bodyHash": "85c6c48b69088a6c5f060b3cd3dd2f237485cbc38a076dc765a6d6abacc14766"
+    },
+    "harmony-recipes": {
+      "version": "1.0.0",
+      "bodyHash": "50cd5bbf9ffdc2b6a7e3d91d6f495d3765b8c26637e183cbb82f869cd4183e23"
+    },
+    "mix-roles": {
+      "version": "1.0.0",
+      "bodyHash": "e17dbebb5fcccbccc86b077bc07e2388fbeac73bad7217923228971f5f1be14e"
+    }
+  }
+}

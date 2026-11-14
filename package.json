@@ -17,6 +17,8 @@
     "check:presets": "node scripts/check-presets.mjs",
     "check:api": "node scripts/extract-strudel-api.mjs",
     "check:knowledge": "node scripts/check-knowledge.mjs",
+    "check:skills": "node scripts/check-skills.mjs",
+    "check:baseline": "node scripts/check-baseline.mjs",
     "spike": "node tests/spike/probe.mjs",
     "spike:compose": "node tests/spike/compose-pipeline.probe.mjs",
     "spike:audio": "node tests/spike/audio-api.probe.mjs",
