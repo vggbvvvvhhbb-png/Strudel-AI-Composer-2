@@ -1,0 +1,59 @@
+{
+    "slug":  "envy-slowed",
+    "title":  "envy - slowed",
+    "artist":  "slxughter",
+    "year":  2025,
+    "duration_s":  126.401,
+    "source":  {
+                   "spotify_track_id":  "57Ju5lrvYBZJvmxKFrtzSt",
+                   "url":  "https://open.spotify.com/track/57Ju5lrvYBZJvmxKFrtzSt",
+                   "license":  null,
+                   "attribution":  null
+               },
+    "reference":  {
+                      "dossier":  "gold-set/dossier-envy-slowed.md",
+                      "original_track_id":  null,
+                      "original_duration_s":  115.817,
+                      "external_bpm_hint":  "slowed ~92 (Shazam); оригинал ~100 (Shazam); для super slowed внешнее значение 153 внутренне противоречиво - не использовать",
+                      "external_key_hint":  null
+                  },
+    "bpm_tap":  null,
+    "bpm_measured":  null,
+    "key":  null,
+    "time_signature":  null,
+    "groove":  null,
+    "sections":  [
+
+                 ],
+    "section_template":  {
+                             "start_s":  null,
+                             "end_s":  null,
+                             "label":  null,
+                             "layers":  [
+
+                                        ],
+                             "comment":  null
+                         },
+    "layers_vocabulary":  [
+                              "kick",
+                              "snare",
+                              "clap",
+                              "hat",
+                              "perc",
+                              "808",
+                              "bass",
+                              "sub",
+                              "keys",
+                              "rhodes",
+                              "guitar_acoustic",
+                              "guitar_elec",
+                              "synth_lead",
+                              "pad",
+                              "vocal",
+                              "vocal_chop",
+                              "fx",
+                              "noise",
+                              "crowd"
+                          ],
+    "notes":  "Владелец заполняет вручную: BPM тапом, тональность, границы секций, активные слои и переходы. Досье: gold-set/dossier-envy-slowed.md. Внешний BPM-ориентир (приблизительно): slowed ~92, оригинал ~100; для super slowed внешнее значение (153) внутренне противоречиво - не доверять. Оригинал ~1:55.8. Кредит Sampler: искать короткий зацикленный сэмпл. Explicit."
+}

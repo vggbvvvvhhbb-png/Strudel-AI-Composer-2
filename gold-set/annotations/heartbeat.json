@@ -1,0 +1,59 @@
+{
+    "slug":  "heartbeat",
+    "title":  "Heartbeat",
+    "artist":  "Childish Gambino",
+    "year":  2011,
+    "duration_s":  269.84,
+    "source":  {
+                   "spotify_track_id":  "5AGQSF0ytihJyt96K5vW9d",
+                   "url":  "https://open.spotify.com/track/5AGQSF0ytihJyt96K5vW9d",
+                   "license":  null,
+                   "attribution":  null
+               },
+    "reference":  {
+                      "dossier":  "gold-set/dossier-heartbeat.md",
+                      "original_track_id":  null,
+                      "original_duration_s":  null,
+                      "external_bpm_hint":  "120 (SongBPM) - внешний, приблизительный",
+                      "external_key_hint":  null
+                  },
+    "bpm_tap":  null,
+    "bpm_measured":  null,
+    "key":  null,
+    "time_signature":  null,
+    "groove":  null,
+    "sections":  [
+
+                 ],
+    "section_template":  {
+                             "start_s":  null,
+                             "end_s":  null,
+                             "label":  null,
+                             "layers":  [
+
+                                        ],
+                             "comment":  null
+                         },
+    "layers_vocabulary":  [
+                              "kick",
+                              "snare",
+                              "clap",
+                              "hat",
+                              "perc",
+                              "808",
+                              "bass",
+                              "sub",
+                              "keys",
+                              "rhodes",
+                              "guitar_acoustic",
+                              "guitar_elec",
+                              "synth_lead",
+                              "pad",
+                              "vocal",
+                              "vocal_chop",
+                              "fx",
+                              "noise",
+                              "crowd"
+                          ],
+    "notes":  "Владелец заполняет вручную: BPM тапом, тональность, границы секций, активные слои и переходы. Досье: gold-set/dossier-heartbeat.md. Особое внимание: смена фактуры/темпа около 0:45-0:49 (интро пиано+кик -\u003e дроп), питч-слайды баса, большой reverb пиано. Slowed-семейства у трека нет - версии не проверять."
+}

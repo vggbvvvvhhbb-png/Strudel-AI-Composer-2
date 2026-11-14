@@ -1,0 +1,59 @@
+{
+    "slug":  "heartburn",
+    "title":  "Heartburn",
+    "artist":  "Tenseoh",
+    "year":  2023,
+    "duration_s":  164.026,
+    "source":  {
+                   "spotify_track_id":  "5xjZWUuylXgl22Nr4dWiTL",
+                   "url":  "https://open.spotify.com/track/5xjZWUuylXgl22Nr4dWiTL",
+                   "license":  null,
+                   "attribution":  null
+               },
+    "reference":  {
+                      "dossier":  "gold-set/dossier-heartburn.md",
+                      "original_track_id":  null,
+                      "original_duration_s":  null,
+                      "external_bpm_hint":  null,
+                      "external_key_hint":  null
+                  },
+    "bpm_tap":  null,
+    "bpm_measured":  null,
+    "key":  null,
+    "time_signature":  null,
+    "groove":  null,
+    "sections":  [
+
+                 ],
+    "section_template":  {
+                             "start_s":  null,
+                             "end_s":  null,
+                             "label":  null,
+                             "layers":  [
+
+                                        ],
+                             "comment":  null
+                         },
+    "layers_vocabulary":  [
+                              "kick",
+                              "snare",
+                              "clap",
+                              "hat",
+                              "perc",
+                              "808",
+                              "bass",
+                              "sub",
+                              "keys",
+                              "rhodes",
+                              "guitar_acoustic",
+                              "guitar_elec",
+                              "synth_lead",
+                              "pad",
+                              "vocal",
+                              "vocal_chop",
+                              "fx",
+                              "noise",
+                              "crowd"
+                          ],
+    "notes":  "Владелец заполняет вручную: BPM тапом, тональность, границы секций, активные слои и переходы. Досье: gold-set/dossier-heartburn.md. Внешнего BPM-референса нет - темп только измерением. Кредит Sampler (Šarūnas Lekavičius) - искать короткий зацикленный сэмпл. EP-версии: Slowed + Reverb, Sped Up, 8D Audio."
+}

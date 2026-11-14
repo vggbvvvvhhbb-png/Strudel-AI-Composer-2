@@ -1,0 +1,59 @@
+{
+    "slug":  "music-connects-us",
+    "title":  "Music Connects Us",
+    "artist":  "DJ Yura",
+    "year":  2024,
+    "duration_s":  121,
+    "source":  {
+                   "spotify_track_id":  null,
+                   "url":  "https://ccmixter.org/files/Yura/67677",
+                   "license":  "CC BY 3.0",
+                   "attribution":  "Music Connects Us by DJ Yura, ccMixter (https://ccmixter.org/files/Yura/67677), CC BY 3.0. Источник сэмпла: \"I get inspired\" by SackJo22 - атрибутировать отдельно при использовании."
+               },
+    "reference":  {
+                      "dossier":  "gold-set/dossier-music-connects-us.md",
+                      "original_track_id":  null,
+                      "original_duration_s":  null,
+                      "external_bpm_hint":  "~127 (заявлено автором на ccMixter; тег bpm_125_130)",
+                      "external_key_hint":  null
+                  },
+    "bpm_tap":  null,
+    "bpm_measured":  null,
+    "key":  null,
+    "time_signature":  null,
+    "groove":  null,
+    "sections":  [
+
+                 ],
+    "section_template":  {
+                             "start_s":  null,
+                             "end_s":  null,
+                             "label":  null,
+                             "layers":  [
+
+                                        ],
+                             "comment":  null
+                         },
+    "layers_vocabulary":  [
+                              "kick",
+                              "snare",
+                              "clap",
+                              "hat",
+                              "perc",
+                              "808",
+                              "bass",
+                              "sub",
+                              "keys",
+                              "rhodes",
+                              "guitar_acoustic",
+                              "guitar_elec",
+                              "synth_lead",
+                              "pad",
+                              "vocal",
+                              "vocal_chop",
+                              "fx",
+                              "noise",
+                              "crowd"
+                          ],
+    "notes":  "Владелец заполняет вручную: BPM тапом, тональность, границы секций, активные слои и переходы. Досье: gold-set/dossier-music-connects-us.md. Контрастный эталон 4-on-the-floor (house/techno/electro). Внешний BPM-ориентир (приблизительно, заявлен автором): ~127. Семейства версий нет. Проверить: ровный ли темп (нет дрейфа) и есть ли заимствованный фрагмент."
+}
