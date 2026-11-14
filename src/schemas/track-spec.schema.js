@@ -40,7 +40,14 @@ export const TrackSpecSchema = z.object({
         effects: z.array(z.object({
           name: z.string(),
           params: z.array(z.any())
-        })).optional()
+        })).optional(),
+        // Огибающая громкости по шагам сетки: mini-нотация чисел
+        // ("0.8 0.5 0.6 ~"). Нужна для двойника: velocity ударов измерена,
+        // а параметр effects.gain принимает только одно число.
+        gainPattern: z.string().optional(),
+        // Свинг сетки: 0 — ровно, 0.5 — прямолинейно, >0.5 — задержка второй
+        // доли. Приходит из измерений (drums.onsets.swing).
+        swing: z.number().min(0).max(1).optional()
       })
     )
   }),

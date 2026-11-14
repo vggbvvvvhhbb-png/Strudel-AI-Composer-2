@@ -72,6 +72,17 @@ function sectionBody(part, role, section, scale, key) {
     body += `.s(${JSON.stringify(part.sound)})`;
   }
   body += effectsFor(part);
+  // Огибающая громкости по шагам сетки (двойник): velocity ударов измерена,
+  // а effects.gain принимает только одно число. Если эффект gain уже задан —
+  // не дублируем.
+  if (part.gainPattern && !part.effects?.some((effect) => effect.name === 'gain')) {
+    body += `.gain(${mini(part.gainPattern, `${role}.gainPattern`)})`;
+  }
+  // Свинг сетки — из измерений (drums.onsets.swing). swingBy есть в реестре
+  // Strudel API (server/music/data/strudel-api.json).
+  if (typeof part.swing === 'number' && Number.isFinite(part.swing) && part.swing > 0.001) {
+    body += `.swingBy(${part.swing}, 8)`;
+  }
   if (section.parameters?.cutoff) {
     body += `.lpf(sine.slow(${section.cycles}).range(${section.parameters.cutoff.join(', ')}))`;
   }
