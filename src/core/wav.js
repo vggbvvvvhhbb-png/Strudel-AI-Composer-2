@@ -29,3 +29,61 @@ export function encodeWav(channels, sampleRate) {
   }
   return view.buffer;
 }
+
+/**
+ * Декодер 16-bit PCM WAV — обратная операция к encodeWav.
+ *
+ * Нужен режиму «Разбор»: сервер получает WAV из рендер-воркера и должен
+ * считать по нему метрики тем же DSP, что и браузер (src/audio/dsp/*).
+ *
+ * Поддерживается только то, что мы сами кодируем: PCM 16-bit, 1 или 2 канала.
+ *
+ * @param {ArrayBuffer|Uint8Array} input
+ * @returns {{channels: Float64Array[], sampleRate: number, frames: number}}
+ */
+export function decodeWav(input) {
+  const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const readTag = (offset) => String.fromCharCode(
+    view.getUint8(offset),
+    view.getUint8(offset + 1),
+    view.getUint8(offset + 2),
+    view.getUint8(offset + 3),
+  );
+  if (readTag(0) !== 'RIFF' || readTag(8) !== 'WAVE') {
+    throw new Error('Это не WAV-файл');
+  }
+  let offset = 12;
+  let sampleRate = 44100;
+  let numCh = 2;
+  let bitsPerSample = 16;
+  let dataOffset = -1;
+  let dataSize = 0;
+  while (offset + 8 <= bytes.length) {
+    const tag = readTag(offset);
+    const size = view.getUint32(offset + 4, true);
+    if (tag === 'fmt ') {
+      numCh = view.getUint16(offset + 10, true);
+      sampleRate = view.getUint32(offset + 12, true);
+      bitsPerSample = view.getUint16(offset + 22, true);
+    } else if (tag === 'data') {
+      dataOffset = offset + 8;
+      dataSize = Math.min(size, bytes.length - dataOffset);
+      break;
+    }
+    offset += 8 + size + (size % 2);
+  }
+  if (dataOffset < 0) throw new Error('В WAV нет блока data');
+  if (bitsPerSample !== 16) throw new Error('Поддерживается только PCM 16-bit, а не ' + bitsPerSample + ' бит');
+  const bytesPerFrame = numCh * 2;
+  const frames = Math.floor(dataSize / bytesPerFrame);
+  const channels = [];
+  for (let c = 0; c < numCh; c += 1) channels.push(new Float64Array(frames));
+  for (let i = 0; i < frames; i += 1) {
+    for (let c = 0; c < numCh; c += 1) {
+      const raw = view.getInt16(dataOffset + i * bytesPerFrame + c * 2, true);
+      channels[c][i] = raw < 0 ? raw / 0x8000 : raw / 0x7fff;
+    }
+  }
+  return { channels, sampleRate, frames };
+}

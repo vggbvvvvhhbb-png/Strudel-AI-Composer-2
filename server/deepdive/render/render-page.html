@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Рендер-воркер Strudel</title>
+  </head>
+  <body>
+    <p id="status">загрузка движка…</p>
+    <!-- UMD-движок Strudel: тот же, что в студии. -->
+    <script src="/bundle.js"></script>
+    <!-- Наш бандл: код → паттерн → OfflineAudioContext → WAV + метрики. -->
+    <script src="/render-bundle.js"></script>
+    <script>
+      (function () {
+        var status = document.getElementById('status');
+        if (!window.strudel) {
+          status.textContent = 'движок не загрузился: window.strudel пуст';
+          return;
+        }
+        status.textContent = 'движок загружен, воркер готов';
+      })();
+    </script>
+  </body>
+</html>

@@ -36,3 +36,6 @@ server/data/taste-model.json
 server/data/taste-report.json
 # Временные рабочие файлы сессий (скрипты, очереди, дампы) — не в git.
 .scratch/
+
+# Бандл рендер-воркера: собирается на этапе сборки образа (npm run build:render).
+server/deepdive/render/dist/

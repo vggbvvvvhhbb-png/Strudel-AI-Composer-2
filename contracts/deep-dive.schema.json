@@ -1,0 +1,582 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://strudel-ai-composer.local/contracts/deep-dive.schema.json",
+  "title": "Deep Dive — контракт разбора трека",
+  "description": "Единый контракт результата режима «Разбор». Верхний уровень — «Разбор трека» (анализ + структура + аккорды-гипотезы). Блок code_twin — «Код-двойник» (транспайлер + рендер + сравнение + итерации улучшения). Каждое число в контракте имеет источник в сигнале: поле confidence и поле evidence обязательны рядом с утверждениями, которые можно оспорить.",
+  "type": "object",
+  "required": ["schema_version", "track", "measurements", "structure", "versions"],
+  "additionalProperties": false,
+
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0",
+      "description": "Версия контракта. Позволяет пересчитать старые разборы после смены схемы."
+    },
+
+    "track": {
+      "type": "object",
+      "required": ["id", "duration_s"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "Идентификатор разбора (не путь, не имя чужого трека — внутренний id)." },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$", "description": "Хэш исходного файла — ключ кэша. Позволяет не считать дважды." },
+        "duration_s": { "type": "number", "exclusiveMinimum": 0 },
+        "sample_rate": { "type": "integer", "enum": [22050, 44100, 48000] },
+        "channels": { "type": "integer", "enum": [1, 2] },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "filename": { "type": "string" },
+            "bytes": { "type": "integer", "minimum": 0 },
+            "container": { "type": "string", "description": "Определён по содержимому, не по расширению." },
+            "codec": { "type": "string" },
+            "uploaded_at": { "type": "string", "format": "date-time" },
+            "expires_at": { "type": "string", "format": "date-time", "description": "TTL аудио. Производные данные живут дольше." }
+          }
+        },
+        "user_supplied_metadata": {
+          "type": "object",
+          "description": "Метаданные, введённые владельцем. Истина по треку — измерение, не это.",
+          "additionalProperties": false,
+          "properties": {
+            "title": { "type": "string" },
+            "artist": { "type": "string" },
+            "note": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "measurements": {
+      "type": "object",
+      "description": "Измерения по миксу. Это единственный вход LLM: модель получает JSON и пересказывает, но не добавляет чисел.",
+      "required": ["tempo", "key", "loudness"],
+      "additionalProperties": false,
+      "properties": {
+        "tempo": {
+          "type": "object",
+          "required": ["bpm", "confidence"],
+          "additionalProperties": false,
+          "properties": {
+            "bpm": { "type": "number", "minimum": 20, "maximum": 400, "description": "Выбранный темп — основной вариант." },
+            "candidates": {
+              "type": "array",
+              "description": "Альтернативы, если темп неоднозначен (half/double-time). Показывать все, а не молча выбирать.",
+              "items": {
+                "type": "object",
+                "required": ["bpm", "kind"],
+                "additionalProperties": false,
+                "properties": {
+                  "bpm": { "type": "number" },
+                  "kind": { "type": "string", "enum": ["primary", "half_time", "double_time", "alternative"] },
+                  "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+                }
+              }
+            },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "method": { "type": "string", "description": "Алгоритм и версия, например 'librosa.beat.beat_track (v0.10.2)'." },
+            "evidence": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Доказательства: совпадение с хромаграммой, сила сетки онсетов, стабильность темпа по окнам."
+            }
+          }
+        },
+        "key": {
+          "type": "object",
+          "required": ["tonic", "mode", "confidence"],
+          "additionalProperties": false,
+          "properties": {
+            "tonic": { "type": "string", "pattern": "^[A-G][#b]?$" },
+            "mode": { "type": "string", "enum": ["major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "unknown"] },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "alternatives": {
+              "type": "array",
+              "description": "Допустимые варианты: релятивная, параллельная тональность. Спорный случай — показываем, а не прячем.",
+              "items": {
+                "type": "object",
+                "required": ["tonic", "mode"],
+                "additionalProperties": false,
+                "properties": {
+                  "tonic": { "type": "string" },
+                  "mode": { "type": "string" },
+                  "relation": { "type": "string", "enum": ["relative", "parallel", "fifth", "other"] },
+                  "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+                }
+              }
+            },
+            "method": { "type": "string" },
+            "evidence": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "loudness": {
+          "type": "object",
+          "required": ["lufs_integrated", "true_peak_dbtp"],
+          "additionalProperties": false,
+          "properties": {
+            "lufs_integrated": { "type": "number" },
+            "lufs_max": { "type": "number" },
+            "lufs_range": { "type": "number" },
+            "true_peak_dbtp": { "type": "number" },
+            "peak_dbfs": { "type": "number" },
+            "crest_db": { "type": "number" },
+            "method": { "type": "string" },
+            "reference": { "type": "string", "description": "Чем мерили: 'pyloudnorm' или 'ffmpeg ebur128' — для сверки." }
+          }
+        },
+        "spectral_balance": {
+          "type": "object",
+          "description": "Энергия по полосам. Доли нормированы на сумму = 1.",
+          "additionalProperties": false,
+          "properties": {
+            "sub": { "type": "number", "minimum": 0, "maximum": 1 },
+            "low": { "type": "number", "minimum": 0, "maximum": 1 },
+            "low_mid": { "type": "number", "minimum": 0, "maximum": 1 },
+            "mid": { "type": "number", "minimum": 0, "maximum": 1 },
+            "high_mid": { "type": "number", "minimum": 0, "maximum": 1 },
+            "high": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "stereo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "correlation": { "type": "number", "minimum": -1, "maximum": 1 },
+            "width": { "type": "number", "minimum": 0 },
+            "mid_side_db": { "type": "object", "additionalProperties": { "type": "number" } }
+          }
+        }
+      }
+    },
+
+    "structure": {
+      "type": "array",
+      "description": "Границы секций по самоподобию. Семантические метки не обещаем: пользователь переименовывает сам.",
+      "items": {
+        "type": "object",
+        "required": ["index", "start_s", "end_s", "label"],
+        "additionalProperties": false,
+        "properties": {
+          "index": { "type": "integer", "minimum": 0 },
+          "start_s": { "type": "number", "minimum": 0 },
+          "end_s": { "type": "number", "exclusiveMinimum": 0 },
+          "label": { "type": "string", "description": "A/B/C — техническая метка, не семантика." },
+          "user_label": { "type": "string", "description": "Переименование пользователем." },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "energy": { "type": "number", "minimum": 0, "maximum": 1 },
+          "repeated_group": { "type": "integer", "minimum": 0, "description": "Номер группы повторяющихся блоков; 0 = уникальный." },
+          "novelty": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+
+    "stems": {
+      "type": "object",
+      "description": "Разделение на стемы. Ссылки — только на свои производные; аудио отдаётся владельцу загрузки.",
+      "additionalProperties": false,
+      "properties": {
+        "drums": { "$ref": "#/$defs/stem" },
+        "bass": { "$ref": "#/$defs/stem" },
+        "vocals": { "$ref": "#/$defs/stem" },
+        "other": { "$ref": "#/$defs/stem" }
+      }
+    },
+
+    "stem_descriptors": {
+      "type": "object",
+      "description": "Измерения по каждому стему. Это главный вход транспайлера.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "activity": {
+            "type": "object",
+            "description": "Энергия по секциям — карта «секция × слой».",
+            "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "onsets": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "count": { "type": "integer", "minimum": 0 },
+              "grid": {
+                "type": "object",
+                "description": "Квантование онсетов к сетке.",
+                "additionalProperties": false,
+                "properties": {
+                  "step": { "type": "string", "description": "1/4, 1/8, 1/12, 1/16, 1/24, 1/32." },
+                  "fit_ratio": { "type": "number", "minimum": 0, "maximum": 1 }
+                }
+              },
+              "swing": { "type": "number", "minimum": 0, "maximum": 1 },
+              "rolls": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["start_s", "steps"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "start_s": { "type": "number" },
+                    "steps": { "type": "integer", "minimum": 1 },
+                    "grid": { "type": "string" }
+                  }
+                }
+              },
+              "velocity": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "mean": { "type": "number" },
+                  "std": { "type": "number" },
+                  "curve": { "type": "array", "items": { "type": "number" } }
+                }
+              },
+              "hits": {
+                "type": "array",
+                "description": "Классифицированные удары: спектральная классификация в GM-ноты.",
+                "items": {
+                  "type": "object",
+                  "required": ["time_s", "gm"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "time_s": { "type": "number" },
+                    "gm": { "type": "integer", "description": "General MIDI номер: 36 kick, 38 snare, 42 closed hat, 46 open hat." },
+                    "label": { "type": "string" },
+                    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+                    "velocity": { "type": "number", "minimum": 0, "maximum": 1 },
+                    "spectral_centroid_hz": { "type": "number" }
+                  }
+                }
+              }
+            }
+          },
+          "pitch": {
+            "type": "object",
+            "description": "Питч-трек баса: ноты, глайды, огибающая.",
+            "additionalProperties": false,
+            "properties": {
+              "notes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["time_s", "midi"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "time_s": { "type": "number" },
+                    "duration_s": { "type": "number" },
+                    "midi": { "type": "integer" },
+                    "note_name": { "type": "string" },
+                    "f0_hz": { "type": "number" },
+                    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+                    "glide": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": { "type": "string", "enum": ["none", "portamento", "legato", "slide"] },
+                        "cents": { "type": "number" },
+                        "duration_ms": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              },
+              "median_f0_hz": { "type": "number" },
+              "harmonic_ratio": { "type": "number", "description": "Доля гармоник над основной — прокси сатурации." },
+              "sidechain": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "detected": { "type": "boolean" },
+                  "depth_db": { "type": "number" },
+                  "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+                }
+              }
+            }
+          },
+          "spectrum": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "centroid_hz": { "type": "number" },
+              "rolloff_hz": { "type": "number" },
+              "flatness": { "type": "number" }
+            }
+          },
+          "stereo": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "correlation": { "type": "number" },
+              "width": { "type": "number" }
+            }
+          },
+          "chords": {
+            "type": "array",
+            "description": "Аккорды-гипотезы. Считать по стему other, не по миксу: 808 забивает хромаграмму.",
+            "items": {
+              "type": "object",
+              "required": ["start_s", "end_s", "root", "quality", "confidence"],
+              "additionalProperties": false,
+              "properties": {
+                "start_s": { "type": "number" },
+                "end_s": { "type": "number" },
+                "root": { "type": "string" },
+                "quality": { "type": "string" },
+                "bass_note": { "type": "string" },
+                "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+                "evidence": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "energy": {
+            "type": "array",
+            "description": "Огибающая энергии во времени.",
+            "items": {
+              "type": "object",
+              "required": ["time_s", "value"],
+              "additionalProperties": false,
+              "properties": {
+                "time_s": { "type": "number" },
+                "value": { "type": "number", "minimum": 0, "maximum": 1 }
+              }
+            }
+          },
+          "peaks_url": { "type": "string", "description": "JSON с пиками — браузер не декодирует длинные файлы." }
+        }
+      }
+    },
+
+    "recipes": {
+      "type": "array",
+      "description": "Рецепты: факты → архетип → параметры. Каждое число рецепта — из измерений.",
+      "items": {
+        "type": "object",
+        "required": ["stem", "archetype", "confidence"],
+        "additionalProperties": false,
+        "properties": {
+          "stem": { "type": "string" },
+          "archetype": { "type": "string", "enum": ["808-sub", "hi-hat-pattern", "kick", "pad", "vocal-chain", "cowbell", "generic"] },
+          "params": {
+            "type": "object",
+            "description": "Значения параметров. Источник каждого — stem_descriptors.",
+            "additionalProperties": true
+          },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+          "evidence": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "На чём основан вывод: имя дескриптора и его значение."
+          },
+          "llm_summary": {
+            "type": "object",
+            "description": "Уровень L2: пересказ LLM по JSON. Модель не добавляет чисел.",
+            "additionalProperties": false,
+            "properties": {
+              "text": { "type": "string" },
+              "how_to_verify": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "code_twin": {
+      "type": "object",
+      "description": "«Код-двойник»: план → код → рендер → сравнение → итерации. Ориентир, не клон.",
+      "required": ["plan", "code", "metrics"],
+      "additionalProperties": false,
+      "properties": {
+        "plan": {
+          "type": "object",
+          "description": "План в формате существующего композитора (TrackSpec). Чтобы «Улучшить» и «Ещё вариант» работали с двойником бесплатно.",
+          "additionalProperties": true
+        },
+        "code": { "type": "string", "description": "Strudel-код двойника." },
+        "render": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": { "type": "string", "enum": ["pending", "rendered", "failed"] },
+            "wav_url": { "type": "string" },
+            "duration_s": { "type": "number" },
+            "render_ms": { "type": "number" },
+            "fingerprint": {
+              "type": "object",
+              "description": "Паспорт рендера — без него метрики нельзя сравнивать между прогонами.",
+              "additionalProperties": false,
+              "properties": {
+                "browser": { "type": "string" },
+                "browser_version": { "type": "string" },
+                "os": { "type": "string" },
+                "engine_version": { "type": "string" },
+                "sample_rate": { "type": "integer" },
+                "code_sha256": { "type": "string" },
+                "seed": { "type": "string" }
+              }
+            }
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "description": "Метрики похожести по слоям. Один элемент — один прогон (baseline или итерация).",
+          "items": {
+            "type": "object",
+            "required": ["iteration", "layers", "overall"],
+            "additionalProperties": false,
+            "properties": {
+              "iteration": { "type": "integer", "minimum": 0, "description": "0 = baseline, до улучшений." },
+              "label": { "type": "string", "description": "baseline | iteration-1 | ..." },
+              "overall": { "type": "number", "minimum": 0, "maximum": 1 },
+              "layers": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "rhythm": {
+                    "type": "object",
+                    "description": "F-measure онсетов кода против онсетов стема, допуск ±50 мс.",
+                    "additionalProperties": false,
+                    "properties": {
+                      "f1": { "type": "number", "minimum": 0, "maximum": 1 },
+                      "precision": { "type": "number", "minimum": 0, "maximum": 1 },
+                      "recall": { "type": "number", "minimum": 0, "maximum": 1 },
+                      "tolerance_ms": { "type": "number" }
+                    }
+                  },
+                  "bass": {
+                    "type": "object",
+                    "description": "Доля совпавших нот (питч ±50 центов, октава-агностик) + RMSE f0.",
+                    "additionalProperties": false,
+                    "properties": {
+                      "note_match_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+                      "f0_rmse_cents": { "type": "number" },
+                      "octave_agnostic": { "type": "boolean" }
+                    }
+                  },
+                  "timbre": {
+                    "type": "object",
+                    "description": "Cosine similarity лог-мел-спектrogram по слоям и по миксу.",
+                    "additionalProperties": false,
+                    "properties": {
+                      "cosine": { "type": "number", "minimum": -1, "maximum": 1 },
+                      "mel_bands": { "type": "integer" }
+                    }
+                  },
+                  "groove": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "envelope_correlation": { "type": "number", "minimum": -1, "maximum": 1 },
+                      "swing_delta": { "type": "number" }
+                    }
+                  },
+                  "loudness": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "lufs_delta_db": { "type": "number" },
+                      "twin_lufs_i": { "type": "number" },
+                      "reference_lufs_i": { "type": "number" }
+                    }
+                  }
+                }
+              },
+              "method": { "type": "string", "description": "Алгоритм и версия метрики." },
+              "created_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "iterations": {
+          "type": "array",
+          "description": "Лог итераций улучшения: что изменено, метрики до/после. LLM правит ПЛАН, не код напрямую.",
+          "items": {
+            "type": "object",
+            "required": ["iteration", "changes", "score_before", "score_after"],
+            "additionalProperties": false,
+            "properties": {
+              "iteration": { "type": "integer", "minimum": 1 },
+              "changes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["field", "from", "to"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "field": { "type": "string", "description": "Путь в плане, например 'parts.roles.kick.pattern'." },
+                    "from": {},
+                    "to": {},
+                    "reason": { "type": "string", "description": "Ссылка на измерение, а не на мнение." }
+                  }
+                }
+              },
+              "score_before": { "type": "number" },
+              "score_after": { "type": "number" },
+              "accepted": { "type": "boolean", "description": "false — если метрики не выросли." },
+              "llm_model": { "type": "string" }
+            }
+          }
+        },
+        "honesty": {
+          "type": "object",
+          "description": "Что двойник НЕ воспроизводит. Показывается в UI.",
+          "additionalProperties": false,
+          "properties": {
+            "not_reproduced": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Список: вокал, точное сведение, мастеринг, ..."
+            },
+            "caveats": { "type": "array", "items": { "type": "string" } },
+            "overall_confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+          }
+        }
+      }
+    },
+
+    "versions": {
+      "type": "object",
+      "required": ["pipeline", "separation_model", "transpiler"],
+      "additionalProperties": false,
+      "properties": {
+        "pipeline": { "type": "string", "description": "Версия пайплайна целиком. Смена версии → можно пересчитать." },
+        "separation_model": { "type": "string", "description": "Например 'htdemucs' или 'none', если разделения не было." },
+        "transpiler": { "type": "string" },
+        "analysis_libs": { "type": "object", "additionalProperties": { "type": "string" } },
+        "schema": { "type": "string" }
+      }
+    },
+
+    "errors": {
+      "type": "array",
+      "description": "Что не получилось. Честная деградация важнее молчаливого пропуска.",
+      "items": {
+        "type": "object",
+        "required": ["stage", "message"],
+        "additionalProperties": false,
+        "properties": {
+          "stage": { "type": "string" },
+          "message": { "type": "string" },
+          "fatal": { "type": "boolean" }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "stem": {
+      "type": "object",
+      "required": ["name", "duration_s"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "enum": ["drums", "bass", "vocals", "other"] },
+        "duration_s": { "type": "number", "exclusiveMinimum": 0 },
+        "url": { "type": "string", "description": "Ссылка на свой файл. Доступна только владельцу загрузки." },
+        "codec": { "type": "string", "enum": ["opus", "aac", "wav"] },
+        "bytes": { "type": "integer" },
+        "separation_confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "Качество разделения — ориентир, на плотных миксах бывают протечки." },
+        "leakage_note": { "type": "string" }
+      }
+    }
+  }
+}
