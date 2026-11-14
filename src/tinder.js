@@ -16,7 +16,7 @@ import './styles/layout.css';
 import './styles/components.css';
 import './styles/tinder.css';
 
-import { initEngine, renderTrackOffline, unlockAudio } from './strudel-engine.js';
+import { initEngine, renderTrackOffline, unlockAudio, ensureSamples } from './strudel-engine.js';
 import { measureLoudness, measurePeakDbfs, measureCrestDb } from './audio/dsp/loudness.js';
 import { measureTruePeak } from './audio/dsp/truepeak.js';
 
@@ -29,8 +29,15 @@ const els = {
   log: document.getElementById('log'),
 };
 
-/** Сколько тактов рендерим на пару: 16 тактов ≈ 8–10 с на 120 BPM. */
-const BARS = 16;
+/**
+ * Сколько тактов рендерим на пару.
+ *
+ * 8 тактов при 120 BPM — это 16 секунд на сторону: достаточно, чтобы услышать
+ * ритм, гармонию и характер трека, но не настолько долго, чтобы «6 минут в
+ * день» превратились в «20 минут ожидания рендера». Длинный фрагмент к
+ * выбору «лучше / хуже» ничего не добавляет.
+ */
+const BARS = 8;
 /** Сколько пар берём за раз. */
 const QUEUE_SIZE = 20;
 
@@ -42,6 +49,44 @@ let playing = false;
 let listenStart = 0;
 let listenMs = 0;
 let activeSource = null;
+// Загрузились ли сэмплы. Без них трек звучит не тем, что нарисован, и
+// сравнение получается неполным — такие метки помечаются как degraded.
+let samplesOk = true;
+// Покрытие промтов: сколько РАЗНЫХ промтов закрыто суждениями (приёмка
+// §7.2 требует 50). Число приходит с сервера — оно единственно честное.
+let coverage = { uniquePrompts: 0, promptsNeeded: 50 };
+
+/**
+ * Строка прогресса: сколько пар пройдено и сколько разных промтов закрыто.
+ */
+function updateProgress() {
+  els.progress.textContent = `${index} / ${queue.length}`
+    + ` · промтов ${coverage.uniquePrompts}/${coverage.promptsNeeded}`;
+}
+
+/**
+ * Обновляет покрытие промтов с сервера (после каждой метки).
+ *
+ * Считать на клиенте нельзя: повторная пара закрывает тот же промт, что уже
+ * закрыт, и наивный счёт завысил бы прогресс — а это приёмочный счётчик.
+ *
+ * @returns {Promise<void>}
+ */
+async function refreshCoverage() {
+  try {
+    const response = await fetch('/api/preference/stats');
+    const data = await response.json();
+    if (Number.isFinite(data?.uniquePrompts)) {
+      coverage = {
+        uniquePrompts: data.uniquePrompts,
+        promptsNeeded: data.promptsNeeded ?? coverage.promptsNeeded,
+      };
+      updateProgress();
+    }
+  } catch {
+    /* прогресс не критичен — не мешаем суждению */
+  }
+}
 
 /**
  * Сообщение в статусной строке.
@@ -204,21 +249,23 @@ async function showCurrent() {
   stopPlayback();
   if (index >= queue.length) {
     say('Очередь закончилась. Спасибо — метки сохранены.');
-    els.progress.textContent = `${queue.length} / ${queue.length}`;
+    updateProgress();
     els.replay.disabled = true;
     return;
   }
   const pair = queue[index];
   current = pair;
   els.prompt.textContent = pair.prompt;
-  els.progress.textContent = `${index} / ${queue.length}`;
+  updateProgress();
   say('Готовим пару: рендерим оба варианта…');
 
   try {
-    const [a, b] = await Promise.all([
-      renderCandidate(pair.a),
-      renderCandidate(pair.b),
-    ]);
+    // Стороны рендерятся ПОСЛЕДОВАТЕЛЬНО, а не параллельно: оффлайн-рендер
+    // переключает глобальный аудиоконтекст движка, и два рендера «в одном
+    // флаконе» перехватывают контекст друг у друга. На выходе был тихий
+    // трек (громкость по −70 LUFS) и ошибки «разные аудиоконтексты».
+    const a = await renderCandidate(pair.a);
+    const b = await renderCandidate(pair.b);
     const gains = alignLoudness(a, b);
     current.buffers = { a: a.buffer, b: b.buffer };
     current.audio = { a: a.audio, b: b.audio };
@@ -228,8 +275,11 @@ async function showCurrent() {
 
     play(a.buffer, gains.a, current.aOnLeft ? -1 : 1);
     els.replay.disabled = false;
+    const degradedNote = samplesOk
+      ? ''
+      : ' ВНИМАНИЕ: сэмплы не загрузились — треки неполные, такая метка не попадёт в обучение.';
     say(`Слушайте. Громкость выровнена (цель ${gains.target.toFixed(1)} LUFS). `
-      + 'Клавиши: ← лучше A, → лучше B, ↓ ничья, Space — ещё раз.');
+      + 'Клавиши: ← лучше A, → лучше B, ↓ ничья, Space — ещё раз.' + degradedNote);
   } catch (err) {
     say(`Не удалось подготовить пару: ${err?.message || err}`);
   }
@@ -257,6 +307,9 @@ async function judge(winner) {
     // Аудио-признаки обеих сторон: без них метку нельзя превратить в
     // обучающий пример (см. server/preference/ledger.js).
     audio: current.audio ? { a: current.audio.a, b: current.audio.b } : undefined,
+    // Рендер без сэмплов — сравнение неполное (нет ударных и пианино).
+    // Такая метка помечается, чтобы не попасть в обучение (см. dataset.js).
+    degraded: !samplesOk,
   };
   stopPlayback();
   try {
@@ -274,6 +327,9 @@ async function judge(winner) {
   els.log.prepend(item);
   index += 1;
   current = null;
+  // Покрытие промтов обновляем с сервера: клиентский счёт завышал бы
+  // прогресс на повторных парах.
+  await refreshCoverage();
   await showCurrent();
 }
 
@@ -283,6 +339,12 @@ async function loadQueue() {
   const data = await response.json();
   if (!data.ok) throw new Error(data.error || 'очередь недоступна');
   queue = data.pairs ?? [];
+  if (data.coverage) {
+    coverage = {
+      uniquePrompts: data.coverage.uniquePrompts ?? coverage.uniquePrompts,
+      promptsNeeded: data.coverage.promptsNeeded ?? coverage.promptsNeeded,
+    };
+  }
 }
 
 els.start.addEventListener('click', async () => {
@@ -291,6 +353,18 @@ els.start.addEventListener('click', async () => {
   try {
     await unlockAudio();
     initEngine(null);
+    // Сэмплы грузим ДО рендера: без них ударные и пианино молчат, и
+    // сравнение двух «половинок» трека бессмысленно.
+    try {
+      samplesOk = await ensureSamples();
+    } catch (error) {
+      samplesOk = false;
+      console.warn('Сэмплы не загрузились:', error?.message || error);
+    }
+    if (!samplesOk) {
+      say('Сэмплы не загрузились (сеть или CDN). Треки прозвучат неполно — '
+        + 'такие метки не попадут в обучение. Попробуйте позже.');
+    }
     await loadQueue();
     await showCurrent();
   } catch (err) {
