@@ -27,7 +27,13 @@ import { featureVector, standardizer, standardizeValues, TASTE_FEATURE_IDS } fro
 import { trainTaste, tasteProbability } from '../src/taste/model.js';
 import { leavePromptOutCV, admitDecision, wilsonInterval } from '../src/taste/cv.js';
 import { selectNextPairs, rankByUncertainty } from '../src/taste/active.js';
-import { readPairs, readLabels } from '../server/preference/ledger.js';
+import {
+  readPairs,
+  readLabels,
+  promptPool,
+  labelCoverage,
+  REQUIRED_UNIQUE_PROMPTS,
+} from '../server/preference/ledger.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
@@ -281,6 +287,33 @@ const decided = labels.filter(
     && (label.source ?? 'explicit') === 'explicit',
 ).length;
 
+// --- 8. очередь пар ---
+
+const pool = promptPool();
+check(
+  'очередь: пул промтов не меньше приёмочного порога',
+  pool.length >= REQUIRED_UNIQUE_PROMPTS,
+  `в пуле ${pool.length} промтов, нужно ${REQUIRED_UNIQUE_PROMPTS}`,
+  { pool: pool.length, required: REQUIRED_UNIQUE_PROMPTS },
+);
+
+const poolPrompts = new Set(pool.map((entry) => entry.prompt));
+check(
+  'очередь: промты в пуле не повторяются',
+  poolPrompts.size === pool.length,
+  `разных промтов ${poolPrompts.size} из ${pool.length}`,
+  { unique: poolPrompts.size, total: pool.length },
+);
+
+const promptCoverage = labelCoverage();
+check(
+  'очередь: покрытие считается по разным промтам',
+  Number.isFinite(promptCoverage.uniquePrompts)
+    && promptCoverage.uniquePrompts <= promptCoverage.judgedPairs + pairs.length,
+  `закрыто промтов ${promptCoverage.uniquePrompts}, оценено пар ${promptCoverage.judgedPairs}`,
+  promptCoverage,
+);
+
 const failed = checks.filter((item) => !item.passed);
 const report = {
   checkedAt: new Date().toISOString(),
@@ -291,9 +324,11 @@ const report = {
   },
   humanGate: {
     // §7.2: приёмка проекта — ≥100 суждений, ≥50 промтов, ≥2 рецензента.
-    status: decided >= 100 ? 'met' : 'pending',
+    status: decided >= 100 && promptCoverage.uniquePrompts >= REQUIRED_UNIQUE_PROMPTS ? 'met' : 'pending',
     decided,
     required: 100,
+    uniquePrompts: promptCoverage.uniquePrompts,
+    requiredPrompts: REQUIRED_UNIQUE_PROMPTS,
     note: 'Метки ставит человек; тест их не заменяет.',
   },
   tasteAdmission: {
@@ -314,6 +349,7 @@ for (const item of checks) {
 console.log('');
 console.log(`механика: ${report.machinery.pass ? 'зелёная' : 'КРАСНАЯ'} (${checks.length} проверок)`);
 console.log(`живых пар: ${decided} (для допуска модели нужно 60, для приёмки проекта — 100)`);
+console.log(`разных промтов закрыто: ${promptCoverage.uniquePrompts} (для приёмки нужно ${REQUIRED_UNIQUE_PROMPTS})`);
 console.log('Записано: docs/evidence/taste/gate.json');
 
 if (!report.machinery.pass) process.exit(1);

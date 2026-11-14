@@ -1,14 +1,16 @@
 {
-  "checkedAt": "2026-11-14T11:15:15.611Z",
+  "checkedAt": "2026-11-14T11:41:55.386Z",
   "machinery": {
     "pass": true,
-    "checks": 20,
+    "checks": 23,
     "failed": 0
   },
   "humanGate": {
     "status": "pending",
     "decided": 0,
     "required": 100,
+    "uniquePrompts": 0,
+    "requiredPrompts": 50,
     "note": "Метки ставит человек; тест их не заменяет."
   },
   "tasteAdmission": {
@@ -189,6 +191,34 @@
       "detail": "выбрано 4, распределение [[\"промт-0\",2],[\"промт-1\",2]]",
       "numbers": {
         "selected": 4
+      }
+    },
+    {
+      "name": "очередь: пул промтов не меньше приёмочного порога",
+      "passed": true,
+      "detail": "в пуле 60 промтов, нужно 50",
+      "numbers": {
+        "pool": 60,
+        "required": 50
+      }
+    },
+    {
+      "name": "очередь: промты в пуле не повторяются",
+      "passed": true,
+      "detail": "разных промтов 60 из 60",
+      "numbers": {
+        "unique": 60,
+        "total": 60
+      }
+    },
+    {
+      "name": "очередь: покрытие считается по разным промтам",
+      "passed": true,
+      "detail": "закрыто промтов 0, оценено пар 0",
+      "numbers": {
+        "judgedPairs": 0,
+        "uniquePrompts": 0,
+        "promptsNeeded": 50
       }
     }
   ]
