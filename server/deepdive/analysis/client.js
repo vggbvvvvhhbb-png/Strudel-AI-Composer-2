@@ -10,6 +10,9 @@
 // результат: контракт разбора закрыт (additionalProperties: false), а
 // лишние сведения возвращаются отдельно в `versions`/`errors`.
 
+import http from 'node:http';
+import https from 'node:https';
+
 const DEFAULT_BASE_URL = process.env.DD_WORKER_URL || 'http://127.0.0.1:8010';
 const DEFAULT_TIMEOUT_MS = Number(process.env.DD_WORKER_TIMEOUT_MS || 120000);
 // Разделение — тяжёлая операция: на 2 vCPU минута аудио — минуты.
@@ -32,27 +35,90 @@ function workerUrl(pathname, baseUrl = DEFAULT_BASE_URL) {
   return `${baseUrl.replace(/\/+$/, '')}${pathname}`;
 }
 
+/**
+ * HTTP-запрос без `headersTimeout`.
+ *
+ * ЗАЧЕМ НЕ fetch. Глобальный fetch — это undici, у которого есть собственные
+ * таймауты: `headersTimeout` = 300 с (сколько ждать заголовков ответа) и
+ * `bodyTimeout` = 300 с. Воркер отвечает на `/separate` ОДНИМ ответом после
+ * конца Demucs — на 2 vCPU это 6–9 минут, то есть больше 300 с. undici рвал
+ * соединение сам, задолго до нашего таймаута: ошибка приходила как
+ * «fetch failed», а демонстрация «тяжёлая операция длится дольше 5 минут»
+ * обрывалась ничем.
+ *
+ * У клиента на node:http таких дефолтов нет: единственный таймаут — тот,
+ * что задаём сами (AbortController/таймер запроса). Поэтому длинное
+ * разделение доезжает до конца, а «зависший» воркер всё равно обрывается
+ * по нашему таймауту.
+ *
+ * @param {string} url
+ * @param {object} options
+ * @returns {Promise<{ok:boolean,status:number,text:string}>}
+ */
+function httpRequest(url, { method = 'GET', headers, body, timeoutMs }) {
+  return new Promise((resolve, reject) => {
+    const target = new URL(url);
+    const transport = target.protocol === 'https:' ? https : http;
+    let timer = null;
+    let timedOut = false;
+
+    const req = transport.request(target, { method, headers }, (res) => {
+      const chunks = [];
+      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('end', () => {
+        if (timer) clearTimeout(timer);
+        resolve({
+          ok: res.statusCode >= 200 && res.statusCode < 300,
+          status: res.statusCode,
+          text: Buffer.concat(chunks).toString('utf8'),
+        });
+      });
+      res.on('error', (err) => {
+        if (timer) clearTimeout(timer);
+        reject(err);
+      });
+    });
+
+    req.on('error', (err) => {
+      if (timer) clearTimeout(timer);
+      if (timedOut) err.timedOut = true;
+      reject(err);
+    });
+
+    if (timeoutMs > 0) {
+      timer = setTimeout(() => {
+        timedOut = true;
+        req.destroy(new Error(`превышен таймаут ${timeoutMs} мс`));
+      }, timeoutMs);
+    }
+
+    req.end(body);
+  });
+}
+
 async function request(pathname, body, { timeoutMs = DEFAULT_TIMEOUT_MS, stage = 'worker', baseUrl } = {}) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
   let response;
   try {
-    response = await fetch(workerUrl(pathname, baseUrl), {
+    const payload = body === undefined ? undefined : JSON.stringify(body);
+    response = await httpRequest(workerUrl(pathname, baseUrl), {
       method: body === undefined ? 'GET' : 'POST',
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json; charset=utf-8' },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: controller.signal,
+      headers: body === undefined
+        ? undefined
+        : {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Content-Length': Buffer.byteLength(payload),
+          },
+      body: payload,
+      timeoutMs,
     });
   } catch (err) {
-    clearTimeout(timer);
-    if (err?.name === 'AbortError') {
+    if (err?.timedOut) {
       throw new WorkerError(`Сервис анализа не ответил за ${Math.round(timeoutMs / 1000)} с`, { stage });
     }
     throw new WorkerError(`Сервис анализа недоступен: ${err?.message || err}`, { stage });
   }
-  clearTimeout(timer);
 
-  const text = await response.text();
+  const text = response.text;
   let payload = null;
   try {
     payload = text ? JSON.parse(text) : null;
