@@ -23,10 +23,15 @@ services:
       # рабочие файлы — в общем томе (пути должны совпадать у обоих).
       DD_WORKER_URL: "http://deepdive-worker:8010"
       DD_WORKSPACE_DIR: "/data/deepdive"
+      # Мьютексы — общий каталог с хостом. Деплой берёт ТОТ ЖЕ лок перед
+      # сборкой образа, поэтому разбор и сборка не могут идти одновременно
+      # (на 2 ядрах и 3.8 ГБ RAM это OOM).
+      DD_LOCK_DIR: "/lock"
     expose:
       - "3001"
     volumes:
       - deepdive-data:/data
+      - /opt/dd-lock:/lock
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -47,10 +52,15 @@ services:
       - /root/.cache/torch:/root/.cache/torch:ro
       - /opt/strudel/server/deepdive/analysis:/analysis:ro
       - deepdive-data:/data
+      - /opt/dd-lock:/lock
     environment:
       DD_PORT: "8010"
       DD_PYTHON: "/opt/dd-venv/bin/python"
       HOME: "/root"
+      # Мьютекс тяжёлых операций (flock). Тот же файл берёт деплой на хосте:
+      # пока Demucs работает, образ не собирается.
+      DD_HEAVY_LOCK: "/lock/heavy.lock"
+      DD_HEAVY_LOCK_WAIT_S: "3600"
     expose:
       - "8010"
     restart: unless-stopped

@@ -15,8 +15,14 @@ import subprocess
 import sys
 import time
 import traceback
+from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+try:  # POSIX-only; на Linux-контейнере всегда есть
+    import fcntl
+except ImportError:  # pragma: no cover — dev на Windows
+    fcntl = None
 
 from .chords import analyze_chords
 from .common import _num, _require_file, _ver, load_audio, rms_envelope
@@ -26,6 +32,61 @@ from .pitch import analyze_bass_pitch
 from .stems import _activity_by_section, _energy_curve
 from .structure import analyze_structure
 from .tempo import analyze_tempo
+
+# Глобальный мьютекс тяжёлых операций. Файл общий с хостом и с приложением:
+# пока он занят, Demucs не запускается (и деплой не собирает образ).
+HEAVY_LOCK_PATH = os.environ.get("DD_HEAVY_LOCK", "/lock/heavy.lock")
+HEAVY_LOCK_WAIT_S = int(os.environ.get("DD_HEAVY_LOCK_WAIT_S", "3600"))
+
+
+@contextmanager
+def heavy_lock():
+    """Взять общий мьютекс тяжёлых операций (flock, эксклюзивно).
+
+    Смысл — механический: на сервере 2 ядра и 3.8 ГБ RAM, Demucs занимает
+    ~1.75 ГБ, две копии сразу — это OOM. flock держится на уровне ядра, поэтому
+    работает и между процессами, и между контейнерами (файл в общем томе).
+
+    Ждём, а не падаем: если мьютекс занят, ждём до HEAVY_LOCK_WAIT_S и только
+    потом отдаём понятную ошибку.
+    """
+    if fcntl is None:
+        yield False
+        return
+
+    path = Path(HEAVY_LOCK_PATH)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
+
+    handle = open(path, "a+")
+    deadline = time.time() + HEAVY_LOCK_WAIT_S
+    try:
+        while True:
+            try:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError:
+                if time.time() >= deadline:
+                    raise RuntimeError(
+                        f"мьютекс тяжёлых операций занят дольше {HEAVY_LOCK_WAIT_S} с ({path})"
+                    )
+                time.sleep(1.0)
+        try:
+            handle.seek(0)
+            handle.truncate()
+            handle.write(f"pid={os.getpid()} since={int(time.time())}\n")
+            handle.flush()
+        except OSError:
+            pass
+        yield True
+    finally:
+        try:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        except OSError:
+            pass
+        handle.close()
 
 
 def health_payload() -> dict:
@@ -151,9 +212,21 @@ def handle_separate(body: dict) -> dict:
     command = [python, "-m", "demucs", "-n", model, "-o", str(out_path), path]
     started = time.time()
     try:
-        completed = subprocess.run(
-            command, capture_output=True, text=True, timeout=7200, check=False
-        )
+        # Мьютекс держим ВОКРУГ запуска Demucs: ровно то время, когда память
+        # занята по-настоящему.
+        with heavy_lock() as locked:
+            if locked:
+                sys.stderr.write(
+                    json.dumps(
+                        {"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "event": "heavy-lock-acquired",
+                         "model": model, "path": str(path)},
+                        ensure_ascii=False,
+                    ) + "\n"
+                )
+                sys.stderr.flush()
+            completed = subprocess.run(
+                command, capture_output=True, text=True, timeout=7200, check=False
+            )
     except FileNotFoundError as exc:
         raise RuntimeError(f"не найден интерпретатор для demucs: {python}") from exc
     except subprocess.TimeoutExpired as exc:

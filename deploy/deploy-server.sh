@@ -50,17 +50,69 @@ echo "==> Сборка образа и запуск сервиса strudel"
 # Compose-файл берём из репозитория: так сервис воркера анализа нельзя
 # случайно потерять (в старой версии скрипта он был зашит здесь же).
 ssh_cmd "cp ${APP_DIR}/deploy/docker-compose.strudel.yml ${COMPOSE_DIR}/docker-compose.strudel.yml"
-# В compose пути к контексту сборки зашиты как /opt/strudel — здесь он и есть.
-ssh_cmd "cd ${COMPOSE_DIR} && docker compose -f docker-compose.yml -f docker-compose.strudel.yml build --progress plain strudel deepdive-worker"
-ssh_cmd "cd ${COMPOSE_DIR} && docker compose -f docker-compose.yml -f docker-compose.strudel.yml up -d strudel deepdive-worker"
+
+# ---------------------------------------------------------------------------
+# МЬЮТЕКС: разбор и деплой не могут идти одновременно.
+#
+# На сервере 2 ядра и 3.8 ГБ RAM. Demucs занимает ~1.75 ГБ, и сборка образа
+# рядом с ним — это OOM (замер: rc=137). «Не гонять разбор и деплой вместе»
+# было правилом в описании; здесь это МЕХАНИЗМ:
+#
+#   job.lock    — каталог-лок (mkdir атомарен). Его держит приложение, пока
+#                 идёт разбор со стемами. Создаёт и обновляет его Node
+#                 (server/deepdive/lock.js) — тот же протокол, что здесь.
+#   heavy.lock  — flock(1). Его держит Python-воркер вокруг запуска Demucs
+#                 (server/deepdive/analysis/ddworker/http.py).
+#   running/    — маркеры «разбор идёт». Приложение создаёт файл на время
+#                 задачи: видно даже те разборы, которые ещё не взяли лок.
+#
+# Порядок: сначала ждём завершения текущих разборов, потом берём локи, потом
+# собираем. Так не возникает взаимоблокировки: разбор, который уже идёт,
+# локов не ждёт, а новый — ждёт.
+# ---------------------------------------------------------------------------
+LOCK_DIR="${LOCK_DIR:-/opt/dd-lock}"
+LOCK_WAIT_S="${LOCK_WAIT_S:-7200}"
+
+echo "==> Мьютекс: ждём завершения текущих разборов"
+ssh_cmd "mkdir -p ${LOCK_DIR}/running ${LOCK_DIR}"
+
+# 1. Ждём, пока не останется живых маркеров разбора.
+ssh_cmd "deadline=\$(( \$(date +%s) + ${LOCK_WAIT_S} )); while [ -n \"\$(ls -A ${LOCK_DIR}/running 2>/dev/null)\" ]; do if [ \$(date +%s) -ge \$deadline ]; then echo 'РАЗБОР ИДЁТ ДОЛЬШЕ ${LOCK_WAIT_S} С — ДЕПЛОЙ ОТМЕНЁН' >&2; exit 1; fi; echo '    ждём разбор: ' \$(ls -A ${LOCK_DIR}/running 2>/dev/null | tr '\n' ' '); sleep 10; done"
+
+# 2. Забираем лок задачи: новые разборы не смогут дойти до разделения.
+#    Heartbeat обновляем, пока идёт сборка, — иначе лок посчитают протухшим.
+ssh_cmd "set -e; mkdir ${LOCK_DIR}/job.lock && echo \$\$ > ${LOCK_DIR}/job.lock/pid && date +%s > ${LOCK_DIR}/job.lock/heartbeat && echo '    job.lock взят'"
+
+# 3+4. Сборка и перезапуск — ПОД flock тяжёлых операций: пока держим лок,
+#     Demucs не запустится (а если запустился — дождётся конца сборки).
+#     Heartbeat лока задачи обновляем на это время, иначе лок посчитают
+#     протухшим и кто-то другой его снимет.
+ssh_cmd "nohup bash -c 'for i in \$(seq 1 800); do date +%s > ${LOCK_DIR}/job.lock/heartbeat 2>/dev/null || exit 0; sleep 15; done' >/dev/null 2>&1 &"
+
+echo "==> Сборка образов (под мьютексом)"
+ssh_cmd "flock -w ${LOCK_WAIT_S} ${LOCK_DIR}/heavy.lock -c 'cd ${COMPOSE_DIR} && docker compose -f docker-compose.yml -f docker-compose.strudel.yml build --progress plain strudel deepdive-worker && docker compose -f docker-compose.yml -f docker-compose.strudel.yml up -d strudel deepdive-worker' || { echo 'СБОРКА НЕ УСПЕЛА: МЬЮТЕКС ТЯЖЁЛЫХ ОПЕРАЦИЙ ЗАНЯТ — ДЕПЛОЙ ОТМЕНЁН' >&2; exit 1; }"
+
+# Локи отпускаем: сборка закончилась, разборы могут идти.
+ssh_cmd "rm -rf ${LOCK_DIR}/job.lock" || true
 
 echo "==> Caddy: сайт-блок для студии"
 ssh_cmd "cp ${COMPOSE_DIR}/Caddyfile ${COMPOSE_DIR}/Caddyfile.bak-\$(date +%s)"
 ssh_cmd "grep -q '${DOMAIN}' ${COMPOSE_DIR}/Caddyfile || cat >> ${COMPOSE_DIR}/Caddyfile <<'CADDY'
 
 ${DOMAIN} {
-	encode zstd gzip
-	reverse_proxy strudel:3001
+	# SSE-поток режима «Разбор»: без буферизации и без сжатия (разбор на CPU
+	# идёт десятки минут — буферизация задерживает события потока).
+	@deepdive path /api/deepdive/*
+	handle @deepdive {
+		reverse_proxy strudel:3001 {
+			flush_interval -1
+		}
+	}
+
+	handle {
+		encode zstd gzip
+		reverse_proxy strudel:3001
+	}
 	header {
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
