@@ -57,6 +57,11 @@ export function pairsFile() {
 }
 
 /**
+ * Сколько разных промтов нужно закрыть для приёмки (бриф §7.2).
+ */
+export const REQUIRED_UNIQUE_PROMPTS = 50;
+
+/**
  * Промты для очереди: по одному на жанр и настроение, чтобы суждение
  * не скатывалось в один стиль.
  */
@@ -72,6 +77,88 @@ export const PROMPTS = [
   'агрессивный фонк',
   'ностальгическая кассета из 90-х',
 ];
+
+/**
+ * Пул промтов для очереди: 60 стратифицированных промтов корпуса
+ * Baseline-0 (4 квадранта × 5 жанров × 3 плотности).
+ *
+ * Зачем: приёмка по брифу §7.2 требует ≥50 РАЗНЫХ промтов, а очередь из
+ * десяти строк даёт десять — и все суждения скатываются в один стиль.
+ *
+ * Файл лежит рядом с модулем, потому что каталог corpus/ в образ не
+ * попадает, а очередь нужна и на сервере. Связь с корпусом проверяется
+ * по хэшу (npm run queue:prompts --check).
+ *
+ * @returns {Array<{id:string, prompt:string, seed:number, quadrant?:string, genre?:string, density?:string}>}
+ */
+export function promptPool() {
+  const file = join(here, 'prompts.json');
+  const fallback = () => PROMPTS.map((prompt, index) => ({
+    id: `fallback-${index}`,
+    prompt,
+    seed: 2000 + index,
+  }));
+  if (!existsSync(file)) return fallback();
+  try {
+    const document = JSON.parse(readFileSync(file, 'utf8'));
+    const list = Array.isArray(document?.prompts) ? document.prompts : [];
+    return list.length ? list : fallback();
+  } catch {
+    return fallback();
+  }
+}
+
+/**
+ * Смещение очереди: сколько пар рецензент уже закрыл.
+ *
+ * Зачем: очередь всегда начиналась с нуля, и каждый сеанс предлагал одни и
+ * те же первые двадцать промтов. Приёмка по брифу §7.2 требует ≥50 РАЗНЫХ
+ * промтов — с таким поведением она недостижима в принципе: владелец будет
+ * бесконечно судить одно и то же. Смещение берётся по максимальному
+ * индексу оценённой пары, поэтому непройденные пары возвращаются, а
+ * пройденные не повторяются.
+ *
+ * @returns {number}
+ */
+export function nextQueueOffset() {
+  const pairs = new Map(readPairs().map((pair) => [pair.pairId, pair]));
+  let max = -1;
+  for (const record of readLabels()) {
+    const winner = record.winner;
+    // Ничья — тоже суждение (промт закрыт), «пропуск» — нет.
+    if (winner !== 'A' && winner !== 'B' && winner !== 'tie') continue;
+    const index = pairs.get(record.pairId)?.index;
+    if (Number.isInteger(index) && index > max) max = index;
+  }
+  return max + 1;
+}
+
+/**
+ * Покрытие промтов: сколько разных промтов закрыто суждениями рецензента.
+ *
+ * Это ровно тот счётчик, который смотрит приёмка (§7.2): не «сколько пар
+ * оценено», а «сколько разных промтов услышано». Считается по реестру пар
+ * (там промт надёжнее, чем в самой метке), с запасным вариантом из метки.
+ *
+ * @returns {{judgedPairs:number, uniquePrompts:number, promptsNeeded:number}}
+ */
+export function labelCoverage() {
+  const pairs = new Map(readPairs().map((pair) => [pair.pairId, pair]));
+  const prompts = new Set();
+  const judged = new Set();
+  for (const record of readLabels()) {
+    const winner = record.winner;
+    if (winner !== 'A' && winner !== 'B' && winner !== 'tie') continue;
+    judged.add(record.pairId);
+    const prompt = pairs.get(record.pairId)?.prompt ?? record.prompt;
+    if (prompt) prompts.add(prompt);
+  }
+  return {
+    judgedPairs: judged.size,
+    uniquePrompts: prompts.size,
+    promptsNeeded: REQUIRED_UNIQUE_PROMPTS,
+  };
+}
 
 /**
  * Хэш кода трека — идентификатор кандидата в парах.
@@ -190,6 +277,7 @@ export function buildQueue({ limit = 10, offset = 0 } = {}) {
   const count = Math.max(1, Math.min(60, Number(limit) || 10));
   const from = Math.max(0, Number(offset) || 0);
   const pairs = [];
+  const pool = promptPool();
 
   for (let index = from; index < from + count && pairs.length < count; index += 1) {
     const id = `pair-${String(index + 1).padStart(3, '0')}`;
@@ -197,8 +285,12 @@ export function buildQueue({ limit = 10, offset = 0 } = {}) {
     // так измеряется надёжность рецензента (§7.1).
     const isRepeat = index % 10 === 9;
     const sourceIndex = isRepeat ? index - 9 : index;
-    const prompt = PROMPTS[sourceIndex % PROMPTS.length];
-    const seed = 2000 + sourceIndex;
+    const entry = pool[sourceIndex % pool.length];
+    const prompt = entry.prompt;
+    // Зерно: первый круг — зерно корпуса (тот самый Baseline-0 трек),
+    // следующие круги — сдвиг, чтобы пары не повторялись по треку.
+    const lap = Math.floor(sourceIndex / pool.length);
+    const seed = Number(entry.seed ?? 2000) + lap * 7919;
     const base = planIR(prompt, { seed });
     const baseCode = compileIR(base).code;
     const variant = variantFor(base, prompt, seed, sourceIndex);
@@ -217,6 +309,10 @@ export function buildQueue({ limit = 10, offset = 0 } = {}) {
     const record = {
       pairId: id,
       prompt,
+      promptId: entry.id ?? null,
+      quadrant: entry.quadrant ?? null,
+      genre: entry.genre ?? null,
+      density: entry.density ?? null,
       seed,
       swapped,
       repeat: isRepeat,
@@ -231,6 +327,9 @@ export function buildQueue({ limit = 10, offset = 0 } = {}) {
       id,
       pairId: id,
       prompt,
+      promptId: record.promptId,
+      quadrant: record.quadrant,
+      genre: record.genre,
       seed,
       a: { code: leftCode, hash: record.a.hash },
       b: { code: rightCode, hash: record.b.hash },
@@ -305,6 +404,9 @@ export function labelStats() {
     reliability: reliability === null ? null : Number(reliability.toFixed(3)),
     reliable: reliability !== null && reliability >= 0.8,
     pairs: readPairs().length,
+    // Сколько РАЗНЫХ промтов закрыто суждениями: это тот счётчик, который
+    // смотрит приёмка (§7.2). «Сколько пар оценено» — не то же самое.
+    ...labelCoverage(),
   };
 }
 

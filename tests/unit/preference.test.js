@@ -55,6 +55,25 @@ async function post(path, body) {
 }
 
 describe('очередь пар', () => {
+  it('продолжается после закрытых пар, а не начинается заново', async () => {
+    const first = await (await get('/queue?limit=3')).json();
+    expect(first.offset).toBe(0);
+    const pair = first.pairs[0];
+    await post('/', {
+      pairId: pair.pairId,
+      winner: 'A',
+      prompt: pair.prompt,
+      hashA: pair.a.hash,
+      hashB: pair.b.hash,
+    });
+    const second = await (await get('/queue?limit=3')).json();
+    // Смещение сдвинулось, и первая пара теперь другая: без этого каждый
+    // сеанс предлагал бы одни и те же промты, а приёмка §7.2 (≥50 разных)
+    // была бы недостижима.
+    expect(second.offset).toBe(1);
+    expect(second.pairs[0].pairId).not.toBe(pair.pairId);
+  });
+
   it('даёт пары с двумя разными кандидатами и хэшами', () => {
     const pairs = buildQueue({ limit: 10 });
     expect(pairs).toHaveLength(10);
@@ -124,6 +143,15 @@ describe('запись меток', () => {
 });
 
 describe('статистика и надёжность', () => {
+  it('покрытие считает разные промты, а не пары', async () => {
+    await post('/', { pairId: 'p1', winner: 'A', hashA: 'a', hashB: 'b', prompt: 'промт раз' });
+    await post('/', { pairId: 'p2', winner: 'A', hashA: 'c', hashB: 'd', prompt: 'промт раз' });
+    await post('/', { pairId: 'p3', winner: 'A', hashA: 'e', hashB: 'f', prompt: 'промт два' });
+    const data = await (await get('/stats')).json();
+    expect(data.uniquePrompts).toBe(2);
+    expect(data.promptsNeeded).toBe(50);
+  });
+
   it('считает решения и ничьи', async () => {
     await post('/', { pairId: 'p1', winner: 'A', hashA: 'a', hashB: 'b' });
     await post('/', { pairId: 'p2', winner: 'B', hashA: 'c', hashB: 'd' });

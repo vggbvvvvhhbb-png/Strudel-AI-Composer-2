@@ -29,15 +29,34 @@ export const PROXY_WEIGHT = 0.2;
 export function buildRows({ pairs = [], labels = [], featureIds = TASTE_FEATURE_IDS } = {}) {
   const byId = new Map(pairs.map((pair) => [pair.pairId, pair]));
   const rows = [];
-  const skipped = { pairMissing: 0, noIr: 0, noDecision: 0, broken: 0 };
+  const skipped = { pairMissing: 0, noIr: 0, noDecision: 0, broken: 0, degraded: 0, stale: 0 };
 
   for (const label of labels) {
     if (label.winner !== 'A' && label.winner !== 'B') continue;
     if ((label.source ?? 'explicit') !== 'explicit') continue;
+    // Рендер без сэмплов: трек прозвучал неполным (нет ударных и пианино).
+    // Сравнение «половинок» неполных треков учит модель не тому, поэтому
+    // такие метки в выборку не идут — но остаются в реестре как факт.
+    if (label.degraded === true) {
+      skipped.degraded += 1;
+      continue;
+    }
     const pair = byId.get(label.pairId);
     if (!pair) {
       skipped.pairMissing += 1;
       continue;
+    }
+    // Метка должна относиться к той же паре, что лежит в реестре. Если
+    // коды треков изменились (движок обновили, промты перегенерировали), то
+    // старый pairId указывает уже на другой трек — обучать на такой метке
+    // нельзя: модель получила бы признаки одного и сравнение с другим.
+    if (label.hashA && label.hashB && pair.a?.hash && pair.b?.hash) {
+      const same = (label.hashA === pair.a.hash && label.hashB === pair.b.hash)
+        || (label.hashA === pair.b.hash && label.hashB === pair.a.hash);
+      if (!same) {
+        skipped.stale += 1;
+        continue;
+      }
     }
     if (!pair.a?.ir || !pair.b?.ir) {
       skipped.noIr += 1;

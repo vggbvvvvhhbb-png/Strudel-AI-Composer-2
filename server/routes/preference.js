@@ -26,7 +26,9 @@ import {
   buildQueue,
   clearAll,
   hashCode,
+  labelCoverage,
   labelStats,
+  nextQueueOffset,
   readLabels,
   readPairs,
 } from '../preference/ledger.js';
@@ -67,6 +69,9 @@ export const PreferenceSchema = z.object({
   swapped: z.boolean().optional(),
   source: z.enum(['explicit', 'implicit']).default('explicit'),
   note: z.string().max(200).optional(),
+  // Рендер без сэмплов: трек прозвучал неполным. Метка сохраняется (это
+  // труд рецензента), но в обучение не идёт — см. server/taste/dataset.js.
+  degraded: z.boolean().optional(),
   audio: z.object({
     a: AudioSideSchema.optional(),
     b: AudioSideSchema.optional(),
@@ -80,11 +85,26 @@ export const appendPreference = appendLabel;
 
 /**
  * GET /api/preference/queue — очередь пар.
+ *
+ * Смещение по умолчанию — продолжение после закрытых пар (nextQueueOffset).
+ * Раньше очередь всегда начиналась с нуля, и каждый сеанс предлагал одни и
+ * те же первые двадцать промтов: приёмка §7.2 (≥50 разных промтов) была
+ * недостижима, а рецензент вязался в одни и те же двадцать треков.
  */
 router.get('/queue', (req, res) => {
   try {
-    const pairs = buildQueue({ limit: req.query.limit, offset: req.query.offset });
-    res.json({ ok: true, count: pairs.length, pairs });
+    const asked = req.query.offset;
+    const offset = asked === undefined || asked === ''
+      ? nextQueueOffset()
+      : Number(asked);
+    const pairs = buildQueue({ limit: req.query.limit, offset });
+    res.json({
+      ok: true,
+      count: pairs.length,
+      offset,
+      coverage: labelCoverage(),
+      pairs,
+    });
   } catch (err) {
     res.status(400).json({ error: err?.message || String(err) });
   }

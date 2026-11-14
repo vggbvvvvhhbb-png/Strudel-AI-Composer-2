@@ -373,6 +373,34 @@ describe('активный отбор', () => {
 });
 
 describe('выборка для обучения', () => {
+  /** Пара-заготовка: две стороны с хэшами и минимальным IR. */
+  const samplePair = () => ({
+    pairId: 'pair-001',
+    prompt: 'тест',
+    a: { hash: 'a', ir: { v: 1, seed: 1, meta: { title: 'a', bpm: 120, meter: '4/4', key: { tonic: 'c', mode: 'major' } }, sections: [], palette: {}, motifs: {}, groove: { template: 'straight', amount: 1 } } },
+    b: { hash: 'b', ir: { v: 1, seed: 2, meta: { title: 'b', bpm: 120, meter: '4/4', key: { tonic: 'c', mode: 'major' } }, sections: [], palette: {}, motifs: {}, groove: { template: 'straight', amount: 1 } } },
+  });
+
+  it('метка от рендера без сэмплов не идёт в обучение', () => {
+    // Трек прозвучал неполным: сравнивать половины неполных треков учит
+    // модель не тому, поэтому такая метка исключается из выборки.
+    const labels = [{ pairId: 'pair-001', winner: 'A', source: 'explicit', degraded: true }];
+    const { rows, stats } = buildRows({ pairs: [samplePair()], labels });
+    expect(rows).toHaveLength(0);
+    expect(stats.skipped.degraded).toBe(1);
+  });
+
+  it('метка, у которой трек в реестре уже другой, не идёт в обучение', () => {
+    // Тот же pairId, но хэши не совпадают: коды переехали, и старая метка
+    // теперь указывает на другую пару — обучать на ней нельзя.
+    const labels = [{
+      pairId: 'pair-001', winner: 'A', source: 'explicit', hashA: 'чужой', hashB: 'чужих',
+    }];
+    const { rows, stats } = buildRows({ pairs: [samplePair()], labels });
+    expect(rows).toHaveLength(0);
+    expect(stats.skipped.stale).toBe(1);
+  });
+
   it('соединяет метку с парой по id и достаёт признаки', () => {
     const pairs = [{
       pairId: 'pair-001',
