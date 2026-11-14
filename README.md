@@ -21,6 +21,8 @@
 Подробно о разборе и цикле обратной связи — [docs/MUSIC-ANALYSIS.md](docs/MUSIC-ANALYSIS.md).
 Звуковой разбор, метрики рендера и приёмка — [docs/AUDIO-QA.md](docs/AUDIO-QA.md).
 Как устроена структурная композиция — [docs/COMPOSE.md](docs/COMPOSE.md).
+Реестр метрик и весов скора — [docs/METRICS.md](docs/METRICS.md).
+Выученная цель (Taste Model) — [docs/TASTE.md](docs/TASTE.md).
 Английская версия README — [README.en.md](README.en.md).
 
 ## Установка
@@ -159,10 +161,16 @@ bash deploy/deploy.sh          # pm2 + nginx (шаблон: домен и пут
 npm test              # юнит- и интеграционные тесты (vitest); актуальное число — в отчёте запуска
 npm run check:presets # мини-нотация пресетов настоящим парсером Strudel
 npm run check:secrets # ключи не попали в репозиторий
+npm run check:taste   # гейт выученной цели: реестр метрик, признаки, модель, CV
+npm run taste:train   # обучить выученную цель на человеческих парах → docs/TASTE.md
 npm run build         # продакшн-сборка в dist/
 node scripts/probe-music.mjs   # разбор всех пресетов с оценками по критериям
 node scripts/calibrate.mjs     # подбор весов критериев под оценки человека
 ```
+
+`npm run check:taste` важен по той же причине, что и остальные проверки: он
+доказывает, что модель **не** допущена в скор, пока нет human-пар. Символьный
+скор — гипотеза, и оптимизировать гипотезу, не проверенную людьми, нельзя.
 
 `npm run check:presets` важен: Strudel принимает в mini-нотации паузу `~`, а не `.`. Пресеты и сгенерированный код проверяются настоящим парсером, а линтер в `src/core/validator.js` ловит точку на месте паузы до запуска.
 

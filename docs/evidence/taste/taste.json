@@ -1,0 +1,607 @@
+{
+  "trainedAt": "2026-11-14T11:15:15.061Z",
+  "model": {
+    "v": 1,
+    "ids": [
+      "symbolic.form.sections",
+      "symbolic.form.minContrast",
+      "symbolic.form.contrastMean",
+      "symbolic.form.contrastMax",
+      "symbolic.energy.correlation",
+      "symbolic.energy.range",
+      "symbolic.energy.profileMean",
+      "symbolic.energy.profileStd",
+      "symbolic.energy.profileSlope",
+      "symbolic.tonality.scaleFit",
+      "symbolic.tonality.harmonicFit",
+      "symbolic.motif.count",
+      "symbolic.motif.sectionCount",
+      "symbolic.motif.variations",
+      "symbolic.motif.hook",
+      "symbolic.phrase.closureRatio",
+      "symbolic.phrase.openRatio",
+      "symbolic.phrase.count",
+      "symbolic.groove.bassKickLock",
+      "symbolic.groove.microtimingStdMs",
+      "symbolic.groove.microtimingMeanMs",
+      "symbolic.density.eventsPerSecond",
+      "symbolic.density.roleEntropy",
+      "symbolic.variation.ratio",
+      "symbolic.kinetics.distinctVelocities",
+      "symbolic.register.bassSpan",
+      "symbolic.register.chordsSpan",
+      "symbolic.register.padSpan",
+      "symbolic.register.leadSpan",
+      "symbolic.register.arpSpan",
+      "symbolic.role.perBar.kick",
+      "symbolic.role.perBar.snare",
+      "symbolic.role.perBar.hats",
+      "symbolic.role.perBar.bass",
+      "symbolic.role.perBar.chords",
+      "symbolic.role.perBar.lead",
+      "audio.lufsI",
+      "audio.lufsS",
+      "audio.truePeakDbtp",
+      "audio.peakDbfs",
+      "audio.crestDb",
+      "audio.clipCount"
+    ],
+    "mean": [
+      5.2,
+      1,
+      1,
+      1,
+      0.9074058333333335,
+      1,
+      0.5816785555555556,
+      0.357122199908832,
+      0.00019753904988815661,
+      1,
+      0.8360083333333332,
+      39.2,
+      3.4,
+      2.1,
+      0.7333333333333333,
+      0,
+      0,
+      24.8,
+      0.40208333333333335,
+      3.6541999999999986,
+      3.1236083333333338,
+      16.601783564814813,
+      0.8775866345028234,
+      0.3024750000000001,
+      20,
+      7.266666666666667,
+      13.25,
+      13.25,
+      7.966666666666667,
+      12,
+      1.9006250000000002,
+      1.332916666666666,
+      6.187430555555554,
+      1.9637499999999997,
+      0.9599999999999996,
+      3.151666666666667,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "std": [
+      0.7483314773547881,
+      1,
+      1,
+      1,
+      0.047036865499012814,
+      1,
+      0.07081561880686515,
+      0.020940210053378837,
+      0.00023361150023501343,
+      1,
+      0.13429014271552295,
+      11.426285485668563,
+      0.7999999999999995,
+      0.789514618821801,
+      0.4422166387140536,
+      1,
+      1,
+      5.878775382679625,
+      0.28083302433217405,
+      4.341817827055086,
+      3.6443854884279068,
+      8.818876011823134,
+      0.00959839734000976,
+      0.08728678331607062,
+      7.809182629016518,
+      2.515728301881762,
+      2.1025777829448624,
+      2.1025777829448624,
+      2.272785857830772,
+      1,
+      0.7399786990959544,
+      0.49684519768531826,
+      3.04363996033375,
+      0.9707395340952976,
+      0.08,
+      0.9778694717106694,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "weights": [
+      0,
+      0,
+      0,
+      0,
+      0.796248,
+      0,
+      -0.018164,
+      -0.403984,
+      0.172514,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.683729,
+      0.306097,
+      0.939635,
+      -0.162936,
+      0.263435,
+      0.140441,
+      -0.013141,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.046802,
+      -0.175331,
+      -0.587237,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "epochs": 400,
+    "lr": 0.1,
+    "lambda": 0.01,
+    "loss": 0.437078,
+    "trainAccuracy": 0.9167,
+    "n": 60,
+    "nHuman": 0,
+    "nProxy": 60
+  },
+  "cv": {
+    "n": 0,
+    "nAll": 60,
+    "prompts": 60,
+    "accuracy": null,
+    "ci": {
+      "lower": 0,
+      "upper": 1
+    },
+    "folds": [
+      {
+        "prompt": " танцевальный диско, на всю мощность",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": " танцевальный нейрофанк, на всю мощность",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "агрессивный диско, ровно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "агрессивный нейрофанк, ровно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "весёлый dnb, умеренно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "весёлый синтипоп, умеренно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "грустный dnb, умеренно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "грустный синтипоп, умеренно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "злой даунтемпо, медленно и пусто",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "злой дрон, медленно и пусто",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "злой чилл, медленно и пусто",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "кассетный даунтемпо, на всю мощность",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "кассетный дрон, на всю мощность",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "кассетный чилл, на всю мощность",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "ласковый dnb, плотно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "ласковый синтипоп, плотно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "меланхоличный лоуфай, разреженно, много воздуха",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "меланхоличный трип-хоп, разреженно, много воздуха",
+        "n": 1,
+        "accuracy": 0,
+        "skipped": false
+      },
+      {
+        "prompt": "меланхоличный эмбиент, разреженно, много воздуха",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "мрачный диско, медленно и пусто",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "мрачный нейрофанк, медленно и пусто",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "на подъёме даунтемпо, ровно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "на подъёме дрон, ровно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "на подъёме чилл, ровно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "напряжённый dnb, плотно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "напряжённый синтипоп, плотно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "нежный dnb, разреженно, много воздуха",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "нежный синтипоп, разреженно, много воздуха",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "нервный лоуфай, умеренно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "нервный трип-хоп, умеренно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "нервный эмбиент, умеренно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "ностальгический даунтемпо, медленно и пусто",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "ностальгический дрон, медленно и пусто",
+        "n": 1,
+        "accuracy": 0,
+        "skipped": false
+      },
+      {
+        "prompt": "ностальгический чилл, медленно и пусто",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "ночной диско, на всю мощность",
+        "n": 1,
+        "accuracy": 0,
+        "skipped": false
+      },
+      {
+        "prompt": "ночной нейрофанк, на всю мощность",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "осенний лоуфай, плотно",
+        "n": 1,
+        "accuracy": 0,
+        "skipped": false
+      },
+      {
+        "prompt": "осенний трип-хоп, плотно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "осенний эмбиент, плотно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "праздничный лоуфай, плотно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "праздничный трип-хоп, плотно",
+        "n": 1,
+        "accuracy": 0,
+        "skipped": false
+      },
+      {
+        "prompt": "праздничный эмбиент, плотно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "радостный лоуфай, разреженно, много воздуха",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "радостный трип-хоп, разреженно, много воздуха",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "радостный эмбиент, разреженно, много воздуха",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "ретро диско, ровно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "ретро нейрофанк, ровно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "тихий лоуфай, умеренно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "тихий трип-хоп, умеренно",
+        "n": 1,
+        "accuracy": 0,
+        "skipped": false
+      },
+      {
+        "prompt": "тихий эмбиент, умеренно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "тревожный dnb, разреженно, много воздуха",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "тревожный синтипоп, разреженно, много воздуха",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "тёмный даунтемпо, ровно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "тёмный дрон, ровно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "тёмный чилл, ровно",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "эйфоричный диско, медленно и пусто",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "эйфоричный нейрофанк, медленно и пусто",
+        "n": 1,
+        "accuracy": 0,
+        "skipped": false
+      },
+      {
+        "prompt": "яростный даунтемпо, на всю мощность",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "яростный дрон, на всю мощность",
+        "n": 1,
+        "accuracy": 1,
+        "skipped": false
+      },
+      {
+        "prompt": "яростный чилл, на всю мощность",
+        "n": 1,
+        "accuracy": 0,
+        "skipped": false
+      }
+    ],
+    "baselines": {
+      "symbolic": null,
+      "louder": null,
+      "chance": {
+        "n": 0,
+        "accuracy": 0.5,
+        "ci": {
+          "lower": 0,
+          "upper": 1
+        },
+        "label": "случайность"
+      }
+    }
+  },
+  "decision": {
+    "admitted": false,
+    "reasons": [
+      "человеческих пар 0 < 60 — модель не используется",
+      "CV-accuracy — < 0.6",
+      "нет базовых линий для сравнения"
+    ],
+    "checks": {
+      "pairsEnough": false,
+      "accuracyEnough": false,
+      "beatsBaselines": false,
+      "modelAlive": true
+    },
+    "explicitPairs": 0,
+    "bestBaseline": null
+  },
+  "stats": {
+    "pairs": 0,
+    "labels": 0,
+    "rows": 0,
+    "prompts": 0,
+    "skipped": {
+      "pairMissing": 0,
+      "noIr": 0,
+      "noDecision": 0,
+      "broken": 0
+    },
+    "proxyRows": 60,
+    "totalRows": 60,
+    "featureCount": 42
+  },
+  "modelPath": "F:\\ГЕНЕРАЦИЯ ФОТОК\\Новая папка\\Strudel AI Composer\\server\\data\\taste-model.json"
+}

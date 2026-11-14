@@ -1,0 +1,195 @@
+{
+  "checkedAt": "2026-11-14T11:15:15.611Z",
+  "machinery": {
+    "pass": true,
+    "checks": 20,
+    "failed": 0
+  },
+  "humanGate": {
+    "status": "pending",
+    "decided": 0,
+    "required": 100,
+    "note": "Метки ставит человек; тест их не заменяет."
+  },
+  "tasteAdmission": {
+    "decided": 0,
+    "required": 60,
+    "status": "pending"
+  },
+  "checks": [
+    {
+      "name": "реестр: id уникальны",
+      "passed": true,
+      "detail": "уникальных 43 из 43",
+      "numbers": {
+        "total": 43,
+        "unique": 43
+      }
+    },
+    {
+      "name": "реестр: все метрики извлекаемы",
+      "passed": true,
+      "detail": "покрыто 43 из 43",
+      "numbers": {
+        "registered": 43,
+        "extractable": 43,
+        "uncovered": []
+      }
+    },
+    {
+      "name": "реестр: веса критериев символьного скора дают 100",
+      "passed": true,
+      "detail": "сумма весов = 100",
+      "numbers": {
+        "sum": 100
+      }
+    },
+    {
+      "name": "реестр: веса критериев аудио-блока дают 100",
+      "passed": true,
+      "detail": "сумма весов = 100",
+      "numbers": {
+        "sum": 100
+      }
+    },
+    {
+      "name": "реестр: веса текстовых блоков дают 1",
+      "passed": true,
+      "detail": "v1 + v2 = 1",
+      "numbers": {
+        "sum": 1
+      }
+    },
+    {
+      "name": "признаки: детерминированы",
+      "passed": true,
+      "detail": "два вызова дали одинаковый вектор",
+      "numbers": null
+    },
+    {
+      "name": "признаки: длина совпадает с составом",
+      "passed": true,
+      "detail": "42 из 42",
+      "numbers": {
+        "length": 42,
+        "expected": 42
+      }
+    },
+    {
+      "name": "признаки: непомеренное — null, а не 0",
+      "passed": true,
+      "detail": "все пропуски помечены null",
+      "numbers": {
+        "missing": 42
+      }
+    },
+    {
+      "name": "признаки: пропуск после стандартизации даёт 0, а не NaN",
+      "passed": true,
+      "detail": "все значения конечны",
+      "numbers": null
+    },
+    {
+      "name": "признаки: экстрактор отдаёт числа по id реестра",
+      "passed": true,
+      "detail": "секций 3, контраст 0.3",
+      "numbers": null
+    },
+    {
+      "name": "модель: обучение детерминировано",
+      "passed": true,
+      "detail": "две тренировки дали одинаковые веса",
+      "numbers": {
+        "weights": 42
+      }
+    },
+    {
+      "name": "модель: вероятность обратима",
+      "passed": true,
+      "detail": "p(A>B)=0.9799, p(B>A)=0.0201",
+      "numbers": {
+        "pAB": 0.9799,
+        "pBA": 0.0201
+      }
+    },
+    {
+      "name": "модель: выучила различающий признак",
+      "passed": true,
+      "detail": "точность на тренировке 1",
+      "numbers": {
+        "trainAccuracy": 1
+      }
+    },
+    {
+      "name": "CV: leave-prompt-out на данных с известным ответом",
+      "passed": true,
+      "detail": "CV-accuracy 1 (CI 0.9124…1)",
+      "numbers": {
+        "accuracy": 1,
+        "ci": {
+          "lower": 0.9124,
+          "upper": 1
+        },
+        "folds": 8
+      }
+    },
+    {
+      "name": "CV: folds по промтам",
+      "passed": true,
+      "detail": "сложено 8 складок, пропущено 0",
+      "numbers": {
+        "folds": 8
+      }
+    },
+    {
+      "name": "CV: интервал Уилсона считается верно",
+      "passed": true,
+      "detail": "0 из 10 → [0.0000, 0.2775]",
+      "numbers": {
+        "lower": 0,
+        "upper": 0.2775
+      }
+    },
+    {
+      "name": "допуск: без живых пар модель не допускается",
+      "passed": true,
+      "detail": "человеческих пар 0 < 60 — модель не используется; CV-accuracy — < 0.6; нет базовых линий для сравнения; модель не обучена",
+      "numbers": {
+        "pairsEnough": false,
+        "accuracyEnough": false,
+        "beatsBaselines": false,
+        "modelAlive": false
+      }
+    },
+    {
+      "name": "допуск: при 40 живых парах не допускается (порог 60)",
+      "passed": true,
+      "detail": "человеческих пар 40 < 60 — модель не используется; нет базовых линий для сравнения",
+      "numbers": {
+        "pairsEnough": false,
+        "accuracyEnough": true,
+        "beatsBaselines": false,
+        "modelAlive": true
+      }
+    },
+    {
+      "name": "активный отбор: неуверенная пара выше уверенной",
+      "passed": true,
+      "detail": "первой идёт «u» (неуверенность 1)",
+      "numbers": {
+        "order": [
+          "u",
+          "c"
+        ]
+      }
+    },
+    {
+      "name": "активный отбор: страты по промту соблюдены",
+      "passed": true,
+      "detail": "выбрано 4, распределение [[\"промт-0\",2],[\"промт-1\",2]]",
+      "numbers": {
+        "selected": 4
+      }
+    }
+  ]
+}
