@@ -93,6 +93,7 @@ function applyMutation(ir, name, seed, index, roll) {
       return `регистр ${role} ${steps > 0 ? '+1' : '−1'} октава`;
     }
     case 'energy': {
+      if (!ir.sections.length) return 'энергия: в плане нет секций';
       const section = pick(seed, ir.sections.map((item) => item.id), 'energy-section', index);
       const delta = (roll - 0.5) * 0.4;
       applyTransform(ir, 'boostSection', section, delta);
@@ -151,9 +152,29 @@ export function searchBest(ir, options = {}) {
   const candidates = [];
 
   for (let index = 0; index < n; index += 1) {
-    const mutation = mutateIR(ir, seed, index);
-    let report = null;
+    let mutation = null;
     let error = null;
+    try {
+      mutation = mutateIR(ir, seed, index);
+    } catch (err) {
+      // Мутация может не подойти вырожденному плану (например, пустому
+      // списку секций). Один сбойный кандидат не должен рушить весь поиск:
+      // он просто выбывает, а остальные кандидаты оцениваются как обычно.
+      error = String(err?.message || err);
+    }
+    if (!mutation) {
+      candidates.push({
+        index,
+        mutation: 'unknown',
+        detail: 'мутация не применилась',
+        score: null,
+        error,
+        ir: null,
+        report: null,
+      });
+      continue;
+    }
+    let report = null;
     try {
       report = analyze(mutation.ir);
     } catch (err) {
