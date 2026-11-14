@@ -10,6 +10,9 @@ RUN npm ci
 
 COPY . .
 RUN npm run build
+# Бандл офлайн-рендера: режим «Разбор» рендерит Strudel-код в WAV через
+# headless Chromium. В рантайме esbuild нет, поэтому бандл собирается здесь.
+RUN npm run build:render
 
 FROM node:22-alpine AS runtime
 WORKDIR /app
@@ -19,8 +22,12 @@ ENV PORT=3001
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
+# Chromium нужен офлайн-рендеру, ffmpeg — конвертации загруженного трека в WAV.
+RUN apk add --no-cache chromium ffmpeg
+
 COPY --from=build /app/dist ./dist
 COPY server ./server
+COPY --from=build /app/server/deepdive/render/dist ./server/deepdive/render/dist
 # src/ нужен серверу: маршруты импортируют схемы и разбор кода из src/
 # (src/schemas, src/core). Отдельного "серверного" пакета у проекта нет.
 COPY src ./src

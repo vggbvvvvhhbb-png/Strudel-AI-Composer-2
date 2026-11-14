@@ -34,6 +34,7 @@ tar -cf - \
   --exclude='./node_modules' \
   --exclude='./dist' \
   --exclude='./.env' \
+  --exclude='./.scratch' \
   --exclude='./.sharrowkin' \
   . | ssh_cmd "tar -xf - -C ${APP_DIR}"
 
@@ -46,32 +47,12 @@ fi
 ssh_cmd "chmod 600 ${APP_DIR}/.env"
 
 echo "==> Сборка образа и запуск сервиса strudel"
-ssh_cmd "cd ${COMPOSE_DIR} && cat > ${COMPOSE_DIR}/docker-compose.strudel.yml <<'YAML'
-services:
-  strudel:
-    build:
-      context: ${APP_DIR}
-      dockerfile: Dockerfile
-    image: strudel-ai-composer:local
-    env_file:
-      - ${APP_DIR}/.env
-    environment:
-      NODE_ENV: production
-      PORT: \"3001\"
-      HOST: \"0.0.0.0\"
-    expose:
-      - \"3001\"
-    restart: unless-stopped
-    healthcheck:
-      test: [\"CMD\", \"node\", \"-e\", \"fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-YAML"
-
-ssh_cmd "cd ${COMPOSE_DIR} && docker compose -f docker-compose.yml -f docker-compose.strudel.yml build --progress plain strudel"
-ssh_cmd "cd ${COMPOSE_DIR} && docker compose -f docker-compose.yml -f docker-compose.strudel.yml up -d strudel"
+# Compose-файл берём из репозитория: так сервис воркера анализа нельзя
+# случайно потерять (в старой версии скрипта он был зашит здесь же).
+ssh_cmd "cp ${APP_DIR}/deploy/docker-compose.strudel.yml ${COMPOSE_DIR}/docker-compose.strudel.yml"
+# В compose пути к контексту сборки зашиты как /opt/strudel — здесь он и есть.
+ssh_cmd "cd ${COMPOSE_DIR} && docker compose -f docker-compose.yml -f docker-compose.strudel.yml build --progress plain strudel deepdive-worker"
+ssh_cmd "cd ${COMPOSE_DIR} && docker compose -f docker-compose.yml -f docker-compose.strudel.yml up -d strudel deepdive-worker"
 
 echo "==> Caddy: сайт-блок для студии"
 ssh_cmd "cp ${COMPOSE_DIR}/Caddyfile ${COMPOSE_DIR}/Caddyfile.bak-\$(date +%s)"
@@ -100,5 +81,9 @@ ssh_cmd "docker exec \$(docker ps -qf 'name=shveyka-caddy-1') caddy validate --c
 }
 ssh_cmd "docker ps --filter name=shveyka-strudel --format '{{.Names}} {{.Status}}'"
 ssh_cmd "docker exec \$(docker ps -qf 'name=shveyka-strudel-1') node -e \"fetch('http://127.0.0.1:3001/api/health').then(r=>r.text()).then(t=>console.log('health:',t)).catch(e=>{console.error(e.message);process.exit(1)})\"" || true
+# Режим «Разбор»: воркер анализа и рендерер. Если воркер недоступен — студия
+# работает, но разбор честно сообщает, что сервис анализа недоступен.
+ssh_cmd "docker ps --filter name=shveyka-deepdive --format '{{.Names}} {{.Status}}'" || true
+ssh_cmd "docker exec \$(docker ps -qf 'name=shveyka-strudel-1') node -e \"fetch('http://127.0.0.1:3001/api/deepdive/health').then(r=>r.text()).then(t=>console.log('deepdive:',t)).catch(e=>console.log('deepdive: ошибка', e.message))\"" || true
 
 echo "==> Готово: https://${DOMAIN}/"

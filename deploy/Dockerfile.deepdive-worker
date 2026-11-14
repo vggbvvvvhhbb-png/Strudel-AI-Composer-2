@@ -1,0 +1,33 @@
+# Образ воркера анализа режима «Разбор».
+#
+# ЗАЧЕМ ОТДЕЛЬНЫЙ ОБРАЗ. Воркер делает то, чего нет в Node: темп, лад,
+# секции, питч баса, аккорды и разделение на стемы (Demucs). Python-окружение
+# с torch CPU уже собрано на хосте в /opt/dd-venv и монтируется в контейнер:
+#
+#   * ставить torch в образ нельзя — на сервере 8 ГБ диска, а сборка с
+#     CUDA-колёсами занимает ~5 ГБ (см. D-082);
+#   * образ остаётся маленьким (~250 МБ): это python-slim + ffmpeg + libsndfile.
+#
+# ВЕСА. Модель htdemucs лежит в кэше torch хоста и монтируется в контейнер
+# (/root/.cache/torch). Сами веса Demucs — не MIT (см. docs/LICENSES.md).
+
+FROM python:3.12-slim
+
+# libsndfile — для soundfile/librosa; ffmpeg — для измерения громкости
+# фильтром ebur128 (как в ffmpeg на хосте).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libsndfile1 ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV HOME=/root
+ENV DD_PORT=8010
+ENV DD_PYTHON=/opt/dd-venv/bin/python
+
+WORKDIR /analysis
+EXPOSE 8010
+
+# Проверка живости: /health отвечает, даже если librosa не импортируется.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD /opt/dd-venv/bin/python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8010/health', timeout=4).status == 200 else 1)"
+
+CMD ["/opt/dd-venv/bin/python", "worker.py"]

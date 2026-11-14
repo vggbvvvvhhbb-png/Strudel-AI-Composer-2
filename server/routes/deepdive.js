@@ -28,7 +28,9 @@ const router = Router();
 
 const MAX_BYTES = 100 * 1024 * 1024; // 100 МБ — полноценный трек
 const JOB_TTL_MS = 7 * 24 * 60 * 60 * 1000; // неделя (D-084)
-const ROOT = path.join(os.tmpdir(), 'strudel-deepdive');
+// Каталог задач. В Docker это общий том с воркером анализа: пути к файлам
+// должны совпадать у обоих контейнеров, иначе воркер не увидит загрузку.
+const ROOT = process.env.DD_WORKSPACE_DIR || path.join(os.tmpdir(), 'strudel-deepdive');
 
 const ALLOWED_MIME = new Set([
   'audio/webm', 'audio/ogg', 'audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/x-wav',

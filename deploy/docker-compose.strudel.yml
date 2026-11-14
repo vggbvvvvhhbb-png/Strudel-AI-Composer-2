@@ -19,8 +19,14 @@ services:
       # Слушаем все адреса контейнера: до 127.0.0.1 обратный прокси из
       # соседнего контейнера не достучится.
       HOST: "0.0.0.0"
+      # Режим «Разбор»: воркер анализа живёт в соседнем контейнере,
+      # рабочие файлы — в общем томе (пути должны совпадать у обоих).
+      DD_WORKER_URL: "http://deepdive-worker:8010"
+      DD_WORKSPACE_DIR: "/data/deepdive"
     expose:
       - "3001"
+    volumes:
+      - deepdive-data:/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -28,3 +34,26 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  # Воркер анализа режима «Разбор»: темп, лад, секции, питч баса, аккорды,
+  # разделение на стемы (Demucs). Python-окружение — общий venv с хоста.
+  deepdive-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.deepdive-worker
+    image: strudel-deepdive-worker:local
+    volumes:
+      - /opt/dd-venv:/opt/dd-venv:ro
+      - /root/.cache/torch:/root/.cache/torch:ro
+      - /opt/strudel/server/deepdive/analysis:/analysis:ro
+      - deepdive-data:/data
+    environment:
+      DD_PORT: "8010"
+      DD_PYTHON: "/opt/dd-venv/bin/python"
+      HOME: "/root"
+    expose:
+      - "8010"
+    restart: unless-stopped
+
+volumes:
+  deepdive-data:
