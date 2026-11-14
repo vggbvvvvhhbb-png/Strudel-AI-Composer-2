@@ -24,6 +24,7 @@ import { applyTransform, TRANSFORMS } from '../../src/ir/transforms.js';
 import { symbolicReport } from '../../src/oracle/report.js';
 import { searchBest } from '../../src/oracle/search.js';
 import { critique } from '../../src/oracle/critic.js';
+import { skillsVersion } from '../skills/loader.js';
 
 const router = express.Router();
 
@@ -47,6 +48,9 @@ function pack(ir) {
     spec: compiled.spec,
     sections: compiled.sections,
     warnings: compiled.warnings,
+    // Версия скил-пака, по которой план принимался: без неё результат
+    // невоспроизводим — правила могут поменяться.
+    skillsVersion: skillsVersion(),
     report: publicReport(report),
   };
 }

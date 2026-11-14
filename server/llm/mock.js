@@ -8,6 +8,7 @@
 // что и настоящий ответ модели.
 
 import { fallbackSpec } from '../music/compose/pipeline.js';
+import { planIR } from '../../src/ir/intent.js';
 
 const STYLES = ['lo-fi', 'techno', 'house', 'ambient', 'dubstep', 'synthwave', 'trap', 'jazz', 'rock', 'cinematic'];
 
@@ -29,6 +30,15 @@ export function mockCompletion({ messages = [], responseFormat } = {}) {
   const text = messages.map((message) => (typeof message.content === 'string' ? message.content : '')).join('\n');
   const style = detectStyle(text);
 
+  // Запрос Composition IR (маркер ставит server/ir/planner.js): мок отдаёт
+  // настоящий валидный IR, собранный правилами, — иначе CI проверял бы
+  // только ветку отказа. Маркер не импортируется отсюда, чтобы мок не тянул
+  // зависимость на планировщик.
+  if (text.includes('COMPOSITION_IR_JSON')) {
+    const prompt = extractIrPrompt(messages);
+    return JSON.stringify(planIR(prompt, { seed: 1 }));
+  }
+
   // Структурированный запрос — отдаём валидную спеку (её же умеет собирать
   // конвейер композиции: fallbackSpec проходит те же проверки, что и ответ модели).
   if (responseFormat?.type === 'json_object' || /json/i.test(text.slice(0, 2000))) {
@@ -42,6 +52,18 @@ export function mockCompletion({ messages = [], responseFormat } = {}) {
     '$KICK: s("bd*4")._scope()',
     '$BASS: n("0 ~ 2 4").scale(key).s("sawtooth")._pianoroll()',
   ].join('\n');
+}
+
+/**
+ * Достаёт текст запроса из сообщений планировщика: строка «Запрос: …».
+ * @param {Array<{role:string, content:string}>} messages
+ * @returns {string}
+ */
+function extractIrPrompt(messages) {
+  const user = messages.filter((message) => message.role === 'user').pop();
+  const content = typeof user?.content === 'string' ? user.content : '';
+  const match = /Запрос:\s*(.+)/.exec(content);
+  return match ? match[1].trim() : content.trim();
 }
 
 /** Стриминговый мок: отдаём ответ кусками по словам. */
