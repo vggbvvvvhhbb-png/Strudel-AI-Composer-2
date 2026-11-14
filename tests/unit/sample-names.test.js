@@ -11,6 +11,11 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  GM_TO_SAMPLE,
+  DRUM_SAMPLE_NAMES,
+  sampleNameForHit,
+} from '../../server/deepdive/transpiler/samples.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '../..');
@@ -63,5 +68,37 @@ describe('доступность сэмплов из промптов', () => {
     // в пустоту. Если их вернут в промпт, тест выше это поймает.
     expect(available.has('oh')).toBe(false);
     expect(available.has('sh')).toBe(false);
+  });
+});
+
+describe('сэмплы транспилятора разбора', () => {
+  // Сэмпл, которого нет в банке, не просто молчит: движок бросает
+  // «sound <имя> not found!» и рендер двойника падает целиком. Поэтому
+  // справочник GM → сэмпл сверяется с реестром банков, а не «на глаз».
+  it('каждое имя из GM_TO_SAMPLE есть в банках', () => {
+    const missing = Object.values(GM_TO_SAMPLE).filter((name) => !available.has(name));
+    expect(missing, `имён без сэмплов: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('каждое имя из DRUM_SAMPLE_NAMES есть в банках', () => {
+    const missing = [...DRUM_SAMPLE_NAMES].filter((name) => !available.has(name));
+    expect(missing, `имён без сэмплов: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('резолвер удара никогда не выдаёт имени вне банков', () => {
+    const hits = [
+      { gm: 36 }, { gm: 38 }, { gm: 42 }, { gm: 46 }, { gm: 49 }, { gm: 51 }, { gm: 53 },
+      { gm: 999, label: 'oh' }, { gm: undefined, label: 'sh' }, { gm: 37, label: 'bd' },
+      { gm: 35 }, {},
+    ];
+    for (const hit of hits) {
+      const name = sampleNameForHit(hit);
+      expect(available.has(name), `сэмпл ${name} (удар ${JSON.stringify(hit)}) есть в банках`).toBe(true);
+    }
+  });
+
+  it('открытый хайхет — это 808oh, а не несуществующий oh', () => {
+    expect(GM_TO_SAMPLE[46]).toBe('808oh');
+    expect(sampleNameForHit({ gm: 46, label: 'oh' })).toBe('808oh');
   });
 });

@@ -4,7 +4,7 @@
 // Всё считается от измеренной сетки drums.onsets.grid и от времени
 // измеренных ударов: ни один шаг не придумывается.
 
-import { GM_TO_SAMPLE } from './samples.js';
+import { sampleNameForHit } from './samples.js';
 
 /**
  * Порядок шагов сетки в такте: 1/4 → 4, 1/8 → 8, 1/12 → 12, 1/16 → 16, 1/24 → 24, 1/32 → 32.
@@ -47,7 +47,7 @@ export function buildGroupsForSection(roleHits, section, barSec, gridSteps) {
       const fraction = gridFraction(time, barStart, barSec);
       const step = Math.min(15, Math.round(fraction * 16));
       const offsetMs = (fraction * 16 - step) * (barSec * 1000) / 16;
-      const sample = GM_TO_SAMPLE[hit.gm] ?? hit.label ?? 'perc';
+      const sample = sampleNameForHit(hit);
       const velocity = Number(hit.velocity ?? 0.8);
       const previous = cells.get(step);
       // На один шаг — самый громкий удар.
@@ -119,7 +119,7 @@ export function barFromHits(hits, barStart, barEnd, steps, stepSec, fallbackGain
     // На один шаг — самый громкий удар: иначе два удара схлопнутся в один токен.
     const gain = hit.velocity ?? 0.8;
     if (!seen[index] || gain > gains[index]) {
-      const sample = GM_TO_SAMPLE[hit.gm] ?? hit.label ?? 'perc';
+      const sample = sampleNameForHit(hit);
       tokens[index] = sample;
       gains[index] = gain;
       seen[index] = true;
