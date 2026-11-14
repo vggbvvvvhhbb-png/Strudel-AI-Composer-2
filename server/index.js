@@ -10,6 +10,7 @@ import fixRoute from './routes/fix.js';
 import transcribeRoute from './routes/transcribe.js';
 import musicRoute from './routes/music.js';
 import composeRoute from './routes/compose.js';
+import irRoute from './routes/ir.js';
 import healthRoute from './routes/health.js';
 import statsRoute from './routes/stats.js';
 
@@ -91,6 +92,7 @@ app.use(fixRoute);
 app.use(transcribeRoute);
 app.use(musicRoute);
 app.use(composeRoute);
+app.use('/api/music/ir', irRoute);
 app.use(healthRoute);
 app.use(statsRoute);
 
