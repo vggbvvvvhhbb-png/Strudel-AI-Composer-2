@@ -1600,7 +1600,7 @@ TrackSpec. Измеренную величину, которую схема не
 Число различных рисунков в секции полезно как индикатор: 1 — точное попадание,
 >1 — приближение, и это должно быть видно в отчёте.
 
-**Проверка.** `server/deepdive/transpiler.js` — `buildGroupsForSection`
+**Проверка.** `server/deepdive/transpiler/grid.js` — `buildGroupsForSection`
 (комментарий «ОГРАНИЧЕНИЕ ФОРМАТА», подсчёт `barSignature`).
 
 **Статус.** принято.
