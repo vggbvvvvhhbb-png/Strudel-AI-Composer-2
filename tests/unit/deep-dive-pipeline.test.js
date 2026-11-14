@@ -154,8 +154,31 @@ describe('пайплайн разбора', () => {
     expect(result.errors).toEqual([]);
   });
 
-  it('падение разделения не роняет разбор, а попадает в errors', async () => {
-    const jobDir = path.join(workspace, 'job-3');
+  it('без разделения ритм двойника берётся из микса, и это сказано в отчёте', async () => {
+    const jobDir = path.join(workspace, 'job-2b');
+    const { result } = await runDeepDive({
+      workspaceDir: jobDir,
+      inputPath,
+      fileName: 'test.wav',
+      separate: false,
+      deps: makeDeps(),
+    });
+
+    // Слой ударных не измерен — в контракте его быть не должно. Ритм из микса
+    // не выдаётся за измерение стема.
+    expect(result.stem_descriptors.drums).toBeUndefined();
+    // Но двойник без ритма бессмысленен: хотя бы одна роль ударных должна быть.
+    const drumRoles = ['kick', 'snare', 'hats', 'perc'];
+    const roles = Object.keys(result.code_twin.plan.parts.roles ?? {});
+    expect(drumRoles.some((role) => roles.includes(role))).toBe(true);
+    // Деградация — это оговорка, а не ошибка: разбор-то прошёл.
+    expect(result.errors).toEqual([]);
+    expect(
+      result.code_twin.honesty.caveats.some((caveat) => caveat.includes('извлечён из микса')),
+    ).toBe(true);
+  });
+
+  it('падение разделения не роняет разбор, а попадает в errors', async () => {    const jobDir = path.join(workspace, 'job-3');
     const deps = makeDeps({
       separate: async () => {
         throw new Error('Demucs: не хватило памяти');
