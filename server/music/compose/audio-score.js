@@ -1,30 +1,28 @@
 // Аудио-блок скора: оценка рендера по объективным метрикам.
 //
-// Вес 20% (§7 промта, фаза 3): общий скор = v1·0.5 + v2·0.3 + аудио·0.2.
-// Блок переключаемый — без отчёта о рендере он просто не участвует.
-//
-// Критерии (веса внутри блока):
-//   повторяемость рендера   25
-//   отсутствие клиппинга     20
-//   true peak в потолке      20
-//   LUFS в коридоре          25
-//   тишина                   10
+// Вес блока (20%) и веса критериев внутри блока берутся из реестра метрик
+// (src/metrics/registry.js) — раньше они были литералами здесь и в
+// соседних модулях, и никто не мог сказать, какие из них проверены
+// человеческими парами. У всех стоит validated: false (бриф §2.8).
 //
 // Критерий даёт 0 при нарушении и полный балл при выполнении — так вес
 // блока честно отражает, насколько рендер готов к публикации.
 
 import { ACCEPTANCE } from '../../../src/audio/metrics-report.js';
 import { runAudioQa, QA_CODES, SEVERITY } from '../../../src/audio/qa.js';
+import { AUDIO_SCORE_CRITERIA, SCORE_COMBINE } from '../../../src/metrics/registry.js';
 
-export const AUDIO_SCORE_WEIGHT = 0.2;
+/** Вес аудио-блока в общем скоре. */
+export const AUDIO_SCORE_WEIGHT = SCORE_COMBINE.audio.weight;
 
-const WEIGHTS = {
-  repeatability: 25,
-  clipping: 20,
-  truePeak: 20,
-  lufs: 25,
-  silence: 10,
-};
+/** Веса критериев внутри блока: {repeatability: 25, clipping: 20, …}. */
+const WEIGHTS = Object.fromEntries(
+  AUDIO_SCORE_CRITERIA.map((criterion) => [criterion.check, criterion.weight]),
+);
+
+/** Веса текстовых блоков: v1 (разбор кода) и v2 (музыкальный анализ). */
+const W_V1 = SCORE_COMBINE.v1.weight;
+const W_V2 = SCORE_COMBINE.v2.weight;
 
 /**
  * Оценивает отчёт рендера.
@@ -70,6 +68,10 @@ export function scoreAudioReport(report, { acceptance = ACCEPTANCE } = {}) {
 /**
  * Смешивает скоры с учётом веса аудио-блока.
  *
+ * Формула: (v1·W_V1 + v2·W_V2)·(1 − W_audio) + аудио·W_audio.
+ * Если v2 нет — его вес переходит к v1 (иначе сумма «съедает» часть
+ * общего скора). Если аудио-блока нет — остаются только текстовые.
+ *
  * @param {number} v1 скор разбора кода
  * @param {number|null} v2 скор по событиям Strudel
  * @param {number|null} audio скор по рендеру
@@ -80,9 +82,11 @@ export function combineScores(v1, v2, audio) {
     // Аудио-блока нет: веса перераспределяются между остальными.
     return v2 === null || v2 === undefined
       ? v1
-      : Math.round((v1 * 0.6 + v2 * 0.4) * 10) / 10;
+      : Math.round((v1 * W_V1 + v2 * W_V2) * 10) / 10;
   }
   const rest = 1 - AUDIO_SCORE_WEIGHT;
-  const base = v2 === null || v2 === undefined ? v1 : v1 * 0.6 + v2 * 0.4;
+  const base = v2 === null || v2 === undefined
+    ? v1
+    : v1 * W_V1 + v2 * W_V2;
   return Math.round((base * rest + audio * AUDIO_SCORE_WEIGHT) * 10) / 10;
 }

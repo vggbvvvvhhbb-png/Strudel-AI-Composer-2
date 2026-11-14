@@ -13,52 +13,24 @@
 // осмысленна?», а не «красиво ли это?».
 
 import { thresholdsFor } from './lint.js';
+import { SCORE_CRITERIA } from '../metrics/registry.js';
 
-/** Веса составляющих. Сумма = 100. Статус: не проверено на людях (H3). */
-export const SCORE_COMPONENTS = [
-  {
-    id: 'form',
-    label: 'Форма',
-    weight: 20,
-    describe: 'секций ≥ 3, соседние секции контрастны',
-  },
-  {
-    id: 'energy',
-    label: 'Энергия',
-    weight: 20,
-    describe: 'профиль энергии совпадает с целевой кривой арки',
-  },
-  {
-    id: 'motif',
-    label: 'Мотив и фраза',
-    weight: 15,
-    describe: 'мотив возвращается и варьируется, фразы закрываются',
-  },
-  {
-    id: 'groove',
-    label: 'Грув',
-    weight: 15,
-    describe: 'бас с киком в lock, микротайминг живой',
-  },
-  {
-    id: 'tonality',
-    label: 'Тональность',
-    weight: 10,
-    describe: 'ноты внутри лада',
-  },
-  {
-    id: 'density',
-    label: 'Плотность',
-    weight: 10,
-    describe: 'плотность в рабочем диапазоне',
-  },
-  {
-    id: 'variation',
-    label: 'Разнообразие',
-    weight: 10,
-    describe: 'такты не копируют друг друга',
-  },
-];
+/**
+ * Веса составляющих. Сумма = 100. Статус: не проверено на людях (H3).
+ *
+ * Значения берутся из реестра метрик (src/metrics/registry.js): раньше они
+ * были продублированы здесь литералами, а правило смешивания — в другом
+ * модуле, и «какой вес чем проверяется» нельзя было ответить, не прочитав
+ * три файла. Теперь источник один, и у каждого веса есть явный признак
+ * «не проверено на людях» (бриф §2.8).
+ */
+export const SCORE_COMPONENTS = SCORE_CRITERIA.map((criterion) => ({
+  id: criterion.key,
+  label: criterion.label,
+  weight: criterion.weight,
+  describe: criterion.describe,
+  validated: criterion.validated,
+}));
 
 /**
  * Считает символьный скор по отчёту.
