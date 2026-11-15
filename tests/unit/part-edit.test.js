@@ -76,8 +76,10 @@ describe('правки дорожки по id', () => {
     });
     expect(result.ok).toBe(true);
     expect(result.spec.parts.roles.VIOLIN_2.sections.drop.pattern).toBe('0 ~ ~ ~');
-    // Переопределение затрагивает только секцию drop.
-    expect(result.spec.parts.roles.VIOLIN_2.sections.intro).toBeUndefined();
+    // Переопределение затрагивает только секцию drop: своя фраза в intro
+    // (её задаёт фаза D при экспансии плана) осталась как была.
+    expect(result.spec.parts.roles.VIOLIN_2.sections.intro)
+      .toEqual(spec.parts.roles.VIOLIN_2.sections.intro);
     // Основной рисунок дорожки не тронут.
     expect(result.spec.parts.roles.VIOLIN_2.pattern).toBe(spec.parts.roles.VIOLIN_2.pattern);
   });
