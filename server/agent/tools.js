@@ -29,8 +29,48 @@ import { symbolicReport } from '../../src/oracle/report.js';
 import { specFromPlan } from '../../src/music/expand.js';
 import { applyPartEdit, PART_OPS } from '../../src/music/part-edit.js';
 import { TrackSpecSchema } from '../../src/schemas/track-spec.schema.js';
+import { schemaShape, zodToJsonSchema } from './json-schema.js';
 
 const LimitSchema = z.number().int().min(1).max(50).default(10);
+
+/**
+ * Предел длины описания трека.
+ *
+ * Раньше здесь стояло 600 символов, а маршрут агента принимает 4000. Модель
+ * отдавала в инструмент весь пользовательский запрос — и длинный запрос
+ * гарантированно падал с «String must contain at most 600 character(s)».
+ * План, построенный по правилам, режет запрос до 400 символов и потому
+ * проходил, а план от модели — нет. Теперь предел совпадает с пределом
+ * маршрута: обрезать описание трека нельзя, а режет его уже сам сборщик.
+ */
+const PROMPT_MAX = 4000;
+
+/**
+ * Модель часто присылает объект JSON-строкой («{"meta":…}»). Данные при
+ * этом валидные, но zod на строке падает с «Expected object, received
+ * string». Разбираем строку заранее — тогда ошибка останется честной
+ * только для действительно негодного аргумента.
+ *
+ * @param {unknown} value
+ * @returns {unknown}
+ */
+function parseJsonArg(value) {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return value;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return value;
+  }
+}
+
+/** План трека (IR): принимается и объектом, и JSON-строкой. */
+const IrSchema = z.preprocess(parseJsonArg, z.object({
+  meta: z.any(),
+  sections: z.any(),
+  layers: z.any(),
+}).passthrough());
 
 /**
  * @typedef {object} AgentTool
@@ -68,7 +108,7 @@ export const TOOLS = [
       'Собирает спеку трека по описанию: план → спека → компиляция → оценка. Если модель '
       + 'недоступна, спека собирается из библиотеки, и в ответе будет честная отметка об этом.',
     schema: z.object({
-      prompt: z.string().min(3).max(600),
+      prompt: z.string().min(3).max(PROMPT_MAX),
       style: z.string().max(40).optional(),
       seed: z.number().int().optional(),
     }),
@@ -90,6 +130,9 @@ export const TOOLS = [
         style: result.style,
         attempts: result.attempts,
         usedFallback: result.usedFallback,
+        // Почему спека модели не прошла: без этого агент не может понять,
+        // что именно чинить, и просто повторяет тот же запрос.
+        errors: result.errors ?? null,
         spec: result.spec,
         code: result.compiled?.code ?? null,
         parts: result.compiled?.parts ?? null,
@@ -100,23 +143,18 @@ export const TOOLS = [
   {
     id: 'compile',
     title: 'Компиляция спеки в код',
-    description: 'Детерминированно превращает спеку в играющий Strudel-код. Один и тот же вход — один и тот же выход.',
-    schema: z.object({
-      spec: z
-        .object({
-          meta: z.object({ style: z.string(), bpm: z.number(), key: z.string() }).passthrough(),
-          parts: z.object({ roles: z.record(z.any()) }).passthrough(),
-          structure: z.object({ sections: z.array(z.any()) }).passthrough(),
-        })
-        .passthrough()
-        .optional(),
-    }),
-    async run(args) {
-      if (!args.spec) {
+    description:
+      'Детерминированно превращает спеку в играющий Strudel-код. Спеку берёт из текущей '
+      + 'сессии (то, что собрал compose_spec) — передавать её не нужно: модель часто '
+      + 'придумывает невалидную спеку, и та ломала бы компиляцию. Один и тот же вход — один и тот же выход.',
+    schema: z.object({}),
+    async run(args, ctx) {
+      const spec = ctx?.currentSpec ?? null;
+      if (!spec) {
         return { ok: false, degraded: false, reason: 'нет спеки для компиляции — сначала вызови compose_spec' };
       }
-      const code = compileTrackSpec(args.spec);
-      return { ok: true, degraded: false, code, parts: Object.keys(args.spec?.parts?.roles ?? {}) };
+      const code = compileTrackSpec(spec);
+      return { ok: true, degraded: false, code, parts: Object.keys(spec?.parts?.roles ?? {}) };
     },
   },
   {
@@ -179,17 +217,16 @@ export const TOOLS = [
       + 'громкость, роль, переопределение в секции. Остальные дорожки не трогаются и не '
       + 'перегенерируются. Работает без сети и без ключей.',
     schema: z.object({
-      spec: z.object({
-        meta: z.object({ style: z.string(), bpm: z.number(), key: z.string() }).passthrough(),
-        parts: z.object({ roles: z.record(z.any()) }).passthrough(),
-        structure: z.object({ sections: z.array(z.any()) }).passthrough(),
-      }).passthrough(),
       id: z.string().min(1).max(60),
       op: z.enum(Object.keys(PART_OPS)),
       params: z.record(z.any()).default({}),
     }),
-    async run(args) {
-      const result = applyPartEdit(args.spec, { id: args.id, op: args.op, params: args.params });
+    async run(args, ctx) {
+      const spec = ctx?.currentSpec ?? null;
+      if (!spec) {
+        return { ok: false, degraded: false, reason: 'нет спеки для правки — сначала собери трек (compose_spec)' };
+      }
+      const result = applyPartEdit(spec, { id: args.id, op: args.op, params: args.params });
       if (!result.ok) {
         return { ok: false, degraded: false, reason: result.error };
       }
@@ -219,7 +256,7 @@ export const TOOLS = [
       'Меняет одну партию существующего трека без перегенерации остальных: мрачнее, светлее, '
       + 'плотнее, другой тембр, сдвиг октавы, свинг, новая гармония. Возвращает измеренную дельту.',
     schema: z.object({
-      ir: z.object({ meta: z.any(), sections: z.any(), layers: z.any() }).passthrough(),
+      ir: IrSchema,
       transform: z.enum(Object.keys(TRANSFORMS)),
       role: z.string().optional(),
       amount: z.number().optional(),
@@ -404,7 +441,7 @@ export function toolManifest(only = null) {
  */
 function describeSchema(schema) {
   try {
-    const shape = schema?.shape ?? {};
+    const shape = schemaShape(schema);
     return Object.entries(shape)
       .map(([key, value]) => {
         const description = value?.description ?? '';
@@ -415,6 +452,29 @@ function describeSchema(schema) {
   } catch {
     return '';
   }
+}
+
+/**
+ * Схемы инструментов в формате нативных вызовов (OpenAI-совместимый).
+ *
+ * Это машинное описание реестра: провайдер получает только те инструменты,
+ * которые разрешены режимом, и сам выбирает, что вызвать. Аргументы приходят
+ * от API уже объектами — разбирать JSON руками больше не нужно.
+ *
+ * @param {string[]} [only] ограничить списком режима
+ * @returns {Array<{type:'function', function:{name:string, description:string, parameters:object}}>}
+ */
+export function toolApiSchemas(only = null) {
+  return TOOLS
+    .filter((tool) => !only || only.includes(tool.id))
+    .map((tool) => ({
+      type: 'function',
+      function: {
+        name: tool.id,
+        description: tool.description,
+        parameters: zodToJsonSchema(tool.schema),
+      },
+    }));
 }
 
 /**

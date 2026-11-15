@@ -14,6 +14,7 @@
 // притворяется, что искал в интернете.
 
 import { agentStream, fetchAgentTools } from './api/client.js';
+import { getCurrentIr } from './core/ir-store.js';
 import { log } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
@@ -57,17 +58,42 @@ export function initAgentPanel({ getCode, setCode, onApply } = {}) {
   // Режим выбирает человек — значит, его выбор главнее умолчания. Отмечаем
   // сам факт выбора, а не значение: паспорт мог прийти уже после выбора.
   let userChoseMode = false;
+
+  // Паспорт режимов: нужен, чтобы показывать число инструментов ТЕКУЩЕГО
+  // режима, а не всего реестра. Раньше панель писала «Инструментов: 11» —
+  // это число всех инструментов, из них в «Композиторе» доступно шесть.
+  let modesInfo = [];
+  let internetAvailable = false;
+
+  /**
+   * Перерисовывает строку статуса под текущий режим.
+   */
+  function renderServiceNote() {
+    if (!serviceNote) return;
+    const currentId = modeSelect?.value || 'composer';
+    const mode = modesInfo.find((item) => item.id === currentId);
+    const count = mode ? (mode.tools ?? []).length : 0;
+    const label = mode?.label ?? currentId;
+    serviceNote.textContent = internetAvailable
+      ? `Инструментов в режиме «${label}»: ${count}. Интернет доступен.`
+      : `Инструментов в режиме «${label}»: ${count}. Интернет недоступен — агент ответит по локальной библиотеке.`;
+    serviceNote.classList.toggle('is-warn', !internetAvailable);
+  }
+
   modeSelect?.addEventListener('change', () => {
     userChoseMode = true;
+    renderServiceNote();
   });
 
   // --- Паспорт агента: режимы и честный статус внешних сервисов ----------
   fetchAgentTools()
     .then((info) => {
+      modesInfo = info.modes ?? [];
+      internetAvailable = Boolean(info.services?.internet);
       if (modeSelect && modeSelect.options.length === 0) {
         // До подстановки список был пуст: человек выбрать режим ещё не мог.
         const preset = modeSelect.value;
-        for (const mode of info.modes ?? []) {
+        for (const mode of modesInfo) {
           const option = document.createElement('option');
           option.value = mode.id;
           option.textContent = mode.label;
@@ -77,16 +103,10 @@ export function initAgentPanel({ getCode, setCode, onApply } = {}) {
         // После append браузер сам выделяет первый вариант («Чат»), поэтому
         // проверка «if (!value)» уже не срабатывает. Умолчание ставим явно —
         // но только если режим не выбрали: ни заранее, ни пока шёл запрос.
-        const hasComposer = (info.modes ?? []).some((mode) => mode.id === 'composer');
+        const hasComposer = modesInfo.some((mode) => mode.id === 'composer');
         if (!preset && !userChoseMode && hasComposer) modeSelect.value = 'composer';
       }
-      if (serviceNote) {
-        const internet = info.services?.internet;
-        serviceNote.textContent = internet
-          ? `Инструментов: ${(info.tools ?? []).length}. Интернет доступен.`
-          : `Инструментов: ${(info.tools ?? []).length}. Интернет недоступен — агент ответит по локальной библиотеке.`;
-        serviceNote.classList.toggle('is-warn', !internet);
-      }
+      renderServiceNote();
     })
     .catch((err) => {
       if (serviceNote) serviceNote.textContent = `Паспорт агента недоступен: ${err.message}`;
@@ -269,6 +289,9 @@ export function initAgentPanel({ getCode, setCode, onApply } = {}) {
         prompt,
         mode: modeSelect?.value || undefined,
         currentCode: getCode?.() ?? null,
+        // План трека из панели IR: без него «Дирижёр» не сможет править
+        // существующий трек — инструменту правки нужен сам план.
+        currentIr: getCurrentIr(),
         history: history.slice(-HISTORY_LIMIT),
         signal: controller.signal,
         onEvent: (event) => {

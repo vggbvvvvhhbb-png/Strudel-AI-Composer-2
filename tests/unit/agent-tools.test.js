@@ -11,7 +11,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { runTool, toolById, toolManifest } from '../../server/agent/tools.js';
+import { runTool, toolById, toolManifest, toolApiSchemas } from '../../server/agent/tools.js';
 import { fallbackSpec } from '../../server/music/compose/pipeline.js';
 import { planIR } from '../../src/ir/intent.js';
 
@@ -76,18 +76,37 @@ describe('compose_spec и compile', () => {
 
   it('компиляция детерминирована', async () => {
     const spec = fallbackSpec('techno', 1);
-    const first = await runTool('compile', { spec });
-    const second = await runTool('compile', { spec });
+    const first = await runTool('compile', {}, { currentSpec: spec });
+    const second = await runTool('compile', {}, { currentSpec: spec });
     expect(first.ok).toBe(true);
     expect(first.code).toBe(second.code);
     expect(first.parts.length).toBeGreaterThan(0);
   });
 
-  it('неверная спека — ошибка аргументов, а не «инструмент упал»', async () => {
-    const result = await runTool('compile', { spec: { meta: {} } });
+  it('компиляция берёт спеку из сессии, а не из аргументов модели', async () => {
+    const spec = fallbackSpec('techno', 1);
+    // Модель в нативном вызове может подсунуть свою, невалидную спеку —
+    // источник истины один: состояние сессии.
+    const result = await runTool('compile', { spec: { meta: {} } }, { currentSpec: spec });
+    expect(result.ok).toBe(true);
+    expect(result.code.length).toBeGreaterThan(0);
+  });
+
+  it('без спеки в сессии — честная причина, а не «инструмент упал»', async () => {
+    const result = await runTool('compile', {}, {});
     expect(result.ok).toBe(false);
     expect(result.degraded).toBe(false);
-    expect(result.reason).toMatch(/аргумент/i);
+    expect(result.reason).toMatch(/compose_spec/);
+  });
+
+  it('длинное описание трека проходит: лимит совпадает с лимитом маршрута', async () => {
+    // Раньше здесь стоял предел 600 символов, и любой длинный запрос падал
+    // с «String must contain at most 600 character(s)».
+    const prompt = `тёмный бит ${'подробное описание '.repeat(60)}`;
+    expect(prompt.length).toBeGreaterThan(600);
+    const result = await runTool('compose_spec', { prompt }, { completeChat });
+    expect(result.ok).toBe(true);
+    expect(result.usedFallback).toBe(false);
   });
 });
 
@@ -108,6 +127,36 @@ describe('edit_ir', () => {
     const result = await runTool('edit_ir', { ir, transform: 'не-существует' });
     expect(result.ok).toBe(false);
     expect(result.reason).toMatch(/аргумент/i);
+  });
+
+  it('план, пришедший JSON-строкой, разбирается и принимается', async () => {
+    const ir = planIR('тёмный ло-фай на 88 BPM', { seed: 1 });
+    const result = await runTool('edit_ir', { ir: JSON.stringify(ir), transform: 'darker', amount: 0.5 });
+    expect(result.ok).toBe(true);
+    expect(result.transform).toBe('darker');
+  });
+});
+
+describe('схемы для нативных вызовов', () => {
+  it('у каждого инструмента есть схема аргументов в формате провайдера', () => {
+    const schemas = toolApiSchemas();
+    expect(schemas.length).toBeGreaterThanOrEqual(8);
+    for (const entry of schemas) {
+      expect(entry.type).toBe('function');
+      expect(entry.function.name).toBeTruthy();
+      expect(entry.function.parameters.type).toBe('object');
+      expect(entry.function.parameters.properties).toBeTruthy();
+    }
+  });
+
+  it('схемы собираются по списку режима', () => {
+    const schemas = toolApiSchemas(['compose_spec', 'compile']);
+    expect(schemas.map((entry) => entry.function.name)).toEqual(['compose_spec', 'compile']);
+  });
+
+  it('у compose_spec в схеме нет жёсткого предела промта', () => {
+    const compose = toolApiSchemas(['compose_spec'])[0];
+    expect(compose.function.parameters.properties.prompt.maxLength).toBeGreaterThanOrEqual(4000);
   });
 });
 

@@ -20,7 +20,11 @@
 // ответ. Если LLM недоступен, агент не падает: план строится эвристикой,
 // ответ собирается из наблюдений.
 
-import { completeChat, streamChat } from '../llm/router.js';
+// Роутер импортируется как пространство имён: новый нативный путь
+// (completeChatTools) появился позже старого контура, и в тестах роутер
+// подменяется моком без него. Проверка «функция есть» вместо жёсткого
+// импорта оставляет оба пути работоспособными.
+import * as llm from '../llm/router.js';
 import { estimateUsage } from '../llm/usage.js';
 import { recordUsage, usageSummary } from '../stats.js';
 
@@ -29,10 +33,41 @@ import { heuristicPlan, parsePlan } from './navigator.js';
 import { modeById } from './modes.js';
 import { answerMessages, plannerMessages } from './prompts.js';
 import { runTool } from './tools.js';
+import { runNativeAgent } from './native.js';
 import { catalogVersion } from './library.js';
 import { TtlLruCache, cacheKey, isCacheable } from './cache.js';
 
+const { completeChat, streamChat } = llm;
+
+/**
+ * Функция нативных вызовов, если она есть в роутере.
+ *
+ * Доступ обёрнут в try/catch намеренно: в тестах роутер подменяется моком,
+ * где такой функции нет, а строгий мок выбрасывает ошибку при обращении к
+ * неизвестному экспорту. Отсутствие функции — это не поломка, а признак
+ * запасного пути (текстовый план).
+ *
+ * @returns {Function|null}
+ */
+function nativeToolCaller() {
+  try {
+    const fn = llm.completeChatTools;
+    return typeof fn === 'function' ? fn : null;
+  } catch {
+    return null;
+  }
+}
+
 const answerCache = new TtlLruCache({ max: 100, ttlMs: 6 * 60 * 60 * 1000 });
+
+/**
+ * Обычный объект (не массив и не null)?
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+export function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
 
 /**
  * Определяет режим по словам в запросе, если клиент его не задал.
@@ -169,9 +204,133 @@ export async function* runAgent({
     signal,
     currentCode,
     currentIr,
+    // Спека текущей сессии. Её собирает compose_spec, и её же используют
+    // compile и edit_part: модель придумывала собственную, невалидную.
+    currentSpec: null,
     completeChat: (options) => completeChat({ ...options, feature: 'agent-plan' }),
     onUsage: null,
   };
+
+  // --- Нативные вызовы инструментов ------------------------------------
+  // Первый путь: модель сама вызывает инструменты (function-calling).
+  // Аргументы приходят от провайдера уже объектами, модель видит результат
+  // и решает дальше. Если провайдер вызовы не поддерживает — падаем на
+  // запасной путь ниже (текстовый план), агент работает в обоих режимах.
+  const nativeCaller = nativeToolCaller();
+  const nativeAvailable = Boolean(nativeCaller) && mode.tools.length > 0;
+  if (nativeAvailable) {
+    const before = usageSummary();
+    const cacheable = isCacheable({ hasHistory: history.length > 0, usesMeasurements: false });
+    const key = cacheKey({ question: prompt, mode: mode.id, catalogVersion: catalogVersion() });
+    const cached = cacheable ? answerCache.get(key) : null;
+    if (cached && typeof cached === 'object') {
+      yield { type: 'text', text: cached.answer };
+      yield { type: 'usage', tokens: 0, costUsd: 0, cached: true, estimated: false, priceKnown: false };
+      yield {
+        type: 'done',
+        mode: mode.id,
+        answer: cached.answer,
+        answerSource: 'cache',
+        planSource: 'model',
+        toolsUsed: cached.toolsUsed ?? [],
+        degraded: [],
+        observations: [],
+        track: { code: cached.code ?? null, spec: cached.spec ?? null, ir: null },
+        guard: guard.snapshot(),
+      };
+      return;
+    }
+
+    let nativeResult = null;
+    let emitted = 0;
+    let fellBack = false;
+    try {
+      for await (const event of runNativeAgent({
+        prompt,
+        mode,
+        currentCode,
+        currentIr,
+        history,
+        signal,
+        env,
+        fetchImpl,
+        guard,
+        completeChatTools: nativeCaller,
+      })) {
+        if (event.type === 'native_result') {
+          nativeResult = event;
+          continue;
+        }
+        emitted += 1;
+        yield event;
+      }
+    } catch (err) {
+      // Провайдер не умеет вызовы — уходим на текстовый план. Или модель
+      // упала на первом же обращении: тогда тоже текстовый план, он умеет
+      // работать без модели вовсе (эвристика + локальные инструменты).
+      const canFallBack = err?.code === 'TOOLS_UNSUPPORTED' || err?.fallbackToPlan === true;
+      if (!canFallBack || emitted > 0) throw err;
+      fellBack = true;
+    }
+
+    if (!fellBack && nativeResult) {
+      const observations = nativeResult.observations ?? [];
+      const degradedTools = nativeResult.degradedTools ?? [];
+      let answer = nativeResult.answer ?? '';
+      let answerSource = nativeResult.answerSource ?? 'model';
+      if (!answer) {
+        answer = deterministicAnswer({
+          plan: { goal: String(prompt).slice(0, 200) },
+          observations,
+          degraded: degradedTools,
+        });
+        answerSource = 'observations';
+        yield { type: 'text', text: answer };
+      }
+
+      const after = usageSummary();
+      const measuredTokens = after.totalTokens - before.totalTokens;
+      const measuredCost = Number((after.costUsd - before.costUsd).toFixed(6));
+      const estimate = measuredTokens > 0 ? null : estimateUsage(answer, prompt);
+      const tokens = measuredTokens > 0 ? measuredTokens : estimate.promptTokens + estimate.completionTokens;
+
+      const usesMeasurements = observations.some((obs) => obs.tool === 'compose_spec' || obs.tool === 'edit_ir');
+      if (cacheable && !usesMeasurements && answer.trim()) {
+        answerCache.set(key, {
+          answer,
+          code: nativeResult.bag?.code ?? null,
+          spec: nativeResult.bag?.spec ?? null,
+          toolsUsed: nativeResult.toolsUsed ?? [],
+        });
+      }
+
+      yield {
+        type: 'usage',
+        tokens,
+        costUsd: measuredCost,
+        requestCount: after.requests - before.requests,
+        estimated: !measuredTokens,
+        priceKnown: measuredCost > 0,
+      };
+      yield {
+        type: 'done',
+        mode: mode.id,
+        answer,
+        answerSource,
+        planSource: 'model',
+        toolsUsed: nativeResult.toolsUsed ?? [],
+        degraded: degradedTools,
+        observations,
+        track: {
+          code: nativeResult.bag?.code ?? null,
+          spec: nativeResult.bag?.spec ?? null,
+          ir: nativeResult.bag?.ir ?? null,
+        },
+        guard: guard.snapshot(),
+      };
+      return;
+    }
+  }
 
   // --- План -------------------------------------------------------------
   let plan = null;
@@ -263,10 +422,13 @@ export async function* runAgent({
     index += 1;
 
     // Аргументы подставляются из контекста, если модель их не задала:
-    // compile берёт спеку из предыдущего шага, edit_ir — текущий план трека.
+    // edit_ir берёт текущий план трека. Для compose_spec и compile спека
+    // не аргумент, а состояние сессии (ctx.currentSpec): модель придумывала
+    // собственную, невалидную — и та ломала компиляцию.
     const args = { ...(step.args ?? {}) };
-    if (step.tool === 'compile' && !args.spec && bag.spec) args.spec = bag.spec;
-    if (step.tool === 'edit_ir' && !args.ir && bag.ir) args.ir = bag.ir;
+    if (step.tool === 'edit_ir' && !isPlainObject(args.ir) && isPlainObject(bag.ir)) {
+      args.ir = bag.ir;
+    }
 
     yield { type: 'tool_start', id: step.tool, index, args, why: step.why ?? null };
 
@@ -282,6 +444,7 @@ export async function* runAgent({
     if (ok && step.tool === 'compose_spec') {
       bag.spec = result.spec ?? null;
       bag.code = result.code ?? bag.code;
+      ctx.currentSpec = bag.spec;
     }
     if (ok && step.tool === 'compile') {
       bag.code = result.code ?? bag.code;
@@ -338,7 +501,7 @@ export async function* runAgent({
   let answerMessagesText = '';
   if (cacheable) {
     const cached = answerCache.get(key);
-    if (cached) {
+    if (cached && typeof cached === 'string') {
       answer = cached;
       answerSource = 'cache';
     }

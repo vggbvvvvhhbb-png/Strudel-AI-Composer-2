@@ -9,6 +9,7 @@
 // applyCode, сообщения — через log.
 
 import { irPlan, irTransform, irSearch, irCritique } from './api/client.js';
+import { setCurrentIr } from './core/ir-store.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -108,6 +109,7 @@ async function runPlan() {
       return;
     }
     currentIr = result.ir;
+    setCurrentIr(currentIr);
     renderReport(result);
     await applyCode(result.code);
     hooks.log(
@@ -137,6 +139,7 @@ async function runTransform(name) {
       return;
     }
     currentIr = result.ir;
+    setCurrentIr(currentIr);
     renderReport(result);
     await applyCode(result.code);
     const delta = result.delta || {};
@@ -195,6 +198,7 @@ async function runCritique() {
       return;
     }
     currentIr = result.ir;
+    setCurrentIr(currentIr);
     renderReport(result);
     await applyCode(result.code);
     const applied = (result.steps || []).filter((step) => step.accepted).length;
@@ -276,6 +280,7 @@ function renderSearch(result) {
       busy(true);
       try {
         currentIr = candidate.ir;
+      setCurrentIr(currentIr);
         await applyCode(candidate.code);
         if (candidate.report) renderReport({ report: candidate.report });
         hooks.log(`Вариант загружен: ${candidate.detail}`, 'ok');

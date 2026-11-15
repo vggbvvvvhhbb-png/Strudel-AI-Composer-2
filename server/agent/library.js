@@ -52,17 +52,64 @@ function norm(text) {
 }
 
 /**
+ * Слова-пустышки: в запросе модели они почти всегда есть и ничего не значат.
+ */
+const STOP_WORDS = new Set([
+  'the', 'and', 'for', 'with', 'from', 'that', 'this', 'into', 'over',
+  'на', 'в', 'и', 'с', 'по', 'для', 'от', 'до', 'а', 'не', 'но', 'или',
+  'к', 'из', 'за', 'что', 'как', 'это', 'под', 'над', 'при', 'без',
+]);
+
+/**
+ * Слова запроса: по ним ищем, когда точная фраза не совпала.
+ *
+ * ЗАЧЕМ. Модель спрашивает естественным языком («vinyl rain snare reverb
+ * kick 808 bass»), а поиск был по целой фразе — такое никогда не находится,
+ * и инструмент честно, но бесполезно отвечал «ничего не найдено». По словам
+ * запрос находится: «kick» находит банк с kick.
+ *
+ * @param {string} text
+ * @returns {string[]}
+ */
+function tokenize(text) {
+  return norm(text)
+    .split(/[^a-zа-я0-9+#-]+/i)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 2 && !STOP_WORDS.has(token));
+}
+
+/**
+ * Оценка совпадения: 0 — не совпало, больше — совпало сильнее.
+ *
+ * @param {string} hay нормализованный текст записи
+ * @param {string} needle нормализованный запрос целиком
+ * @param {string[]} tokens слова запроса
+ * @returns {number}
+ */
+function scoreMatch(hay, needle, tokens) {
+  if (!needle) return 1;
+  if (hay.includes(needle)) return 100 + tokens.length;
+  let score = 0;
+  for (const token of tokens) {
+    if (hay.includes(token)) score += 1;
+  }
+  return score;
+}
+
+/**
  * Сэмплы: поиск по именам внутри банков.
  * @param {{query:string, limit?:number}} args
  */
 function searchSamples({ query, limit = 10 }) {
   const { banks, licenses } = registry();
   const needle = norm(query);
+  const tokens = tokenize(query);
   const hits = [];
   for (const [bank, entry] of Object.entries(banks)) {
     const license = licenses[bank] ?? null;
     for (const name of entry.names ?? []) {
-      if (needle && !norm(name).includes(needle)) continue;
+      const score = scoreMatch(norm(name), needle, tokens);
+      if (!score) continue;
       hits.push({
         name,
         bank,
@@ -73,16 +120,18 @@ function searchSamples({ query, limit = 10 }) {
         verdict: license?.verdict ?? 'требует решения владельца',
         confirmed: Boolean(license?.licenseId),
         commercial: license?.commercial ?? false,
+        score,
       });
-      if (hits.length >= limit * 4) break;
     }
-    if (hits.length >= limit * 4) break;
   }
-  hits.sort((a, b) => Number(a.confirmed) - Number(b.confirmed));
+  // Сначала точные совпадения, потом подтверждённая лицензия, потом имя.
+  hits.sort((a, b) => (b.score - a.score) || (Number(a.confirmed) - Number(b.confirmed)) || a.name.localeCompare(b.name, 'en'));
+  const total = hits.length;
+  const top = hits.slice(0, limit);
   return {
-    total: hits.length,
-    hits: hits.slice(0, limit),
-    note: hits.length && hits.every((h) => !h.confirmed)
+    total,
+    hits: top.map(({ score, ...hit }) => hit),
+    note: top.length && top.every((h) => !h.confirmed)
       ? 'Ни один найденный сэмпл не имеет подтверждённой лицензии — их нельзя предлагать как свободные.'
       : null,
   };
@@ -95,11 +144,10 @@ function searchSamples({ query, limit = 10 }) {
 function listBanks({ query, limit = 10 }) {
   const { banks, licenses } = registry();
   const needle = norm(query);
+  const tokens = tokenize(query);
   return {
     total: Object.keys(banks).length,
     banks: Object.entries(banks)
-      .filter(([bank]) => !needle || norm(bank).includes(needle))
-      .slice(0, limit)
       .map(([bank, entry]) => ({
         bank,
         url: entry.url ?? null,
@@ -107,7 +155,12 @@ function listBanks({ query, limit = 10 }) {
         license: licenses[bank]?.license ?? 'не подтверждена',
         verdict: licenses[bank]?.verdict ?? 'требует решения владельца',
         confirmed: Boolean(licenses[bank]?.licenseId),
-      })),
+        score: scoreMatch(norm(bank), needle, tokens),
+      }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map(({ score, ...entry }) => entry),
   };
 }
 
@@ -117,12 +170,14 @@ function listBanks({ query, limit = 10 }) {
  */
 function searchKnowledge({ query, limit = 10 }) {
   const needle = norm(query);
+  const tokens = tokenize(query);
   const hits = [];
 
   const push = (kind, id, title, detail) => {
     const hay = norm(`${id} ${title} ${JSON.stringify(detail ?? {})}`);
-    if (needle && !hay.includes(needle)) return;
-    hits.push({ kind, id, title, detail: detail ?? null });
+    const score = scoreMatch(hay, needle, tokens);
+    if (!score) return;
+    hits.push({ kind, id, title, detail: detail ?? null, score });
   };
 
   for (const p of PROGRESSIONS) push('progression', p.id ?? p.name, p.name ?? p.id, p);
@@ -132,7 +187,8 @@ function searchKnowledge({ query, limit = 10 }) {
   for (const [id, transition] of Object.entries(TRANSITIONS)) push('transition', id, id, transition);
   for (const role of ROLES) push('role', role, role, { rolesForStyle: rolesForStyle(role).length });
 
-  return { total: hits.length, hits: hits.slice(0, limit) };
+  hits.sort((a, b) => b.score - a.score);
+  return { total: hits.length, hits: hits.slice(0, limit).map(({ score, ...hit }) => hit) };
 }
 
 /**
@@ -141,13 +197,17 @@ function searchKnowledge({ query, limit = 10 }) {
  */
 function listPresets({ query, limit = 10 }) {
   const needle = norm(query);
-  const hits = PRESETS.filter((preset) => {
-    if (!needle) return true;
-    return norm(`${preset.name} ${(preset.tags ?? []).join(' ')} ${preset.bpm} ${preset.key}`).includes(needle);
-  });
+  const tokens = tokenize(query);
+  const hits = PRESETS
+    .map((preset) => ({
+      preset,
+      score: scoreMatch(norm(`${preset.name} ${(preset.tags ?? []).join(' ')} ${preset.bpm} ${preset.key}`), needle, tokens),
+    }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score);
   return {
     total: hits.length,
-    hits: hits.slice(0, limit).map((preset) => ({
+    hits: hits.slice(0, limit).map(({ preset }) => ({
       id: preset.id ?? preset.name,
       name: preset.name,
       tags: preset.tags ?? [],
@@ -164,14 +224,17 @@ function listPresets({ query, limit = 10 }) {
  */
 function listSkillCards({ query, limit = 10 }) {
   const needle = norm(query);
-  const cards = listSkills();
-  const hits = cards.filter((card) => {
-    if (!needle) return true;
-    return norm(`${card.id} ${card.kind} ${(card.tags ?? []).join(' ')}`).includes(needle);
-  });
+  const tokens = tokenize(query);
+  const hits = listSkills()
+    .map((card) => ({
+      card,
+      score: scoreMatch(norm(`${card.id} ${card.kind} ${(card.tags ?? []).join(' ')}`), needle, tokens),
+    }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score);
   return {
     total: hits.length,
-    hits: hits.slice(0, limit).map((card) => ({
+    hits: hits.slice(0, limit).map(({ card }) => ({
       id: card.frontmatter?.id ?? card.id,
       kind: card.frontmatter?.kind ?? null,
       tags: card.frontmatter?.tags ?? [],

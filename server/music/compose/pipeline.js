@@ -1,8 +1,8 @@
 // План → validateTrackSpec/checkSpec → синхронная компиляция → оценка/refine.
 import { TrackSpecSchema, validateTrackSpec } from '../../../src/schemas/track-spec.schema.js';
-import { ROLES as SPEC_ROLES } from '../../../src/schemas/parts.js';
+import { ROLES as SPEC_ROLES, SAMPLED_ROLES, ROLE_RE } from '../../../src/schemas/parts.js';
 import { checkSpec } from '../spec/check.js';
-import { formsForStyle, roleFor, selectPattern } from '../knowledge/index.js';
+import { formsForStyle, roleFor, rolesForStyle, selectPattern } from '../knowledge/index.js';
 import { detectStyle } from '../references.js';
 import { compileForProtocol } from './compiled.js';
 import { compileTrackSpec } from '../compiler/index.js';
@@ -10,11 +10,15 @@ import { compileTrackSpec } from '../compiler/index.js';
 const SPEC_STYLES = TrackSpecSchema.shape.meta.shape.style.options;
 const SECTION_KINDS = TrackSpecSchema.shape.structure.shape.sections.element.shape.name.options;
 
+/** Границы длины трека в тактах — те же, что и у проверки спеки. */
+const MIN_TRACK_BARS = 16;
+const MAX_TRACK_BARS = 96;
+
 const STYLE_HINTS = [
   ['techno', ['techno', 'техно', 'industrial', 'рейв']],
   ['house', ['house', 'хаус', 'disco', 'диско']],
   ['synthwave', ['synthwave', 'синтвейв', 'retrowave']],
-  ['trap', ['trap', 'трэп', 'drill', 'дрилл']],
+  ['trap', ['trap', 'трэп', 'drill', 'дрилл', 'phonk', 'фонк']],
   ['lo-fi', ['lo-fi', 'lofi', 'лоу-фай', 'лофай', 'boom bap']],
   ['dubstep', ['dubstep', 'дабстеп']],
   ['jazz', ['jazz', 'джаз', 'swing', 'blues']],
@@ -57,6 +61,215 @@ function validatePlan(raw) {
   }
 }
 
+/**
+ * Сводка библиотеки для стиля: какие звуки и рисунки можно ставить.
+ *
+ * ЗАЧЕМ. Модель выдумывала «vinyl rain texture» и «hats» — такие значения
+ * компилятор отвергает, и спека падала целиком, хотя остальное было в
+ * порядке. Сводка отдаёт ровно те сэмплы и шаблоны, которые библиотека уже
+ * проверила настоящим парсером Strudel.
+ *
+ * @param {string} style
+ * @returns {string}
+ */
+function styleDigest(style) {
+  const libraryStyle = knowledgeStyle(style);
+  const roles = rolesForStyle(libraryStyle);
+  if (!roles.length) return '';
+  const lines = roles.map((role) => {
+    const info = roleFor(libraryStyle, role);
+    const sampled = SAMPLED_ROLES.has(role);
+    const sounds = sampled ? (info?.sounds ?? []) : (info?.synth ? [info.synth] : []);
+    const patterns = (info?.patterns ?? []).slice(0, 3);
+    const soundText = sampled
+      ? (sounds.length ? `sound — один из: ${sounds.join(', ')}` : 'sound — нет: роль играет тонами')
+      : `sound — '${sounds[0] ?? 'sine'}'`;
+    return `- ${role}: ${soundText}; pattern — один из: ${patterns.join(' / ') || '—'}`;
+  });
+  return lines.join('\n');
+}
+
+/**
+ * Приводит стиль, темп и лад к тому, что понимает схема.
+ *
+ * Модель писала «phonk drift» вместо стиля из списка — и вся спека падала
+ * целиком, хотя остальное было в порядке. Незнакомый стиль переводится в
+ * ближайший допустимый, лад приводится к виду «Fmin», темп зажимается в
+ * 60..180. Это не подгонка под результат: всё, что приводится, остаётся
+ * осмысленным и проверяемым.
+ *
+ * @param {object} raw спека от модели
+ * @param {string} fallbackStyle стиль, определённый по запросу
+ * @returns {object}
+ */
+export function normalizeSpec(raw, fallbackStyle) {
+  if (!raw || typeof raw !== 'object' || !raw.meta || typeof raw.meta !== 'object') return raw;
+  const meta = { ...raw.meta };
+  if (typeof meta.style === 'string' && !SPEC_STYLES.includes(meta.style)) {
+    meta.style = detectSpecStyle(meta.style) || fallbackStyle;
+  }
+  if (typeof meta.bpm === 'number' && Number.isFinite(meta.bpm)) {
+    meta.bpm = Math.min(180, Math.max(60, Math.round(meta.bpm)));
+  }
+  if (typeof meta.key === 'string') {
+    const key = meta.key.trim().replace(/\s+/g, '');
+    meta.key = /minor$/i.test(key)
+      ? key.replace(/minor$/i, 'min')
+      : /major$/i.test(key)
+        ? key.replace(/major$/i, 'maj')
+        : key;
+  }
+  // schemaVersion в схеме — строка вида «1.2», а модель часто присылает
+  // число 1.2 (или целое 1). Из-за одного этого поля валидная спека
+  // отбрасывалась целиком и трек собирался из запасного плана библиотеки.
+  if (typeof meta.schemaVersion === 'number' && Number.isFinite(meta.schemaVersion)) {
+    const asText = String(meta.schemaVersion);
+    if (/^\d+\.\d+$/.test(asText)) meta.schemaVersion = asText;
+    else delete meta.schemaVersion;
+  } else if (typeof meta.schemaVersion === 'string' && !/^\d+\.\d+$/.test(meta.schemaVersion)) {
+    delete meta.schemaVersion;
+  }
+  return { ...raw, meta };
+}
+
+/**
+ * Допустимые символы mini-нотации — ровно те, что принимает компилятор.
+ * Длинное тире и кириллица сюда не входят: модель их приносила, и одна
+ * такая буква ломала всю спеку.
+ */
+const MINI_CHARS = /^[\w\s~*\[\]<>.,:!#b+\-\/|?@()]+$/;
+
+/**
+ * Чинит mini-нотацию: типографские тире и кавычки заменяются, недопустимые
+ * символы убираются.
+ *
+ * @param {unknown} text
+ * @returns {string|null} исправленная нотация или null, если чинить нечего
+ */
+export function sanitizePattern(text) {
+  if (typeof text !== 'string') return null;
+  const cleaned = text
+    .replace(/[—–]/g, '-')
+    .replace(/[“”„]/g, '"')
+    .replace(/[^\w\s~*\[\]<>.,:!#b+\-\/|?@()]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned || !MINI_CHARS.test(cleaned)) return null;
+  return cleaned;
+}
+
+/**
+ * Чинит спеку модели по библиотеке.
+ *
+ * ЗАЧЕМ. Модель подходит к правильной форме близко, но ошибается в деталях:
+ * роль партии без поля role, несуществующий сэмпл, длинное тире внутри
+ * mini-нотации, неизвестное имя секции. Раньше такая спека отбрасывалась
+ * целиком, и трек собирался из запасного плана библиотеки — то есть запрос
+ * пользователя не выполнялся вовсе. Теперь известные значения заменяются на
+ * библиотечные, а партии, чью роль определить нельзя, убираются.
+ *
+ * @param {object} raw спека от модели
+ * @param {string} style канонический стиль
+ * @returns {object}
+ */
+export function repairSpec(raw, style) {
+  if (!raw || typeof raw !== 'object') return raw;
+  const libraryStyle = knowledgeStyle(style);
+  const next = { ...raw };
+  const meta = { ...(next.meta ?? {}) };
+
+  if (typeof meta.style !== 'string' || !SPEC_STYLES.includes(meta.style)) {
+    meta.style = SPEC_STYLES.includes(style) ? style : 'techno';
+  }
+  if (!Number.isFinite(meta.bpm)) meta.bpm = 120;
+  if (typeof meta.key !== 'string' || !/^[A-G][#b]?[a-z]*$/.test(meta.key)) meta.key = 'Cmin';
+  next.meta = meta;
+
+  // Секции: неизвестное имя и мусорные числа заменяем на осмысленные.
+  const sections = Array.isArray(next.structure?.sections) ? next.structure.sections : [];
+  const fixedSections = [];
+  for (const section of sections) {
+    if (!section || typeof section !== 'object') continue;
+    if (!SECTION_KINDS.includes(section.name)) continue;
+    fixedSections.push({
+      ...section,
+      cycles: Number.isFinite(section.cycles) ? Math.min(64, Math.max(1, Math.round(section.cycles))) : 4,
+      energy: Number.isFinite(section.energy) ? Math.min(1, Math.max(0, section.energy)) : 0.5,
+      harmony: typeof section.harmony === 'string' && section.harmony.trim() ? section.harmony : 'Cm Fm Gm Cm',
+    });
+  }
+  if (fixedSections.length) {
+    // Длина трека: 16..96 тактов. Модель часто собирает короче или длиннее —
+    // растягиваем и ужимаем секции пропорционально, а не отбрасываем трек.
+    const total = fixedSections.reduce((sum, section) => sum + section.cycles, 0);
+    if (total < MIN_TRACK_BARS || total > MAX_TRACK_BARS) {
+      const target = Math.min(MAX_TRACK_BARS, Math.max(MIN_TRACK_BARS, total));
+      const scaled = fixedSections.map((section) => ({
+        ...section,
+        cycles: Math.max(1, Math.round((section.cycles / total) * target)),
+      }));
+      let diff = target - scaled.reduce((sum, section) => sum + section.cycles, 0);
+      let index = 0;
+      while (diff !== 0 && scaled.length && index < 1000) {
+        const section = scaled[index % scaled.length];
+        const step = diff > 0 ? 1 : -1;
+        if (section.cycles + step >= 1) {
+          section.cycles += step;
+          diff -= step;
+        }
+        index += 1;
+      }
+      fixedSections.length = 0;
+      fixedSections.push(...scaled);
+    }
+    next.structure = { ...next.structure, sections: fixedSections };
+  }
+
+  // Партии: роль, сэмпл и рисунок — по библиотеке.
+  const roles = next.parts?.roles;
+  if (roles && typeof roles === 'object') {
+    const fixedRoles = {};
+    for (const [id, part] of Object.entries(roles)) {
+      if (!part || typeof part !== 'object') continue;
+      const declared = typeof part.role === 'string' && ROLE_RE.test(part.role) ? part.role : null;
+      const fromKey = SPEC_ROLES.includes(id) ? id : null;
+      const role = declared ?? fromKey;
+      // Роль не определить — партию использовать нечем.
+      if (!role) continue;
+
+      const info = roleFor(libraryStyle, role);
+      const sampled = SAMPLED_ROLES.has(role);
+      const allowedSounds = sampled ? (info?.sounds ?? []) : (info?.synth ? [info.synth] : []);
+      let sound = part.sound;
+      if (!allowedSounds.includes(sound)) sound = allowedSounds[0] ?? (sampled ? 'bd' : 'sine');
+
+      // Рисунок должен быть ПРИГОДНЫМ для роли, а не просто набором букв:
+      // ударной партии — имя сэмпла, тональной — цифра (степень). Иначе в
+      // коде появится n("vinyl rain texture"), и REPL на этом упадёт.
+      const fits = (text) => {
+        if (!text) return false;
+        if (sampled) {
+          const names = allowedSounds.length ? allowedSounds : ['bd', 'sd', 'hh'];
+          return names.some((name) => text.includes(name));
+        }
+        return /\d/.test(text);
+      };
+      const libraryPattern = sanitizePattern((info?.patterns ?? [])[0]);
+      let pattern = sanitizePattern(part.pattern);
+      if (!fits(pattern)) pattern = fits(libraryPattern) ? libraryPattern : (sampled ? 'bd*4' : '0 ~ 2 4');
+
+      const activeIn = Array.isArray(part.activeIn) && part.activeIn.length
+        ? part.activeIn.filter((name) => fixedSections.some((section) => section.name === name))
+        : fixedSections.map((section) => section.name);
+      if (!activeIn.length) continue;
+
+      fixedRoles[id] = { ...part, role, sound, pattern, activeIn };
+    }
+    next.parts = { ...next.parts, roles: fixedRoles };
+  }
+  return next;
+}
+
 function specMessages(prompt, style) {
   const system = [
     'Ты — композитор. Спланируй трек, не пиши JavaScript или Strudel-код.',
@@ -66,15 +279,25 @@ function specMessages(prompt, style) {
     `structure: {sections: [{name, cycles, energy, harmony, parameters?}]}; name: ${SECTION_KINDS.join(', ')}.`,
     'cycles — целое число циклов >=1; energy 0..1; harmony — строка аккордов, например "Cm Fm Gm Cm".',
     'parameters?: {cutoff?: [число, число], gain?: [число, число]}.',
-    `parts: {roles: {роль: {activeIn, pattern, sound, effects?}}}; роли: ${SPEC_ROLES.join(', ')}.`,
-    'Имена секций могут повторяться; порядок и длительности задаёт structure.sections.',
+    '',
+    'parts: {roles: {...}} — КЛЮЧ записи это идентификатор партии, а НЕ роль:',
+    '  ключи вида KICK_1, SNARE_1, HATS_1, PERC_1, BASS_1, PAD_1, CHORDS_1, LEAD_1, ARP_1, FX_1, TEX_1, SUB_1;',
+    '  вторая дорожка той же роли — KICK_2;',
+    `  значение партии: {role, activeIn, pattern, sound, effects?}, где role — ровно одно из: ${SPEC_ROLES.join(', ')}.`,
     'activeIn — массив имён существующих секций; партия играет во всех секциях с указанным именем.',
-    'pattern — mini-нотация, не код: ударные "bd*4", "~ sd ~ sd", "hh*8"; тональные партии — степени "0 ~ 2 4".',
-    'sound — имя сэмпла или синтезатора: bd, sd, hh, sine, triangle, sawtooth, square, piano.',
+    'pattern — mini-нотация, НЕ слова. Допустимы только символы: буквы, цифры,',
+    '  пробел, ~ * [ ] < > . , : ! # b + - / | ? @ ( ). Никаких слов и фраз:',
+    '  «vinyl rain texture» — ошибка. Для ударных: "bd*4", "~ sd ~ sd", "hh*8".',
+    '  Для тональных партий — степени: "0 ~ 2 4", "<0 3 4 0>", "[0 0 3 5]".',
+    'sound — ТОЛЬКО из белого списка ниже; другое имя компилятор отвергнет.',
     'effects?: [{name, params}]; поддерживаются room, delay, gain, lpf, hpf с одним числовым аргументом. Не придумывай методы.',
     'reasoning? — короткое объяснение плана.',
     'План: 2..12 секций, всего 16..96 циклов; энергия и набор активных ролей различаются; гармония развивается.',
     'Никаких верхнеуровневых harmony, form, motif, automation; никаких recipe/variant.',
+    '',
+    `Белый список для стиля «${style}» — бери звуки и рисунки отсюда:`,
+    styleDigest(style),
+    '',
     `Стиль запроса: ${style}. Пример канонической структуры:`,
     JSON.stringify(fallbackSpec(style, 1)),
   ].join('\n');
@@ -253,7 +476,7 @@ export async function buildTrack({
       emit('warn', { message: `Модель не ответила: ${err.message || err}` });
       break;
     }
-    raw = answer.raw;
+    raw = repairSpec(normalizeSpec(answer.raw, trackStyle), trackStyle);
     if (!raw) {
       lastErrors = ['ответ модели не разобрался как JSON'];
       emit('warn', { message: 'Ответ модели не разобрался как JSON' });
@@ -296,7 +519,7 @@ export async function buildTrack({
           onUsage,
           responseFormat: { type: 'json_object' },
         });
-        const fixedRaw = extractJson(fixed);
+        const fixedRaw = repairSpec(normalizeSpec(extractJson(fixed), trackStyle), trackStyle);
         if (fixedRaw) {
           const fixedCheck = validatePlan(fixedRaw);
           if (fixedCheck.ok) {
@@ -336,7 +559,7 @@ export async function buildTrack({
     trace: compiled.trace,
   });
 
-  return { spec, compiled, style: trackStyle, attempts: modelCalls, usedFallback, seed, raw };
+  return { spec, compiled, style: trackStyle, attempts: modelCalls, usedFallback, seed, raw, errors: lastErrors };
 }
 
 export { SPEC_STYLES, SPEC_ROLES, SECTION_KINDS };
