@@ -13,14 +13,13 @@
 // Версионируется отдельно от IR: изменение схемы ломает кэш планировщика,
 // поэтому версия входит в ключ кэша.
 
+import { ROLES as STUDIO_ROLES } from '../../src/schemas/parts.js';
+
 /** Версия контракта. Меняется при правке схемы. */
 export const IR_SCHEMA_VERSION = 'ir-json-1.0.0';
 
-/** Роли студии — те же, что IR_ROLES в src/ir/schema.js. */
-const ROLES = [
-  'kick', 'snare', 'hats', 'perc', 'sub',
-  'bass', 'pad', 'chords', 'lead', 'arp', 'fx', 'texture',
-];
+/** Роли студии — единый источник `src/schemas/parts.js` (D-100). */
+const ROLES = STUDIO_ROLES;
 
 const MODES = [
   'major', 'minor', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'aeolian', 'locrian',

@@ -11,7 +11,11 @@
 // Белый список сэмплов взят из server/prompts/system.md и проверен
 // tests/unit/knowledge.test.js: каждый шаблон реально разбирается движком.
 
-export const ROLES = ['kick', 'snare', 'hats', 'perc', 'sub', 'bass', 'pad', 'chords', 'lead', 'arp', 'fx', 'texture'];
+// Список ролей — один источник (src/schemas/parts.js). Дубли списка в
+// четырёх местах разъехались бы при первом же расширении (D-100).
+import { ROLES as STUDIO_ROLES } from '../../../src/schemas/parts.js';
+
+export const ROLES = STUDIO_ROLES;
 
 /** Синтезаторы, которые гарантированно зарегистрированы в Strudel. */
 export const SYNTHS = ['sawtooth', 'square', 'triangle', 'sine', 'piano', 'supersaw', 'pulse', 'fm', 'organ', 'am'];

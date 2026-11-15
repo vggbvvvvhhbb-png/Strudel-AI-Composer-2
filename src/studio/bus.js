@@ -12,12 +12,13 @@
 //   • история ограничена 200 записями, жесты склеиваются по groupId.
 
 import { z } from 'zod';
-import { canonicalJson, ProjectModelSchema, ROLES } from './model.js';
+import { PART_ID_RE } from '../schemas/parts.js';
+import { canonicalJson, ProjectModelSchema } from './model.js';
 
 export const COMMAND_TYPES = [
   'setBpm', 'setKey', 'setProgression',
   'addSection', 'removeSection', 'resizeSection', 'duplicateSection',
-  'setRole', 'editNotes', 'setMix', 'setMaster',
+  'setPart', 'editNotes', 'setMix', 'setMaster',
   'addTransition', 'setAutomation',
   'mutate', 'applyAutoMix',
 ];
@@ -29,7 +30,10 @@ const SectionNameSchema = z.enum([
   'fill', 'outro', 'verse', 'chorus', 'bridge',
 ]);
 
-const RoleSchema = z.enum(ROLES);
+// Команды адресуют ПАРТИЮ по идентификатору (`VIOLIN_1`), а не по роли:
+// у одной роли может быть много дорожек, и правка должна попадать в
+// конкретную (D-100).
+const PartIdSchema = z.string().regex(PART_ID_RE, 'идентификатор партии');
 
 export const CommandSchema = z.object({
   id: z.string().min(1),
@@ -54,16 +58,16 @@ export const PAYLOAD_SCHEMAS = {
   removeSection: z.object({ name: z.string().min(1) }),
   resizeSection: z.object({ name: z.string().min(1), cycles: z.number().int().min(1).max(64) }),
   duplicateSection: z.object({ name: z.string().min(1) }),
-  setRole: z.object({
-    role: RoleSchema,
+  setPart: z.object({
+    id: PartIdSchema,
     sound: z.string().min(1).optional(),
     pattern: z.string().min(1).optional(),
     activeIn: z.array(z.string().min(1)).optional(),
     recipe: z.enum(['default', 'busy', 'sparse']).optional(),
   }),
-  editNotes: z.object({ role: RoleSchema, notes: z.string() }),
+  editNotes: z.object({ id: PartIdSchema, notes: z.string() }),
   setMix: z.object({
-    role: RoleSchema,
+    id: PartIdSchema,
     patch: z.object({
       gainDb: z.number().min(-60).max(12).optional(),
       pan: z.number().min(-1).max(1).optional(),
@@ -109,7 +113,7 @@ export const PAYLOAD_SCHEMAS = {
     id: z.string().min(1).optional(),
     target: z.union([
       z.object({ kind: z.literal('section'), id: z.string().min(1) }),
-      z.object({ kind: z.literal('part'), id: RoleSchema }),
+      z.object({ kind: z.literal('part'), id: PartIdSchema }),
     ]),
     param: z.enum(['gain', 'cutoff', 'energy']),
     curve: z.object({
@@ -120,13 +124,13 @@ export const PAYLOAD_SCHEMAS = {
     }),
   }),
   mutate: z.object({
-    role: RoleSchema,
+    id: PartIdSchema,
     field: z.enum(['pattern', 'sound', 'activeIn']),
     value: z.union([z.string(), z.array(z.string())]),
   }),
   applyAutoMix: z.object({
     changes: z.array(z.object({
-      role: RoleSchema,
+      id: PartIdSchema,
       patch: z.record(z.any()),
     })).max(32),
     report: z.record(z.any()).optional(),
@@ -147,11 +151,11 @@ function sectionIndex(model, name) {
   return model.spec.structure.sections.findIndex((section) => section.name === name);
 }
 
-function requireRole(model, role) {
-  if (!model.spec.parts.roles[role]) {
-    throw new Error(`команда: роли «${role}» нет в проекте`);
+function requirePart(model, id) {
+  if (!model.spec.parts.roles[id]) {
+    throw new Error(`команда: партии «${id}» нет в проекте`);
   }
-  return model.spec.parts.roles[role];
+  return model.spec.parts.roles[id];
 }
 
 /**
@@ -216,15 +220,15 @@ export function reduce(model, command) {
       break;
     }
 
-    case 'setRole': {
-      const part = requireRole(next, payload.role);
+    case 'setPart': {
+      const part = requirePart(next, payload.id);
       if (payload.sound !== undefined) part.sound = payload.sound;
       if (payload.pattern !== undefined) part.pattern = payload.pattern;
       if (payload.activeIn !== undefined) part.activeIn = payload.activeIn;
       if (payload.recipe !== undefined) {
         const variants = (part.variants || []).filter((variant) => variant.kind !== 'recipe');
         variants.push({
-          id: `${payload.role}-recipe`,
+          id: `${payload.id}-recipe`,
           kind: 'recipe',
           value: payload.recipe,
         });
@@ -234,19 +238,19 @@ export function reduce(model, command) {
     }
 
     case 'editNotes': {
-      const part = requireRole(next, payload.role);
+      const part = requirePart(next, payload.id);
       const variants = (part.variants || []).filter((variant) => variant.kind !== 'notes');
       if (payload.notes) {
-        variants.push({ id: `${payload.role}-notes`, kind: 'notes', value: payload.notes });
+        variants.push({ id: `${payload.id}-notes`, kind: 'notes', value: payload.notes });
       }
       part.variants = variants;
       break;
     }
 
     case 'setMix': {
-      const current = next.mix.parts[payload.role] || {};
+      const current = next.mix.parts[payload.id] || {};
       const patch = payload.patch;
-      next.mix.parts[payload.role] = {
+      next.mix.parts[payload.id] = {
         ...current,
         ...patch,
         sends: { ...(current.sends || {}), ...(patch.sends || {}) },
@@ -289,7 +293,7 @@ export function reduce(model, command) {
     }
 
     case 'mutate': {
-      const part = requireRole(next, payload.role);
+      const part = requirePart(next, payload.id);
       if (payload.field === 'pattern' || payload.field === 'sound') {
         part[payload.field] = String(payload.value);
       } else {
@@ -300,8 +304,8 @@ export function reduce(model, command) {
 
     case 'applyAutoMix': {
       for (const change of payload.changes) {
-        const current = next.mix.parts[change.role] || {};
-        next.mix.parts[change.role] = { ...current, ...change.patch };
+        const current = next.mix.parts[change.id] || {};
+        next.mix.parts[change.id] = { ...current, ...change.patch };
       }
       break;
     }

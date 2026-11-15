@@ -1,11 +1,10 @@
 // Детерминированная компиляция канонической TrackSpec в Strudel.
 import { validateTrackSpec } from '../../../src/schemas/track-spec.schema.js';
+import { isSampledRole, listParts, transposeFor } from '../../../src/schemas/parts.js';
 import { checkSpec } from '../spec/check.js';
 
-const SAMPLED = new Set(['kick', 'snare', 'hats', 'perc', 'fx']);
 const EFFECTS = new Set(['room', 'delay', 'gain', 'lpf', 'hpf']);
 const NOTES = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-const TRANSPOSE = { sub: -24, bass: -24, arp: 12, lead: 12 };
 
 function mini(text, field) {
   // Values are data inside quoted mini strings, never executable Strudel expressions.
@@ -58,15 +57,15 @@ function effectsFor(part, { skipGain = false } = {}) {
  * ДУБЛИРУЕТ события, а swing(x) без второго аргумента — no-op
  * (проверено пробой tests/spike/swing-semantics.probe.mjs).
  */
-function groupsExpression(part, role) {
+function groupsExpression(part, id) {
   const groups = part.groups ?? [];
   if (!groups.length) return null;
   const parts = groups.map((group) => {
     if (!group.sample || !/^[\w:-]+$/.test(group.sample)) {
-      throw new Error(`${role}.groups.sample: неподдерживаемое имя сэмпла`);
+      throw new Error(`${id}.groups.sample: неподдерживаемое имя сэмпла`);
     }
     const steps = group.steps.map((step) => Math.round(step)).join(',');
-    if (!steps) throw new Error(`${role}.groups: пустой список шагов`);
+    if (!steps) throw new Error(`${id}.groups: пустой список шагов`);
     const gain = Number.isFinite(group.gain) ? Number(group.gain.toFixed(4)) : 1;
     const late = Number.isFinite(group.lateMs) && Math.abs(group.lateMs) > 0.01
       ? `.late(ms(${Number(group.lateMs.toFixed(3))}))`
@@ -76,18 +75,19 @@ function groupsExpression(part, role) {
   return parts.length === 1 ? parts[0] : `stack(${parts.join(', ')})`;
 }
 
-function sectionBody(part, role, section, scale, key) {
+function sectionBody(part, id, role, section, scale, key) {
   // Переопределения по секции: у каждой секции свой рисунок (двойник).
   const override = part.sections?.[section.name] ?? {};
   const pattern = override.pattern ?? part.pattern;
   const sound = override.sound ?? part.sound;
   const gainPattern = override.gainPattern ?? part.gainPattern;
   const groups = override.groups ?? part.groups;
-  const sampled = SAMPLED.has(role);
-  const notation = mini(pattern, `${role}.pattern`);
+  // Музыкальное поведение задаёт РОЛЬ партии, идентичность — её id (D-100).
+  const sampled = isSampledRole(role);
+  const notation = mini(pattern, `${id}.pattern`);
   // Буквенные ноты уже содержат высоту; числовые ступени читаются через лад.
   const explicitNotes = !sampled && /[a-g](?:#|b)?-?\d/.test(pattern);
-  let body = sampled ? (groupsExpression({ ...part, groups }, role) ?? `s(${notation})`) : explicitNotes ? `note(${notation})` : `n(${notation})`;
+  let body = sampled ? (groupsExpression({ ...part, groups }, id) ?? `s(${notation})`) : explicitNotes ? `note(${notation})` : `n(${notation})`;
   if (!sampled) {
     if (!explicitNotes) {
       const roots = chordRoots(section.harmony, key);
@@ -97,14 +97,15 @@ function sectionBody(part, role, section, scale, key) {
       }
       body += `.scale(${JSON.stringify(scale)})`;
     }
-    if (TRANSPOSE[role]) body += `.transpose(${TRANSPOSE[role]})`;
+    const transpose = transposeFor(role);
+    if (transpose) body += `.transpose(${transpose})`;
     body += `.s(${JSON.stringify(sound)})`;
   }
   // 's' означает, что имена сэмплов уже указаны в pattern.
   // При заданных groups имена сэмплов уже внутри групп — .s() перебил бы их.
   const hasGroups = Boolean(groups?.length);
   if (sampled && !hasGroups && sound !== 's' && sound !== 'sample') {
-    if (!/^[\w:-]+$/.test(sound)) throw new Error(`${role}.sound: неподдерживаемое имя сэмпла`);
+    if (!/^[\w:-]+$/.test(sound)) throw new Error(`${id}.sound: неподдерживаемое имя сэмпла`);
     body += `.s(${JSON.stringify(sound)})`;
   }
   // При группах динамика уже записана в каждой группе — общий gain не дублируем.
@@ -137,7 +138,9 @@ export function compileTrackSpec(input) {
   const checked = checkSpec(spec);
   if (!checked.ok) throw new Error(`Invalid TrackSpec: ${checked.errors.join('; ')}`);
   const { sections } = spec.structure;
-  const roles = Object.entries(spec.parts.roles).sort(([a], [b]) => a.localeCompare(b, 'en'));
+  // Партии трека: идентификатор (id) + роль (атрибут). Порядок — по id,
+  // чтобы компиляция оставалась детерминированной (D-100).
+  const parts = listParts(spec.parts);
   const scale = keyScale(spec.meta.key);
   const lines = [
     `// ${spec.meta.style} — ${spec.meta.bpm} BPM, ${scale}`,
@@ -156,24 +159,24 @@ export function compileTrackSpec(input) {
   }
   lines.push('');
   const constants = [];
-  const parts = [];
-  for (const [role, part] of roles) {
+  const partLines = [];
+  for (const { id, label, role, part } of parts) {
     const chunks = [];
     sections.forEach((section, index) => {
       if (!part.activeIn.includes(section.name)) {
         chunks.push(`[${section.cycles}, silence]`);
         return;
       }
-      const name = `${role.toUpperCase()}_${index}`;
-      constants.push(`const ${name} = ${sectionBody(part, role, section, scale, spec.meta.key)}`);
+      const name = `${label}_${index}`;
+      constants.push(`const ${name} = ${sectionBody(part, id, role, section, scale, spec.meta.key)}`);
       chunks.push(`[${section.cycles}, ${name}]`);
     });
     if (part.activeIn.length) {
-      const visual = SAMPLED.has(role) ? '_scope' : '_pianoroll';
-      parts.push(`$${role.toUpperCase()}: arrange(${chunks.join(', ')}).${visual}()`);
+      const visual = isSampledRole(role) ? '_scope' : '_pianoroll';
+      partLines.push(`$${label}: arrange(${chunks.join(', ')}).${visual}()`);
     }
   }
-  lines.push(...constants, '', ...parts);
+  lines.push(...constants, '', ...partLines);
   return lines.join('\n');
 }
 
@@ -181,17 +184,19 @@ export function compileTrackSpec(input) {
 export function compile(spec) {
   const code = compileTrackSpec(spec);
   const sections = spec.structure.sections;
+  const parts = listParts(spec.parts);
   let bar = 0;
   return {
     code,
-    parts: code.split('\n').filter((line) => /^\$[A-Z]+:/.test(line))
-      .map((line) => ({ label: line.match(/^\$([A-Z]+):/)[1], code: line })),
+    // Метка партии: `$VIOLIN_1:` — идентификатор в верхнем регистре.
+    parts: code.split('\n').filter((line) => /^\$[A-Z][A-Z0-9_]*:/.test(line))
+      .map((line) => ({ label: line.match(/^\$([A-Z][A-Z0-9_]*):/)[1], code: line })),
     sections: sections.map((section) => {
       const startBar = bar;
       bar += section.cycles;
       return { kind: section.name, bars: section.cycles, energy: section.energy,
         startBar, endBar: bar,
-        roles: Object.entries(spec.parts.roles).filter(([, part]) => part.activeIn.includes(section.name)).map(([role]) => role),
+        roles: parts.filter((item) => item.part.activeIn.includes(section.name)).map((item) => item.id),
         transition: null };
     }),
     warnings: [],

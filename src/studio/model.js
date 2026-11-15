@@ -11,14 +11,14 @@
 // возвращает проект бит-в-бит.
 
 import { z } from 'zod';
-import { TrackSpecSchema } from '../schemas/track-spec.schema.js';
+import { TrackSpecSchema, PartSchema } from '../schemas/track-spec.schema.js';
+import { PART_ID_RE, ROLES, refinePartIdentity } from '../schemas/parts.js';
 
 export const PROJECT_VERSION = 'v3';
 
-export const ROLES = [
-  'kick', 'snare', 'hats', 'perc', 'sub',
-  'bass', 'pad', 'chords', 'lead', 'arp', 'fx', 'texture',
-];
+// Библиотечные роли живут в одном месте (src/schemas/parts.js). Здесь —
+// обратная совместимость для потребителей, которые импортируют ROLES отсюда.
+export { ROLES };
 
 // Варианты партии: `recipe` — идентификатор ритмического рецепта из
 // библиотеки знаний, `notes` — свободные заметки (текст), которые модель
@@ -34,23 +34,17 @@ const VariantSchema = z.object({
 // Спека студии = спека v2 + варианты партии.
 // Схему v2 нельзя просто переиспользовать: Zod вырезает поля, которых нет
 // в схеме, а варианты нужны как часть модели проекта.
-const StudioRoleSchema = z.object({
-  activeIn: z.array(z.string()),
-  pattern: z.string(),
-  sound: z.string(),
-  effects: z.array(z.object({
-    name: z.string(),
-    params: z.array(z.any()),
-  })).optional(),
+const StudioRoleSchema = PartSchema.extend({
   variants: z.array(VariantSchema).max(8).default([]),
 });
 
 export const StudioSpecSchema = TrackSpecSchema.extend({
   parts: TrackSpecSchema.shape.parts.extend({
-    roles: z.record(z.string(), StudioRoleSchema).refine(
-      (roles) => Object.keys(roles).every((role) => ROLES.includes(role)),
-      'parts.roles: неизвестная роль',
-    ),
+    // Ключ — идентификатор партии (D-100). Роль — атрибут `role`.
+    roles: z.record(
+      z.string().regex(PART_ID_RE, 'идентификатор партии: латиница, цифры, подчёркивание'),
+      StudioRoleSchema
+    ).superRefine(refinePartIdentity),
   }),
 });
 
@@ -100,7 +94,9 @@ const AutomationSchema = z.object({
     // Секция адресуется именем: в спеке v2 у секций нет собственных id,
     // а партии ссылаются на секции именно по имени (activeIn).
     z.object({ kind: z.literal('section'), id: z.string().min(1) }),
-    z.object({ kind: z.literal('part'), id: z.enum(ROLES) }),
+    // Партия адресуется идентификатором (`VIOLIN_1`), а не ролью (D-100):
+    // правка «скрипка №3» должна попадать в конкретную дорожку.
+    z.object({ kind: z.literal('part'), id: z.string().min(1) }),
   ]),
   param: z.enum(['gain', 'cutoff', 'energy']),
   curve: z.object({
@@ -125,16 +121,36 @@ export const ProjectModelSchema = z.object({
   seed: z.number().int().min(0).max(2147483647),
   spec: StudioSpecSchema,
   mix: z.object({
-    // Ключи — роли из ROLES; лишние роли отбрасываются проверкой ниже.
-    parts: z.record(z.string(), PartMixSchema).refine(
-      (parts) => Object.keys(parts).every((role) => ROLES.includes(role)),
-      'mix.parts: неизвестная роль',
-    ),
+    // Ключи — идентификаторы партий из spec.parts.roles; проверка ниже.
+    parts: z.record(z.string(), PartMixSchema),
     masterGainDb: z.number().min(-24).max(6).default(0),
   }),
   master: MasterSchema,
   automation: z.array(AutomationSchema).max(64).default([]),
   transitions: z.array(TransitionSchema).max(32).default([]),
+}).superRefine((model, ctx) => {
+  // Микс и автоматизация адресуют партии, а не роли: ключ микса должен
+  // существовать в спеке, иначе правка уйдёт «в никуда» (D-100).
+  const ids = new Set(Object.keys(model.spec.parts.roles));
+  for (const id of Object.keys(model.mix.parts)) {
+    if (!ids.has(id)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['mix', 'parts', id],
+        message: `неизвестная партия «${id}»: такой партии нет в spec.parts.roles`,
+      });
+    }
+  }
+  model.automation.forEach((item, index) => {
+    if (item.target.kind !== 'part') return;
+    if (!ids.has(item.target.id)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['automation', index, 'target', 'id'],
+        message: `неизвестная партия «${item.target.id}»: такой партии нет в spec.parts.roles`,
+      });
+    }
+  });
 });
 
 /** Валидирует модель; бросает ZodError с понятным сообщением. */

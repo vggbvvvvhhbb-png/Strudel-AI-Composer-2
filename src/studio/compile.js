@@ -12,6 +12,7 @@
 import { compileTrackSpec } from '../../server/music/compiler/index.js';
 import { roleFor } from '../../server/music/knowledge/index.js';
 import { selectPattern } from '../../server/music/knowledge/roles.js';
+import { labelIndex, listParts, roleOf } from '../schemas/parts.js';
 import { ENGINE_VERSION_STRING } from '../audio/engine-version.js';
 import { canonicalJson, sectionTimeline, totalBars } from './model.js';
 import { codeHash } from './roundtrip.js';
@@ -50,14 +51,17 @@ function applyAutomation(spec, automation) {
 }
 
 /** Рецепт партии выбирает ритмический шаблон из библиотеки знаний. */
-function applyVariants(spec, variantsByRole, seed) {
+function applyVariants(spec, variantsById, seed) {
   const out = clone(spec);
-  for (const [role, variants] of Object.entries(variantsByRole)) {
+  for (const [id, variants] of Object.entries(variantsById)) {
     const recipe = variants.find((variant) => variant.kind === 'recipe');
     if (!recipe) continue;
-    const roleDesc = roleFor(spec.meta.style, role);
+    // Шаблон выбирается по РОЛИ партии, а вариант хранится у конкретной
+    // дорожки (id) — у 100 дорожек одной роли у каждой свой рецепт.
+    const role = roleOf(id, out.parts.roles[id]);
+    const roleDesc = role ? roleFor(spec.meta.style, role) : null;
     const pattern = selectPatternSafe(roleDesc, recipe.value, seed);
-    if (pattern && out.parts.roles[role]) out.parts.roles[role].pattern = pattern;
+    if (pattern && out.parts.roles[id]) out.parts.roles[id].pattern = pattern;
   }
   return out;
 }
@@ -136,44 +140,47 @@ function scaleGainRange(expression, factor) {
  * добавляет цепочку микса и комментарии с заметками.
  */
 function applyMixAndNotes(code, model, spec) {
-  const variantsByRole = {};
-  for (const [role, part] of Object.entries(model.spec.parts.roles)) {
+  const variantsById = {};
+  for (const [id, part] of Object.entries(model.spec.parts.roles)) {
     const variants = (part.variants || []);
-    if (variants.length) variantsByRole[role] = variants;
+    if (variants.length) variantsById[id] = variants;
   }
 
-  const activeSectionsByRole = {};
-  for (const [role, part] of Object.entries(spec.parts.roles)) {
+  const activeSectionsById = {};
+  for (const [id, part] of Object.entries(spec.parts.roles)) {
     const sections = spec.structure.sections.filter((section) => part.activeIn.includes(section.name));
-    activeSectionsByRole[role] = {
+    activeSectionsById[id] = {
       hasSectionGain: sections.some((section) => section.parameters?.gain),
       hasSectionCutoff: sections.some((section) => section.parameters?.cutoff),
     };
   }
 
-  const notesByRole = {};
-  for (const [role, part] of Object.entries(model.spec.parts.roles)) {
+  const notesById = {};
+  for (const [id, part] of Object.entries(model.spec.parts.roles)) {
     const notes = (part.variants || []).filter((variant) => variant.kind === 'notes');
-    if (notes.length) notesByRole[role] = notes.map((variant) => variant.value).join(' | ');
+    if (notes.length) notesById[id] = notes.map((variant) => variant.value).join(' | ');
   }
+
+  // Метка в коде -> идентификатор партии: `$VIOLIN_1:` -> `VIOLIN_1`.
+  const idByLabel = labelIndex(spec.parts);
 
   const masterFactor = dbToLin(model.mix.masterGainDb);
   const lines = code.split('\n');
   const out = [];
   for (const line of lines) {
-    const match = line.match(/^const ([A-Z]+)_(\d+) = (.*)$/);
+    const match = line.match(/^const ([A-Z][A-Z0-9_]*)_(\d+) = (.*)$/);
     if (!match) {
       out.push(line);
       continue;
     }
     const [, label, , expression] = match;
-    const role = Object.keys(spec.parts.roles).find((key) => key.toUpperCase() === label);
-    if (!role) {
+    const id = idByLabel.get(label);
+    if (!id) {
       out.push(line);
       continue;
     }
-    const mix = model.mix.parts[role];
-    const flags = activeSectionsByRole[role] || { hasSectionGain: false, hasSectionCutoff: false };
+    const mix = model.mix.parts[id];
+    const flags = activeSectionsById[id] || { hasSectionGain: false, hasSectionCutoff: false };
     let text = expression;
 
     // Общий множитель: микс партии + мастер-шина. Если у секции своя
@@ -184,7 +191,7 @@ function applyMixAndNotes(code, model, spec) {
       text = scaled ?? `${text}.gain(${factor.toFixed(4)})`;
     }
     if (mix) {
-      for (const item of mixChain(role, mix, flags)) text += item;
+      for (const item of mixChain(id, mix, flags)) text += item;
     }
     out.push(`const ${label}_${match[2]} = ${text}`);
   }
@@ -192,11 +199,11 @@ function applyMixAndNotes(code, model, spec) {
   const result = out.join('\n');
   // Заметки (вариант 'notes') — как комментарии над строкой партии.
   const withNotes = result.split('\n').flatMap((line) => {
-    const partMatch = line.match(/^\$([A-Z]+):/);
+    const partMatch = line.match(/^\$([A-Z][A-Z0-9_]*):/);
     if (!partMatch) return [line];
-    const role = Object.keys(spec.parts.roles).find((key) => key.toUpperCase() === partMatch[1]);
-    const notes = role ? notesByRole[role] : null;
-    return notes ? [`// ${role}: ${notes.replace(/\n/g, ' ')}`, line] : [line];
+    const id = idByLabel.get(partMatch[1]);
+    const notes = id ? notesById[id] : null;
+    return notes ? [`// ${id}: ${notes.replace(/\n/g, ' ')}`, line] : [line];
   });
   return withNotes.join('\n');
 }
@@ -207,12 +214,12 @@ function applyMixAndNotes(code, model, spec) {
  * @returns {{code:string, plan:object, hash:string}}
  */
 export function compileProject(model) {
-  const variantsByRole = {};
-  for (const [role, part] of Object.entries(model.spec.parts.roles)) {
-    if (part.variants?.length) variantsByRole[role] = part.variants;
+  const variantsById = {};
+  for (const [id, part] of Object.entries(model.spec.parts.roles)) {
+    if (part.variants?.length) variantsById[id] = part.variants;
   }
 
-  const specWithVariants = applyVariants(model.spec, variantsByRole, model.seed);
+  const specWithVariants = applyVariants(model.spec, variantsById, model.seed);
   const specWithAutomation = applyAutomation(specWithVariants, model.automation);
   const base = compileTrackSpec(specWithAutomation);
   const code = applyMixAndNotes(base, model, specWithAutomation);
@@ -233,9 +240,11 @@ export function compileProject(model) {
       cycles: section.cycles,
       energy: section.energy,
     })),
-    parts: Object.entries(specWithAutomation.parts.roles).map(([role, part]) => ({
+    // План партий: идентичность (id), роль (атрибут) и метка в коде.
+    parts: listParts(specWithAutomation.parts).map(({ id, role, label, part }) => ({
+      id,
       role,
-      label: role.toUpperCase(),
+      label,
       sound: part.sound,
       activeIn: part.activeIn,
     })),

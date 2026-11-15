@@ -165,7 +165,7 @@ describe('Audio QA', () => {
     expect(finding.severity).toBe(SEVERITY.WARNING);
     expect(finding.suggestedCommands[0]).toEqual({
       type: 'setMix',
-      payload: { role: 'bass', patch: { gainDb: -4 } },
+      payload: { id: 'bass', patch: { gainDb: -4 } },
     });
   });
 
@@ -195,7 +195,7 @@ describe('Audio QA', () => {
     });
     const finding = findings.find((f) => f.code === QA_CODES.PART_TOO_LOUD);
     expect(finding).toBeTruthy();
-    expect(finding.suggestedCommands[0].payload.role).toBe('lead');
+    expect(finding.suggestedCommands[0].payload.id).toBe('lead');
     expect(finding.suggestedCommands[0].payload.patch.gainDb).toBeLessThan(0);
   });
 

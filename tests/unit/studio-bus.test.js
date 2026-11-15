@@ -67,7 +67,7 @@ describe('редьюсер', () => {
 
   it('applyAutoMix применяет набор изменений', () => {
     const next = reduce(model(), createCommand('applyAutoMix', {
-      changes: [{ role: 'bass', patch: { gainDb: -4 } }],
+      changes: [{ id: 'bass', patch: { gainDb: -4 } }],
     }));
     expect(next.mix.parts.bass.gainDb).toBe(-4);
   });
@@ -90,7 +90,7 @@ describe('хранилище: история, группы, undo', () => {
     const beforeJson = canonicalJson(store.model);
     const beforeHash = compileProject(store.model).hash;
     store.dispatch(createCommand('setBpm', { bpm: 92 }));
-    store.dispatch(createCommand('setMix', { role: 'bass', patch: { gainDb: -5 } }));
+    store.dispatch(createCommand('setMix', { id: 'bass', patch: { gainDb: -5 } }));
     store.undo();
     store.undo();
     expect(canonicalJson(store.model)).toBe(beforeJson);
@@ -103,7 +103,7 @@ describe('хранилище: история, группы, undo', () => {
     store.beginGroup('auto-1');
     store.dispatch(createCommand('setBpm', { bpm: 110 }, { groupId: 'auto-1' }));
     store.dispatch(createCommand('setMaster', { patch: { targetLufs: -16 } }, { groupId: 'auto-1' }));
-    store.dispatch(createCommand('setMix', { role: 'kick', patch: { gainDb: -2 } }, { groupId: 'auto-1' }));
+    store.dispatch(createCommand('setMix', { id: 'kick', patch: { gainDb: -2 } }, { groupId: 'auto-1' }));
     store.commitGroup('autoMix');
     expect(store.history).toHaveLength(1);
     expect(store.model.spec.meta.bpm).toBe(110);

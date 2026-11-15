@@ -1,5 +1,6 @@
 // План → validateTrackSpec/checkSpec → синхронная компиляция → оценка/refine.
 import { TrackSpecSchema, validateTrackSpec } from '../../../src/schemas/track-spec.schema.js';
+import { ROLES as SPEC_ROLES } from '../../../src/schemas/parts.js';
 import { checkSpec } from '../spec/check.js';
 import { formsForStyle, roleFor, selectPattern } from '../knowledge/index.js';
 import { detectStyle } from '../references.js';
@@ -7,7 +8,6 @@ import { compileForProtocol } from './compiled.js';
 import { compileTrackSpec } from '../compiler/index.js';
 
 const SPEC_STYLES = TrackSpecSchema.shape.meta.shape.style.options;
-const SPEC_ROLES = TrackSpecSchema.shape.parts.shape.roles.keySchema.options;
 const SECTION_KINDS = TrackSpecSchema.shape.structure.shape.sections.element.shape.name.options;
 
 const STYLE_HINTS = [

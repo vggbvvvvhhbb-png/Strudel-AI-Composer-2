@@ -15,11 +15,10 @@
 
 import { z } from 'zod';
 
-/** Роли студии. Совпадают с ROLES в `src/studio/model.js`. */
-export const IR_ROLES = [
-  'kick', 'snare', 'hats', 'perc', 'sub',
-  'bass', 'pad', 'chords', 'lead', 'arp', 'fx', 'texture',
-];
+import { ROLES } from '../schemas/parts.js';
+
+/** Роли студии. Единый источник — `src/schemas/parts.js` (D-100). */
+export const IR_ROLES = ROLES;
 
 /** Лады, которые понимает движок Strudel (полные имена, одно слово). */
 export const IR_MODES = [

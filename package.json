@@ -34,6 +34,7 @@
     "baseline:build": "node scripts/build-baseline.mjs --update",
     "spike": "node tests/spike/probe.mjs",
     "spike:parts": "node tests/spike/parts-100.probe.mjs",
+    "spike:parts:after": "node tests/spike/parts-100-new.probe.mjs",
     "spike:compose": "node tests/spike/compose-pipeline.probe.mjs",
     "spike:audio": "node tests/spike/audio-api.probe.mjs",
     "spike:browser": "node tests/spike/browser/master-spike.mjs",

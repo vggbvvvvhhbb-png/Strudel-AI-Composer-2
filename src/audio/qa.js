@@ -91,7 +91,7 @@ export function runAudioQa(report, { acceptance = ACCEPTANCE, bandProfile = null
     if (loud) {
       commands.push({
         type: 'setMix',
-        payload: { role: loud.id, patch: { gainDb: -Math.min(over, 6) } },
+        payload: { id: loud.id, patch: { gainDb: -Math.min(over, 6) } },
       });
     }
     commands.push({ type: 'setMaster', payload: { patch: { limiter: { ceilingDbtp: -1.5 } } } });
@@ -117,7 +117,7 @@ export function runAudioQa(report, { acceptance = ACCEPTANCE, bandProfile = null
       hint: `${report.clipCount} отсчётов достигли полной шкалы.`,
       params: { clipCount: report.clipCount },
       suggestedCommands: loud
-        ? [{ type: 'setMix', payload: { role: loud.id, patch: { gainDb: -3 } } }]
+        ? [{ type: 'setMix', payload: { id: loud.id, patch: { gainDb: -3 } } }]
         : [],
     });
   }
@@ -134,7 +134,7 @@ export function runAudioQa(report, { acceptance = ACCEPTANCE, bandProfile = null
       hint: `LUFS-I ${round(report.lufsI)} при коридоре ${low}…${high}. Цель — ${acceptance.targetLufs} LUFS.`,
       params: { lufsI: report.lufsI, corridor: acceptance.lufsCorridor, deltaDb: delta },
       suggestedCommands: loud
-        ? [{ type: 'setMix', payload: { role: loud.id, patch: { gainDb: -Math.min(delta, 6) } } }]
+        ? [{ type: 'setMix', payload: { id: loud.id, patch: { gainDb: -Math.min(delta, 6) } } }]
         : [],
     });
   }
@@ -148,7 +148,7 @@ export function runAudioQa(report, { acceptance = ACCEPTANCE, bandProfile = null
       hint: `LUFS-I ${round(report.lufsI)} при коридоре ${low}…${high}. Цель — ${acceptance.targetLufs} LUFS.`,
       params: { lufsI: report.lufsI, corridor: acceptance.lufsCorridor, deltaDb: delta },
       suggestedCommands: loud
-        ? [{ type: 'setMix', payload: { role: loud.id, patch: { gainDb: Math.min(delta, 6) } } }]
+        ? [{ type: 'setMix', payload: { id: loud.id, patch: { gainDb: Math.min(delta, 6) } } }]
         : [],
     });
   }
@@ -197,7 +197,7 @@ export function runAudioQa(report, { acceptance = ACCEPTANCE, bandProfile = null
         label: `Партия «${id}» слишком громкая`,
         hint: `Пик ${round(part.peakDbfs)} dBFS при ориентире ${acceptance.voicePeakDbfs} dBFS.`,
         params: { role: id, peakDbfs: part.peakDbfs, deltaDb: delta },
-        suggestedCommands: [{ type: 'setMix', payload: { role: id, patch: { gainDb: -Math.min(delta, 6) } } }],
+        suggestedCommands: [{ type: 'setMix', payload: { id, patch: { gainDb: -Math.min(delta, 6) } } }],
       });
     }
     if (part.lufsI === null || (typeof part.lufsI === 'number' && part.lufsI < -60)) {

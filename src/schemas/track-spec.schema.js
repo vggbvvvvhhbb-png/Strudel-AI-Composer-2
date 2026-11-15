@@ -1,7 +1,57 @@
 import { z } from 'zod';
 
+import { PART_ID_RE, refinePartIdentity } from './parts.js';
+
 // Schema copied from the document "От статичных циклов..."
 // Section: Архитектура Решения №1 → Схема JSON-спецификации
+
+// Партия трека. Ключ записи в `parts.roles` — идентификатор партии
+// (`P001`, `VIOLIN_1`), а роль (`kick`, `bass`, `violin`) — атрибут партии:
+// у 100 дорожек роли повторяются, а идентичности — нет (D-100).
+// Если `role` не указан, роль выводится из ключа — так живёт легаси-форма.
+export const PartSchema = z.object({
+  role: z.string().optional(),
+  activeIn: z.array(z.string()),
+  pattern: z.string(),
+  sound: z.string(),
+  effects: z.array(z.object({
+    name: z.string(),
+    params: z.array(z.any())
+  })).optional(),
+  // Огибающая громкости по шагам сетки: mini-нотация чисел
+  // ("0.8 0.5 0.6 ~"). Нужна для двойника: velocity ударов измерена,
+  // а параметр effects.gain принимает только одно число.
+  gainPattern: z.string().optional(),
+  // Свинг сетки: 0 — ровно, 0.5 — прямолинейно, >0.5 — задержка второй
+  // доли. Приходит из измерений (drums.onsets.swing).
+  swing: z.number().min(0).max(1).optional(),
+  // Группы измеренных ударов: сэмпл + шаги сетки + динамика + сдвиг.
+  // Это точный способ выразить РИТМ ИЗ ТРЕКА: список шагов через
+  // .beat("0,4,8,12",16), динамика через .gain(), микротайминг через
+  // .late(ms(x)). Свинг при этом не «параметр», а измеренный сдвиг.
+  // Если groups заданы, они важнее pattern.
+  groups: z.array(z.object({
+    sample: z.string(),
+    steps: z.array(z.number().int().min(0).max(63)),
+    gain: z.number().min(0).max(2),
+    lateMs: z.number().optional()
+  })).optional(),
+  // Переопределения по секциям: имя секции -> свой рисунок.
+  // Нужно двойнику: в разных секциях трека ритм и набор слоёв разные,
+  // а part.activeIn ссылается на имя секции, а не на индекс.
+  sections: z.record(z.string(), z.object({
+    pattern: z.string().optional(),
+    sound: z.string().optional(),
+    groups: z.array(z.object({
+      sample: z.string(),
+      steps: z.array(z.number().int().min(0).max(63)),
+      gain: z.number().min(0).max(2),
+      lateMs: z.number().optional()
+    })).optional(),
+    gainPattern: z.string().optional()
+  })).optional()
+});
+
 export const TrackSpecSchema = z.object({
   meta: z.object({
     style: z.enum([
@@ -28,53 +78,12 @@ export const TrackSpecSchema = z.object({
     }))
   }),
   parts: z.object({
+    // Ключ — идентификатор партии, не роль. Идентификатор должен быть
+    // пригоден как метка в коде (`$VIOLIN_1:`), поэтому латиница и цифры.
     roles: z.record(
-      z.enum([
-        'kick', 'snare', 'hats', 'perc', 'sub',
-        'bass', 'pad', 'chords', 'lead', 'arp', 'fx', 'texture'
-      ]),
-      z.object({
-        activeIn: z.array(z.string()),
-        pattern: z.string(),
-        sound: z.string(),
-        effects: z.array(z.object({
-          name: z.string(),
-          params: z.array(z.any())
-        })).optional(),
-        // Огибающая громкости по шагам сетки: mini-нотация чисел
-        // ("0.8 0.5 0.6 ~"). Нужна для двойника: velocity ударов измерена,
-        // а параметр effects.gain принимает только одно число.
-        gainPattern: z.string().optional(),
-        // Свинг сетки: 0 — ровно, 0.5 — прямолинейно, >0.5 — задержка второй
-        // доли. Приходит из измерений (drums.onsets.swing).
-        swing: z.number().min(0).max(1).optional(),
-        // Группы измеренных ударов: сэмпл + шаги сетки + динамика + сдвиг.
-        // Это точный способ выразить РИТМ ИЗ ТРЕКА: список шагов через
-        // .beat("0,4,8,12",16), динамика через .gain(), микротайминг через
-        // .late(ms(x)). Свинг при этом не «параметр», а измеренный сдвиг.
-        // Если groups заданы, они важнее pattern.
-        groups: z.array(z.object({
-          sample: z.string(),
-          steps: z.array(z.number().int().min(0).max(63)),
-          gain: z.number().min(0).max(2),
-          lateMs: z.number().optional()
-        })).optional(),
-        // Переопределения по секциям: имя секции -> свой рисунок.
-        // Нужно двойнику: в разных секциях трека ритм и набор слоёв разные,
-        // а part.activeIn ссылается на имя секции, а не на индекс.
-        sections: z.record(z.string(), z.object({
-          pattern: z.string().optional(),
-          sound: z.string().optional(),
-          groups: z.array(z.object({
-            sample: z.string(),
-            steps: z.array(z.number().int().min(0).max(63)),
-            gain: z.number().min(0).max(2),
-            lateMs: z.number().optional()
-          })).optional(),
-          gainPattern: z.string().optional()
-        })).optional()
-      })
-    )
+      z.string().regex(PART_ID_RE, 'идентификатор партии: латиница, цифры, подчёркивание'),
+      PartSchema
+    ).superRefine(refinePartIdentity)
   }),
   reasoning: z.string().optional()
 });

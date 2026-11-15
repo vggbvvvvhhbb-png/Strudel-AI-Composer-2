@@ -33,12 +33,13 @@ export function checkSpec(raw) {
   // activeIn ссылается на имя: партия активна во всех одноимённых секциях.
   const names = new Set(sections.map((section) => section.name));
 
-  for (const [role, part] of Object.entries(roles)) {
-    if (!part.activeIn.length) warnings.push(`parts.roles.${role}.activeIn: партия не играет ни в одной секции`);
+  // Ключ записи — идентификатор партии (D-100), а не роль.
+  for (const [id, part] of Object.entries(roles)) {
+    if (!part.activeIn.length) warnings.push(`parts.roles.${id}.activeIn: партия не играет ни в одной секции`);
     for (const [index, name] of part.activeIn.entries()) {
-      if (!names.has(name)) errors.push(`parts.roles.${role}.activeIn.${index}: секции «${name}» нет`);
+      if (!names.has(name)) errors.push(`parts.roles.${id}.activeIn.${index}: секции «${name}» нет`);
       if (part.activeIn.indexOf(name) !== index) {
-        errors.push(`parts.roles.${role}.activeIn.${index}: повтор секции «${name}»`);
+        errors.push(`parts.roles.${id}.activeIn.${index}: повтор секции «${name}»`);
       }
     }
   }

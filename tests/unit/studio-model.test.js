@@ -33,12 +33,12 @@ describe('ProjectModel', () => {
     expect(a.seed).toBe(hashToSeed('x'));
   });
 
-  it('неизвестная роль в миксе отклоняется', () => {
+  it('неизвестная партия в миксе отклоняется', () => {
     const model = projectFromSpec(SPEC);
     model.mix.parts.guitar = { ...model.mix.parts.kick };
     const result = safeValidateProjectModel(model);
     expect(result.ok).toBe(false);
-    expect(result.error.issues[0].message).toMatch(/неизвестная роль/);
+    expect(result.error.issues[0].message).toMatch(/неизвестная партия/);
   });
 
   it('валидация даёт внятную ошибку', () => {
