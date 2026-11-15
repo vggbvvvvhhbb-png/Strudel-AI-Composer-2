@@ -367,6 +367,167 @@ function isFormatUnsupported(err) {
 }
 
 /**
+ * Вызов модели с нативными инструментами (function-calling).
+ *
+ * Обычный `completeChat` возвращает только текст: инструменты приходилось бы
+ * описывать в промте и разбирать из JSON — модель при этом теряет контроль
+ * над аргументами. Нативный вызов отдаёт аргументы структурой, которые
+ * провайдер проверяет сам, и позволяет модели видеть результат инструмента
+ * и решать дальше.
+ *
+ * ПОДДЕРЖКА. OpenAI-совместимые провайдеры (OpenAI, Groq, Ollama, LM Studio,
+ * прокси вроде APInex). Anthropic — отдельный формат Messages API, он
+ * пока не поддержан: при отказе провайдера функция честно сообщает
+ * TOOLS_UNSUPPORTED, и агент переходит на запасной путь (текстовый план).
+ *
+ * @param {{
+ *   messages: Array,
+ *   tools: Array,
+ *   toolChoice?: string,
+ *   temperature?: number,
+ *   signal?: AbortSignal,
+ *   providerId?: string,
+ *   maxTokens?: number,
+ *   feature?: string,
+ * }} options
+ * @returns {Promise<{content:string, toolCalls:Array<{id:string,name:string,arguments:object}>, provider:string|null}>}
+ */
+export async function completeChatTools({
+  messages,
+  tools,
+  toolChoice = 'auto',
+  temperature = 0.2,
+  signal,
+  providerId,
+  maxTokens,
+  feature,
+} = {}) {
+  if (MOCK_LLM) {
+    // Мок вызовов инструментов не умеет: честно говорим об этом, и агент
+    // уходит на запасной путь (текстовый план), который мок обслуживает.
+    const error = new Error('Мок-LLM не поддерживает вызовы инструментов');
+    error.code = 'TOOLS_UNSUPPORTED';
+    throw error;
+  }
+  let lastError = null;
+  let unsupported = false;
+  const chain = providerChain().filter((p) => !providerId || p.id === providerId);
+  if (!chain.length) throw new Error('Нет доступных провайдеров LLM');
+
+  for (const provider of chain) {
+    if (signal?.aborted) throw new Error('Запрос отменён');
+    if (provider.type !== 'openai') {
+      // Формат Anthropic другой — нативные вызовы там пока не поддержаны.
+      unsupported = true;
+      continue;
+    }
+    const started = Date.now();
+    try {
+      const res = await openaiToolsRequest({
+        provider,
+        messages,
+        tools,
+        toolChoice,
+        temperature,
+        signal,
+        maxTokens,
+      });
+      const json = await res.json();
+      const message = json.choices?.[0]?.message ?? {};
+      const toolCalls = normalizeToolCalls(message.tool_calls);
+      const content = typeof message.content === 'string' ? message.content : '';
+      if (!toolCalls.length && !content.trim()) throw new Error('провайдер вернул пустой ответ');
+      if (json.usage) {
+        recordCall({ provider, usage: json.usage, feature, durationMs: Date.now() - started });
+      }
+      return { content, toolCalls, provider: provider.id };
+    } catch (err) {
+      if (signal?.aborted) throw err;
+      if (isToolsUnsupported(err)) {
+        unsupported = true;
+        console.error(`[llm] провайдер ${provider.id} не поддерживает вызовы инструментов — пропускаем`);
+        continue;
+      }
+      lastError = err;
+      console.error(`[llm] провайдер ${provider.id} недоступен: ${err.message}`);
+    }
+  }
+  if (unsupported) {
+    const error = new Error('Провайдер не поддерживает нативные вызовы инструментов');
+    error.code = 'TOOLS_UNSUPPORTED';
+    throw error;
+  }
+  throw lastError || new Error('LLM недоступен');
+}
+
+/**
+ * Запрос с инструментами в OpenAI-совместимом формате.
+ * @param {object} args
+ * @returns {Promise<Response>}
+ */
+async function openaiToolsRequest({ provider, messages, tools, toolChoice, temperature, signal, maxTokens }) {
+  const body = {
+    model: provider.model,
+    messages,
+    temperature,
+    ...(maxTokens ? { max_tokens: maxTokens } : {}),
+    tools,
+    tool_choice: toolChoice,
+  };
+  const headers = { 'Content-Type': 'application/json' };
+  if (provider.apiKey) headers.Authorization = `Bearer ${provider.apiKey}`;
+  const res = await fetch(`${provider.baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+    signal: timeoutSignal(signal),
+  });
+  if (!res.ok) throw new Error(`провайдер ${provider.id}: ${await upstreamError(res)}`);
+  return res;
+}
+
+/**
+ * Приведение вызовов к общему виду: {id, name, arguments: объект}.
+ * Аргументы у провайдера приходят строкой JSON — разбираем их здесь,
+ * чтобы в цикле они всегда были объектом.
+ *
+ * @param {Array} raw
+ * @returns {Array<{id:string,name:string,arguments:object}>}
+ */
+export function normalizeToolCalls(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const call of raw) {
+    const fn = call?.function ?? {};
+    let args = {};
+    if (fn.arguments !== undefined && fn.arguments !== null) {
+      if (typeof fn.arguments === 'string') {
+        try {
+          args = fn.arguments.trim() ? JSON.parse(fn.arguments) : {};
+        } catch {
+          args = { __raw: fn.arguments };
+        }
+      } else if (typeof fn.arguments === 'object') {
+        args = fn.arguments;
+      }
+    }
+    if (!fn.name) continue;
+    out.push({ id: call.id ?? `call_${out.length + 1}`, name: fn.name, arguments: args });
+  }
+  return out;
+}
+
+/**
+ * Провайдер отверг именно вызовы инструментов (а не сам запрос).
+ * @param {Error} err
+ * @returns {boolean}
+ */
+function isToolsUnsupported(err) {
+  const text = String(err?.message || '');
+  return /tool_choice|tools|function_calling|not support|unsupported/i.test(text);
+}
+
+/**
  * Записать вызов LLM в учёт стоимости.
  *
  * Единственная точка записи: любой вызов модели — потоковый, обычный, из

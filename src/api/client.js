@@ -25,13 +25,16 @@ export async function fetchAgentTools(signal) {
  * Агентный цикл в SSE. События приходят по одному: plan, tool_start, tool_end,
  * text, usage, done, error — панель рисует шаги отдельно от текста ответа.
  *
- * @param {{prompt:string, mode?:string, currentCode?:string|null, onEvent:(event:object)=>void, signal?:AbortSignal}} options
+ * `currentIr` — план трека из панели IR. Без него режим «Дирижёр» не может
+ * править существующий трек: инструменту правки нужен сам план, а не код.
+ *
+ * @param {{prompt:string, mode?:string, currentCode?:string|null, currentIr?:object|null, onEvent:(event:object)=>void, signal?:AbortSignal}} options
  */
-export async function agentStream({ prompt, mode, currentCode = null, onEvent, signal }) {
+export async function agentStream({ prompt, mode, currentCode = null, currentIr = null, onEvent, signal }) {
   const res = await fetch('/api/agent', {
     method: 'POST',
     headers: usageHeaders(),
-    body: JSON.stringify({ prompt, mode, currentCode }),
+    body: JSON.stringify({ prompt, mode, currentCode, currentIr }),
     signal,
   });
   if (!res.ok || !res.body) {

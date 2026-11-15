@@ -24,6 +24,50 @@ function historyText(history = []) {
 }
 
 /**
+ * Промт нативного режима: модель сама вызывает инструменты.
+ *
+ * Здесь НЕТ списка инструментов и НЕТ требования вернуть JSON: инструменты
+ * передаются провайдеру отдельным полем `tools`, и модель получает их как
+ * настоящие вызовы. Поэтому промт короткий: что можно и чего нельзя.
+ *
+ * @param {{mode:string, prompt:string, history?:Array, context?:object}} options
+ * @returns {Array<{role:string, content:string}>}
+ */
+export function nativeMessages({ mode, prompt, history = [], context = {} }) {
+  const instruction = plannerInstruction(mode);
+  const contextText = context?.code
+    ? `\nТекущий трек в студии (код):\n${String(context.code).slice(0, 1200)}\n`
+    : '';
+
+  const system = [
+    'Ты — помощник-композитор Strudel AI Composer. У тебя есть инструменты:',
+    'вызывай их, когда нужен факт из библиотеки, интернета или действие над треком.',
+    'Не вызывай инструмент, если ответ можно дать без него.',
+    '',
+    'ПРАВИЛА:',
+    '1. Аргументы бери из запроса пользователя. Не выдумывай сэмплы, URL и числа.',
+    '2. Инструмент вернул ошибку — скажи это прямо в ответе, вместе с причиной.',
+    '3. Результат инструмента — это факты, а не текст для пересказа: опирайся на них.',
+    '4. Код трека, если он появился, покажи целиком в блоке кода.',
+    '5. Собери трек, когда его просят: сначала спека (compose_spec), потом код (compile).',
+    '   Спеку компиляции передавать не нужно — сервер подставит её сам.',
+    '6. Слушай прошлые реплики: запрос может продолжать прошлый разговор.',
+    '',
+    instruction,
+    contextText,
+  ].join('\n');
+
+  return [
+    { role: 'system', content: system },
+    ...history.slice(-8).map((turn) => ({
+      role: turn.role === 'assistant' ? 'assistant' : 'user',
+      content: String(turn.content ?? '').slice(0, 1200),
+    })),
+    { role: 'user', content: `Запрос: ${prompt}` },
+  ];
+}
+
+/**
  * Промт планировщика: модель получает инструменты и возвращает план.
  * @param {{mode:string, prompt:string, tools?:string[], context?:object, history?:Array}} options
  * @returns {Array<{role:string, content:string}>}
