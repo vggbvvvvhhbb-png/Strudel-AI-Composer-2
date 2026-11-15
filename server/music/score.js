@@ -57,7 +57,7 @@ export const CRITERIA = [
   {
     id: 'tempo',
     label: 'Темп',
-    weight: 8,
+    weight: 6,
     unit: 'BPM',
     value: (m) => m.bpm,
     target: (p) => p.bpm,
@@ -151,7 +151,7 @@ export const CRITERIA = [
   {
     id: 'motion',
     label: 'Движение мелодии',
-    weight: 12,
+    weight: 10,
     unit: 'интервалов',
     value: (m) => m.motion,
     target: (p) => p.motion,
@@ -160,7 +160,7 @@ export const CRITERIA = [
   {
     id: 'space',
     label: 'Воздух (паузы)',
-    weight: 8,
+    weight: 6,
     unit: 'доля',
     value: (m) => m.space,
     target: (p) => p.space,
@@ -169,7 +169,7 @@ export const CRITERIA = [
   {
     id: 'variety',
     label: 'Разнообразие партий',
-    weight: 10,
+    weight: 8,
     unit: 'доля',
     value: (m) => m.rhythmVariety,
     min: (p) => p.variety,
@@ -184,6 +184,21 @@ export const CRITERIA = [
       const min = varietyTarget(profile, metrics.partCount);
       return `не менее ${Math.round(min * 100)}% партий со своим ритмом (${metrics.partCount} партий)`;
     },
+  },
+  {
+    id: 'development',
+    label: 'Развитие мелодии',
+    weight: 8,
+    unit: 'доля',
+    value: (m) => m.motifDevelopment,
+    describe: () => 'не менее 30% секций с новым материалом',
+    // Порог откалиброван измерением: у трека с одной темой на все секции
+    // развитие 0, у трека с фразой A|A'|B|A'' — около 0.9
+    // (scripts/probe-melody-metrics.mjs).
+    score: (value) => clamp01(value / 0.3),
+    // У трека с одной секцией развития нет по построению — данных нет,
+    // и штрафовать за это нельзя.
+    noDataScore: 1,
   },
 ];
 
@@ -231,7 +246,10 @@ export function scoreTrack(analysis, profile = PROFILES.generic, weights = {}) {
     if (criterion.score) {
       // У критерия своя функция оценки: цель может зависеть от метрик
       // (плотность — от числа дорожек, аранжировка — от нижней границы).
-      score = value === null ? 0.5 : criterion.score(value, profile, metrics);
+      // «Нет данных» — нейтральная оценка 0.5, но критерий может задать
+      // своё значение (noDataScore): отсутствие данных не должно штрафовать
+      // трек, у которого просто нет нескольких секций.
+      score = value === null ? (criterion.noDataScore ?? 0.5) : criterion.score(value, profile, metrics);
       if (criterion.target) {
         const range = criterion.target(profile);
         target = `${range[0]}–${range[1]} ${criterion.unit}`;

@@ -9,6 +9,40 @@ import { parseKey, MODES, PITCH_NAMES, pitchClass, notesOutsideScale } from './n
 
 const EPS = 1e-6;
 
+// Устойчивые ступени для каденции.
+//
+// Это тон трезвучия тоники: тоника (0), её терция (2) и квинта (4).
+// В миноре это C-Eb-G в тональности c:minor, в мажоре C-E-G в c:major —
+// одна и та же формула, потому что трезвучие тоники всегда состоит из
+// ступеней 0, 2 и 4 лада. Доминанта (квинта тоники) входит сюда же:
+// конец фразы на квинте — тоже устойчивая точка, просто половинная
+// каденция, а не полное разрешение.
+//
+// Не входит субтоника (6) и вторая ступень в мажоре: это уже не точка
+// опоры, а проходящая ступень.
+const STABLE_DEGREES = new Set([0, 2, 4]);
+
+// Одинаковый ли набор высот: секция повторяет первую или нет.
+function samePitches(a, b) {
+  if (!a.length || a.length !== b.length) return false;
+  return a.every((value, index) => value === b[index]);
+}
+
+// Роли, в которых живёт мелодия.
+//
+// Прежний список ('melody', 'arp', 'bass', 'pad') не ловил почти ничего:
+// роли 'melody' в проекте не существует (D-100 перенёс роль в атрибут),
+// а оркестровые роли (violin, horn, choir_*) в него не входили вовсе.
+// Из-за этого «движение мелодии» и «доля пауз» считались почти по пустому.
+export const MELODIC_ROLES = new Set([
+  'lead', 'melody', 'arp', 'pad', 'chords', 'texture', 'bass', 'sub',
+  'violin', 'viola', 'cello', 'contrabass',
+  'horn', 'trumpet', 'trombone', 'tuba',
+  'flute', 'oboe', 'clarinet', 'bassoon',
+  'piano', 'organ', 'harp',
+  'choir', 'choir_soprano', 'choir_alto', 'choir_tenor', 'choir_bass',
+]);
+
 // Округление позиции атаки до 1/16 — так ритмы сравниваются между партиями.
 function grid16(value) {
   return Math.round(value * 16) / 16;
@@ -128,6 +162,9 @@ export function analyzeTrack(code) {
   // Паузы: доля тишин среди терминов в мелодических партиях.
   const space = restShare(track);
 
+  // L1-метрики мелодии (фаза D): связность, развитие, каденция, энтропия.
+  const melody = melodyMetrics(track, key);
+
   const roles = [...new Set(parts.map((p) => p.role))];
 
   return {
@@ -136,6 +173,7 @@ export function analyzeTrack(code) {
     detectedKey: detected ? detected.name : null,
     outsideScale: declaredKey && allNotes.length ? notesOutsideScale(allNotes, declaredKey) : [],
     parts,
+    melody,
     metrics: {
       bpm: track.bpm,
       partCount: parts.length,
@@ -150,6 +188,13 @@ export function analyzeTrack(code) {
       rhythmVariety,
       space,
       noteCount: allNotes.length,
+      // L1 мелодии — в общий набор метрик, чтобы скор их видел.
+      motifCoherence: melody.motifCoherence,
+      motifDevelopment: melody.motifDevelopment,
+      cadenceClarity: melody.cadenceClarity,
+      resolution: melody.resolution,
+      contourEntropy: melody.contourEntropy,
+      melodyRange: melody.melodyRange,
     },
     errors,
   };
@@ -159,7 +204,7 @@ export function analyzeTrack(code) {
 function melodicMotion(track, key) {
   const intervals = new Set();
   for (const part of track.parts) {
-    if (!['melody', 'arp', 'bass', 'pad'].includes(part.role)) continue;
+    if (!MELODIC_ROLES.has(part.role)) continue;
     const parsed = partEvents(part, key);
     const notes = parsed.notes
       .filter((n) => n.kind !== 'sample' && n.begin < 1 - EPS)
@@ -178,7 +223,7 @@ function restShare(track) {
   let rests = 0;
   let terms = 0;
   for (const part of track.parts) {
-    if (!['melody', 'arp', 'bass', 'pad'].includes(part.role)) continue;
+    if (!MELODIC_ROLES.has(part.role)) continue;
     for (const source of part.sources) {
       if (source.kind === 's') continue;
       // Считаем тильды и термы прямо в исходной строке паттерна.
@@ -191,4 +236,182 @@ function restShare(track) {
   }
   const total = rests + terms;
   return total ? rests / total : 0;
+}
+
+/**
+ * Ступень лада для MIDI-ноты: 0 — тоника, 4 — доминанта.
+ * @param {number} midi
+ * @param {object|null} key
+ * @returns {number|null} ступень или null, если нота вне лада
+ */
+function scaleDegree(midi, key) {
+  if (!key || !Array.isArray(key.intervals)) return null;
+  const pc = (((midi - key.pc) % 12) + 12) % 12;
+  const index = key.intervals.indexOf(pc);
+  return index === -1 ? null : index;
+}
+
+/**
+ * Перекрытие двух множеств интервалов: |A∩B| / min(|A|,|B|).
+ *
+ * Именно перекрытие, а не Жаккар: материал секции — часто НАЧАЛО общей
+ * темы (хор поёт две ноты из четырёх), и мера «сколько общих интервалов
+ * на двоих» сказала бы «ничего общего». Перекрытие отвечает на вопрос
+ * «это часть той же темы?» — а это и есть связность.
+ *
+ * @param {Set<number>} a
+ * @param {Set<number>} b
+ * @returns {number} 0..1
+ */
+function overlapCoefficient(a, b) {
+  if (!a.size || !b.size) return 0;
+  let shared = 0;
+  for (const value of a) if (b.has(value)) shared += 1;
+  return shared / Math.min(a.size, b.size);
+}
+
+/**
+ * L1-метрики мелодии (фаза D).
+ *
+ * Четыре вопроса, на которые должен отвечать разбор трека:
+ *   • СВЯЗНОСТЬ — мелодия держится одной темой или это набор случайных
+ *     нот? Транспозиция сохраняет интервальный рисунок, поэтому варианты
+ *     темы (A, A') считаются родными.
+ *   • РАЗВИТИЕ — мелодия идёт дальше или повторяет одно и то же? Без
+ *     этого метрики статичный трек получит идеальную связность, а это
+ *     ровно тот дефект, который фаза D и лечит. Развитие меряется по
+ *     ВЫСОТАМ: транспозиция фразы (A' против A) сохраняет рисунок, но
+ *     это развитие, а не повтор.
+ *   • КАДЕНЦИОННАЯ ЯСНОСТЬ — конец фразы приходит на устойчивую ступень
+ *     (тон трезвучия тоники), а не на проходящую.
+ *   • КОНТУРНАЯ ЭНТРОПИЯ — насколько разнообразен контур: один интервал
+ *     подряд (скучный) или настоящее движение.
+ *
+ * Все величины честные: если данных нет — null («нет данных»), а не 0.
+ *
+ * @param {object} track результат extractTrack
+ * @param {object|null} key тональность
+ * @returns {object} метрики мелодии
+ */
+export function melodyMetrics(track, key) {
+  const perPart = [];
+  const intervalCounts = new Map();
+  const allMelodicNotes = [];
+  const partIntervals = new Map();   // партия -> множество беззнаковых интервалов
+  let endings = 0;
+  let stableEndings = 0;
+  let tonicEndings = 0;
+
+  for (const part of track.parts) {
+    if (!MELODIC_ROLES.has(part.role)) continue;
+    const parsed = partEvents(part, key);
+    const sections = parsed.sections.filter((section) => section.notes.length >= 2);
+    if (!sections.length) continue;
+
+    const signatures = sections.map((section) => {
+      const midis = section.notes.map((note) => note.midi);
+      for (const midi of midis) allMelodicNotes.push(midi);
+      const signature = [];
+      for (let i = 1; i < midis.length; i += 1) {
+        const step = midis[i] - midis[i - 1];
+        signature.push(step);
+        const bucket = String(step);
+        intervalCounts.set(bucket, (intervalCounts.get(bucket) ?? 0) + 1);
+      }
+      return signature;
+    });
+
+    // Материал партии: множество БЕЗЗНАКОВЫХ интервалов. Транспозиция
+    // сохраняет рисунок, инверсия меняет знак, но не величину.
+    const material = new Set();
+    for (const signature of signatures) {
+      for (const step of signature) material.add(Math.abs(step));
+    }
+    partIntervals.set(part.label, material);
+
+    // Связность партии с остальными: перекрытие материалов.
+    let coherenceSum = 0;
+    let coherenceCount = 0;
+    for (const [otherLabel, other] of partIntervals) {
+      if (otherLabel === part.label) continue;
+      coherenceSum += overlapCoefficient(material, other);
+      coherenceCount += 1;
+    }
+
+    // Высоты по секциям. Развитие — это про ВЫСОТЫ: транспозиция фразы
+    // сохраняет интервальный рисунок, но музыкально это уже другое
+    // событие. Рисунок (интервалы) — материал связности.
+    const pitches = sections.map((section) => section.notes.map((note) => note.midi));
+
+    // Развитие: доля секций, отличных от первой.
+    let different = 0;
+    for (let i = 1; i < pitches.length; i += 1) {
+      if (!samePitches(pitches[0], pitches[i])) different += 1;
+    }
+
+    // Каденция: последняя нота секции — устойчивая ступень?
+    for (const section of sections) {
+      const last = section.notes[section.notes.length - 1];
+      const degree = scaleDegree(last.midi, key);
+      if (degree === null) continue;
+      endings += 1;
+      if (degree === 0) tonicEndings += 1;
+      if (STABLE_DEGREES.has(degree)) stableEndings += 1;
+    }
+
+    perPart.push({
+      role: part.role,
+      label: part.label,
+      sections: sections.length,
+      coherence: coherenceCount ? coherenceSum / coherenceCount : null,
+      development: signatures.length > 1 ? different / (signatures.length - 1) : null,
+    });
+  }
+
+  // Общая связность: средняя связность партии с материалом ТЕМЫ трека.
+  // Тема — материал, который встречается чаще всего.
+  const materialCount = new Map();
+  for (const material of partIntervals.values()) {
+    const key = [...material].sort((a, b) => a - b).join(',');
+    materialCount.set(key, (materialCount.get(key) ?? 0) + 1);
+  }
+  let themeMaterial = null;
+  let themeHits = 0;
+  for (const [key, count] of materialCount) {
+    if (count > themeHits) {
+      themeHits = count;
+      themeMaterial = new Set(key.split(',').filter(Boolean).map(Number));
+    }
+  }
+  const coherences = themeMaterial
+    ? [...partIntervals.values()].map((material) => overlapCoefficient(material, themeMaterial))
+    : [];
+  const developments = perPart.map((item) => item.development).filter((value) => value !== null);
+
+  // Энтропия распределения интервалов: 0 — всегда один и тот же интервал,
+  // 1 — равномерное разнообразие.
+  let entropy = null;
+  const totalIntervals = [...intervalCounts.values()].reduce((sum, value) => sum + value, 0);
+  if (totalIntervals > 0 && intervalCounts.size > 1) {
+    let h = 0;
+    for (const count of intervalCounts.values()) {
+      const p = count / totalIntervals;
+      h -= p * Math.log(p);
+    }
+    entropy = h / Math.log(intervalCounts.size);
+  }
+
+  return {
+    motifCoherence: coherences.length ? coherences.reduce((a, b) => a + b, 0) / coherences.length : null,
+    motifDevelopment: developments.length ? developments.reduce((a, b) => a + b, 0) / developments.length : null,
+    cadenceClarity: endings ? stableEndings / endings : null,
+    resolution: endings ? tonicEndings / endings : null,
+    contourEntropy: entropy,
+    melodyRange: allMelodicNotes.length
+      ? Math.max(...allMelodicNotes) - Math.min(...allMelodicNotes)
+      : null,
+    melodicParts: perPart.length,
+    endings,
+    parts: perPart,
+  };
 }

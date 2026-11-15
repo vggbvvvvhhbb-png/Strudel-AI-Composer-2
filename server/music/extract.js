@@ -206,6 +206,26 @@ function parseArrangeChunks(region) {
 }
 
 /**
+ * Порядок секций из компилятора: строка `// Форма: intro(8) → verse(8)`.
+ *
+ * Нужна, чтобы привязать кусок `arrange` к секции: компилятор кладёт
+ * секции по порядку, а имени в коде не пишет. Без этого нельзя сказать,
+ * что именно «в секции drop» — а это и есть материал для анализа
+ * развития мелодии (фаза D).
+ *
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function parseFormSections(text) {
+  const match = String(text ?? '').match(/^\/\/\s*Форма:\s*(.+)$/m);
+  if (!match) return [];
+  return match[1].split('→').map((piece) => {
+    const name = piece.trim().replace(/\(\d+\)$/, '').trim();
+    return name;
+  }).filter(Boolean);
+}
+
+/**
  * Разбирает весь код на партии.
  * @returns {{bpm: number|null, key: object|null, parts: Array}}
  */
@@ -213,6 +233,7 @@ export function extractTrack(code) {
   const text = String(code ?? '');
   const lines = text.split('\n');
   const constants = parseConstants(lines);
+  const formSections = parseFormSections(text);
 
   // Границы партий: заголовок и следующий заголовок.
   const headers = [];
@@ -227,7 +248,7 @@ export function extractTrack(code) {
     const end = h + 1 < headers.length ? headers[h + 1].line : lines.length;
     const region = lines.slice(header.line, end).join('\n');
     const calls = scanCalls(region);
-    parts.push(buildPart(header.label, header.muted, header.solo, calls, region, constants));
+    parts.push(buildPart(header.label, header.muted, header.solo, calls, region, constants, formSections));
   }
 
   const keyRaw = getKey(text);
@@ -235,11 +256,12 @@ export function extractTrack(code) {
     bpm: getBpm(text),
     key: parseKey(keyRaw),
     keyRaw,
+    sections: formSections,
     parts,
   };
 }
 
-function buildPart(label, muted, solo, calls, region, constants = new Map()) {
+function buildPart(label, muted, solo, calls, region, constants = new Map(), formSections = []) {
   // Паттерны — вызовы без точки: note(...), n(...), chord(...), s(...).
   const patterns = [];
   const methods = new Map();
@@ -284,17 +306,19 @@ function buildPart(label, muted, solo, calls, region, constants = new Map()) {
   // оттуда, а вес секции — число тактов, которые она занимает.
   const chunks = parseArrangeChunks(region);
   const resolved = [];
-  for (const chunk of chunks) {
+  chunks.forEach((chunk, index) => {
     const expression = constants.get(chunk.name);
-    if (!expression) continue;
+    if (!expression) return;
+    // Номер куска — это номер секции: компилятор кладёт секции по порядку.
+    const section = formSections[index] ?? null;
     for (const call of scanCalls(expression)) {
       if (call.method) continue;
       if (!['note', 'n', 'chord', 's'].includes(call.name)) continue;
       const value = call.strings[0];
       if (value === undefined) continue;
-      resolved.push({ kind: call.name, value, bars: chunk.bars });
+      resolved.push({ kind: call.name, value, bars: chunk.bars, section });
     }
-  }
+  });
 
   return {
     label,
@@ -388,7 +412,7 @@ export function partEvents(part, key) {
       if (source.kind === 's') {
         // Сэмпл ударных — ритмическое событие без высоты.
         if (SYNTH_NAMES.has(value)) continue;
-        events.push({ begin: ev.begin, end: ev.end, value, kind: 'sample', midis: [] });
+        events.push({ begin: ev.begin, end: ev.end, value, kind: 'sample', midis: [], section: source.section ?? null });
         continue;
       }
       let midis = null;
@@ -410,6 +434,7 @@ export function partEvents(part, key) {
         value,
         kind: source.kind,
         midis: midis || [],
+        section: source.section ?? null,
       });
     }
   }
@@ -438,6 +463,21 @@ export function partEvents(part, key) {
     }
   }
 
+  // Ноты по секциям: материал для анализа развития мелодии (фаза D).
+  // Секция = кусок arrange, а куски идут по порядку секций трека.
+  const bySection = new Map();
+  for (const ev of events) {
+    if (!ev.section) continue;
+    if (ev.begin >= 1 - EPS) continue;
+    if (!ev.midis || !ev.midis.length) continue;
+    if (!bySection.has(ev.section)) bySection.set(ev.section, []);
+    for (const midi of ev.midis) bySection.get(ev.section).push({ midi, begin: ev.begin });
+  }
+  const sections = [...bySection.entries()].map(([name, items]) => ({
+    name,
+    notes: items.sort((a, b) => a.begin - b.begin),
+  }));
+
   return {
     events,
     notes,
@@ -446,5 +486,7 @@ export function partEvents(part, key) {
     onsetsPerBar: totalBars ? weightedOnsets / totalBars : 0,
     // Позиции атак первого такта — по ним считается подпись ритма.
     firstBar: firstBar ?? [],
+    // Ноты по секциям — по ним видно, как мелодия развивается по форме.
+    sections,
   };
 }
