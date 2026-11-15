@@ -1,8 +1,29 @@
 import { defineConfig } from 'vite';
 
+/**
+ * Прямая ссылка на разбор в dev-режиме.
+ *
+ * Панель разбора живёт в studio.html, а vite по умолчанию отдаёт на любой
+ * неизвестный путь index.html — то есть ссылка /razbor/<id> открывала бы
+ * обложку, где панели нет. Поэтому в dev тот же путь отдаёт studio.html.
+ * В сборке этим же занимается сервер (server/index.js).
+ */
+function razborFallback() {
+  return {
+    name: 'razbor-fallback',
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        if (req.url?.startsWith('/razbor/')) req.url = '/studio.html';
+        next();
+      });
+    },
+  };
+}
+
 // В dev /api проксируется на локальный сервер (127.0.0.1:3001).
 // Ключи живут только на сервере — фронт ходит исключительно на свой /api.
 export default defineConfig({
+  plugins: [razborFallback()],
   server: {
     port: 5173,
     proxy: {

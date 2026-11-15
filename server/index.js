@@ -19,6 +19,7 @@ import healthRoute from './routes/health.js';
 import statsRoute from './routes/stats.js';
 import deepdiveRoute from './routes/deepdive.js';
 import { withUsageContext } from './llm/context.js';
+import { cspHeaderFor } from './security/csp.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const distDir = join(here, '../dist');
@@ -41,43 +42,24 @@ app.set('trust proxy', 1); // за nginx: реальный IP клиента в 
 app.disable('x-powered-by');
 
 // CSP: wasm для аудио-движка, blob: для AudioWorklet, домены сэмплов dirt-samples.
-// unsafe-eval нужен компилятору паттернов Strudel — без него живой код не исполняется.
+//
+// Политика зависит от пути: строгая для обложки и статики, послабленная для
+// страниц, где исполняется сгенерированный код. Helmet умеет только одну
+// политику на всё приложение, а два заголовка CSP означают пересечение
+// правил — побеждает строгая. Поэтому считаем политику сами.
 app.use(
   helmet({
-    contentSecurityPolicy: {
-      useDefaults: true,
-      directives: {
-        'default-src': ["'self'"],
-        // data: нужен Strudel: его AudioWorklet-модули (sample-generator,
-        // recorder, эффекты) приходят как data:text/javascript;base64.
-        // Без него в консоли «could not load AudioWorklet effects».
-        'script-src': [
-          "'self'",
-          "'unsafe-eval'",
-          "'wasm-unsafe-eval'",
-          "'unsafe-inline'",
-          'blob:',
-          'data:',
-        ],
-        'style-src': ["'self'", "'unsafe-inline'"],
-        'img-src': ["'self'", 'data:', 'blob:'],
-        'media-src': ["'self'", 'blob:', 'https://raw.githubusercontent.com'],
-        'connect-src': [
-          "'self'",
-          'blob:',
-          'https://raw.githubusercontent.com',
-          'https://shabda.ndre.gr',
-          'https://*.githubusercontent.com',
-        ],
-        'worker-src': ["'self'", 'blob:'],
-        'child-src': ["'self'", 'blob:'],
-      },
-    },
+    contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: { policy: 'cross-origin' },
     permissionsPolicy: { microphone: ['(self)'] },
   }),
 );
+
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', cspHeaderFor(req.path));
+  next();
+});
 
 // 20 запросов/мин на IP на все /api/* (draft-7 заголовки RateLimit-*).
 app.use(
@@ -139,9 +121,15 @@ if (existsSync(distDir)) {
     // каталога сборки.
     const requested = resolve(distDir, `.${req.path}`);
     const inside = requested.startsWith(resolve(distDir));
+    // Прямая ссылка на разбор открывает СТУДИЮ: панель разбора живёт
+    // в studio.html, а на обложке её нет. Раньше /razbor/<id> отдавал
+    // обложку, и ссылка просто ничего не делала.
+    const fallback = req.path.startsWith('/razbor/')
+      ? join(distDir, 'studio.html')
+      : join(distDir, 'index.html');
     const target = inside && existsSync(requested) && requested.endsWith('.html')
       ? requested
-      : join(distDir, 'index.html');
+      : fallback;
     res.sendFile(target);
   });
 }
