@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "gate": "node scripts/gate.mjs",
     "gate:a": "node scripts/gate-a.mjs",
+    "gate:b": "node scripts/gate-b.mjs",
     "check:secrets": "node scripts/check-secrets.js",
     "check:presets": "node scripts/check-presets.mjs",
     "check:api": "node scripts/extract-strudel-api.mjs",

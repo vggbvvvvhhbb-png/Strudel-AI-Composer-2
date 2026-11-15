@@ -1,0 +1,255 @@
+#!/usr/bin/env node
+// Локальный демон Strudel AI Composer.
+//
+// ЗАЧЕМ ОН. Тяжёлое считается на машине владельца: рендер, разделение на
+// стемы, анализ (D-097). Сервер остаётся витриной и оркестратором, LLM —
+// в облаке. На сервере 2 vCPU дают 207–396 с на минуту аудио, то есть 56.4
+// минуты на 4-минутный трек: цикл «спросил → услышал» там невозможен.
+//
+// ЧТО ОН УМЕЕТ.
+//   • очередь задач на диске: обрыв связи или перезапуск демона не теряют
+//     задачу (local/queue.mjs);
+//   • прогресс по каждой задаче в SSE — тем же протоколом, что и весь проект;
+//   • авторизация по токену: демон не открыт в сеть без токена;
+//   • офлайн-режим: демон работает сам, без сервера.
+//
+// ЗАПУСК.
+//   LOCAL_DAEMON_TOKEN=<длинный случайный токен> node local/daemon.mjs
+//   Порт: LOCAL_DAEMON_PORT (по умолчанию 3213). Адрес: 127.0.0.1.
+//
+// БЕЗОПАСНОСТЬ ПО УМОЛЧАНИЮ. Если токен не задан, демон НЕ стартует: молча
+// открытый в сеть рендерер — это дыра. Можно задать LOCAL_DAEMON_ALLOW_ANON=1
+// только для локальных экспериментов.
+
+import http from 'node:http';
+import os from 'node:os';
+import path from 'node:path';
+import { timingSafeEqual } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+
+import { DurableQueue } from './queue.mjs';
+import { createTaskRegistry } from './tasks.mjs';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(HERE, '..');
+
+const PORT = Number(process.env.LOCAL_DAEMON_PORT || 3213);
+const HOST = process.env.LOCAL_DAEMON_HOST || '127.0.0.1';
+const TOKEN = process.env.LOCAL_DAEMON_TOKEN || '';
+const ALLOW_ANON = process.env.LOCAL_DAEMON_ALLOW_ANON === '1';
+const STATE_DIR = process.env.LOCAL_DAEMON_STATE || path.join(ROOT, 'local', '.state');
+const MAX_BODY_BYTES = 8 * 1024 * 1024;
+
+/**
+ * @param {http.ServerResponse} res
+ * @param {number} status
+ * @param {object} body
+ */
+function sendJson(res, status, body) {
+  const text = JSON.stringify(body);
+  res.writeHead(status, {
+    'content-type': 'application/json; charset=utf-8',
+    'content-length': Buffer.byteLength(text),
+    'cache-control': 'no-store',
+  });
+  res.end(text);
+}
+
+/**
+ * @param {http.IncomingMessage} req
+ * @returns {Promise<string>}
+ */
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let size = 0;
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > MAX_BODY_BYTES) {
+        reject(new Error('тело запроса слишком велико'));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    req.on('error', reject);
+  });
+}
+
+/**
+ * @param {http.IncomingMessage} req
+ * @param {string} token
+ * @returns {boolean}
+ */
+function authorized(req, token) {
+  if (ALLOW_ANON) return true;
+  const header = req.headers.authorization || '';
+  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
+  if (!match) return false;
+  // Сравнение постоянного времени: токен — секрет, и его нельзя перебирать
+  // по времени ответа.
+  const given = Buffer.from(match[1]);
+  const expected = Buffer.from(token);
+  if (given.length !== expected.length) return false;
+  return timingSafeEqual(given, expected);
+}
+
+/**
+ * Собирает демон.
+ * @returns {Promise<{server:http.Server, queue:DurableQueue, registry:object}>}
+ */
+export async function createDaemon({ token = TOKEN, stateDir = STATE_DIR, log = console.log } = {}) {
+  const registry = createTaskRegistry({ stateDir });
+  const queue = new DurableQueue({
+    dir: stateDir,
+    concurrency: 1,
+    onEvent: (event) => {
+      // Жизнь очереди видна в консоли демона: владелец должен видеть, что
+      // задача принята, идёт и завершилась, даже если интерфейс отвалился.
+      if (event.type === 'queue_restored') {
+        log(`[local] после перезапуска возвращено задач: ${event.restored}`);
+        return;
+      }
+      if (event.type === 'task_added') log(`[local] принята задача ${event.task.id} (${event.task.type})`);
+      if (event.type === 'task_started') log(`[local] задача ${event.task.id} в работе`);
+      if (event.type === 'task_done') log(`[local] задача ${event.task.id} готова`);
+      if (event.type === 'task_error') log(`[local] задача ${event.task.id} упала: ${event.task.error}`);
+    },
+    handler: (task, helpers) => {
+      const runner = registry.tasks[task.type];
+      if (!runner) {
+        return Promise.reject(new Error(`неизвестный тип задачи: ${task.type}`));
+      }
+      return runner(task.payload, helpers);
+    },
+  });
+  await queue.init();
+
+  const server = http.createServer(async (req, res) => {
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+
+    if (!authorized(req, token)) {
+      sendJson(res, 401, { error: 'нужен токен: Authorization: Bearer <LOCAL_DAEMON_TOKEN>' });
+      return;
+    }
+
+    try {
+      if (url.pathname === '/health' && req.method === 'GET') {
+        const health = await registry.health();
+        sendJson(res, 200, {
+          ok: true,
+          service: 'strudel-local-daemon',
+          version: '0.2.0',
+          machine: {
+            platform: process.platform,
+            arch: process.arch,
+            cpus: os.cpus().length,
+            totalMemMb: Math.round(os.totalmem() / (1024 * 1024)),
+            node: process.version,
+          },
+          ...health,
+          queue: queue.stats(),
+        });
+        return;
+      }
+
+      if (url.pathname === '/tasks' && req.method === 'GET') {
+        sendJson(res, 200, { tasks: queue.list(), stats: queue.stats() });
+        return;
+      }
+
+      if (url.pathname === '/tasks' && req.method === 'POST') {
+        const raw = await readBody(req);
+        let payload = {};
+        try {
+          payload = raw ? JSON.parse(raw) : {};
+        } catch {
+          sendJson(res, 400, { error: 'тело запроса — не JSON' });
+          return;
+        }
+        const type = String(payload.type ?? '').trim();
+        if (!registry.tasks[type]) {
+          sendJson(res, 400, {
+            error: `неизвестный тип задачи: ${type || '—'}`,
+            available: registry.types(),
+          });
+          return;
+        }
+        const task = await queue.enqueue(type, payload.payload ?? {});
+        sendJson(res, 202, { id: task.id, type: task.type, state: task.state });
+        return;
+      }
+
+      const taskMatch = /^\/tasks\/([\w-]+)(\/stream)?$/.exec(url.pathname);
+      if (taskMatch) {
+        const [, id, stream] = taskMatch;
+        const task = queue.get(id);
+        if (!task) {
+          sendJson(res, 404, { error: `задача не найдена: ${id}` });
+          return;
+        }
+        if (stream) {
+          // SSE: события задачи по мере их появления. Отдельный поток, чтобы
+          // долгая задача не блокировала обычные запросы.
+          res.writeHead(200, {
+            'content-type': 'text/event-stream; charset=utf-8',
+            'cache-control': 'no-store',
+            connection: 'keep-alive',
+          });
+          const write = (event) => {
+            res.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
+          };
+          write({ type: 'snapshot', task });
+          const unsubscribe = queue.subscribe(id, write);
+          const timer = setInterval(() => {
+            const current = queue.get(id);
+            if (!current) return;
+            if (current.state === 'done' || current.state === 'error') {
+              write({ type: current.state, task: current });
+              clearInterval(timer);
+              unsubscribe();
+              res.end();
+            }
+          }, 500);
+          req.on('close', () => {
+            clearInterval(timer);
+            unsubscribe();
+          });
+          return;
+        }
+        sendJson(res, 200, { task });
+        return;
+      }
+
+      sendJson(res, 404, { error: `нет маршрута: ${url.pathname}` });
+    } catch (err) {
+      sendJson(res, 500, { error: String(err?.message || err) });
+    }
+  });
+
+  return { server, queue, registry };
+}
+
+// Прямой запуск: node local/daemon.mjs
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
+  if (!TOKEN && !ALLOW_ANON) {
+    console.error(
+      '✗ LOCAL_DAEMON_TOKEN не задан. Демон без токена открыт в сеть — это дыра.\n'
+      + '  Задайте токен: LOCAL_DAEMON_TOKEN=<случайная строка> node local/daemon.mjs\n'
+      + '  Для локальных экспериментов: LOCAL_DAEMON_ALLOW_ANON=1 node local/daemon.mjs',
+    );
+    process.exit(1);
+  }
+  const { server } = await createDaemon();
+  server.listen(PORT, HOST, () => {
+    console.log(`[local] демон слушает http://${HOST}:${PORT} (очередь: ${STATE_DIR})`);
+  });
+  const shutdown = () => {
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 2000).unref();
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+}

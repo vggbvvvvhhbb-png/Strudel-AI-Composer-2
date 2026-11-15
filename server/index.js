@@ -19,6 +19,7 @@ import healthRoute from './routes/health.js';
 import statsRoute from './routes/stats.js';
 import deepdiveRoute from './routes/deepdive.js';
 import agentRoute from './routes/agent.js';
+import localRoute from './routes/local.js';
 import { withUsageContext } from './llm/context.js';
 import { cspHeaderFor } from './security/csp.js';
 
@@ -102,6 +103,8 @@ app.use(statsRoute);
 app.use(deepdiveRoute);
 // Помощник-агент: планирование, вызовы инструментов, ответ — потоком SSE.
 app.use('/api/agent', agentRoute);
+// Локальный демон: тяжёлое считается на машине владельца (D-097).
+app.use('/api/local', localRoute);
 
 if (existsSync(distDir)) {
   // index.html — без кэша: сборка кладёт в assets файлы с хэшем в имени, и
