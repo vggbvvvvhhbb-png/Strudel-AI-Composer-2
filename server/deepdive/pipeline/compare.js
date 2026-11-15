@@ -8,6 +8,7 @@
 
 import { decodeWav } from '../../../src/core/wav.js';
 import { compareTwin, COMPARE_METHOD } from '../compare.js';
+import { detectBassNotes } from '../../../src/audio/dsp/pitch.js';
 import { trimChannels } from './helpers.js';
 
 /**
@@ -48,10 +49,24 @@ export function compareStage({ original, mixRender, layerRenders, stemAudio, ste
     }
   }
 
-  const referenceBassNotes = stemDescriptors.bass?.pitch?.notes ?? null;
-  const candidateBassNotes = (stemDescriptors.bass?.pitch?.notes ?? []).length
+  // Ноты баса.
+  //
+  // Стороны должны быть РАЗНЫМИ. Раньше обе брались из питч-трека
+  // оригинала (stemDescriptors.bass.pitch.notes), поэтому совпадение всегда
+  // было 100 %, а вес слоя — 30 % общей оценки. Теперь:
+  //   • оригинал — измеренные питч-ноты его стема (дескрипторы воркера);
+  //   • двойник — питч-трек с ЕГО отрендеренного стема баса.
+  // Если нот нет ни с одной стороны — слой не публикуется («нет данных»).
+  const referenceBassNotes = stemDescriptors.bass?.pitch?.notes?.length
     ? stemDescriptors.bass.pitch.notes
     : null;
+
+  let candidateBassNotes = null;
+  const candidateBassAudio = candidate.bass;
+  if (candidateBassAudio?.channels?.length) {
+    const notes = detectBassNotes(candidateBassAudio.channels, candidateBassAudio.sampleRate);
+    if (notes.length) candidateBassNotes = notes;
+  }
 
   const comparison = compareTwin({
     reference,
@@ -68,6 +83,7 @@ export function compareStage({ original, mixRender, layerRenders, stemAudio, ste
     iteration: 0,
     label: 'baseline',
     overall: comparison.overall,
+    coverage: comparison.coverage,
     layers: comparison.layers,
   };
 }

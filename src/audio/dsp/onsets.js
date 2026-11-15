@@ -122,16 +122,22 @@ export function onsetFMeasure(referenceTimes, candidateTimes, options = {}) {
  * Корреляция огибающих громкости — грубовая мера «грува» (совпадает ли рисунок
  * нарастаний и спадов).
  *
+ * Возвращает null, когда корреляцию считать не на чем: сигнала нет либо
+ * у него нулевая дисперсия (тишина, постоянный сигнал). null означает
+ * «нет данных» — раньше здесь возвращался 0, и вызывающий код превращал
+ * его в 0.5 балла, то есть тишина получала «половинку» за схожесть.
+ *
  * @param {Float64Array[]} a
  * @param {Float64Array[]} b
  * @param {number} sampleRate
+ * @returns {number|null} корреляция в диапазоне -1..1 либо null
  */
 export function envelopeCorrelation(a, b, sampleRate, options = {}) {
   const hop = options.hop ?? Math.max(1, Math.round(sampleRate * 0.01)); // 10 мс
   const ea = rmsEnvelope(a, sampleRate, hop);
   const eb = rmsEnvelope(b, sampleRate, hop);
   const n = Math.min(ea.length, eb.length);
-  if (!n) return 0;
+  if (!n) return null;
   let ma = 0;
   let mb = 0;
   for (let i = 0; i < n; i += 1) {
@@ -151,7 +157,8 @@ export function envelopeCorrelation(a, b, sampleRate, options = {}) {
     vb += db * db;
   }
   const denom = Math.sqrt(va * vb);
-  if (!denom) return 0;
+  // Нулевая дисперсия — корреляция не определена (тишина или ровный сигнал).
+  if (!denom) return null;
   return Number((cov / denom).toFixed(4));
 }
 

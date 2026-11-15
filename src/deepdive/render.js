@@ -56,9 +56,18 @@ const METRIC_LABELS = {
   mel_bands: 'полос mel',
   envelope_correlation: 'корреляция огибающих',
   swing_delta: 'дельта свинга',
+  similarity: 'похожесть грува',
+  matched: 'совпало нот',
+  reference_count: 'нот оригинала',
+  candidate_count: 'нот двойника',
+  source: 'источник данных',
+  per_layer: 'по слоям',
   lufs_delta_db: 'разница LUFS, дБ',
   twin_lufs_i: 'LUFS двойника',
   reference_lufs_i: 'LUFS оригинала',
+  mean_frame_cosine: 'косинус по кадрам',
+  reference_frames: 'кадров оригинала',
+  candidate_frames: 'кадров двойника',
 };
 
 /* --- Паспорт трека --- */
@@ -350,7 +359,13 @@ export function renderMetrics(payload) {
   const latest = metrics[metrics.length - 1];
   const overall = el('div', 'dive-overall');
   overall.append(el('span', 'dive-overall-num', num(latest?.overall, 3)));
-  overall.append(el('span', 'dive-overall-label', `общее сходство · ${latest?.label ?? `итерация ${latest?.iteration ?? '—'}`}`));
+  // Покрытие — рядом с общей оценкой. Общая оценка нормирована по тем слоям,
+  // которые измерены, поэтому без покрытия она вводит в заблуждение:
+  // «0.92» при двух слоях из четырёх — это не то же, что «0.92» при четырёх.
+  const coverageLabel = latest?.coverage?.label
+    ? ` · слои ${latest.coverage.label}`
+    : '';
+  overall.append(el('span', 'dive-overall-label', `общее сходство${coverageLabel} · ${latest?.label ?? `итерация ${latest?.iteration ?? '—'}`}`));
   box.append(overall);
 
   const grid = el('div', 'dive-metric-layers');
@@ -365,6 +380,23 @@ export function renderMetrics(payload) {
     }
     const list = el('div', 'dive-metric-pairs');
     for (const [name, value] of Object.entries(data)) {
+      // Объект (например, per_layer с метриками по слоям) нельзя превращать
+      // в строку: получалось «[object Object]». Такие значения раскрываются
+      // списком, а не строкой.
+      if (value && typeof value === 'object') {
+        const row = el('div', 'dive-metric-pair');
+        row.append(el('span', 'dive-metric-key', METRIC_LABELS[name] ?? name));
+        const details = el('span', 'dive-metric-val');
+        for (const [subName, subValue] of Object.entries(value)) {
+          const line = el('div', 'dive-metric-sub');
+          line.append(el('span', 'dive-metric-key', METRIC_LABELS[subName] ?? subName));
+          line.append(el('span', 'dive-metric-val', typeof subValue === 'number' ? num(subValue, 3) : String(subValue)));
+          details.append(line);
+        }
+        row.append(details);
+        list.append(row);
+        continue;
+      }
       const row = el('div', 'dive-metric-pair');
       row.append(el('span', 'dive-metric-key', METRIC_LABELS[name] ?? name));
       row.append(el('span', 'dive-metric-val', typeof value === 'number' ? num(value, 3) : String(value)));

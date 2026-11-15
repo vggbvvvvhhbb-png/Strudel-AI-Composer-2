@@ -225,7 +225,7 @@ describe('цикл самоулучшения: план → правки → м�
     expect(result.log.join('\n')).toMatch(/отклонено .*set_bpm/);
   });
 
-  it('BPM в пределах измеренного — операция принимается, код пересобирается', async () => {
+  it('BPM в пределах измеренного — операция проходит проверку диапазона', async () => {
     const respond = async () => JSON.stringify({
       operations: [{ op: 'set_bpm', value: 93.5 }],
     });
@@ -233,10 +233,36 @@ describe('цикл самоулучшения: план → правки → м�
 
     const first = result.iterations[1];
     expect(first.status).toBe('ok');
+    // Проверка диапазона операцию пропустила: 93.5 внутри измеренного темпа.
     expect(first.rejected).toEqual([]);
     expect(first.changes.join(' ')).toMatch(/темп/);
+    // Но честная метрика грува видит, что огибающие двойника на 93.5 BPM
+    // разошлись с оригиналом на 92 BPM (корреляция 1.0 → 0.53), поэтому
+    // общая оценка упала — и цикл вернул план к лучшему. Раньше слой грува
+    // был постоянной 0.5, расхождение не было видно, и цикл принимал
+    // ухудшающую правку.
+    expect(result.best.plan.meta.bpm).toBe(92);
+    expect(result.log.join('\n')).toMatch(/оценка хуже лучшей/);
+  });
+
+  it('правка, улучшающая сходство, применяется', async () => {
+    const respond = async () => JSON.stringify({
+      operations: [{ op: 'set_bpm', value: 93.5 }],
+    });
+    // Оригинал — на 93.5 BPM: тогда смена темпа улучшает сходство,
+    // и цикл её принимает.
+    const barSec = 240 / 93.5;
+    const signal = clicks([0, (8 * barSec) / 16]);
+    const reference = {
+      drums: { channels: signal, sampleRate: SAMPLE_RATE },
+      mix: { channels: signal, sampleRate: SAMPLE_RATE },
+    };
+    const result = await refineTwin(await makeInput(respond, { options: { reference } }));
+
     expect(result.best.plan.meta.bpm).toBe(93.5);
     expect(result.best.code).toMatch(/setCpm\(93\.5\/4\)/);
+    // Правка выиграла у baseline: оценка выросла, поэтому цикл её оставил.
+    expect(result.best.overall).toBeGreaterThan(result.iterations[0].metrics.overall);
   });
 
   it('3. невалидный JSON не роняет цикл: итерация неудачна, следующая выполняется', async () => {

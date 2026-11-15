@@ -423,12 +423,26 @@
           "description": "Метрики похожести по слоям. Один элемент — один прогон (baseline или итерация).",
           "items": {
             "type": "object",
-            "required": ["iteration", "layers", "overall"],
+            "required": ["iteration", "layers", "overall", "coverage"],
             "additionalProperties": false,
             "properties": {
               "iteration": { "type": "integer", "minimum": 0, "description": "0 = baseline, до улучшений." },
               "label": { "type": "string", "description": "baseline | iteration-1 | ..." },
               "overall": { "type": "number", "minimum": 0, "maximum": 1 },
+              "coverage": {
+                "type": "object",
+                "description": "Сколько слоёв из четырёх реально измерены. Общая оценка нормирована по присутствующим слоям (знаменатель намеренно НЕ фиксированный, D-098), поэтому покрытие публикуется вместе с ней всегда: единый балл без покрытия запрещён — иначе трек без баса получил бы «идеальную» оценку.",
+                "additionalProperties": false,
+                "required": ["covered", "total", "label"],
+                "properties": {
+                  "covered": { "type": "integer", "minimum": 0, "maximum": 4 },
+                  "total": { "type": "integer", "minimum": 0, "maximum": 4 },
+                  "label": { "type": "string", "description": "«3/4» — человекочитаемое покрытие." },
+                  "complete": { "type": "boolean" },
+                  "measured": { "type": "array", "items": { "type": "string" } },
+                  "missing": { "type": "array", "items": { "type": "string" } }
+                }
+              },
               "layers": {
                 "type": "object",
                 "additionalProperties": false,
@@ -446,12 +460,16 @@
                   },
                   "bass": {
                     "type": "object",
-                    "description": "Доля совпавших нот (питч ±50 центов, октава-агностик) + RMSE f0.",
+                    "description": "Доля совпавших нот (питч ±50 центов, октава-агностик) + RMSE f0. Ноты обеих сторон сняты питч-треком из своего стема.",
                     "additionalProperties": false,
                     "properties": {
                       "note_match_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
-                      "f0_rmse_cents": { "type": "number" },
-                      "octave_agnostic": { "type": "boolean" }
+                      "f0_rmse_cents": { "type": ["number", "null"] },
+                      "octave_agnostic": { "type": "boolean" },
+                      "source": { "type": "string", "description": "Откуда взяты ноты: stem-pitch." },
+                      "matched": { "type": "integer", "minimum": 0 },
+                      "reference_count": { "type": "integer", "minimum": 0 },
+                      "candidate_count": { "type": "integer", "minimum": 0 }
                     }
                   },
                   "timbre": {
@@ -460,15 +478,32 @@
                     "additionalProperties": false,
                     "properties": {
                       "cosine": { "type": "number", "minimum": -1, "maximum": 1 },
-                      "mel_bands": { "type": "integer" }
+                      "mel_bands": { "type": "integer" },
+                      "per_layer": {
+                        "type": "object",
+                        "description": "Косинус по каждому слою отдельно (drums, bass, other).",
+                        "additionalProperties": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "cosine": { "type": "number", "minimum": -1, "maximum": 1 },
+                            "mean_frame_cosine": { "type": "number", "minimum": -1, "maximum": 1 },
+                            "mel_bands": { "type": "integer" },
+                            "reference_frames": { "type": "integer" },
+                            "candidate_frames": { "type": "integer" }
+                          }
+                        }
+                      }
                     }
                   },
                   "groove": {
                     "type": "object",
+                    "description": "Корреляция огибающих оригинала и двойника. null — «нет данных» (тишина или постоянный сигнал), а не ноль.",
                     "additionalProperties": false,
                     "properties": {
-                      "envelope_correlation": { "type": "number", "minimum": -1, "maximum": 1 },
-                      "swing_delta": { "type": "number" }
+                      "envelope_correlation": { "type": ["number", "null"], "minimum": -1, "maximum": 1 },
+                      "swing_delta": { "type": ["number", "null"] },
+                      "similarity": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
                     }
                   },
                   "loudness": {

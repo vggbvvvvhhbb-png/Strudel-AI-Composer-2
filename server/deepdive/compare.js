@@ -114,17 +114,52 @@ export function compareTimbre(reference, candidate, options = {}) {
   };
 }
 
-/** Сравнение грува: корреляция огибающих + разница свинга. */
+/**
+ * Сравнение грува: корреляция огибающих + разница свинга.
+ *
+ * КОРРЕЛЯЦИЯ — именно корреляция огибающих ОРИГИНАЛА и ДВОЙНИКА между
+ * собой. Раньше здесь было `envelopeCorrelation(reference.channels,
+ * reference.sampleRate)` — сигнал сравнивался сам с собой, а второй
+ * аргумент (число вместо массива) ломал расчёт: hop выходил NaN, огибающая
+ * пустой, и результат всегда был 0. Нормализованный по (corr+1)/2 это
+ * превращалось в постоянные 0.5 — слой грува был украшением.
+ *
+ * Теперь: честная корреляция между сторонами, и null, когда её считать
+ * не на чем (тишина или постоянный сигнал). null — это «нет данных»,
+ * а не «0.5 балла за схожесть».
+ */
 export function compareGroove(reference, candidate, options = {}) {
-  const correlation = envelopeCorrelation(reference.channels, reference.sampleRate);
-  const candidateCorrelation = envelopeCorrelation(candidate.channels, candidate.sampleRate);
+  const sampleRate = options.sampleRate ?? reference.sampleRate ?? candidate.sampleRate ?? null;
+  const correlation = sampleRate
+    ? envelopeCorrelation(reference.channels, candidate.channels, sampleRate)
+    : null;
   const refSwing = reference.swing ?? null;
   const candSwing = candidate.swing ?? null;
   return {
     envelope_correlation: correlation,
-    candidate_envelope_correlation: candidateCorrelation,
     swing_delta: refSwing !== null && candSwing !== null ? Number(Math.abs(refSwing - candSwing).toFixed(4)) : null,
+    // Похожесть грува: нулевая корреляция — это «схожести нет», а не
+    // «половинка балла». Отрицательная корреляция — тоже ноль.
+    similarity: correlation === null ? null : Number(Math.max(0, correlation).toFixed(4)),
   };
+}
+
+/**
+ * Есть ли в слое ИЗМЕРЕННОЕ число.
+ *
+ * Слой может присутствовать в объекте, но не содержать числа — тогда это
+ * «нет данных», а не «ноль». Например, слой грува на тишине публикуется с
+ * `similarity: null`: слой описан, но измерить его не на чем.
+ *
+ * @param {string} name имя слоя
+ * @param {object|undefined} layer данные слоя
+ * @returns {boolean}
+ */
+export function layerHasValue(name, layer) {
+  if (!layer) return false;
+  const key = { rhythm: 'f1', bass: 'note_match_ratio', timbre: 'cosine', groove: 'similarity' }[name];
+  if (!key) return false;
+  return Number.isFinite(layer[key]);
 }
 
 /**
@@ -162,10 +197,13 @@ export function compareTwin(input) {
     scores.push({ value: rhythm.f1, weight: LAYER_WEIGHTS.rhythm });
   }
 
-  // Бас — по нотам (питч-трек оригинала + план двойника).
+  // Бас — по нотам. Ноты оригинала сняты питч-треком из его стема, ноты
+  // двойника — питч-треком из ЕГО стема (см. pipeline/compare.js).
+  // Если нот нет ни с одной стороны — слой не публикуется вовсе:
+  // «нет данных», а не «совпало 100 %».
   if (referenceBassNotes?.length && candidateBassNotes?.length) {
     const bass = compareNotes(referenceBassNotes, candidateBassNotes);
-    layers.bass = bass;
+    layers.bass = { ...bass, source: 'stem-pitch' };
     if (bass.note_match_ratio > 0) scores.push({ value: bass.note_match_ratio, weight: LAYER_WEIGHTS.bass });
   }
 
@@ -193,34 +231,62 @@ export function compareTwin(input) {
       { ...grooveCand, swing: candidateSwing },
     );
     layers.groove = groove;
-    // Корреляция огибающих может быть отрицательной — в оценку идёт
-    // нормированное значение 0..1, иначе «антикорреляция» шла бы «в минус».
-    const normalized = Math.max(0, Math.min(1, (groove.envelope_correlation + 1) / 2));
-    scores.push({ value: normalized, weight: LAYER_WEIGHTS.groove });
+    // Считается только то, что действительно измерено. Корреляция 0 — это
+    // «схожести нет» (0), а не «половинка балла»: старая шкала (corr+1)/2
+    // награждала отсутствие сходства половиной балла. null — «нет данных».
+    if (groove.similarity !== null) {
+      scores.push({ value: groove.similarity, weight: LAYER_WEIGHTS.groove });
+    }
   }
 
   // Громкость — по миксу.
+  // Если LUFS не измерился (тишина — измерить нечего), слой не публикуется:
+  // раньше здесь падало «null.toFixed» на тишине.
   if (reference.mix?.channels?.length && candidate.mix?.channels?.length) {
     const refLufs = measureLoudness(reference.mix.channels, reference.mix.sampleRate).lufsI;
     const candLufs = measureLoudness(candidate.mix.channels, candidate.mix.sampleRate).lufsI;
-    layers.loudness = {
-      lufs_delta_db: Number((candLufs - refLufs).toFixed(2)),
-      twin_lufs_i: Number(candLufs.toFixed(2)),
-      reference_lufs_i: Number(refLufs.toFixed(2)),
-    };
+    if (Number.isFinite(refLufs) && Number.isFinite(candLufs)) {
+      layers.loudness = {
+        lufs_delta_db: Number((candLufs - refLufs).toFixed(2)),
+        twin_lufs_i: Number(candLufs.toFixed(2)),
+        reference_lufs_i: Number(refLufs.toFixed(2)),
+      };
+    }
   }
 
   const overall = scores.length
     ? scores.reduce((sum, item) => sum + item.value * item.weight, 0) / scores.reduce((sum, item) => sum + item.weight, 0)
     : 0;
 
+  // Покрытие: сколько слоёв из четырёх реально измерены.
+  //
+  // Знаменатель общей оценки НЕ меняем молча (это продуктовое решение, см.
+  // D-098): `overall` остаётся средним по присутствующим слоям. Но вместе
+  // с ним теперь ВСЕГДА публикуется покрытие — иначе трек без баса получил
+  // бы «идеальную» оценку без следа о том, что один слой не измерен.
+  //
+  // Слой считается измеренным, если у него есть ЧИСЛО. Слой, который
+  // посчитан, но получился «нет данных» (тишина, пустой стем), измеренным
+  // не является — иначе покрытие снова врёт.
+  const measuredLayerNames = ['rhythm', 'bass', 'timbre', 'groove'];
+  const covered = measuredLayerNames.filter((name) => layerHasValue(name, layers[name]));
+  const coverage = {
+    covered: covered.length,
+    total: measuredLayerNames.length,
+    label: `${covered.length}/${measuredLayerNames.length}`,
+    complete: covered.length === measuredLayerNames.length,
+    measured: covered,
+    missing: measuredLayerNames.filter((name) => !covered.includes(name)),
+  };
+
   return {
     iteration,
     label: iterationLabel,
     overall: Number(overall.toFixed(4)),
+    coverage,
     layers,
     method: COMPARE_METHOD,
     measured_layers: scores.map((item) => item.value >= 0 ? item.value : 0),
-    missing_layers: ['rhythm', 'bass', 'timbre', 'groove'].filter((name) => !layers[name]),
+    missing_layers: coverage.missing,
   };
 }

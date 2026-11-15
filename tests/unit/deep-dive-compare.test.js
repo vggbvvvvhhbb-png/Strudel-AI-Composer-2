@@ -7,9 +7,12 @@
 // Так метрики нельзя «подогнать» под удобный результат.
 
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { fftInPlace, powerSpectrum } from '../../src/audio/dsp/fft.js';
 import { logMelSpectrogram, cosineSimilarity, cosineOfVectors, melFilterbank, hzToMel, melToHz } from '../../src/audio/dsp/mel.js';
 import { detectOnsets, onsetFMeasure, envelopeCorrelation, rmsEnvelope } from '../../src/audio/dsp/onsets.js';
+import { detectBassNotes } from '../../src/audio/dsp/pitch.js';
+import { decodeWav } from '../../src/core/wav.js';
 import { compareNotes, compareRhythm, compareTimbre, compareTwin } from '../../server/deepdive/compare.js';
 
 const SAMPLE_RATE = 44100;
@@ -220,5 +223,99 @@ describe('полное сравнение двойника', () => {
     const result = compareTwin({});
     expect(result.method).toMatch(/compare@/);
     expect(result.iteration).toBe(0);
+  });
+});
+
+// --- Честность метрик (A0.3) ------------------------------------------------
+//
+// До этой правки две метрики были украшением:
+//   • грув — сравнение вызывалось с неверными аргументами, огибающая
+//     считалась от числа, hop выходил NaN, и результат всегда был 0;
+//     нормализация (0+1)/2 превращала это в постоянные 0.5 балла;
+//   • бас — обе стороны брались из питч-трека ОРИГИНАЛА, поэтому совпадение
+//     всегда было 100 %, а вес слоя — 30 % общей оценки.
+describe('честность метрик', () => {
+  it('грув — настоящая корреляция, а не постоянные 0.5', () => {
+    const reference = clicks([0.5, 1.0, 1.5, 2.0], 2.5);
+    const same = clicks([0.5, 1.0, 1.5, 2.0], 2.5);
+    const shifted = clicks([0.55, 1.05, 1.55, 2.05], 2.5);
+
+    const close = compareTwin({
+      reference: { mix: { channels: reference, sampleRate: SAMPLE_RATE } },
+      candidate: { mix: { channels: same, sampleRate: SAMPLE_RATE } },
+    });
+    const far = compareTwin({
+      reference: { mix: { channels: reference, sampleRate: SAMPLE_RATE } },
+      candidate: { mix: { channels: shifted, sampleRate: SAMPLE_RATE } },
+    });
+
+    expect(close.layers.groove.envelope_correlation).toBeGreaterThan(0.9);
+    expect(far.layers.groove.envelope_correlation).toBeLessThan(close.layers.groove.envelope_correlation);
+    // Похожесть — это max(0, корреляция): ноль корреляции означает
+    // «схожести нет», а не половинку балла.
+    expect(far.layers.groove.similarity).toBe(Math.max(0, far.layers.groove.envelope_correlation));
+  });
+
+  it('грув: тишина — «нет данных», а не половинка балла', () => {
+    const silence = [new Float64Array(SAMPLE_RATE * 2)];
+    const result = compareTwin({
+      reference: { mix: { channels: silence, sampleRate: SAMPLE_RATE } },
+      candidate: { mix: { channels: silence, sampleRate: SAMPLE_RATE } },
+    });
+    expect(result.layers.groove.envelope_correlation).toBeNull();
+    expect(result.layers.groove.similarity).toBeNull();
+    // Нет данных — слой не входит в оценку, но остаётся видимым.
+    expect(result.coverage.missing).toContain('groove');
+  });
+
+  it('бас: стороны не сравниваются сами с собой', () => {
+    const signal = clicks([0.5, 1.0, 1.5, 2.0], 2.5);
+    const result = compareTwin({
+      reference: { mix: { channels: signal, sampleRate: SAMPLE_RATE } },
+      candidate: { mix: { channels: signal, sampleRate: SAMPLE_RATE } },
+      referenceBassNotes: [{ time_s: 0.5, midi: 40 }, { time_s: 1.0, midi: 43 }],
+      // Двойник играет другие ноты — совпадение не может быть 100 %.
+      candidateBassNotes: [{ time_s: 0.5, midi: 47 }, { time_s: 1.0, midi: 50 }],
+    });
+    expect(result.layers.bass.note_match_ratio).toBe(0);
+    expect(result.layers.bass.source).toBe('stem-pitch');
+  });
+
+  it('бас: нет нот у двойника — слой не публикуется вовсе', () => {
+    const signal = clicks([0.5, 1.0], 2.5);
+    const result = compareTwin({
+      reference: { mix: { channels: signal, sampleRate: SAMPLE_RATE } },
+      candidate: { mix: { channels: signal, sampleRate: SAMPLE_RATE } },
+      referenceBassNotes: [{ time_s: 0.5, midi: 40 }],
+      candidateBassNotes: [],
+    });
+    expect(result.layers.bass).toBeUndefined();
+    expect(result.coverage.missing).toContain('bass');
+    // В этой фикстуре измерены только грув по миксу: 1 слой из 4.
+    expect(result.coverage.label).toBe('1/4');
+  });
+
+  it('покрытие публикуется вместе с общей оценкой', () => {
+    const signal = clicks([0.5, 1.0, 1.5, 2.0], 2.5);
+    const result = compareTwin({
+      reference: { drums: { channels: signal, sampleRate: SAMPLE_RATE }, mix: { channels: signal, sampleRate: SAMPLE_RATE } },
+      candidate: { drums: { channels: signal, sampleRate: SAMPLE_RATE }, mix: { channels: signal, sampleRate: SAMPLE_RATE } },
+    });
+    expect(result.coverage).toBeTruthy();
+    expect(result.coverage.total).toBe(4);
+    expect(result.coverage.covered + result.coverage.missing.length).toBe(4);
+    expect(result.coverage.label).toBe(`${result.coverage.covered}/4`);
+    expect(typeof result.coverage.complete).toBe('boolean');
+  });
+});
+
+describe('регресс на настоящем сигнале', () => {
+  it('питч-трекер снимает ноты басовой линии из WAV-фикстуры', () => {
+    // Фикстура: A1–C2–E2–G2, темп 92 BPM. Ноты известны заранее.
+    const file = new URL('../fixtures/audio/bass-line-92bpm.wav', import.meta.url);
+    const wav = decodeWav(new Uint8Array(readFileSync(file)));
+    const notes = detectBassNotes(wav.channels, wav.sampleRate, { minFreq: 35, maxFreq: 500 });
+    const midis = [...new Set(notes.map((note) => note.midi))].sort((a, b) => a - b);
+    expect(midis).toEqual([33, 36, 40, 43]);
   });
 });

@@ -96,6 +96,9 @@ export function normalizeMetrics(metrics) {
   const overall = Number(metrics?.overall);
   return {
     overall: Number.isFinite(overall) ? overall : 0,
+    // Покрытие едет вместе с оценкой: без него «0.9» неизвестно из каких
+    // слоёв оно сложилось (см. D-098).
+    coverage: metrics?.coverage ?? null,
     layers: metrics?.layers && typeof metrics.layers === 'object' ? clone(metrics.layers) : {},
   };
 }
