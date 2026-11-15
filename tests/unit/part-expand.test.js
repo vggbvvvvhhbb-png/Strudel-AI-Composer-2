@@ -111,4 +111,28 @@ describe('экспансия плана', () => {
     expect(parsed.success).toBe(true);
     expect(Object.keys(parsed.data.parts.roles)).toHaveLength(30);
   });
+
+  it('голоса стоят в разных регистрах', () => {
+    const { parts } = expandPlan({
+      style: 'cinematic', key: 'Cmin', bpm: 90,
+      sections: [{ name: 'drop', bars: 8, energy: 0.9, harmony: 'Cm' }],
+      groups: [
+        { group: 'bass', role: 'bass', count: 1 },
+        { group: 'strings', role: 'violin', count: 1 },
+        { group: 'woodwinds', role: 'flute', count: 1 },
+      ],
+    });
+    expect(parts.BASS_1.transpose).toBe(-24);
+    expect(parts.VIOLIN_1.transpose).toBeUndefined();
+    expect(parts.FLUTE_1.transpose).toBe(12);
+  });
+
+  it('явный сдвиг в плане важнее роли', () => {
+    const { parts } = expandPlan({
+      style: 'cinematic', key: 'Cmin', bpm: 90,
+      sections: [{ name: 'drop', bars: 8, energy: 0.9, harmony: 'Cm' }],
+      groups: [{ group: 'strings', role: 'violin', count: 1, transpose: -5 }],
+    });
+    expect(parts.VIOLIN_1.transpose).toBe(-5);
+  });
 });

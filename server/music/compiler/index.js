@@ -97,7 +97,8 @@ function sectionBody(part, id, role, section, scale, key) {
       }
       body += `.scale(${JSON.stringify(scale)})`;
     }
-    const transpose = transposeFor(role);
+    // Регистр партии: явный сдвиг важнее сдвига по роли (D-100, D-107).
+    const transpose = Number.isFinite(part.transpose) ? part.transpose : transposeFor(role);
     if (transpose) body += `.transpose(${transpose})`;
     body += `.s(${JSON.stringify(sound)})`;
   }

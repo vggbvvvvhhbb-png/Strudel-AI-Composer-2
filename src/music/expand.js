@@ -56,22 +56,29 @@ export function globalAttackBudget(voices) {
 
 // Громкость одной дорожки на группу: сумма голосов группы держится около
 // GROUP_LEVEL. Калибровано измерением: при 0.28 рендер оперы давал
-// -18.47 LUFS-I (ниже коридора -16…-12), при 0.40 - измерение ниже.
-export const GROUP_LEVEL = 0.4;
+// -18.47 LUFS-I (ниже коридора -16…-12), при 0.40 - -15.37, а после
+// раскладки по регистрам потребовался 0.8, чтобы мастер-цепь (компрессор +
+// лимитер, как в студии) вывела микс в коридор при пике не выше -1 dBTP.
+export const GROUP_LEVEL = 0.8;
 
 // Семейство ролей для шаблонов рисунков.
+//
+// Sustained-ноты («0@2» — нота длиной два такта) удерживают звук между
+// атаками. Это не украшение: без них микс из 66 дорожек звучит «пиками»
+// (пик −2.85 dBTP при −21.47 LUFS), и в коридор громкости он не влезает
+// никогда — K-взвешивание не считает низкие регистры.
 const FAMILY = {
   drums: ['bd*4', '~ sd ~ ~', 'hh*8', 'perc*3'],
   bass: ['0 ~ 2 ~', '0*4', '[0 0 3 5]'],
-  strings: ['0 ~ 2 ~ 4 ~', '<0 2 4> ~', '0 ~ 4 ~ 2 ~'],
-  brass: ['0 ~ ~ 2 ~', '<0 3> ~ ~'],
-  woodwinds: ['0 ~ 2 ~ ~', '<4 5> ~ ~'],
-  keys: ['0 ~ 2 ~ 4 ~', '0 2 ~ 4 ~'],
-  choir: ['0 ~ ~ ~ 2 ~', '<0 2 4> ~'],
-  pads: ['0 ~ ~ ~', '<0 2 4> ~'],
+  strings: ['0@2 ~ 2@2', '0@1 ~ 2@1 ~ 4@1', '0@2 ~ 4@2'],
+  brass: ['0@2 ~', '0@1 ~ 2@1'],
+  woodwinds: ['0@1 ~ 2@1', '0@2 ~'],
+  keys: ['0@2 ~ 2@2', '0 ~ 2 ~ 4 ~'],
+  choir: ['0@2 ~ 2@2', '0@4'],
+  pads: ['0@4', '0@2 ~ 2@2'],
   lead: ['7 ~ 4 ~ 2 ~', '4 ~ 5 ~ 7 ~'],
   arp: ['0 2 4 7', '7 4 2 0'],
-  chords: ['0 2 4', '0 ~ 2 ~ 4 ~'],
+  chords: ['0@2 ~ 2@2', '0 2 4'],
   fx: ['~ ~ perc ~', '~ perc ~ ~'],
 };
 
@@ -102,6 +109,20 @@ const SOUND_BY_GROUP = {
   arp: 'square',
   chords: 'piano',
   fx: 'perc',
+};
+
+// Регистр голоса в полутонах относительно средней ступени лада.
+// Без этого все голоса оркестра стоят в одном регистре: «диапазон» и
+// «разделение регистров» в скоре равны нулю (измерено на треке из 100
+// дорожек до введения раскладки).
+const REGISTER_BY_ROLE = {
+  bass: -24, sub: -24, contrabass: -24,
+  cello: -12, pads: -12, pad: -12, texture: -12,
+  viola: -5, horn: -7, trombone: -7, tuba: -7, bassoon: -7,
+  violin: 0, trumpet: 0, clarinet: 0, piano: 0, harp: 0, keys: 0,
+  flute: 12, choir: 5, choir_soprano: 7, choir_alto: 0, choir_tenor: -5, choir_bass: -12,
+  lead: 12, arp: 12, chords: 0, percussion: 0, perc: 0,
+  kick: 0, snare: 0, hats: 0, fx: 0,
 };
 
 const DEFAULT_BUDGET = 4;
@@ -250,6 +271,8 @@ export function expandPlan(plan) {
           pattern: family[i % family.length],
           sound,
           activeIn: [...activeIn],
+          // Регистр голоса: явный сдвиг в плане важнее роли.
+          transpose: Number.isFinite(entry.transpose) ? entry.transpose : REGISTER_BY_ROLE[entry.role],
         });
       }
     }
@@ -269,13 +292,17 @@ export function expandPlan(plan) {
     const voiceGain = GROUP_LEVEL / Math.max(1, voices.length);
     for (const voice of voices) {
       if (parts[voice.id]) continue; // идентификатор уже занят
-      parts[voice.id] = {
+      const part = {
         role: voice.role,
         activeIn: voice.activeIn,
         pattern: voice.pattern,
         sound: voice.sound,
         effects: [{ name: 'gain', params: [Number(voiceGain.toFixed(4))] }],
       };
+      // Регистр голоса: у скрипок смещение, у альтов — вниз, у флейт — вверх.
+      const register = voice.transpose;
+      if (Number.isFinite(register) && register !== 0) part.transpose = register;
+      parts[voice.id] = part;
     }
 
     report.groups.push({

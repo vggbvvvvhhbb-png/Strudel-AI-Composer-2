@@ -14,6 +14,10 @@ export const PartSchema = z.object({
   activeIn: z.array(z.string()),
   pattern: z.string(),
   sound: z.string(),
+  // Сдвиг регистра партии в полутонах. Задаётся экспансией: у оркестра
+  // голоса стоят в разных регистрах, и без этого «разделение регистров»
+  // в скоре равно нулю (измерено).
+  transpose: z.number().int().min(-48).max(48).optional(),
   effects: z.array(z.object({
     name: z.string(),
     params: z.array(z.any())

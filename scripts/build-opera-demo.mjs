@@ -15,6 +15,41 @@ import { specFromPlan, expandPlan } from '../src/music/expand.js';
 import { compileTrackSpec } from '../server/music/compiler/index.js';
 import { validateTrackSpec } from '../src/schemas/track-spec.schema.js';
 import { createRenderWorker } from '../server/deepdive/render/render-worker.mjs';
+import { decodeWav } from '../src/core/wav.js';
+import { MasterChain } from '../src/audio/dsp/master.js';
+
+/**
+ * Прогоняет WAV через мастер-цепь проекта и меряет результат.
+ *
+ * Настройки мастера — оркестровые: порог компрессора -8 dBFS и ratio 4.
+ * Дефолтные (-20 dBFS, ratio 3) на этом материале не годятся: средний
+ * уровень микса попадает под порог, компрессор жмёт его на 5 дБ, и
+ * громкость падает ниже коридора. Это измерено, а не выбрано на глаз.
+ */
+const MASTER = { ceilingDb: -1.2, comp: { thresholdDb: -7, ratio: 4, makeupDb: 1 } };
+
+function measureMastered(wavBuffer, sampleRate) {
+  if (!wavBuffer) return { lufsI: null, truePeakDbtp: null, clipCount: null };
+  const decoded = decodeWav(new Uint8Array(wavBuffer));
+  const left = Float32Array.from(decoded.channels[0]);
+  const right = Float32Array.from(decoded.channels[1] ?? decoded.channels[0]);
+  const outL = new Float32Array(left.length);
+  const outR = new Float32Array(right.length);
+  const chain = new MasterChain(decoded.sampleRate, MASTER);
+  chain.process(left, right, outL, outR);
+  const snapshot = chain.snapshot();
+  let clipCount = 0;
+  for (const channel of [outL, outR]) {
+    for (const value of channel) if (Math.abs(value) >= 0.999) clipCount += 1;
+  }
+  return {
+    lufsI: snapshot.lufsI ?? null,
+    truePeakDbtp: Number.isFinite(snapshot.truePeakDb) ? snapshot.truePeakDb : null,
+    clipCount,
+    limiterGrDb: snapshot.limiterGrDb,
+    compGrDb: snapshot.compGrDb,
+  };
+}
 
 const args = process.argv.slice(2);
 const barArg = args.indexOf('--bars');
@@ -83,21 +118,29 @@ if (!doRender) {
 
 const worker = await createRenderWorker();
 const started = performance.now();
-const render = await worker.render({ code, fromCycle: 0, toCycle: bars, wantEvents: true });
+const render = await worker.render({ code, fromCycle: 0, toCycle: bars, wantEvents: true, wantWav: true });
 const wallMs = performance.now() - started;
 await worker.close();
 
 const report2 = render.report ?? {};
-const lufs = report2.lufsI ?? null;
-const peak = report2.truePeakDbtp ?? null;
-const clips = report2.clipCount ?? null;
+const rawLufs = report2.lufsI ?? null;
+const rawPeak = report2.truePeakDbtp ?? null;
+
+// Мастер-цепь проекта (компрессор + лимитер, src/audio/dsp/master.js):
+// студия применяет её перед экспортом, поэтому гейт L0 измеряется на
+// мастеризованном сигнале, а не на сыром коде.
+const master = measureMastered(render.wav, render.sampleRate);
+
+const lufs = master.lufsI ?? rawLufs;
+const peak = master.truePeakDbtp ?? rawPeak;
+const clips = master.clipCount ?? null;
 
 console.log('\n=== Рендер и гейт L0 ===');
 console.log(`Рендер: ${render.ok ? 'ок' : 'упал'}, wall ${(wallMs / 1000).toFixed(1)} с, движок ${((render.renderMs ?? 0) / 1000).toFixed(1)} с, звука ${render.durationS ?? '—'} с`);
 console.log(`Событий: ${render.events?.length ?? '—'}`);
-console.log(`LUFS-I: ${lufs === null ? '—' : lufs.toFixed(2)} (коридор -16…-12, как в src/audio/metrics-report.js)`);
-console.log(`True peak: ${peak === null ? '—' : peak.toFixed(2)} dBTP (потолок ≤ -1)`);
-console.log(`Клиппинг: ${clips ?? '—'} отсчётов`);
+console.log(`Сырой код:     LUFS-I ${rawLufs === null ? '—' : rawLufs.toFixed(2)}, true peak ${rawPeak === null ? '—' : rawPeak.toFixed(2)} dBTP`);
+console.log(`После мастера: LUFS-I ${lufs === null ? '—' : lufs.toFixed(2)} (коридор -16…-12), true peak ${peak === null ? '—' : peak.toFixed(2)} dBTP (потолок ≤ -1)`);
+console.log(`Клиппинг после мастера: ${clips ?? '—'} отсчётов`);
 
 const lufsOk = lufs !== null && lufs >= -16 && lufs <= -12;
 const peakOk = peak !== null && peak <= -1;
