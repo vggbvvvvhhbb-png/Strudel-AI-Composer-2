@@ -1,5 +1,5 @@
 // Интерфейс: промпт, стриминг кода с живой печатью, исполнение, лог.
-import { evaluateCode, stop, reset, unlockAudio, renderTrackOffline } from './strudel-engine.js';
+import { getEngine, stop, reset } from './engine-loader.js';
 import { generateCode, fixCode } from './api/client.js';
 import { staticValidate, dryValidate } from './core/validator.js';
 import { initMixer, syncMixer } from './mixer.js';
@@ -73,6 +73,7 @@ export async function runValidated(codeRaw, onStatus) {
       }
       continue;
     }
+    const { evaluateCode } = await getEngine();
     const res = await evaluateCode(code);
     return res.ok ? { ok: true, code } : { ok: false, error: res.error, code };
   }
@@ -191,6 +192,7 @@ export function initUI({ editor: editorApi } = {}) {
     log,
     // Звуковой разбор: рендер трека в браузере → отчёт о громкости и пике.
     renderAudio: async (code) => {
+      const { renderTrackOffline } = await getEngine();
       const { report } = await renderTrackOffline({ code, bars: [0, 16] });
       return { report };
     },
@@ -322,6 +324,7 @@ export function initUI({ editor: editorApi } = {}) {
     log('Сброшено: код, лог и звук');
   });
   $('btn-start-audio').addEventListener('click', async () => {
+    const { unlockAudio } = await getEngine();
     const audioState = await unlockAudio();
     $('audio-gate').hidden = true;
     log(`Звук разблокирован (${audioState})`);

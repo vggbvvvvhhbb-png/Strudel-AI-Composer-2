@@ -1,5 +1,9 @@
 // Запись мастер-выхода в WAV: перехват destination → AudioWorklet → 16-bit PCM.
-import { getAudioContext } from '@strudel/web';
+//
+// ДИНАМИЧЕСКИЙ ИМПОРТ. @strudel/web — это 627 КБ. Если импортировать его
+// статически, он попадает в статический граф студии, и первый экран ждёт
+// его загрузки. Здесь нужен всего один getAudioContext, и он нужен только
+// в момент старта записи — поэтому импорт динамический.
 import { encodeWav } from './wav.js';
 
 export { encodeWav };
@@ -29,6 +33,7 @@ async function attachTap(ctx) {
 
 export async function startRecording({ bars = null, bpm = 120, name = 'track', onTick, onFinished } = {}) {
   if (isRecording()) return { ok: false, reason: 'Уже идёт запись' };
+  const { getAudioContext } = await import('@strudel/web');
   const ctx = getAudioContext?.();
   if (!ctx || ctx.state !== 'running') return { ok: false, reason: 'Аудио не запущено' };
   const tap = await attachTap(ctx);

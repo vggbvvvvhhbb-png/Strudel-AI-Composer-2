@@ -7,7 +7,7 @@ import './styles/steps.css';
 import { initEditor } from './editor.js';
 import { initUI } from './ui.js';
 import { initCompose } from './compose.js';
-import { initEngine } from './strudel-engine.js';
+import { getEngine } from './engine-loader.js';
 import { initHistory } from './history.js';
 import { syncMixer } from './mixer.js';
 import { syncTransport } from './transport.js';
@@ -21,7 +21,14 @@ import { initStudioSteps } from './studio-steps.js';
 const editor = initEditor();
 
 initUI({ editor });
-initEngine(document.getElementById('strudel-container'));
+// Движок (725 КБ) грузится динамически: оболочка студии рисуется сразу,
+// а звуковой движок приезжает следом и к моменту, когда до него дотянется
+// пользователь, уже готов. Ошибка загрузки — в лог, а не в консоль молча.
+getEngine()
+  .then((engine) => engine.initEngine(document.getElementById('strudel-container')))
+  .catch((err) => {
+    console.error('[engine] не загрузился:', err);
+  });
 initLive({ editor });
 initVoice();
 initDeepDive();

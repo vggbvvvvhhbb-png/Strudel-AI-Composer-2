@@ -108,17 +108,27 @@ async function main() {
       if (message.type() === 'error') consoleErrors.push(message.text());
     });
 
-    await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+    // Студия живёт на отдельной странице studio.html: обложка (/) — витрина
+    // без движка. Проверять надо студию, иначе смоук смотрит на пустую
+    // витрину и радуется, что кнопок нет.
+    await page.goto(`${BASE}/studio.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     ok('страница загрузилась');
 
-    const hasStudio = await page.locator('#studio').count();
-    if (hasStudio) {
-      await page.waitForSelector('#studio[data-studio-ready="1"]', { timeout: 15_000 });
-      ok('студийная панель смонтирована');
-    } else {
-      ok('студийной панели нет — проверяем редактор кода', 'GUI-фаза не подключена');
-    }
+    const hasEditor = await page.locator('#code-input').count();
+    if (hasEditor) ok('редактор кода на месте');
+    else fail('редактор кода', 'не найден #code-input');
+
+    // Движок Strudel (627 КБ) грузится динамическим импортом: страница
+    // рисуется без него. Проверяем, что он всё-таки приезжает — иначе
+    // регрессия «тихий лайт» заметна только по отсутствию звука.
+    // Маркер — window.strudelStudio: движок выставляет его после инициализации.
+    const engineReady = await page
+      .waitForFunction(() => Boolean(window.strudelStudio), null, { timeout: 20_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (engineReady) ok('движок загрузился', 'window.strudelStudio на месте');
+    else fail('движок не загрузился', 'window.strudelStudio не появился за 20 с');
 
     // Разблокировка звука: браузеры требуют жест пользователя.
     const gate = page.locator('#btn-start-audio');
@@ -127,7 +137,7 @@ async function main() {
       await page.waitForTimeout(500);
     }
 
-    const playButton = hasStudio ? page.locator('#studio-play') : page.locator('#btn-play-code');
+    const playButton = page.locator('#btn-play-code');
     if (await playButton.count()) {
       await playButton.click({ timeout: 5000 }).catch(() => {});
       await page.waitForTimeout(800);
@@ -137,27 +147,18 @@ async function main() {
       fail('play/stop', 'не найдена кнопка воспроизведения');
     }
 
-    if (hasStudio) {
-      // Правка ноты: клик по пианороллу добавляет ноту — это одна команда шины.
-      const before = await page.locator('#studio').getAttribute('data-studio-commands');
-      const canvas = page.locator('#studio-piano-roll');
-      if (await canvas.count()) {
-        const box = await canvas.boundingBox();
-        if (box) {
-          await page.mouse.click(box.x + box.width * 0.3, box.y + box.height * 0.5);
-          await page.waitForTimeout(400);
-          const after = await page.locator('#studio').getAttribute('data-studio-commands');
-          if (after !== before) ok('правка ноты изменила проект', `${before} → ${after}`);
-          else fail('правка ноты', 'состояние не изменилось');
-        }
-      }
-
-      const undo = page.locator('#studio-undo');
-      if (await undo.count()) {
-        await undo.click({ timeout: 5000 }).catch(() => {});
-        await page.waitForTimeout(300);
-        ok('undo выполнен');
-      }
+    // Панели студии на месте. Раньше здесь стояла проверка «пианоролл и undo»
+    // из старой GUI-фазы: этих элементов в разметке уже нет, и проверка
+    // молча ничего не проверяла — то есть гейт был зелёный вхолостую.
+    const panels = await page.evaluate(() => ({
+      transport: Boolean(document.querySelector('#btn-play')),
+      editor: Boolean(document.querySelector('#code-input')),
+      steps: Boolean(document.querySelector('#studio-steps')),
+    }));
+    if (panels.transport && panels.editor) {
+      ok('панели студии на месте', `транспорт: ${panels.transport}, редактор: ${panels.editor}`);
+    } else {
+      fail('панели студии', `транспорт: ${panels.transport}, редактор: ${panels.editor}`);
     }
 
     // Ошибок в консоли быть не должно (кроме сетевых шумов сэмплов).

@@ -2,7 +2,7 @@
 import { getBpm, setCpm, getKey, setKey } from './core/code-model.js';
 import { startRecording, stopRecording, isRecording } from './core/recorder.js';
 import { staticValidate } from './core/validator.js';
-import { evaluateCode, stop } from './strudel-engine.js';
+import { getEngine, stop } from './engine-loader.js';
 import { log } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
@@ -53,6 +53,7 @@ function applyTransport() {
     if (!staticValidate(code).ok) return;
     hooks.setCode(code);
     if (playing) {
+      const { evaluateCode } = await getEngine();
       const res = await evaluateCode(code);
       if (!res.ok) log(`Ошибка после смены BPM/key: ${res.error}`, 'error');
     }
@@ -123,6 +124,7 @@ export function initTransport({ getCode, setCode, onPlayToggle }) {
     } else {
       const code = hooks.getCode();
       if (!code.trim()) return;
+      const { evaluateCode } = await getEngine();
       const res = await evaluateCode(code);
       if (res.ok) {
         playing = true;

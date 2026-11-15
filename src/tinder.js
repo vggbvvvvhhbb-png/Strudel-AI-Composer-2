@@ -16,7 +16,7 @@ import './styles/layout.css';
 import './styles/components.css';
 import './styles/tinder.css';
 
-import { initEngine, renderTrackOffline, unlockAudio, ensureSamples } from './strudel-engine.js';
+import { getEngine } from './engine-loader.js';
 import { measureLoudness, measurePeakDbfs, measureCrestDb } from './audio/dsp/loudness.js';
 import { measureTruePeak } from './audio/dsp/truepeak.js';
 
@@ -176,6 +176,7 @@ function countClips(channels) {
  * @returns {Promise<{buffer:AudioBuffer, lufs:number, audio:object}>}
  */
 async function renderCandidate(candidate) {
+  const { renderTrackOffline } = await getEngine();
   const result = await renderTrackOffline({
     code: candidate.code,
     bars: [0, BARS],
@@ -369,6 +370,7 @@ els.start.addEventListener('click', async () => {
   els.start.disabled = true;
   say('Готовим студию…');
   try {
+    const { unlockAudio, initEngine, ensureSamples } = await getEngine();
     await unlockAudio();
     initEngine(null);
     // Сэмплы грузим ДО рендера: без них ударные и пианино молчат, и

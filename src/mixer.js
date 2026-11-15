@@ -1,6 +1,6 @@
 // Микшер по партиям: fader gain, M/S кнопки, индикатор уровня.
 // Правки применяются к коду в редакторе и исполняются повторным evaluate без остановки такта.
-import { evaluateCode } from './strudel-engine.js';
+import { getEngine } from './engine-loader.js';
 import { parseParts, setPartMuted, setPartSolo, unsoloAll, setPartGain, getPartGain } from './core/code-model.js';
 import { staticValidate } from './core/validator.js';
 import { accentOf } from './accents.js';
@@ -14,6 +14,7 @@ function applyLive(code) {
   clearTimeout(state.applyTimer);
   state.applyTimer = setTimeout(async () => {
     if (!staticValidate(code).ok) return; // битую правку не исполняем — ждём ручную
+    const { evaluateCode } = await getEngine();
     const res = await evaluateCode(code);
     if (!res.ok) log(`Ошибка после правки микшера: ${res.error}`, 'error');
   }, 250);
