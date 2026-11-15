@@ -18,6 +18,7 @@ import tasteRoute from './routes/taste.js';
 import healthRoute from './routes/health.js';
 import statsRoute from './routes/stats.js';
 import deepdiveRoute from './routes/deepdive.js';
+import agentRoute from './routes/agent.js';
 import { withUsageContext } from './llm/context.js';
 import { cspHeaderFor } from './security/csp.js';
 
@@ -99,6 +100,8 @@ app.use(healthRoute);
 app.use(statsRoute);
 // Режим «Разбор» — отдельный контур, не трогает существующие пути студии.
 app.use(deepdiveRoute);
+// Помощник-агент: планирование, вызовы инструментов, ответ — потоком SSE.
+app.use('/api/agent', agentRoute);
 
 if (existsSync(distDir)) {
   // index.html — без кэша: сборка кладёт в assets файлы с хэшем в имени, и

@@ -1,0 +1,93 @@
+// Режимы агента: чат, ресёрч, композитор, дирижёр.
+//
+// ПОРТИРОВАНО из донора (.scratch/shveyka-igolka/packages/core/src/ai/skills.ts):
+// декларативный реестр режимов с бюджетами (лимит запросов, лимит источников,
+// лимит токенов, инструкция) и двумя инструкциями — развёрнутой и короткой.
+// Короткая нужна там, где модель обрывает ответ (у донора это стиль «short»).
+//
+// Отличия от донора: бюджет тратится не на поисковые запросы, а на вызовы
+// инструментов и шаги цикла. Инструкции переписаны под музыкальный домен.
+
+export const MODES = {
+  chat: {
+    id: 'chat',
+    label: 'Чат',
+    hint: 'Быстрый ответ без инструментов — дёшево и без сети.',
+    maxSteps: 2,
+    maxToolCalls: 2,
+    maxSources: 0,
+    maxTokens: 1200,
+    tools: [],
+    instruction:
+      'Отвечай кратко и по делу. Инструменты недоступны в этом режиме: опирайся на знания '
+      + 'и на то, что есть в контексте трека. Не выдумывай то, чего не знаешь.',
+    shortInstruction: 'Коротко и по делу.',
+  },
+  research: {
+    id: 'research',
+    label: 'Ресёрч',
+    hint: 'Поиск в интернете + чтение страниц + наша библиотека.',
+    maxSteps: 6,
+    maxToolCalls: 8,
+    maxSources: 6,
+    maxTokens: 2600,
+    tools: ['web_search', 'web_fetch', 'library_search'],
+    instruction:
+      'Сначала найди факты (web_search), потом прочитай нужные страницы (web_fetch), потом '
+      + 'сверь с нашей библиотекой (library_search). Каждый факт — со ссылкой. Если интернет '
+      + 'недоступен, скажи это прямо и ответь по библиотеке, не выдумывая источники.',
+    shortInstruction: 'Факты со ссылками, без выдумок.',
+  },
+  composer: {
+    id: 'composer',
+    label: 'Композитор',
+    hint: 'Спека → компиляция → готовый код трека.',
+    maxSteps: 6,
+    maxToolCalls: 8,
+    maxSources: 0,
+    maxTokens: 3200,
+    tools: ['library_search', 'compose_spec', 'compile', 'usage_report'],
+    instruction:
+      'Собери трек по описанию: сначала подбери звуки и форму (library_search), затем построй '
+      + 'спеку (compose_spec), затем скомпилируй её в код (compile). Код обязан быть пригоден '
+      + 'для исполнения в студии.',
+    shortInstruction: 'Спека → код, без пересказов.',
+  },
+  director: {
+    id: 'director',
+    label: 'Дирижёр',
+    hint: 'Правки и микс существующего трека — типизированные трансформы.',
+    maxSteps: 6,
+    maxToolCalls: 8,
+    maxSources: 0,
+    maxTokens: 2400,
+    tools: ['library_search', 'edit_ir', 'usage_report'],
+    instruction:
+      'Правь существующий трек через типографированные операции (edit_ir): они меняют одну '
+      + 'партию, не перегенерируя остальные. Перед правкой посмотри роли и возможности '
+      + '(library_search). Каждая правка — с указанием, что именно изменилось.',
+    shortInstruction: 'Точечные правки, без перегенерации.',
+  },
+};
+
+/**
+ * @param {string} id
+ * @returns {object} режим с дефолтами
+ */
+export function modeById(id) {
+  return MODES[id] || MODES.chat;
+}
+
+/**
+ * Инструкции режима для промта планировщика.
+ * @param {string} id
+ * @returns {string}
+ */
+export function plannerInstruction(id) {
+  const mode = modeById(id);
+  return [
+    `Режим: ${mode.label}. ${mode.hint}`,
+    mode.instruction,
+    `Доступные инструменты: ${mode.tools.length ? mode.tools.join(', ') : 'нет'}.`,
+  ].join(' ');
+}

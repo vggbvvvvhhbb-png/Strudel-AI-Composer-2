@@ -9,6 +9,7 @@
 
 import { fallbackSpec } from '../music/compose/pipeline.js';
 import { planIR } from '../../src/ir/intent.js';
+import { heuristicPlan } from '../agent/navigator.js';
 
 const STYLES = ['lo-fi', 'techno', 'house', 'ambient', 'dubstep', 'synthwave', 'trap', 'jazz', 'rock', 'cinematic'];
 
@@ -29,6 +30,19 @@ function detectStyle(text) {
 export function mockCompletion({ messages = [], responseFormat } = {}) {
   const text = messages.map((message) => (typeof message.content === 'string' ? message.content : '')).join('\n');
   const style = detectStyle(text);
+
+  // Запрос плана агента (маркер из server/agent/prompts.js): отдаём настоящий
+  // валидный план, собранный теми же правилами, что и запасной план. Иначе CI
+  // проверял бы только ветку «модель не ответила» — то есть не проверял бы
+  // разбор плана вовсе.
+  if (text.includes('AGENT_PLAN_JSON')) {
+    return JSON.stringify(heuristicPlan(extractUserText(messages)));
+  }
+
+  // Ответ агента: перечисляем инструменты и их статусы из блока наблюдений.
+  if (text.includes('AGENT_ANSWER')) {
+    return mockAgentAnswer(text);
+  }
 
   // Запрос Composition IR (маркер ставит server/ir/planner.js): мок отдаёт
   // настоящий валидный IR, собранный правилами, — иначе CI проверял бы
@@ -64,6 +78,39 @@ function extractIrPrompt(messages) {
   const content = typeof user?.content === 'string' ? user.content : '';
   const match = /Запрос:\s*(.+)/.exec(content);
   return match ? match[1].trim() : content.trim();
+}
+
+/**
+ * Текст последнего сообщения пользователя — для агента.
+ * @param {Array<{role:string, content:string}>} messages
+ * @returns {string}
+ */
+function extractUserText(messages) {
+  const user = messages.filter((message) => message.role === 'user').pop();
+  return typeof user?.content === 'string' ? user.content : '';
+}
+
+/**
+ * Мок-ответ агента: перечисляет инструменты и их статусы из наблюдений.
+ * Содержание выдуманным не назовёшь — оно собрано из того, что агент реально
+ * вызвал, поэтому в тестах и в CI видно, какие инструменты сработали.
+ * @param {string} text весь текст запроса
+ * @returns {string}
+ */
+function mockAgentAnswer(text) {
+  const block = /Наблюдения:\n([\s\S]*?)\n\n/.exec(text);
+  if (!block) return 'Мок-ответ: наблюдений не было.';
+  const lines = block[1]
+    .split('\n\n')
+    .map((chunk) => chunk.trim())
+    .filter(Boolean);
+  const parts = lines.map((chunk) => {
+    const tool = /Инструмент:\s*(\S+)/.exec(chunk)?.[1] ?? 'инструмент';
+    const status = /Статус:\s*([^\n]+)/.exec(chunk)?.[1] ?? 'неизвестно';
+    const reason = /Причина:\s*([^\n]+)/.exec(chunk)?.[1] ?? null;
+    return `- ${tool}: ${status}${reason ? ` (${reason})` : ''}`;
+  });
+  return ['Мок-ответ агента (ключи и сеть не использовались):', ...parts].join('\n');
 }
 
 /** Стриминговый мок: отдаём ответ кусками по словам. */
