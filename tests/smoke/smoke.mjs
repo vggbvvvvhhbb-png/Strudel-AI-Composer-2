@@ -97,11 +97,41 @@ async function main() {
       ok('генерация на мок-LLM', code ? `код ${code.split('\n').length} строк` : 'ответ получен');
     }
 
+    // Помощник-агент: паспорт инструментов и настоящий цикл в SSE.
+    // Это проверка «агент вообще работает», а не украшение: без неё агент
+    // мог бы сломаться тихо и никто бы не узнал.
+    const toolsRes = await fetch(`${BASE}/api/agent/tools`);
+    const toolsBody = await toolsRes.json().catch(() => null);
+    if (!toolsRes.ok || !Array.isArray(toolsBody?.tools)) {
+      fail('паспорт агента', `HTTP ${toolsRes.status}`);
+    } else {
+      ok('паспорт агента', `${toolsBody.tools.length} инструментов, режимов: ${toolsBody.modes.length}`);
+    }
+
+    const agentRes = await fetch(`${BASE}/api/agent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: 'сделай бит в стиле техно', mode: 'composer' }),
+    });
+    const agentRaw = await agentRes.text();
+    const agentEvents = agentRaw
+      .trim()
+      .split('\n\n')
+      .map((chunk) => chunk.split('\n').find((line) => line.startsWith('data: ')))
+      .filter(Boolean)
+      .map((line) => JSON.parse(line.slice('data: '.length)));
+    const agentTypes = agentEvents.map((event) => event.type);
+    if (!agentRes.ok || !agentTypes.includes('plan') || !agentTypes.includes('done')) {
+      fail('агент: цикл в SSE', `события: ${agentTypes.join(', ') || 'нет'}`);
+    } else {
+      const done = agentEvents.find((event) => event.type === 'done');
+      ok('агент: цикл в SSE', `инструментов: ${(done?.toolsUsed ?? []).join(', ') || 'нет'}`);
+    }
+
     browser = await chromium.launch({
       executablePath: pickBrowserPath(),
       args: ['--no-sandbox', '--mute-audio', '--autoplay-policy=no-user-gesture-required'],
-    });
-    const page = await browser.newPage();
+    });    const page = await browser.newPage();
     const consoleErrors = [];
     page.on('pageerror', (error) => consoleErrors.push(String(error)));
     page.on('console', (message) => {
@@ -154,11 +184,12 @@ async function main() {
       transport: Boolean(document.querySelector('#btn-play')),
       editor: Boolean(document.querySelector('#code-input')),
       steps: Boolean(document.querySelector('#studio-steps')),
+      agent: Boolean(document.querySelector('#agent-panel, #agent-input')),
     }));
-    if (panels.transport && panels.editor) {
-      ok('панели студии на месте', `транспорт: ${panels.transport}, редактор: ${panels.editor}`);
+    if (panels.transport && panels.editor && panels.agent) {
+      ok('панели студии на месте', `транспорт: ${panels.transport}, редактор: ${panels.editor}, агент: ${panels.agent}`);
     } else {
-      fail('панели студии', `транспорт: ${panels.transport}, редактор: ${panels.editor}`);
+      fail('панели студии', `транспорт: ${panels.transport}, редактор: ${panels.editor}, агент: ${panels.agent}`);
     }
 
     // Ошибок в консоли быть не должно (кроме сетевых шумов сэмплов).

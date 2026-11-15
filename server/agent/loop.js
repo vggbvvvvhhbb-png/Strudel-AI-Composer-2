@@ -244,9 +244,12 @@ export async function* runAgent({
 
     yield { type: 'tool_start', id: step.tool, index, args, why: step.why ?? null };
 
-    const startedAt = Date.now();
+    // Время инструмента меряем высокоточным таймером: Date.now() имеет
+    // миллисекундную сетку и для быстрых инструментов честно показывал «0 мс»,
+    // хотя работа была. Округляем до 0.1 мс — дробная часть значима.
+    const startedAt = performance.now();
     const result = await runTool(step.tool, args, ctx);
-    const ms = Date.now() - startedAt;
+    const ms = Math.round((performance.now() - startedAt) * 10) / 10;
 
     const ok = Boolean(result?.ok);
     const degraded = Boolean(result?.degraded);

@@ -214,7 +214,10 @@ body:not([data-step='3']) .step-advanced {
   display: none;
 }
 
-body:not([data-step='3']) .col-right {
+/* Правая колонка нужна на всех шагах: в ней живёт помощник-агент, а с ним
+   пишут трек уже на первом шаге. Прячем только микшер — на первых двух
+   шагах он лишний. */
+body:not([data-step='3']) #mixer-panel {
   display: none;
 }
 
@@ -243,12 +246,15 @@ body[data-step='1'] .visual-stage {
    центру, чтобы визуализация и оценка были крупнее. Планшет и мобильный
    не трогаем: там раскладку задаёт layout.css. */
 @media (min-width: 1181px) {
-  body:not([data-step='3']) main.app-grid:not([data-view='dive']) {
-    grid-template-columns: 320px minmax(0, 1fr);
+  /* Правая колонка (помощник-агент + микшер) есть на всех шагах: агент нужен
+     уже на первом шаге — с ним и пишут трек. Микшер, наоборот, на первых
+     двух шагах лишний, поэтому прячем только его, а колонку оставляем. */
+  body:not([data-step='3']) main.app-grid:not([data-view='dive']) #mixer-panel {
+    display: none;
   }
 }
 
-/* --- Мобильный: шапка переносится, кнопка микшера — только на шаге 3 --- */
+/* --- Мобильный: шапка переносится, кнопка шторки доступна на всех шагах --- */
 @media (max-width: 860px) {
   .app-header {
     flex-wrap: wrap;
@@ -258,9 +264,5 @@ body[data-step='1'] .visual-stage {
     order: 3;
     width: 100%;
     margin-left: 0;
-  }
-
-  body:not([data-step='3']) button.mixer-toggle {
-    display: none;
   }
 }

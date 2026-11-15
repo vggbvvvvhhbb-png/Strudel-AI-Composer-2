@@ -4,6 +4,7 @@ import './styles/components.css';
 import './styles/compose.css';
 import './styles/animations.css';
 import './styles/steps.css';
+import './styles/agent.css';
 import { initEditor } from './editor.js';
 import { initUI } from './ui.js';
 import { initCompose } from './compose.js';
@@ -17,6 +18,7 @@ import { applyMixerState } from './core/code-model.js';
 import { codeFromHash } from './core/share.js';
 import { initDeepDive } from './deepdive/panel.js';
 import { initStudioSteps } from './studio-steps.js';
+import { initAgentPanel } from './agent-panel.js';
 
 const editor = initEditor();
 
@@ -35,6 +37,19 @@ initDeepDive();
 // Шаги студии («Опишите → Слушайте → Правьте») — после разбора,
 // чтобы флаг ?dive=1 уже был разобран и шапка шагов знала про режим.
 initStudioSteps();
+
+// Помощник-агент: план, вызовы инструментов и ответ — раздельно.
+// Код, который агент собрал, попадает в редактор только по кнопке.
+initAgentPanel({
+  getCode: () => document.getElementById('code-input')?.value ?? '',
+  setCode: (code) => {
+    const el = document.getElementById('code-input');
+    if (!el) return;
+    el.value = code;
+    syncMixer(code);
+    syncTransport(code);
+  },
+});
 
 // Мобильная шторка микшера
 document.getElementById('mixer-toggle')?.addEventListener('click', () => {

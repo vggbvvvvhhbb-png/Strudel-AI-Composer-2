@@ -11,6 +11,36 @@ export async function fetchHealth(signal) {
   return jsonOrThrow(await fetch('/api/health', { signal }));
 }
 
+// --- Помощник-агент ---
+
+/**
+ * Паспорт агента: режимы, инструменты, статус внешних сервисов.
+ * @param {AbortSignal} [signal]
+ */
+export async function fetchAgentTools(signal) {
+  return jsonOrThrow(await fetch('/api/agent/tools', { signal }));
+}
+
+/**
+ * Агентный цикл в SSE. События приходят по одному: plan, tool_start, tool_end,
+ * text, usage, done, error — панель рисует шаги отдельно от текста ответа.
+ *
+ * @param {{prompt:string, mode?:string, currentCode?:string|null, onEvent:(event:object)=>void, signal?:AbortSignal}} options
+ */
+export async function agentStream({ prompt, mode, currentCode = null, onEvent, signal }) {
+  const res = await fetch('/api/agent', {
+    method: 'POST',
+    headers: usageHeaders(),
+    body: JSON.stringify({ prompt, mode, currentCode }),
+    signal,
+  });
+  if (!res.ok || !res.body) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `HTTP ${res.status}`);
+  }
+  await consumeSSE(res, onEvent);
+}
+
 // Генерация со стримингом. onDelta(text) — каждый чанк; возвращает полный код.
 // signal — AbortController-сигнал кнопки «Стоп».
 export async function generateCode({ prompt, mode = 'new', currentCode, context, onDelta, signal }) {

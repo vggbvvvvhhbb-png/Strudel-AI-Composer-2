@@ -243,7 +243,33 @@
 
       <!-- Правая колонка: микшер (показывается на шаге «Правьте») -->
       <aside class="col-right">
-        <section class="panel" aria-label="Микшер">
+        <!-- Помощник-агент: план, вызовы инструментов и ответ — раздельно. -->
+        <section class="panel agent-panel" aria-label="Помощник-агент">
+          <h2 class="panel-title">Помощник</h2>
+          <p class="hint agent-hint">
+            Агент сам выбирает инструменты: ищет по библиотеке, собирает спеку, компилирует
+            и правит трек. Каждый шаг виден отдельно от ответа.
+          </p>
+          <div class="agent-head">
+            <label class="visually-hidden" for="agent-mode">Режим агента</label>
+            <select id="agent-mode"></select>
+            <span id="agent-services" class="agent-services"></span>
+          </div>
+          <label class="visually-hidden" for="agent-input">Запрос агенту</label>
+          <textarea
+            id="agent-input"
+            rows="2"
+            placeholder="Например: найди в интернете, что такое phonk drift, и сделай бит в этом стиле"
+          ></textarea>
+          <div class="row">
+            <button id="agent-send" class="btn primary" type="button">Спросить</button>
+            <button id="agent-stop" class="btn ghost" type="button" hidden>Стоп</button>
+          </div>
+          <div id="agent-stream" class="agent-stream" aria-live="polite"></div>
+          <div id="agent-usage" class="agent-usage"></div>
+        </section>
+
+        <section class="panel" id="mixer-panel" aria-label="Микшер">
           <h2 class="panel-title">Микшер</h2>
           <div id="mixer" class="mixer"></div>
           <p class="hint">M — заглушить партию, S — соло, ползунок — громкость. Индикатор показывает, что партия звучит сейчас.</p>
@@ -398,7 +424,17 @@
     </main>
 
     <!-- Нижний транспорт -->
-    <button id="mixer-toggle" class="btn mixer-toggle" type="button">🎚 Микшер</button>
+    <!-- На мобильном правая колонка выезжает шторкой: в ней теперь помощник
+         и микшер, поэтому кнопка называется «Помощник». -->
+    <button
+      id="mixer-toggle"
+      class="btn mixer-toggle"
+      type="button"
+      title="Помощник-агент и микшер"
+      aria-label="Показать помощника и микшер"
+    >
+      ☰ Помощник
+    </button>
     <footer class="transport" aria-label="Транспорт">
       <button id="btn-play" class="btn primary btn-play" type="button" aria-pressed="false">▶</button>
       <button id="btn-stop-transport" class="btn" type="button" title="Остановить звук">⏹</button>
