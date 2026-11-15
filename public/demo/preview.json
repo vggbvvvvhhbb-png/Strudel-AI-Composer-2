@@ -1,0 +1,24 @@
+{
+  "source": "demo/preview.js",
+  "bars": 2,
+  "bpm": 120,
+  "durationS": 4,
+  "sampleRate": 24000,
+  "channels": 1,
+  "bytes": 192044,
+  "lufsI": -18.16,
+  "truePeakDbtp": -3.94,
+  "peakDbfs": -3.97,
+  "clipCount": 0,
+  "fingerprint": {
+    "browser": "chromium",
+    "browser_version": "157.0.8103.51",
+    "os": "win32",
+    "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+    "sample_rate": 48000,
+    "code_sha256": "3e4b76e44e583dc5d74a803d3d3f8df52c6c6f89e881e90901439e205b64582c",
+    "seed": "deterministic-engine"
+  },
+  "engine": "strudel-web@1.3.0/superdough@1.3.0",
+  "renderMs": 122
+}

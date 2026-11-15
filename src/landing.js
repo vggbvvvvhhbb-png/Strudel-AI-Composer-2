@@ -1,6 +1,11 @@
 // Главная страница: примеры, переход в студию, тема.
 // Страница лёгкая: без Strudel — генерация живёт в студии.
 import './styles/tokens.css';
+// components.css — обязателен: без него `.btn.primary` (главная кнопка
+// обложки) не существует в бандле обложки, и кнопка выглядит серой
+// кнопкой без оформления. Импорт до landing.css, чтобы общие правила
+// уступали правилам обложки при равной специфичности.
+import './styles/components.css';
 import './styles/landing.css';
 
 const $ = (id) => document.getElementById(id);
@@ -43,8 +48,59 @@ function initForm() {
   });
 }
 
-function initTheme() {
-  const btn = $('theme-toggle');
+// Предрассчитанное демо: 4 секунды, тот же движок, что в студии.
+// Файл собирает scripts/build-demo.mjs из demo/preview.js — лежит в public/,
+// поэтому обложка не грузит движок и не ждёт сеть: звук начинается сразу.
+const DEMO_URL = 'demo/preview.wav';
+
+function initDemo() {
+  const btn = $('hero-demo');
+  const label = $('hero-demo-label');
+  const bar = $('hero-demo-fill');
+  if (!btn) return;
+
+  const audio = new Audio();
+  audio.preload = 'auto';
+  audio.src = DEMO_URL;
+
+  const setLabel = (text) => {
+    if (label) label.textContent = text;
+  };
+
+  const paint = () => {
+    if (!bar) return;
+    const ratio = audio.duration ? audio.currentTime / audio.duration : 0;
+    bar.style.width = `${Math.min(100, Math.max(0, ratio * 100)).toFixed(1)}%`;
+  };
+
+  btn.addEventListener('click', async () => {
+    if (!audio.paused) {
+      audio.pause();
+      setLabel('▶ Демо — 4 секунды');
+      return;
+    }
+    try {
+      await audio.play();
+      setLabel('⏸ Стоп');
+    } catch (err) {
+      // Честная деградация: если файл не отдался — говорим об этом, а не
+      // делаем вид, что звук играет.
+      setLabel('⚠ Демо недоступно');
+      console.error('[demo] не проигрался:', err);
+    }
+  });
+
+  audio.addEventListener('timeupdate', paint);
+  audio.addEventListener('ended', () => {
+    setLabel('▶ Демо — 4 секунды');
+    paint();
+  });
+  audio.addEventListener('error', () => {
+    setLabel('⚠ Демо недоступно');
+  });
+}
+
+function initTheme() {  const btn = $('theme-toggle');
   const THEMES = [
     { id: 'jade', label: 'Jade' },
     { id: 'obsidian', label: 'Obsidian' },
@@ -70,3 +126,4 @@ function initTheme() {
 initExamples();
 initForm();
 initTheme();
+initDemo();

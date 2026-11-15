@@ -4,15 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
-    <title>Strudel — опишите музыку словами, услышите её за 5 секунд</title>
+    <title>Strudel — опишите музыку словами, услышьте демо за 5 секунд</title>
     <meta
       name="description"
-      content="Опишите музыку обычными словами — услышите её через 5 секунд. Не запись из библиотеки, а живой код: его можно править, а оценка трека считается по измерениям, а не по обещаниям."
+      content="Опишите музыку обычными словами — услышьте демо за 5 секунд. Не запись из библиотеки, а живой код: его можно править, а оценка трека считается по измерениям, а не по обещаниям."
     />
     <meta property="og:title" content="Strudel — опишите музыку словами" />
     <meta
       property="og:description"
-      content="Опишите музыку словами — услышите её за 5 секунд. Настоящий код, честные измерения, правки по одной фразе."
+      content="Демо — за 5 секунд. Свой трек — настоящий код: можно править и мерить, а не перегенерировать."
     />
     <link rel="stylesheet" href="/fonts/fonts.css" />
   </head>
@@ -36,7 +36,7 @@
           <p class="hero-kicker">Музыка по описанию — с настоящим кодом внутри</p>
           <h1 class="hero-title">
             Опишите музыку словами —<br />
-            <span class="hero-accent">услышите её через 5 секунд</span>
+            <span class="hero-accent">услышьте демо через 5 секунд</span>
           </h1>
           <p class="hero-sub">
             Напишите, что хотите услышать: жанр, настроение, темп, инструменты. Сервер
@@ -55,6 +55,22 @@
               ✨ Создать трек
             </button>
           </form>
+
+          <!-- Демо: предрассчитанный трек. Играет сразу после клика, без
+               регистрации и без загрузки движка — это и есть «услышали за
+               5 секунд». Числа в подписи — измерение, а не обещание. -->
+          <div class="hero-demo">
+            <button id="hero-demo" class="btn ghost hero-demo-btn" type="button">
+              <span id="hero-demo-label">▶ Демо — 4 секунды</span>
+            </button>
+            <div class="hero-demo-track" aria-hidden="true">
+              <div id="hero-demo-fill" class="hero-demo-fill"></div>
+            </div>
+            <p class="hero-demo-note">
+              Предрассчитанный трек: 4,0 с, −18,2 LUFS, тот же движок, что в студии.
+              Свой трек по описанию собирается дольше — десятки секунд, не секунды.
+            </p>
+          </div>
 
           <div class="hero-examples">
             <span class="hero-examples-label">или начните с примера:</span>

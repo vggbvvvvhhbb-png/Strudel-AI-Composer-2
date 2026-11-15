@@ -198,6 +198,44 @@
   text-align: left;
 }
 
+/* --- Демо: предрассчитанный трек, звук сразу после клика --- */
+
+.hero-demo {
+  max-width: 680px;
+  margin: var(--sp-3) auto 0;
+  text-align: left;
+}
+
+.hero-demo-btn {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  justify-content: flex-start;
+}
+
+.hero-demo-track {
+  height: 3px;
+  margin-top: var(--sp-2);
+  border-radius: 2px;
+  background: rgb(var(--jade-rgb) / 0.12);
+  overflow: hidden;
+}
+
+.hero-demo-fill {
+  width: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--jade) 0%, var(--jade-bright) 100%);
+  transition: width 0.08s linear;
+}
+
+.hero-demo-note {
+  margin: var(--sp-2) 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
 .hero-examples-label {
   display: block;
   margin-bottom: var(--sp-2);
