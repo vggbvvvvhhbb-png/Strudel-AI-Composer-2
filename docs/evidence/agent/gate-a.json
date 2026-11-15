@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-15T12:34:00.363Z",
+  "checkedAt": "2026-11-15T13:03:31.130Z",
   "gate": "A — помощник-агент",
   "query": "найди в интернете, что такое phonk drift, и сделай бит в этом стиле",
   "internet": "не измерено: ключа поиска в репозитории нет (EXA_API_KEY не задан)",
@@ -126,14 +126,14 @@
           "ok": true,
           "degraded": false,
           "reason": null,
-          "ms": 0.7
+          "ms": 0.6
         },
         {
           "tool": "compose_spec",
           "ok": true,
           "degraded": false,
           "reason": null,
-          "ms": 14.7
+          "ms": 16.3
         },
         {
           "tool": "compile",
