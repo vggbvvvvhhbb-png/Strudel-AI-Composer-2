@@ -1081,3 +1081,62 @@ npm test      → 1200 тестов, 80 файлов — зелёные
 npm run gate  → 12/12 зелёные (59.3 с)
 ```
 
+## 13.8. Дефект, который нашёлся только на деплое: образ без `local/`
+
+Сборка образа прошла, контейнер стартовал — и сразу упал:
+`ERR_MODULE_NOT_FOUND: /app/local/client.mjs` (импорт из
+`server/routes/local.js`). Контейнер ушёл в бесконечный рестарт, сайт не
+отвечал. Причина: фаза B добавила `local/`, а Dockerfile копировал в рантайм
+только `server`, `src`, `scripts` и `skills`.
+
+Почему это не видели локальные тесты: на машине владельца сервер запускается
+из исходников, где `local/` есть на диске. Ловится только в образе. Значит,
+дефект был на `main` с момента коммита `f039f49` и любой деплой главной
+ветки после него давал бы падающий контейнер.
+
+Что сделано:
+
+* `Dockerfile`: `COPY local ./local`;
+* `tests/unit/docker-image-layout.test.js` — тест на класс дефекта: любой
+  импорт сервера за пределами копируемых каталогов должен быть скопирован в
+  образ, и скопированный каталог не должен быть исключён из контекста
+  сборки. Проверено вручную: без строки `COPY local` тест падает
+  (`expected [ 'local' ] to deeply equal []`).
+
+## 13.9. Деплой на боевой сервер (Google Cloud, 34.88.114.146)
+
+Шаги — те же, что в `deploy/deploy-server.sh`: копирование исходников в
+`/opt/strudel` (без `.git`, `node_modules`, `dist`, `.env`, `.scratch`),
+`.env` на сервере (600, вне git), сборка образов под `flock` от мьютекса
+тяжёлых операций, блок Caddy с бэкапом и проверкой конфига, перезапуск
+только Caddy.
+
+```
+strudel-ai-composer:local  Built   (1.45 ГБ)
+strudel-deepdive-worker:local Built
+shveyka-strudel-1          Up (healthy)
+shveyka-deepdive-worker-1  Up (healthy)
+shveyka-caddy-1            Up
+health:  {"ok":true,"version":"0.2.0","features":{"voice":false,"music":true},"providers":["openai"]}
+deepdive: worker available, htdemucs 4.1.0, очередь пуста
+Соседние сервисы (web, bot, admin-bot) не тронуты.
+```
+
+Проверка снаружи: `https://music.34.88.114.146.sslip.io/` — 200,
+`/studio.html` — 200, `/api/health` — 200.
+
+**Проверка, что на сервере именно новая логика** (POST `/api/music/analyze`
+с треком из трёх секций):
+
+```
+motifCoherence   : 1
+motifDevelopment : 1
+cadenceClarity   : 0.667
+resolution       : 0.333
+contourEntropy   : 0.946
+melodyRange      : 14
+score total      : 88.4
+```
+
+Цифры совпадают с локальным замером — на сервере та же версия кода.
+
