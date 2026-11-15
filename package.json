@@ -9,6 +9,7 @@
     "build:worklet": "node scripts/build-worklet.mjs",
     "build:render": "node scripts/build-render-bundle.mjs",
     "build:demo": "node scripts/build-demo.mjs",
+    "demo:opera": "node scripts/build-opera-demo.mjs",
     "render:wav": "node scripts/render-wav.mjs",
     "prebuild": "node scripts/build-worklet.mjs",
     "predev": "node scripts/build-worklet.mjs",

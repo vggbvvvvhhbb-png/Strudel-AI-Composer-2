@@ -26,6 +26,9 @@ import { usageSummary } from '../stats.js';
 import { applyTransform, TRANSFORMS } from '../../src/ir/transforms.js';
 import { safeValidateIR } from '../../src/ir/schema.js';
 import { symbolicReport } from '../../src/oracle/report.js';
+import { specFromPlan } from '../../src/music/expand.js';
+import { applyPartEdit, PART_OPS } from '../../src/music/part-edit.js';
+import { TrackSpecSchema } from '../../src/schemas/track-spec.schema.js';
 
 const LimitSchema = z.number().int().min(1).max(50).default(10);
 
@@ -114,6 +117,99 @@ export const TOOLS = [
       }
       const code = compileTrackSpec(args.spec);
       return { ok: true, degraded: false, code, parts: Object.keys(args.spec?.parts?.roles ?? {}) };
+    },
+  },
+  {
+    id: 'expand_plan',
+    title: 'Экспансия плана в дорожки',
+    description:
+      'Детерминированно разворачивает план (форма, гармония, состав групп) в 30-100+ дорожек: '
+      + 'у каждой дорожки своя идентичность, свой рисунок и своя громкость. Бюджет полифонии '
+      + 'соблюдается: не более N атак на такт на группу. Работает без сети и без ключей.',
+    schema: z.object({
+      plan: z.object({
+        style: z.string().max(40).optional(),
+        key: z.string().max(20).optional(),
+        bpm: z.number().int().min(60).max(180).optional(),
+        sections: z.array(z.object({
+          name: z.string().min(1),
+          bars: z.number().int().min(1).max(64),
+          energy: z.number().min(0).max(1).optional(),
+          harmony: z.string().max(80).optional(),
+        })).min(1).max(16),
+        groups: z.array(z.object({
+          group: z.string().min(1).max(30),
+          role: z.string().min(1).max(30),
+          count: z.number().int().min(1).max(24),
+          sound: z.string().max(30).optional(),
+          activeIn: z.array(z.string()).optional(),
+        })).min(1).max(24),
+      }),
+      compile: z.boolean().default(true),
+    }),
+    async run(args) {
+      const { spec, report } = specFromPlan(args.plan);
+      const checked = TrackSpecSchema.safeParse(spec);
+      if (!checked.success) {
+        return {
+          ok: false,
+          degraded: false,
+          reason: `план не развернулся в валидную спеку: ${checked.error.issues.slice(0, 3).map((issue) => issue.message).join('; ')}`,
+        };
+      }
+      const code = args.compile ? compileTrackSpec(checked.data) : null;
+      return {
+        ok: true,
+        degraded: false,
+        voices: report.voices,
+        budgetOk: report.budgetOk,
+        attacksPerBar: report.totalAttacksPerBar,
+        attackBudget: report.globalBudget,
+        groups: report.groups,
+        spec: checked.data,
+        code,
+      };
+    },
+  },
+  {
+    id: 'edit_part',
+    title: 'Правка одной дорожки',
+    description:
+      'Меняет ОДНУ дорожку трека по её идентификатору (VIOLIN_3, LEAD_1): тембр, рисунок, '
+      + 'громкость, роль, переопределение в секции. Остальные дорожки не трогаются и не '
+      + 'перегенерируются. Работает без сети и без ключей.',
+    schema: z.object({
+      spec: z.object({
+        meta: z.object({ style: z.string(), bpm: z.number(), key: z.string() }).passthrough(),
+        parts: z.object({ roles: z.record(z.any()) }).passthrough(),
+        structure: z.object({ sections: z.array(z.any()) }).passthrough(),
+      }).passthrough(),
+      id: z.string().min(1).max(60),
+      op: z.enum(Object.keys(PART_OPS)),
+      params: z.record(z.any()).default({}),
+    }),
+    async run(args) {
+      const result = applyPartEdit(args.spec, { id: args.id, op: args.op, params: args.params });
+      if (!result.ok) {
+        return { ok: false, degraded: false, reason: result.error };
+      }
+      const checked = TrackSpecSchema.safeParse(result.spec);
+      if (!checked.success) {
+        return {
+          ok: false,
+          degraded: false,
+          reason: `после правки спека невалидна: ${checked.error.issues.slice(0, 3).map((issue) => issue.message).join('; ')}`,
+        };
+      }
+      return {
+        ok: true,
+        degraded: false,
+        id: args.id,
+        op: args.op,
+        changed: result.changed,
+        spec: checked.data,
+        code: compileTrackSpec(checked.data),
+      };
     },
   },
   {
