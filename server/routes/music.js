@@ -17,6 +17,7 @@ import { formatAudioRemarks } from '../music/compose/audio-remarks.js';
 import { scoreAudioReport, combineScores } from '../music/compose/audio-score.js';
 import { parseMetricsReport } from '../../src/audio/metrics-report.js';
 import { runAudioQa } from '../../src/audio/qa.js';
+import { licenseReport } from '../music/licenses.js';
 
 const router = Router();
 
@@ -280,6 +281,14 @@ router.post('/api/music/variants', async (req, res) => {
   } catch (err) {
     res.status(502).json({ error: err?.message || 'Не удалось сгенерировать варианты' });
   }
+});
+
+// GET /api/music/licenses — правовой статус сэмпл-банков, которые грузит студия.
+//
+// Отдаём честно: если лицензия не подтверждена, так и написано. Тишина
+// здесь выглядела бы как «всё в порядке», а это неправда (см. D-099).
+router.get('/api/music/licenses', (_req, res) => {
+  res.json(licenseReport());
 });
 
 // GET /api/music/styles — список референсов для интерфейса.

@@ -1,0 +1,94 @@
+{
+  "generatedAt": "2026-11-15T00:32:52.072Z",
+  "mode": "release",
+  "ok": true,
+  "releaseBlocked": true,
+  "totals": {
+    "banks": 2,
+    "confirmed": 0,
+    "unresolved": 2,
+    "names": 219,
+    "unresolvedNames": 219
+  },
+  "usedBanks": [
+    "github:tidalcycles/dirt-samples",
+    "shabda:piano"
+  ],
+  "banks": [
+    {
+      "key": "github:tidalcycles/dirt-samples",
+      "names": 218,
+      "license": "не подтверждена",
+      "licenseId": null,
+      "scope": "bank",
+      "verdict": "требует решения владельца",
+      "confirmed": false,
+      "requiresDecision": true,
+      "reason": "LICENSE-файла в репозитории нет: GitHub API отдаёт license: null, README про лицензию не упоминает. Состав зафиксирован («We keep everything as it is to not break existing artwork»), происхождение не документировано. Папка breaks125 — лупы, нарезанные из чужих записей. Разрешение возможно только письменное — от TidalCycles или авторов.",
+      "source": "https://api.github.com/repos/tidalcycles/Dirt-Samples",
+      "checkedAt": "2026-11-15",
+      "attribution": "Банк сэмплов: https://github.com/tidalcycles/Dirt-Samples — лицензия не подтверждена"
+    },
+    {
+      "key": "shabda:piano",
+      "names": 1,
+      "license": "наследуется от Freesound: у каждого сэмпла своя",
+      "licenseId": null,
+      "scope": "sample",
+      "verdict": "требует решения владельца",
+      "confirmed": false,
+      "requiresDecision": true,
+      "reason": "Манифест strudel отдаёт только имя и путь: лицензии каждого сэмпла в нём нет. Инструмент shabda умеет фильтр --licenses cc0|by|by-nc, то есть NC-сэмплы попадают в тот же банк. Читать лицензию нужно у Freesound по id образца — нужен либо Freesound API-ключ, либо фильтрация на стороне студии.",
+      "source": "https://labs.freesound.org/apps/2025/11/27/shabda.html",
+      "checkedAt": "2026-11-15",
+      "attribution": "Банк сэмплов: https://github.com/ilesinge/shabda — лицензия наследуется от Freesound: у каждого сэмпла своя"
+    }
+  ],
+  "checks": [
+    {
+      "name": "Банки из кода есть в реестре лицензий",
+      "passed": true,
+      "detail": "все 2 банка(ов) из кода зафиксированы в реестре",
+      "numbers": {
+        "used": 2,
+        "missing": []
+      }
+    },
+    {
+      "name": "Реестр не шире списка банков в коде",
+      "passed": true,
+      "detail": "лишних записей нет",
+      "numbers": {
+        "extra": []
+      }
+    },
+    {
+      "name": "У каждой записи есть лицензия, источник, дата и вердикт",
+      "passed": true,
+      "detail": "все записи полные",
+      "numbers": {
+        "incomplete": []
+      }
+    },
+    {
+      "name": "Каждый банк из манифеста описан в реестре",
+      "passed": true,
+      "detail": "пропусков нет",
+      "numbers": {
+        "missing": []
+      }
+    },
+    {
+      "name": "Публичный релиз не заблокирован",
+      "passed": false,
+      "detail": "заблокирован: 2 банка(ов) без подтверждённой лицензии, 219 имён сэмплов — ждём решения владельца (D-099)",
+      "numbers": {
+        "unresolved": [
+          "github:tidalcycles/dirt-samples",
+          "shabda:piano"
+        ],
+        "names": 219
+      }
+    }
+  ]
+}

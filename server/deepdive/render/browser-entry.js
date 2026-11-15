@@ -19,6 +19,7 @@ import { createEngineAdapter } from '../../../src/audio/engine/adapter.js';
 import { audioBufferToChannels } from '../../../src/audio/render/offline.js';
 import { buildMetricsReport } from '../../../src/audio/metrics-report.js';
 import { encodeWav } from '../../../src/core/wav.js';
+import { SAMPLE_SETS } from '../../../src/sample-banks.js';
 
 const strudel = window.strudel;
 
@@ -154,10 +155,9 @@ async function render(args) {
 
 /**
  * Банки сэмплов. Без них ударные и пианино молчат: `s("bd")` без сэмпла
- * даёт «sound bd not found!». Имена и адреса — из реестра
- * server/music/data/sample-banks.json (не выдумываем имён сэмплов).
+ * даёт «sound bd not found!». Список — общий (src/sample-banks.js), там же
+ * живёт его проверка лицензий.
  */
-const SAMPLE_SETS = ['github:tidalcycles/dirt-samples', 'shabda:piano'];
 
 /** Готовит живой контекст и движок. */
 async function init() {

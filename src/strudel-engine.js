@@ -28,6 +28,7 @@ import { instrumentCode, resetMeters } from './meters.js';
 import { accentOf } from './accents.js';
 import { createStudioGraph } from './audio/graph.js';
 import { createEngineAdapter } from './audio/engine/adapter.js';
+import { SAMPLE_SETS } from './sample-banks.js';
 import { masterPresetFor } from './audio/master-presets.js';
 import { renderAndMeasure, audioBufferToChannels } from './audio/render/offline.js';
 import { allSamplesReady } from './samples-ready.js';
@@ -226,12 +227,9 @@ export function engineAdapter() {
 let samplesPromise = null;
 let samplesRetryAt = 0;
 
-// Наборы сэмплов, которые реально существуют.
-//   github:tidalcycles/dirt-samples — большой набор (bd, sd, hh, cp, 808*, breaks* …);
-//   shabda:piano — пианино (в dirt-samples его нет).
-// Имена из манифеста — единственные рабочие: неизвестное имя молча
-// выпадает из звука («sound … not found!»).
-const SAMPLE_SETS = ['github:tidalcycles/dirt-samples', 'shabda:piano'];
+// Наборы сэмплов, которые реально существуют. Список — в общем модуле:
+// им пользуются ещё серверный рендерер и гейт лицензий, иначе банк можно
+// добавить в одном месте, а лицензия останется непроверенной.
 
 /**
  * Подгружает манифесты сэмплов. Возвращает промис, который можно ждать:

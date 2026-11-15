@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-11-15T00:00:00.000Z",
+  "note": "Машинный реестр лицензий сэмпл-банков. Источник истины по тексту — docs/LICENSES.md; этот файл нужен, чтобы гейт мог считать покрытие, а не полагаться на догадку. Каждая запись обязана иметь license, source, checkedAt и verdict — иначе гейт падает.",
+  "policy": {
+    "allowedByDefault": [
+      "MIT",
+      "BSD-2-Clause",
+      "BSD-3-Clause",
+      "ISC",
+      "Apache-2.0",
+      "LGPL-2.1",
+      "CC0-1.0",
+      "CC-BY-3.0",
+      "CC-BY-4.0"
+    ],
+    "requiresOwnerDecision": [
+      "AGPL-3.0",
+      "GPL-3.0",
+      "CC-BY-NC-*",
+      "CC-BY-ND-*",
+      "кастомная лицензия",
+      "первоисточник не подтверждён"
+    ],
+    "rule": "Лицензия каждого сэмпла читается с первоисточника. «Не нашёл запрета» ≠ «разрешено»."
+  },
+  "banks": {
+    "github:tidalcycles/dirt-samples": {
+      "url": "https://raw.githubusercontent.com/tidalcycles/dirt-samples/main/strudel.json",
+      "repository": "https://github.com/tidalcycles/Dirt-Samples",
+      "license": "не подтверждена",
+      "licenseId": null,
+      "scope": "bank",
+      "source": "https://api.github.com/repos/tidalcycles/Dirt-Samples",
+      "checkedAt": "2026-11-15",
+      "verdict": "требует решения владельца",
+      "commercial": false,
+      "distribution": false,
+      "attributionRequired": false,
+      "note": "LICENSE-файла в репозитории нет: GitHub API отдаёт license: null, README про лицензию не упоминает. Состав зафиксирован («We keep everything as it is to not break existing artwork»), происхождение не документировано. Папка breaks125 — лупы, нарезанные из чужих записей. Разрешение возможно только письменное — от TidalCycles или авторов.",
+      "decision": null
+    },
+    "shabda:piano": {
+      "url": "https://shabda.ndre.gr/piano.json?strudel=1",
+      "repository": "https://github.com/ilesinge/shabda",
+      "license": "наследуется от Freesound: у каждого сэмпла своя",
+      "licenseId": null,
+      "scope": "sample",
+      "source": "https://labs.freesound.org/apps/2025/11/27/shabda.html",
+      "checkedAt": "2026-11-15",
+      "verdict": "требует решения владельца",
+      "commercial": null,
+      "distribution": null,
+      "attributionRequired": true,
+      "note": "Манифест strudel отдаёт только имя и путь: лицензии каждого сэмпла в нём нет. Инструмент shabda умеет фильтр --licenses cc0|by|by-nc, то есть NC-сэмплы попадают в тот же банк. Читать лицензию нужно у Freesound по id образца — нужен либо Freesound API-ключ, либо фильтрация на стороне студии.",
+      "decision": null
+    }
+  }
+}

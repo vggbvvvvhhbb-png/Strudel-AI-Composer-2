@@ -23,6 +23,8 @@
     "check:baseline": "node scripts/check-baseline.mjs",
     "check:prompts": "node scripts/build-queue-prompts.mjs --check",
     "check:taste": "node scripts/check-taste.mjs",
+    "check:licenses": "node scripts/check-licenses.mjs",
+    "check:release": "node scripts/check-licenses.mjs --release",
     "taste:train": "node scripts/train-taste.mjs",
     "queue:prompts": "node scripts/build-queue-prompts.mjs --update",
     "baseline:build": "node scripts/build-baseline.mjs --update",
