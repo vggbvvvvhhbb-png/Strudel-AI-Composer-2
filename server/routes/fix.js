@@ -24,6 +24,7 @@ router.post('/api/fix', async (req, res) => {
         { role: 'system', content: prompts.fix },
         { role: 'user', content: `Код:\n\n${code}\n\nОшибка:\n\n${error}\n\nВерни исправленный код целиком.` },
       ],
+      feature: 'fix',
     });
     res.json({ code: content });
   } catch (err) {

@@ -7,6 +7,9 @@
 
 import { config } from '../config.js';
 import { mockCompletion, mockStream } from './mock.js';
+import { recordUsage } from '../stats.js';
+import { currentUsageContext } from './context.js';
+import { mergeUsage, parseProviderUsage, estimateUsage } from './usage.js';
 
 const TIMEOUT_MS = 120_000;
 
@@ -147,7 +150,8 @@ async function request(args) {
 }
 
 // Разбор SSE-потока OpenAI-совместимого API.
-async function* readOpenAiStream(res) {
+// usage — накопитель: счётчик приходит последним чанком (include_usage).
+async function* readOpenAiStream(res, usage) {
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
@@ -164,6 +168,8 @@ async function* readOpenAiStream(res) {
       if (!data || data === '[DONE]') continue;
       try {
         const json = JSON.parse(data);
+        // Счётчик токенов приходит отдельным чанком в конце потока.
+        if (json.usage) Object.assign(usage, mergeUsage(usage, json.usage));
         const delta = json.choices?.[0]?.delta?.content;
         if (delta) yield delta;
       } catch {
@@ -174,7 +180,9 @@ async function* readOpenAiStream(res) {
 }
 
 // Разбор SSE-потока Anthropic: события content_block_delta с delta.text.
-async function* readAnthropicStream(res) {
+// У Anthropic счётчик размазан по двум событиям: message_start (вход) и
+// message_delta (выход), поэтому копим максимум.
+async function* readAnthropicStream(res, usage) {
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
@@ -191,6 +199,10 @@ async function* readAnthropicStream(res) {
       if (!data || data === '[DONE]') continue;
       try {
         const json = JSON.parse(data);
+        if (json.message?.usage) {
+          Object.assign(usage, mergeUsage(usage, json.message.usage));
+        }
+        if (json.usage) Object.assign(usage, mergeUsage(usage, json.usage));
         const text = json.delta?.text;
         if (text) yield text;
       } catch {
@@ -202,9 +214,9 @@ async function* readAnthropicStream(res) {
 
 /**
  * Стриминг ответа: перебирает провайдеров, пока кто-нибудь не ответит.
- * @param {{messages:Array, temperature?:number, signal?:AbortSignal, providerId?:string}} options
+ * @param {{messages:Array, temperature?:number, signal?:AbortSignal, providerId?:string, feature?:string}} options
  */
-export async function* streamChat({ messages, temperature = 0.8, signal, providerId, maxTokens } = {}) {
+export async function* streamChat({ messages, temperature = 0.8, signal, providerId, maxTokens, feature } = {}) {
   if (MOCK_LLM) {
     yield* mockStream({ messages, responseFormat: null });
     return;
@@ -216,16 +228,42 @@ export async function* streamChat({ messages, temperature = 0.8, signal, provide
   for (const provider of chain) {
     if (signal?.aborted) return;
     let produced = false;
+    const started = Date.now();
+    const usage = {};
+    let text = '';
     try {
       const res = await request({ provider, messages, temperature, stream: true, signal, maxTokens });
       if (!res.body) throw new Error('пустой поток');
-      const source = provider.type === 'anthropic' ? readAnthropicStream(res) : readOpenAiStream(res);
+      const source = provider.type === 'anthropic'
+        ? readAnthropicStream(res, usage)
+        : readOpenAiStream(res, usage);
       for await (const delta of source) {
-        if (signal?.aborted) return;
+        if (signal?.aborted) break;
         produced = true;
+        text += delta;
         yield delta;
       }
-      if (produced) return;
+      if (produced) {
+        // Не все шлюзы отдают счётчик в потоке (APInex, например, может
+        // проигнорировать stream_options.include_usage). Тогда цену нельзя
+        // назвать нулём: считаем оценкой по длине текста и честно помечаем
+        // запись флагом estimated.
+        const measured = parseProviderUsage(usage);
+        const estimate = measured.promptTokens || measured.completionTokens
+          ? null
+          : estimateUsage(text, JSON.stringify(messages));
+        recordCall({
+          provider,
+          usage: measured.promptTokens || measured.completionTokens ? usage : {
+            prompt_tokens: estimate.promptTokens,
+            completion_tokens: estimate.completionTokens,
+          },
+          feature,
+          durationMs: Date.now() - started,
+          estimated: Boolean(estimate),
+        });
+        return;
+      }
       lastError = new Error('провайдер вернул пустой ответ');
     } catch (err) {
       if (signal?.aborted) return;
@@ -256,6 +294,7 @@ export async function completeChat({
   maxTokens,
   onUsage,
   responseFormat,
+  feature,
 } = {}) {
   if (MOCK_LLM) {
     return mockCompletion({ messages, responseFormat });
@@ -271,6 +310,7 @@ export async function completeChat({
     let attempts = wantsFormat ? 2 : 1;
     for (let attempt = 0; attempt < attempts; attempt += 1) {
       const useFormat = wantsFormat && attempt === 0;
+      const started = Date.now();
       try {
         const res = await request({
           provider,
@@ -289,8 +329,16 @@ export async function completeChat({
           content = json.choices?.[0]?.message?.content;
         }
         if (typeof content !== 'string' || !content.trim()) throw new Error('провайдер вернул пустой ответ');
-        if (json.usage && typeof onUsage === 'function') {
-          onUsage({ provider: provider.id, model: provider.model, ...json.usage });
+        if (json.usage) {
+          if (typeof onUsage === 'function') {
+            onUsage({ provider: provider.id, model: provider.model, ...json.usage });
+          }
+          recordCall({
+            provider,
+            usage: json.usage,
+            feature,
+            durationMs: Date.now() - started,
+          });
         }
         return content;
       } catch (err) {
@@ -316,4 +364,34 @@ export async function completeChat({
 function isFormatUnsupported(err) {
   const text = String(err?.message || '');
   return /response_format|json_schema|schema/i.test(text);
+}
+
+/**
+ * Записать вызов LLM в учёт стоимости.
+ *
+ * Единственная точка записи: любой вызов модели — потоковый, обычный, из
+ * рефайн-цикла разбора — проходит через роутер, поэтому цену нельзя
+ * «забыть» в одном из маршрутов.
+ *
+ * Идентификаторы операции, сессии и группы берутся из контекста запроса
+ * (server/llm/context.js), а фича — из места вызова: одна операция может
+ * состоять из планирования, критики и починки.
+ *
+ * @param {{provider:object, usage:object, feature?:string, durationMs?:number}} call
+ */
+function recordCall({ provider, usage, feature, durationMs, estimated = false }) {
+  const parsed = parseProviderUsage(usage);
+  const context = currentUsageContext();
+  recordUsage({
+    model: provider.model,
+    provider: provider.id,
+    feature: feature || 'unknown',
+    promptTokens: parsed.promptTokens,
+    completionTokens: parsed.completionTokens,
+    durationMs,
+    estimated,
+    operationId: context.operationId || null,
+    sessionId: context.sessionId || null,
+    group: context.group || null,
+  });
 }

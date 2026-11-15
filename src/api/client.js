@@ -1,4 +1,5 @@
 import { consumeSSE } from './stream.js';
+import { usageHeaders, sessionId } from './usage.js';
 
 async function jsonOrThrow(res) {
   const data = await res.json().catch(() => ({}));
@@ -15,7 +16,7 @@ export async function fetchHealth(signal) {
 export async function generateCode({ prompt, mode = 'new', currentCode, context, onDelta, signal }) {
   const res = await fetch('/api/generate', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: usageHeaders(),
     body: JSON.stringify({ prompt, mode, currentCode, context }),
     signal,
   });
@@ -45,7 +46,7 @@ export async function generateCode({ prompt, mode = 'new', currentCode, context,
 export async function fixCode({ code, error, signal }) {
   const res = await fetch('/api/fix', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: usageHeaders(),
     body: JSON.stringify({ code, error }),
     signal,
   });
@@ -66,7 +67,7 @@ export async function fetchMusicStyles(signal) {
 export async function analyzeMusic({ code, style, audioReport, signal }) {
   const res = await fetch('/api/music/analyze', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: usageHeaders(),
     body: JSON.stringify({ code, style, audioReport }),
     signal,
   });
@@ -77,7 +78,7 @@ export async function analyzeMusic({ code, style, audioReport, signal }) {
 export async function refineMusic({ code, style, iterations = 2, signal }) {
   const res = await fetch('/api/music/refine', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: usageHeaders(),
     body: JSON.stringify({ code, style, iterations }),
     signal,
   });
@@ -88,7 +89,7 @@ export async function refineMusic({ code, style, iterations = 2, signal }) {
 export async function musicVariants({ prompt, count = 3, style, currentCode, signal }) {
   const res = await fetch('/api/music/variants', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: usageHeaders(),
     body: JSON.stringify({ prompt, count, style, currentCode }),
     signal,
   });
@@ -101,7 +102,14 @@ export async function transcribeAudio(blob, mimeType = 'audio/webm', signal) {
   // Имя файла с расширением помогает апстриму определить формат.
   const ext = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm';
   form.append('audio', blob, `recording.${ext}`);
-  const res = await fetch('/api/transcribe', { method: 'POST', body: form, signal });
+  // У FormData свой Content-Type выставляет браузер — задаём только сессию,
+  // чтобы стоимость транскрипции тоже попала в «цену сессии».
+  const res = await fetch('/api/transcribe', {
+    method: 'POST',
+    headers: { 'X-Strudel-Session': sessionId() },
+    body: form,
+    signal,
+  });
   const data = await jsonOrThrow(res);
   return data;
 }
@@ -118,7 +126,7 @@ export async function transcribeAudio(blob, mimeType = 'audio/webm', signal) {
 export async function composeTrack({ prompt, mode = 'structured', style, seed, refine = true, onEvent, signal }) {
   const res = await fetch('/api/music/compose', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: usageHeaders(),
     body: JSON.stringify({ prompt, mode, style, seed, refine }),
     signal,
   });
@@ -161,7 +169,7 @@ export async function composeTrack({ prompt, mode = 'structured', style, seed, r
 export async function composeVariants({ spec, count = 4, seed, signal }) {
   const res = await fetch('/api/music/compose/variants', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: usageHeaders(),
     body: JSON.stringify({ spec, count, seed }),
     signal,
   });
@@ -172,7 +180,7 @@ export async function composeVariants({ spec, count = 4, seed, signal }) {
 export async function composeMutate({ spec, mutation, seed, signal }) {
   const res = await fetch('/api/music/compose/mutate', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: usageHeaders(),
     body: JSON.stringify({ spec, mutation, seed }),
     signal,
   });
@@ -185,7 +193,7 @@ export async function composeMutate({ spec, mutation, seed, signal }) {
 export async function irPlan({ prompt, seed, genre, bpm, signal }) {
   const res = await fetch('/api/music/ir/plan', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: usageHeaders(),
     body: JSON.stringify({ prompt, seed, genre, bpm }),
     signal,
   });
@@ -196,7 +204,7 @@ export async function irPlan({ prompt, seed, genre, bpm, signal }) {
 export async function irTransform({ ir, transform, amount, role, steps, mode, sectionId, signal }) {
   const res = await fetch('/api/music/ir/transform', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: usageHeaders(),
     body: JSON.stringify({ ir, transform, amount, role, steps, mode, sectionId }),
     signal,
   });
@@ -207,7 +215,7 @@ export async function irTransform({ ir, transform, amount, role, steps, mode, se
 export async function irSearch({ prompt, ir, n, topK, seed, signal }) {
   const res = await fetch('/api/music/ir/search', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: usageHeaders(),
     body: JSON.stringify({ prompt, ir, n, topK, seed }),
     signal,
   });
@@ -218,7 +226,7 @@ export async function irSearch({ prompt, ir, n, topK, seed, signal }) {
 export async function irCritique({ ir, signal }) {
   const res = await fetch('/api/music/ir/critique', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: usageHeaders(),
     body: JSON.stringify({ ir }),
     signal,
   });

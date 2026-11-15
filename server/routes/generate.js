@@ -73,7 +73,11 @@ router.post('/api/generate', (req, res) => {
   // а не через .then(): промисом он не является.
   (async () => {
     try {
-      for await (const delta of streamChat({ messages: buildMessages(body), signal: upstream.signal })) {
+      for await (const delta of streamChat({
+        messages: buildMessages(body),
+        signal: upstream.signal,
+        feature: 'generate',
+      })) {
         if (upstream.signal.aborted) break;
         full += delta;
         send({ type: 'delta', text: delta });

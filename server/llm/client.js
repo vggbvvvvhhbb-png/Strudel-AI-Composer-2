@@ -15,7 +15,7 @@ export function streamChat(options) {
  * Нестримовый вызов — для автофикса, улучшения и генерации вариантов.
  * `responseFormat` — структурированный вывод (`{type:'json_schema', ...}`):
  * провайдер, который его не поддерживает, получит запрос без него.
- * @param {{messages:Array, temperature?:number, signal?:AbortSignal, providerId?:string, onUsage?:Function, responseFormat?:object}} options
+ * @param {{messages:Array, temperature?:number, signal?:AbortSignal, providerId?:string, onUsage?:Function, responseFormat?:object, feature?:string}} options
  */
 export function completeChat(options) {
   return routerComplete(options);

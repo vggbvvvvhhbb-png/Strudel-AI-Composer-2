@@ -132,6 +132,7 @@ export async function planWithLLM(input = {}) {
     prompt = '', seed = 1, genre = null, bpm = null,
     maxCalls = DEFAULT_MAX_CALLS, signal, onUsage,
     complete = completeChat,
+    feature = 'ir-plan',
   } = input;
 
   const book = compileSkills({ prompt, genre });
@@ -196,6 +197,7 @@ export async function planWithLLM(input = {}) {
         temperature: 0.3,
         signal,
         onUsage,
+        feature: feature || 'ir-plan',
         responseFormat: {
           type: 'json_schema',
           json_schema: {

@@ -16,6 +16,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { completeChat } from '../llm/client.js';
+import { withFeature } from '../llm/feature.js';
 import { prompts } from '../prompts.js';
 import { staticValidate } from '../../src/core/validator.js';
 import { analyzeTrack } from '../music/features.js';
@@ -154,6 +155,7 @@ router.post('/api/music/compose', async (req, res) => {
         ],
         temperature: 0.8,
         signal: upstream.signal,
+        feature: 'compose-free',
       });
       const code = stripCodeFences(content);
       const check = staticValidate(code);
@@ -175,7 +177,9 @@ router.post('/api/music/compose', async (req, res) => {
     const built = await buildTrack({
       prompt: body.prompt,
       style,
-      completeChat,
+      // Метка фичи: весь пайплайн композиции (план → спека → починка) —
+      // одна операция «трек» в учёте стоимости.
+      completeChat: withFeature(completeChat, 'compose'),
       seed: body.seed,
       signal: upstream.signal,
       onEvent: (event, payload) => send(event, payload),

@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { config } from '../config.js';
+import { recordUsage, TRANSCRIPTION_PRICE_PER_HOUR_USD } from '../stats.js';
+import { currentUsageContext } from '../llm/context.js';
 
 const router = Router();
 
@@ -33,11 +35,15 @@ const upload = multer({
 });
 
 // Groq Whisper — OpenAI-совместимый эндпоинт транскрипции.
+//
+// Groq считает не токены, а секунды аудио: whisper-large-v3-turbo стоит
+// $0.04 за час. Поэтому просим verbose_json — в нём есть длительность,
+// без неё цену посчитать нечем, и мы честно говорим «нет данных».
 async function transcribeWithGroq(file) {
   const form = new FormData();
   form.append('file', new Blob([file.buffer], { type: file.mimetype }), file.originalname || 'audio.webm');
   form.append('model', config.groqTranscribeModel);
-  form.append('response_format', 'json');
+  form.append('response_format', 'verbose_json');
 
   const res = await fetch(`${config.groqBaseUrl}/audio/transcriptions`, {
     method: 'POST',
@@ -52,7 +58,31 @@ async function transcribeWithGroq(file) {
   }
   const json = await res.json();
   const text = typeof json?.text === 'string' ? json.text.trim() : '';
-  return text;
+  const durationSec = Number(json?.duration);
+  return { text, durationSec: Number.isFinite(durationSec) ? durationSec : null };
+}
+
+/**
+ * Записать стоимость транскрипции в учёт.
+ * @param {number|null} durationSec длительность аудио в секундах
+ */
+function recordTranscription(durationSec) {
+  const context = currentUsageContext();
+  const costUsd = durationSec === null
+    ? 0
+    : (durationSec / 3600) * TRANSCRIPTION_PRICE_PER_HOUR_USD;
+  recordUsage({
+    model: config.groqTranscribeModel,
+    provider: 'groq',
+    feature: 'transcribe',
+    promptTokens: 0,
+    completionTokens: 0,
+    costUsd,
+    durationMs: durationSec === null ? 0 : Math.round(durationSec * 1000),
+    operationId: context.operationId || null,
+    sessionId: context.sessionId || null,
+    group: context.group || null,
+  });
 }
 
 router.post('/api/transcribe', (req, res) => {
@@ -74,11 +104,12 @@ router.post('/api/transcribe', (req, res) => {
       return;
     }
     try {
-      const text = await transcribeWithGroq(req.file);
+      const { text, durationSec } = await transcribeWithGroq(req.file);
       if (!text) {
         res.status(422).json({ error: 'Не удалось распознать речь' });
         return;
       }
+      recordTranscription(durationSec);
       res.json({ text });
     } catch (e) {
       console.error(`[transcribe] ошибка: ${e.message}`);

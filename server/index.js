@@ -1,6 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
@@ -17,6 +18,7 @@ import tasteRoute from './routes/taste.js';
 import healthRoute from './routes/health.js';
 import statsRoute from './routes/stats.js';
 import deepdiveRoute from './routes/deepdive.js';
+import { withUsageContext } from './llm/context.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const distDir = join(here, '../dist');
@@ -90,6 +92,17 @@ app.use(
 );
 
 app.use(express.json({ limit: '100kb' }));
+
+// Контекст учёта стоимости: одна операция = один запрос к серверу.
+// sessionId приходит от браузера (X-Strudel-Session) — по нему считается
+// «цена сессии»; group — необязательная группа (ночная партия, трек).
+app.use('/api', (req, res, next) => {
+  withUsageContext({
+    operationId: randomUUID(),
+    sessionId: req.get('X-Strudel-Session') || null,
+    group: req.get('X-Strudel-Group') || null,
+  }, next);
+});
 
 app.use(generateRoute);
 app.use(fixRoute);

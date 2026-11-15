@@ -180,6 +180,7 @@ router.post('/api/music/refine', async (req, res) => {
           },
         ],
         temperature: 0.5,
+        feature: 'refine',
       });
       const candidate = stripCodeFences(content);
       const check = staticValidate(candidate);
@@ -248,6 +249,7 @@ router.post('/api/music/variants', async (req, res) => {
             ],
             temperature: 0.9,
             onUsage: (u) => usage.push(u),
+            feature: 'variants',
           });
           const code = stripCodeFences(content);
           const check = staticValidate(code);

@@ -125,6 +125,7 @@ export async function defaultRespond({ messages, temperature }) {
     messages,
     temperature,
     responseFormat: { type: 'json_object' },
+    feature: 'deepdive-refine',
   });
 }
 
