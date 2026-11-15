@@ -35,6 +35,10 @@ COPY scripts ./scripts
 # skills/ — скил-карты: сервер читает их при запуске (учебник для LLM,
 # версия пака в отчёте). Без каталога /api/skills и планировщик падают.
 COPY skills ./skills
+# local/ — клиент локального демона: server/routes/local.js импортирует
+# local/client.mjs на старте. Без этого каталога сервер не поднимается
+# (ERR_MODULE_NOT_FOUND, контейнер уходит в рестарт).
+COPY local ./local
 
 # Ключи — только через окружение (docker compose env_file), в образе их нет.
 EXPOSE 3001
