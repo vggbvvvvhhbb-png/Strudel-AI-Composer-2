@@ -13,6 +13,19 @@
 //
 // Идентичность дорожки — её id (D-100), роль — атрибут. Две скрипки одной
 // группы получают разные id, разные рисунки и разные голоса.
+//
+// Фаза D: мелодические группы играют не статичный шаблон из матрицы, а
+// ОБЩУЮ ТЕМУ трека. Тема одна (иначе оркестр — набор солистов), группа
+// берёт её по-своему, голоса внутри группы делят варианты фразы (дивизи),
+// а секции получают свои варианты по энергии: тихая — предпосылка, громкая —
+// вывод с разрешением.
+
+import {
+  MOTIF_LENGTH_BY_GROUP,
+  assignPhraseRoles,
+  trackTheme,
+  voiceMotifMini,
+} from './motif.js';
 
 // Группы оркестра: роль -> группа. Роль из плана может быть любой
 // (`violin`, `choir_soprano`), но для бюджета и разбавки нужна группа.
@@ -37,9 +50,9 @@ export const GROUP_BUDGET = {
   drums: 4,
   bass: 4,
   strings: 3,
-  brass: 2,
-  woodwinds: 2,
-  keys: 3,
+  brass: 3,
+  woodwinds: 3,
+  keys: 4,
   choir: 2,
   pads: 1,
   lead: 4,
@@ -49,9 +62,16 @@ export const GROUP_BUDGET = {
 };
 
 // Бюджет атак на такт на весь трек: не меньше 24 (обычный бит) и не
-// больше 1.4 на дорожку. Без него 100 голосов превращаются в кашу.
+// больше 3 на дорожку.
+//
+// Почему 3, а не прежние 1.4: коэффициент был откалиброван на СТАТИЧНЫХ
+// шаблонах, где 66 голосов давали 81 атаку на такт. С темой (фаза D)
+// материал честнее: 167 атак на такт при 66 голосах — 2.53 на голос, и
+// это то, что делает настоящий оркестр в дивизи (каждый играющий —
+// половинные и целые ноты). Целевая плотность скора для 66 партий — от
+// 99 атак на такт (densityTarget, generic), то есть 167 в неё попадает.
 export function globalAttackBudget(voices) {
-  return Math.max(24, Math.round(voices * 1.4));
+  return Math.max(24, Math.round(voices * 3));
 }
 
 // Громкость одной дорожки на группу: сумма голосов группы держится около
@@ -176,7 +196,12 @@ export function attacksPerBar(pattern) {
 
 /**
  * Прореживание рисунка: оставить каждую `stride`-ю атаку.
- * Детерминированно: атаки, взяты�� по порядку, а не случайно.
+ * Детерминированно: атаки, взятые по порядку, а не случайно.
+ *
+ * Длительности (@N) переживают прореживание: снятая нота не исчезает из
+ * такта, её длительность переходит к предыдущей. Иначе мотив рассыпался
+ * бы на «нота — пауза — нота — пауза», а длительность такта менялась бы:
+ * в mini-нотации единица = 1/(сумма длительностей) цикла.
  *
  * Важно: внутри группы `<...>` тишины быть не может — Strudel такую
  * запись не парсит (проверено: рендер падал на `n("<0 ~ ~ ~")`). Поэтому
@@ -187,6 +212,20 @@ export function thinPattern(pattern, stride) {
   const tokens = tokenizeMini(pattern);
   const out = [];
   let attackIndex = 0;
+
+  // Последняя нота в списке (паузы пропускаются) — ей отойдёт длительность.
+  const lastNote = () => {
+    for (let i = out.length - 1; i >= 0; i -= 1) {
+      if (out[i] === '~') continue;
+      return i;
+    }
+    return -1;
+  };
+  const durationOf = (token) => {
+    const match = token.match(/@(\d+(?:\.\d+)?)$/);
+    return match ? Number(match[1]) : null;
+  };
+
   for (const token of tokens) {
     if (token === '~') {
       out.push(token);
@@ -210,7 +249,28 @@ export function thinPattern(pattern, stride) {
       attackIndex += tokenAttacks(token);
       continue;
     }
-    out.push(attackIndex % stride === 0 ? token : '~');
+
+    const duration = durationOf(token);
+    if (duration === null) {
+      // Старый формат: атака без длительности — заменяем паузой.
+      out.push(attackIndex % stride === 0 ? token : '~');
+      attackIndex += 1;
+      continue;
+    }
+
+    if (attackIndex % stride === 0) {
+      out.push(token);
+    } else {
+      // Снятая нота: её длительность переходит к предыдущей ноте.
+      const index = lastNote();
+      if (index >= 0) {
+        const value = out[index].replace(/@(\d+(?:\.\d+)?)$/, '');
+        const base = durationOf(out[index]) ?? 1;
+        out[index] = `${value}@${base + duration}`;
+      } else {
+        out.push(`~@${duration}`);
+      }
+    }
     attackIndex += 1;
   }
   return out.join(' ');
@@ -238,11 +298,21 @@ export function expandPlan(plan) {
   const sections = Array.isArray(plan?.sections) ? plan.sections : [];
   const sectionNames = sections.map((section) => section.name);
   const parts = {};
+
+  // Фаза D: тема трека и варианты фразы по секциям.
+  const seed = Number.isFinite(plan?.seed) ? plan.seed : 1;
+  const style = plan?.style ?? 'cinematic';
+  const theme = trackTheme({ seed, style });
+  const phraseRoles = assignPhraseRoles(sections);
+  const variantBySection = new Map();
+  sections.forEach((section, index) => variantBySection.set(section.name, phraseRoles.get(index) ?? 0));
+
   const report = {
     voices: 0,
     groups: [],
     budgetViolations: [],
     totalAttacksPerBar: 0,
+    theme: { degrees: theme.degrees, contour: theme.contour, rhythm: theme.rhythm },
   };
 
   // Голоса собираются по группам: бюджет плотности — на голос, а общий
@@ -258,17 +328,23 @@ export function expandPlan(plan) {
   for (const [group, entries] of byGroup) {
     const perVoiceBudget = entries[0].budget ?? GROUP_BUDGET[group] ?? DEFAULT_BUDGET;
     const voices = [];
+    // Мелоодические группы играют тему; остальные — статичный рисунок.
+    const melodic = MOTIF_LENGTH_BY_GROUP[group] !== undefined;
     for (const entry of entries) {
       const count = Math.max(1, Math.round(entry.count ?? 1));
       const family = ROLE_FAMILY[entry.role] || FAMILY[group] || ['0 ~ 2 ~'];
       const sound = entry.sound || ROLE_SOUND[entry.role] || SOUND_BY_GROUP[group] || 'sawtooth';
       const activeIn = entry.activeIn?.length ? entry.activeIn : sectionNames;
       for (let i = 0; i < count; i += 1) {
+        const homeVariant = variantBySection.get(activeIn[0] ?? sectionNames[0]) ?? 0;
         voices.push({
           id: voiceId(entry.role, i),
           role: entry.role,
           group,
-          pattern: family[i % family.length],
+          voiceIndex: i,
+          pattern: melodic
+            ? voiceMotifMini({ group, seed, style, voiceIndex: i, variantIndex: homeVariant, theme })
+            : family[i % family.length],
           sound,
           activeIn: [...activeIn],
           // Регистр голоса: явный сдвиг в плане важнее роли.
@@ -303,6 +379,26 @@ export function expandPlan(plan) {
       const register = voice.transpose;
       if (Number.isFinite(register) && register !== 0) part.transpose = register;
       parts[voice.id] = part;
+
+      // Фаза D: своя фраза в каждой секции. Тихая секция — предпосылка,
+      // громкая — вывод с разрешением в тонику.
+      if (MOTIF_LENGTH_BY_GROUP[voice.group] !== undefined) {
+        const overrides = {};
+        for (const name of part.activeIn) {
+          const variant = variantBySection.get(name) ?? 0;
+          overrides[name] = {
+            pattern: voiceMotifMini({
+              group: voice.group,
+              seed,
+              style,
+              voiceIndex: voice.voiceIndex,
+              variantIndex: variant,
+              theme,
+            }),
+          };
+        }
+        part.sections = overrides;
+      }
     }
 
     report.groups.push({
