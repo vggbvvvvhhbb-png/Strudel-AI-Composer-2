@@ -57,8 +57,8 @@ export function analyzeTrack(code) {
   for (const part of track.parts) {
     const parsed = partEvents(part, track.key);
     errors.push(...parsed.errors);
-    const cycleEvents = parsed.events.filter((e) => e.begin < 1 - EPS);
-    const onsets = cycleEvents.map((e) => grid16(e.begin)).sort((a, b) => a - b);
+    // Позиции атак первого такта — по ним ритмическая подпись партии.
+    const onsets = parsed.firstBar;
     const pitched = parsed.notes.filter((n) => n.kind !== 'sample');
     const partMidis = pitched.map((n) => n.midi);
     for (const n of pitched) allNotes.push(n.midi);
@@ -73,8 +73,9 @@ export function analyzeTrack(code) {
       role: part.role,
       muted: part.muted,
       solo: part.solo,
-      onsets: onsets.length,
-      density: onsets.length,
+      // Атаки на такт: среднее по секциям, взвешенное по их длине.
+      onsets: parsed.onsetsPerBar,
+      density: parsed.onsetsPerBar,
       offbeat,
       noteCount: partMidis.length,
       minMidi: partMidis.length ? Math.min(...partMidis) : null,

@@ -26,6 +26,14 @@ const SYNTH_NAMES = new Set([
 
 const PART_HEADER = /^[ \t]*([_S]?)\$[ \t]*([A-Za-z]\w*)?[ \t]*:/;
 
+// Погрешность сравнения по времени: первый такт — это [0, 1).
+const EPS = 1e-6;
+
+// Округление позиции атаки до 1/16 — так ритмы сравниваются между партиями.
+function grid16(value) {
+  return Math.round(value * 16) / 16;
+}
+
 // Методы цепочки, влияющие на время.
 const TIME_METHODS = new Set(['fast', 'slow', 'rev', 'off', 'every', 'ply', 'euclid', 'segment']);
 
@@ -159,12 +167,52 @@ export function stripCodeFences(text) {
 }
 
 /**
+ * Константы верхнего уровня: `const P001_0 = s("bd*4")`.
+ *
+ * Компилятор выносит содержимое партии в константу, а в строках партии
+ * остаётся только `arrange([8, P001_0], [8, P001_1])`. Без разбора
+ * констант анализатор не находит ни одного события в скомпилированном
+ * треке (D-001) — и все десять критериев скора выдают мусор.
+ */
+const CONST_LINE = /^[ \t]*const[ \t]+([A-Za-z_$][\w$]*)[ \t]*=[ \t]*(.+?)[ \t]*;?[ \t]*$/;
+
+function parseConstants(lines) {
+  const constants = new Map();
+  for (const line of lines) {
+    const match = line.match(CONST_LINE);
+    if (!match) continue;
+    constants.set(match[1], match[2]);
+  }
+  return constants;
+}
+
+/**
+ * Куски `arrange([bars, NAME], ...)`: сколько тактов играет какая
+ * константа. Пустой массив — партия написана без arrange.
+ */
+function parseArrangeChunks(region) {
+  const match = String(region ?? '').match(/arrange\s*\(([^)]*)\)/);
+  if (!match) return [];
+  const chunks = [];
+  for (const piece of match[1].split(/\]\s*,\s*\[/)) {
+    const inner = piece.replace(/^\[?/, '').replace(/\]?$/, '').trim();
+    const parts = inner.split(',').map((value) => value.trim());
+    const bars = Number(parts[0]);
+    const name = parts[1] ?? '';
+    if (!Number.isFinite(bars) || !name) continue;
+    chunks.push({ bars, name });
+  }
+  return chunks;
+}
+
+/**
  * Разбирает весь код на партии.
  * @returns {{bpm: number|null, key: object|null, parts: Array}}
  */
 export function extractTrack(code) {
   const text = String(code ?? '');
   const lines = text.split('\n');
+  const constants = parseConstants(lines);
 
   // Границы партий: заголовок и следующий заголовок.
   const headers = [];
@@ -179,7 +227,7 @@ export function extractTrack(code) {
     const end = h + 1 < headers.length ? headers[h + 1].line : lines.length;
     const region = lines.slice(header.line, end).join('\n');
     const calls = scanCalls(region);
-    parts.push(buildPart(header.label, header.muted, header.solo, calls, region));
+    parts.push(buildPart(header.label, header.muted, header.solo, calls, region, constants));
   }
 
   const keyRaw = getKey(text);
@@ -191,7 +239,7 @@ export function extractTrack(code) {
   };
 }
 
-function buildPart(label, muted, solo, calls, region) {
+function buildPart(label, muted, solo, calls, region, constants = new Map()) {
   // Паттерны — вызовы без точки: note(...), n(...), chord(...), s(...).
   const patterns = [];
   const methods = new Map();
@@ -228,7 +276,24 @@ function buildPart(label, muted, solo, calls, region) {
   for (const p of patterns) {
     // s() без точки — паттерн сэмплов: его ритм тоже разбирается mini-нотацией.
     // .s("sawtooth") — выбор синтезатора, это метод цепочки, в паттерны не попадает.
-    sources.push({ kind: p.kind, value: p.value });
+    sources.push({ kind: p.kind, value: p.value, bars: 1 });
+  }
+
+  // Содержимое партии может лежать в константах компилятора:
+  // `$P001: arrange([8, P001_0], [8, P001_1])`. Тогда паттерны берутся
+  // оттуда, а вес секции — число тактов, которые она занимает.
+  const chunks = parseArrangeChunks(region);
+  const resolved = [];
+  for (const chunk of chunks) {
+    const expression = constants.get(chunk.name);
+    if (!expression) continue;
+    for (const call of scanCalls(expression)) {
+      if (call.method) continue;
+      if (!['note', 'n', 'chord', 's'].includes(call.name)) continue;
+      const value = call.strings[0];
+      if (value === undefined) continue;
+      resolved.push({ kind: call.name, value, bars: chunk.bars });
+    }
   }
 
   return {
@@ -238,8 +303,8 @@ function buildPart(label, muted, solo, calls, region) {
     region,
     chain,
     patterns,
-    sources,
-    role: detectRole(label, sources, declaredRole(region)),
+    sources: resolved.length ? resolved : sources,
+    role: detectRole(label, resolved.length ? resolved : sources, declaredRole(region)),
   };
 }
 
@@ -299,10 +364,24 @@ export function partEvents(part, key) {
   const errors = [];
   const events = [];
   const notes = [];
+  let weightedOnsets = 0;
+  let totalBars = 0;
+  let firstBar = null;
 
   for (const source of part.sources) {
     const parsed = parseMini(source.value, { cycles: 2 });
     for (const err of parsed.errors) errors.push(`$ ${part.label}: ${err}`);
+
+    // Атаки первого такта этой секции. Секция весит столько тактов,
+    // сколько указано в arrange: иначе плотность партии умножалась бы на
+    // число секций.
+    const bars = Number.isFinite(source.bars) && source.bars > 0 ? source.bars : 1;
+    const barEvents = parsed.events.filter((ev) => ev.begin < 1 - EPS);
+    weightedOnsets += barEvents.length * bars;
+    totalBars += bars;
+    if (firstBar === null) {
+      firstBar = barEvents.map((ev) => grid16(ev.begin)).sort((a, b) => a - b);
+    }
 
     for (const ev of parsed.events) {
       const value = ev.value;
@@ -359,5 +438,13 @@ export function partEvents(part, key) {
     }
   }
 
-  return { events, notes, errors };
+  return {
+    events,
+    notes,
+    errors,
+    // Атаки на такт партии: среднее по секциям, взвешенное по их длине.
+    onsetsPerBar: totalBars ? weightedOnsets / totalBars : 0,
+    // Позиции атак первого такта — по ним считается подпись ритма.
+    firstBar: firstBar ?? [],
+  };
 }

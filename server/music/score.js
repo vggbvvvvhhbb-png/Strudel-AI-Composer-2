@@ -38,6 +38,21 @@ export function densityTarget(profile, partCount) {
   return [Math.max(1, Math.round(base[0] * scale)), Math.max(2, Math.round(base[1] * scale))];
 }
 
+/**
+ * Доля партий со своим ритмом, ожидаемая при данном размере трека.
+ *
+ * В маленьком треке каждая партия играет по-своему. В оркестре из 100
+ * дорожек секции делят ритм (8 скрипок играют одно и то же) — это и есть
+ * оркестровка, а не дефект. Поэтому ожидание падает с ростом состава,
+ * но не ниже 2%: иначе критерий вообще ничего не значит.
+ */
+export function varietyTarget(profile, partCount) {
+  const n = Math.max(1, Math.round(partCount || 1));
+  const reference = Math.max(1, profile.parts[0]);
+  const scale = Math.min(1, reference / n);
+  return Math.max(0.02, profile.variety * scale);
+}
+
 export const CRITERIA = [
   {
     id: 'tempo',
@@ -159,6 +174,16 @@ export const CRITERIA = [
     value: (m) => m.rhythmVariety,
     min: (p) => p.variety,
     describe: (p) => `не менее ${Math.round(p.variety * 100)}% партий со своим ритмом`,
+    // Ожидание падает с ростом состава (varietyTarget): в оркестре секции
+    // делят ритм, и это нормально.
+    score: (value, profile, metrics) => {
+      const min = varietyTarget(profile, metrics.partCount);
+      return clamp01(value / (min || 1));
+    },
+    describeScaled: (profile, metrics) => {
+      const min = varietyTarget(profile, metrics.partCount);
+      return `не менее ${Math.round(min * 100)}% партий со своим ритмом (${metrics.partCount} партий)`;
+    },
   },
 ];
 
@@ -207,8 +232,13 @@ export function scoreTrack(analysis, profile = PROFILES.generic, weights = {}) {
       // У критерия своя функция оценки: цель может зависеть от метрик
       // (плотность — от числа дорожек, аранжировка — от нижней границы).
       score = value === null ? 0.5 : criterion.score(value, profile, metrics);
-      const range = criterion.target(profile);
-      target = `${range[0]}–${range[1]} ${criterion.unit}`;
+      if (criterion.target) {
+        const range = criterion.target(profile);
+        target = `${range[0]}–${range[1]} ${criterion.unit}`;
+      } else {
+        const min = criterion.min ? criterion.min(profile) : null;
+        target = min === null ? '—' : min <= 1 ? `≥ ${Math.round(min * 100)}%` : `≥ ${min} ${criterion.unit}`;
+      }
     } else if (criterion.min) {
       const min = criterion.min(profile);
       // Порог в долях (0..1) — это процент, иначе — абсолютная величина.
