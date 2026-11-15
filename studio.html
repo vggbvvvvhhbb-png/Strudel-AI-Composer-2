@@ -264,8 +264,12 @@
           <div class="row">
             <button id="agent-send" class="btn primary" type="button">Спросить</button>
             <button id="agent-stop" class="btn ghost" type="button" hidden>Стоп</button>
+            <!-- Голосовой ввод в поле агента. Кнопка появляется только если
+                 сервер подтвердил наличие ключа распознавания. -->
+            <button id="agent-voice" class="voice-btn" type="button" hidden aria-label="Голосовой ввод агенту">🎤</button>
           </div>
           <div id="agent-stream" class="agent-stream" aria-live="polite"></div>
+          <div id="agent-summary" class="agent-summary"></div>
           <div id="agent-usage" class="agent-usage"></div>
         </section>
 

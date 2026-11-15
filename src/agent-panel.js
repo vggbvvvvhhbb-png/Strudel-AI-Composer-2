@@ -43,10 +43,16 @@ export function initAgentPanel({ getCode, setCode, onApply } = {}) {
   const modeSelect = $('agent-mode');
   const serviceNote = $('agent-services');
   const usageNote = $('agent-usage');
+  const summaryNote = $('agent-summary');
   if (!input || !sendBtn || !stream) return;
 
   let controller = null;
   let busy = false;
+
+  // История разговора: агент должен помнить, о чём говорили. Храним её в
+  // панели (диалог живёт в открытой студии) и отправляем с каждым запросом.
+  const history = [];
+  const HISTORY_LIMIT = 8;
 
   // Режим выбирает человек — значит, его выбор главнее умолчания. Отмечаем
   // сам факт выбора, а не значение: паспорт мог прийти уже после выбора.
@@ -90,6 +96,7 @@ export function initAgentPanel({ getCode, setCode, onApply } = {}) {
   const clear = () => {
     stream.replaceChildren();
     if (usageNote) usageNote.textContent = '';
+    if (summaryNote) summaryNote.textContent = '';
   };
 
   const toolCards = new Map();
@@ -116,12 +123,36 @@ export function initAgentPanel({ getCode, setCode, onApply } = {}) {
     const list = el('ol', 'agent-steps');
     for (const step of event.steps ?? []) {
       const item = el('li', 'agent-step');
-      item.append(el('code', 'agent-step-tool', step.tool));
-      if (step.why) item.append(el('span', 'agent-step-why', step.why));
+      // План кликабельный: клик по шагу показывает карточку этого
+      // инструмента. Ничего не перезапускается и ничего не стоит денег —
+      // шаг просто подсвечивается.
+      const button = el('button', 'agent-step-btn');
+      button.type = 'button';
+      button.title = 'Показать результат этого шага';
+      button.append(el('code', 'agent-step-tool', step.tool));
+      if (step.why) button.append(el('span', 'agent-step-why', step.why));
+      button.addEventListener('click', () => focusTool(step.tool));
+      item.append(button);
       list.append(item);
     }
     block.append(list);
     stream.append(block);
+  }
+
+  /**
+   * Подсвечивает карточку инструмента с указанным именем.
+   * @param {string} tool
+   */
+  function focusTool(tool) {
+    for (const card of toolCards.values()) {
+      const id = card.querySelector('.agent-tool-id')?.textContent;
+      if (id === tool) {
+        card.classList.add('is-highlight');
+        card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        setTimeout(() => card.classList.remove('is-highlight'), 1200);
+        return;
+      }
+    }
   }
 
   function renderToolStart(event) {
@@ -169,6 +200,27 @@ export function initAgentPanel({ getCode, setCode, onApply } = {}) {
     scrollStream();
   }
 
+  function renderUsage(event) {
+    if (!usageNote) return;
+    if (event.cached) {
+      usageNote.textContent = 'Ответ взят из кэша — токены не тратились.';
+      return;
+    }
+    const tokens = event.tokens ?? 0;
+    const parts = [event.estimated
+      ? `Токенов ≈ ${tokens} (оценка: провайдер не отдал счётчики)`
+      : `Токенов: ${tokens}`];
+    // Цена показывается только если она посчитана по известной модели.
+    // Ноль цены при неизвестной модели — это «нет данных», а не «бесплатно».
+    parts.push(event.priceKnown
+      ? `Цена: $${Number(event.costUsd ?? 0).toFixed(4)}`
+      : 'Цена не измерена (модель или провайдер неизвестны)');
+    if (typeof event.requestCount === 'number' && event.requestCount > 0) {
+      parts.push(`учтённых вызовов модели: ${event.requestCount}`);
+    }
+    usageNote.textContent = parts.join(' · ');
+  }
+
   function renderDone(event) {
     if (event.degraded?.length) {
       const warn = el('div', 'agent-warn');
@@ -192,9 +244,9 @@ export function initAgentPanel({ getCode, setCode, onApply } = {}) {
       bar.append(btn);
       stream.append(bar);
     }
-    if (usageNote) {
-      const tokens = event.guard?.toolCalls ?? 0;
-      usageNote.textContent = `Инструментов вызвано: ${tokens}. Режим: ${event.mode}.`;
+    if (summaryNote) {
+      const tools = event.guard?.toolCalls ?? 0;
+      summaryNote.textContent = `Инструментов вызвано: ${tools}. Режим: ${event.mode}.`;
     }
   }
 
@@ -217,6 +269,7 @@ export function initAgentPanel({ getCode, setCode, onApply } = {}) {
         prompt,
         mode: modeSelect?.value || undefined,
         currentCode: getCode?.() ?? null,
+        history: history.slice(-HISTORY_LIMIT),
         signal: controller.signal,
         onEvent: (event) => {
           switch (event.type) {
@@ -224,6 +277,7 @@ export function initAgentPanel({ getCode, setCode, onApply } = {}) {
             case 'tool_start': renderToolStart(event); break;
             case 'tool_end': renderToolEnd(event); break;
             case 'text': renderText(event); break;
+            case 'usage': renderUsage(event); break;
             case 'done': renderDone(event); break;
             case 'error':
               stream.append(el('div', 'agent-warn', event.message ?? 'Агент остановился с ошибкой.'));
@@ -239,6 +293,14 @@ export function initAgentPanel({ getCode, setCode, onApply } = {}) {
         stream.append(el('div', 'agent-warn', `Агент недоступен: ${err?.message || err}`));
       }
     } finally {
+      // Реплики запоминаем только если диалог состоялся: прерванный запрос
+      // и ответ «агент недоступен» в память не идут.
+      const answer = stream.querySelector('.agent-answer')?.textContent?.trim();
+      if (answer) {
+        history.push({ role: 'user', content: prompt });
+        history.push({ role: 'assistant', content: answer });
+        if (history.length > HISTORY_LIMIT * 2) history.splice(0, history.length - HISTORY_LIMIT * 2);
+      }
       busy = false;
       sendBtn.disabled = false;
       if (stopBtn) stopBtn.hidden = true;

@@ -36,14 +36,25 @@ const answerCache = new TtlLruCache({ max: 100, ttlMs: 6 * 60 * 60 * 1000 });
 
 /**
  * Определяет режим по словам в запросе, если клиент его не задал.
+ *
+ * ПОРЯДОК ПРОВЕРКИ — ПО ЦЕЛИ, А НЕ ПО ПЕРВОМУ СОВПАДЕНИЮ. Запрос гайда
+ * «найди в интернете, что такое phonk drift, и сделай бит в этом стиле» содержит
+ * и поиск, и композицию. Раньше побеждал поиск, и агент оставался в ресёрче без
+ * инструментов компиляции — то есть половину запроса выполнить не мог. Цель
+ * такого запроса — бит, а поиск лишь подготовительный шаг, поэтому побеждает
+ * композитор.
+ *
  * @param {string} prompt
  * @returns {string}
  */
 export function detectMode(prompt) {
   const text = String(prompt || '').toLowerCase();
-  if (/(найди|поищи|загугли|что такое|в интернете|источник|статья)/.test(text)) return 'research';
-  if (/(поменяй|замени|сделай (тише|громче|мрачн|светлее)|правк|тембр|микс)/.test(text)) return 'director';
-  if (/(сделай|собери|создай|напиши|бит|трек|компози)/.test(text)) return 'composer';
+  const wantsResearch = /(найди|поищи|загугли|что такое|в интернете|источник|статья)/.test(text);
+  const wantsDirector = /(поменяй|замени|сделай (тише|громче|мрачн|светлее)|правк|тембр|микс)/.test(text);
+  const wantsComposition = /(сделай|собери|создай|напиши|бит|трек|компози)/.test(text);
+  if (wantsComposition && !wantsDirector) return 'composer';
+  if (wantsResearch) return 'research';
+  if (wantsDirector) return 'director';
   return 'chat';
 }
 
@@ -167,7 +178,13 @@ export async function* runAgent({
   let planSource = 'heuristic';
   try {
     const answer = await completeChat({
-      messages: plannerMessages({ mode: mode.id, prompt, tools: mode.tools, context: { code: currentCode } }),
+      messages: plannerMessages({
+        mode: mode.id,
+        prompt,
+        tools: mode.tools,
+        context: { code: currentCode },
+        history,
+      }),
       temperature: 0.1,
       signal,
       feature: 'agent-plan',
@@ -212,7 +229,16 @@ export async function* runAgent({
   const bag = { spec: null, code: currentCode, ir: currentIr };
   let index = 0;
 
-  for (const step of steps) {
+  // Шаги выполняются из очереди: после успешного поиска цикл может добавить
+  // шаг «прочитать найденную страницу». Модель не знает адрес заранее, а
+  // гейт A требует путь «найди → прочитай → собери»: без чтения запрос
+  // остаётся сбором заголовков.
+  const queue = [...steps];
+  let queueIndex = 0;
+
+  while (queueIndex < queue.length) {
+    const step = queue[queueIndex];
+    queueIndex += 1;
     if (signal?.aborted) {
       yield { type: 'error', message: 'Запрос отменён' };
       return;
@@ -275,6 +301,21 @@ export async function* runAgent({
     observations.push(observation);
     if (degraded || !ok) degradedTools.push({ tool: step.tool, reason: result?.reason ?? 'без причины' });
 
+    // Поиск нашёл страницу — читаем её. Шаг добавляется в очередь на лету:
+    // адрес известен только после поиска, а без текста страницы агент знает
+    // лишь заголовок. Шаг видно в панели отдельной карточкой.
+    if (ok && step.tool === 'web_search' && allowed.has('web_fetch')
+      && !queue.some((item) => item.tool === 'web_fetch')) {
+      const url = (result?.results ?? []).map((item) => item?.url).find(Boolean);
+      if (url) {
+        queue.push({
+          tool: 'web_fetch',
+          args: { url },
+          why: 'прочитать найденную страницу (шаг добавлен после поиска)',
+        });
+      }
+    }
+
     yield {
       type: 'tool_end',
       id: step.tool,
@@ -294,6 +335,7 @@ export async function* runAgent({
 
   let answer = '';
   let answerSource = 'model';
+  let answerMessagesText = '';
   if (cacheable) {
     const cached = answerCache.get(key);
     if (cached) {
@@ -305,8 +347,13 @@ export async function* runAgent({
   if (!answer) {
     const before = usageSummary();
     try {
+      // Сообщения сохраняем: по ним же считаем оценку токенов, когда
+      // провайдер не отдал счётчики. Оценка по голому запросу занижала бы
+      // расход в разы: в промпте есть план и все наблюдения.
+      const messages = answerMessages({ mode: mode.id, prompt, plan, observations, history });
+      answerMessagesText = JSON.stringify(messages);
       const stream = streamChat({
-        messages: answerMessages({ mode: mode.id, prompt, plan, observations }),
+        messages,
         temperature: 0.4,
         signal,
         feature: 'agent-answer',
@@ -332,12 +379,26 @@ export async function* runAgent({
       answerCache.set(key, answer);
     }
     const after = usageSummary();
-    const tokens = after.totalTokens - before.totalTokens;
-    const cost = Number((after.costUsd - before.costUsd).toFixed(6));
-    yield { type: 'usage', tokens, costUsd: cost, requestCount: after.requests - before.requests };
+    const measuredTokens = after.totalTokens - before.totalTokens;
+    const measuredCost = Number((after.costUsd - before.costUsd).toFixed(6));
+    // Счётчики провайдера могут не прийти (или это мок) — тогда токенов
+    // «ноль», но это не «бесплатно», а «нет данных». Считаем оценку и
+    // честно помечаем её, чтобы панель не показывала ноль как факт.
+    const estimate = measuredTokens > 0 ? null : estimateUsage(answer, answerMessagesText || prompt);
+    const tokens = measuredTokens > 0 ? measuredTokens : estimate.promptTokens + estimate.completionTokens;
+    yield {
+      type: 'usage',
+      tokens,
+      costUsd: measuredCost,
+      requestCount: after.requests - before.requests,
+      estimated: !measuredTokens,
+      // Цена честно остаётся нулём, если модель неизвестна: выдумывать
+      // стоимость нельзя, а «цена не измерена» — это честная формулировка.
+      priceKnown: measuredCost > 0,
+    };
   } else {
     yield { type: 'text', text: answer };
-    yield { type: 'usage', tokens: 0, costUsd: 0, cached: true };
+    yield { type: 'usage', tokens: 0, costUsd: 0, cached: true, estimated: false, priceKnown: false };
   }
 
   yield {

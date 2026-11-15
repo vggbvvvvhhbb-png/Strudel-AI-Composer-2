@@ -33,6 +33,8 @@ getEngine()
   });
 initLive({ editor });
 initVoice();
+// Голос в поле помощника-агента: тот же ввод, но адресат — агенту.
+initVoice({ buttonId: 'agent-voice', targetId: 'agent-input' });
 initDeepDive();
 // Шаги студии («Опишите → Слушайте → Правьте») — после разбора,
 // чтобы флаг ?dive=1 уже был разобран и шапка шагов знала про режим.

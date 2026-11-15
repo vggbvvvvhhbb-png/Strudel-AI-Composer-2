@@ -1,0 +1,174 @@
+{
+  "checkedAt": "2026-11-15T02:01:10.104Z",
+  "gate": "A — помощник-агент",
+  "query": "найди в интернете, что такое phonk drift, и сделай бит в этом стиле",
+  "internet": "не измерено: ключа поиска в репозитории нет (EXA_API_KEY не задан)",
+  "passed": 15,
+  "total": 15,
+  "checks": [
+    {
+      "name": "цикл отдаёт план, шаги и ответ",
+      "ok": true,
+      "detail": "события: plan, tool_start, tool_end, text, usage, done"
+    },
+    {
+      "name": "режим — композитор (цель запроса — бит)",
+      "ok": true,
+      "detail": "режим: composer"
+    },
+    {
+      "name": "в плане есть поиск, сборка и компиляция",
+      "ok": true,
+      "detail": "шаги: web_search, library_search, compose_spec, compile"
+    },
+    {
+      "name": "поиск без ключа не проходит и это сказано прямо",
+      "ok": true,
+      "detail": "Интернет недоступен: не задан EXA_API_KEY. Отвечаю по локальной библиотеке."
+    },
+    {
+      "name": "агент не упал и перешёл к сборке",
+      "ok": true,
+      "detail": "инструментов выполнено: 4"
+    },
+    {
+      "name": "трек собран: код получен",
+      "ok": true,
+      "detail": "символов кода: 2806"
+    },
+    {
+      "name": "деградация видна в итоге агента",
+      "ok": true,
+      "detail": "деградировало: web_search"
+    },
+    {
+      "name": "usage отдаёт честное число токенов",
+      "ok": true,
+      "detail": "токенов ≈ 401 (оценка: true), цена измерена: false"
+    },
+    {
+      "name": "панель агента видна на первом экране",
+      "ok": true,
+      "detail": "проверено в браузере 1440×900"
+    },
+    {
+      "name": "шаги плана видны в панели",
+      "ok": true,
+      "detail": "шагов: 4"
+    },
+    {
+      "name": "карточки вызовов инструментов видны",
+      "ok": true,
+      "detail": "карточек: 4"
+    },
+    {
+      "name": "неудачный инструмент помечен, а не спрятан",
+      "ok": true,
+      "detail": "помечено: 1"
+    },
+    {
+      "name": "расход токенов виден в usage",
+      "ok": true,
+      "detail": "Токенов ≈ 401 (оценка: провайдер не отдал счётчики) · Цена не измерена (модель или провайдер неизвестны)"
+    },
+    {
+      "name": "статус сервисов сказан до запроса",
+      "ok": true,
+      "detail": "Инструментов: 9. Интернет недоступен — агент ответит по локальной библиотеке."
+    },
+    {
+      "name": "ошибок в консоли нет",
+      "ok": true,
+      "detail": "нет"
+    }
+  ],
+  "measured": {
+    "server": {
+      "httpStatus": 200,
+      "eventTypes": [
+        "plan",
+        "tool_start",
+        "tool_end",
+        "tool_start",
+        "tool_end",
+        "tool_start",
+        "tool_end",
+        "tool_start",
+        "tool_end",
+        "text",
+        "text",
+        "text",
+        "text",
+        "text",
+        "text",
+        "text",
+        "usage",
+        "done"
+      ],
+      "mode": "composer",
+      "planSource": "model",
+      "planSteps": [
+        "web_search",
+        "library_search",
+        "compose_spec",
+        "compile"
+      ],
+      "tools": [
+        {
+          "tool": "web_search",
+          "ok": false,
+          "degraded": true,
+          "reason": "Интернет недоступен: не задан EXA_API_KEY. Отвечаю по локальной библиотеке.",
+          "ms": 0.4
+        },
+        {
+          "tool": "library_search",
+          "ok": true,
+          "degraded": false,
+          "reason": null,
+          "ms": 0.7
+        },
+        {
+          "tool": "compose_spec",
+          "ok": true,
+          "degraded": false,
+          "reason": null,
+          "ms": 12.8
+        },
+        {
+          "tool": "compile",
+          "ok": true,
+          "degraded": false,
+          "reason": null,
+          "ms": 0.6
+        }
+      ],
+      "usage": {
+        "type": "usage",
+        "tokens": 401,
+        "costUsd": 0,
+        "requestCount": 0,
+        "estimated": true,
+        "priceKnown": false
+      },
+      "degraded": [
+        {
+          "tool": "web_search",
+          "reason": "Интернет недоступен: не задан EXA_API_KEY. Отвечаю по локальной библиотеке."
+        }
+      ],
+      "codeChars": 2806,
+      "answerChars": 154
+    },
+    "panel": {
+      "planSteps": 4,
+      "toolCards": 4,
+      "failed": 1,
+      "usage": "Токенов ≈ 401 (оценка: провайдер не отдал счётчики) · Цена не измерена (модель или провайдер неизвестны)",
+      "summary": "Инструментов вызвано: 4. Режим: composer.",
+      "applyButton": 1,
+      "services": "Инструментов: 9. Интернет недоступен — агент ответит по локальной библиотеке.",
+      "panelVisible": true
+    }
+  }
+}

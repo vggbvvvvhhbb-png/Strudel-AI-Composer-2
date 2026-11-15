@@ -191,3 +191,68 @@ describe('запуск запроса', () => {
     expect(elements.get('agent-stop').hidden).toBe(true);
   });
 });
+
+describe('расход токенов', () => {
+  it('оценка помечается оценкой, а ноль цены — как «цена не измерена»', async () => {
+    api.agentStream.mockImplementation(async ({ onEvent }) => {
+      onEvent({ type: 'usage', tokens: 305, costUsd: 0, requestCount: 1, estimated: true, priceKnown: false });
+    });
+    await elements.get('agent-send').click();
+    const usage = elements.get('agent-usage').textContent;
+    expect(usage).toMatch(/Токенов ≈ 305/);
+    expect(usage).toMatch(/оценка/);
+    // Ноль цены при неизвестной модели — это «нет данных», а не «бесплатно».
+    expect(usage).toMatch(/Цена не измерена/);
+  });
+
+  it('измеренная цена показывается числом', async () => {
+    api.agentStream.mockImplementation(async ({ onEvent }) => {
+      onEvent({ type: 'usage', tokens: 1200, costUsd: 0.0123, requestCount: 2, estimated: false, priceKnown: true });
+    });
+    await elements.get('agent-send').click();
+    const usage = elements.get('agent-usage').textContent;
+    expect(usage).toMatch(/Токенов: 1200/);
+    expect(usage).toMatch(/\$0\.0123/);
+  });
+
+  it('ответ из кэша — токены не тратились', async () => {
+    api.agentStream.mockImplementation(async ({ onEvent }) => {
+      onEvent({ type: 'usage', tokens: 0, costUsd: 0, cached: true });
+    });
+    await elements.get('agent-send').click();
+    expect(elements.get('agent-usage').textContent).toMatch(/кэш/);
+  });
+});
+
+describe('память разговора', () => {
+  it('прошлые реплики уходят с запросом', async () => {
+    await elements.get('agent-send').click();
+    expect(api.agentStream.mock.calls[0][0].history).toEqual([]);
+
+    api.agentStream.mockImplementation(async ({ onEvent }) => {
+      onEvent({ type: 'text', text: 'Второй ответ' });
+    });
+    await elements.get('agent-send').click();
+    const history = api.agentStream.mock.calls[1][0].history;
+    expect(history).toHaveLength(2);
+    expect(history[0]).toEqual({ role: 'user', content: 'найди, что такое phonk drift' });
+    expect(history[1]).toMatchObject({ role: 'assistant' });
+  });
+});
+
+describe('кликабельный план', () => {
+  it('клик по шагу подсвечивает карточку этого инструмента', async () => {
+    await elements.get('agent-send').click();
+    const stream = elements.get('agent-stream');
+    const plan = stream.children.find((child) => child.classList.contains('agent-plan'));
+    const list = plan.children.find((child) => child.classList.contains('agent-steps'));
+    const step = list.children[0];
+    const button = step.children.find((child) => child.tag === 'button');
+    expect(button).toBeTruthy();
+
+    const card = stream.children.find((child) => child.classList.contains('agent-tool'));
+    expect(card.classList.contains('is-highlight')).toBe(false);
+    await button.click();
+    expect(card.classList.contains('is-highlight')).toBe(true);
+  });
+});

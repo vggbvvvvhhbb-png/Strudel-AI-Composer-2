@@ -192,6 +192,41 @@
   min-height: 1em;
 }
 
+.agent-summary {
+  font-size: 0.74rem;
+  color: var(--text-dim);
+}
+
+/* План кликабельный: шаг — кнопка, которая подсвечивает карточку
+   соответствующего инструмента. Ничего не перезапускается. */
+.agent-step-btn {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.agent-step-btn:hover .agent-step-tool {
+  text-decoration: underline;
+}
+
+.agent-step-btn:focus-visible {
+  outline: 1px solid var(--jade);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.agent-tool.is-highlight {
+  border-left-color: var(--mint);
+  background: rgb(var(--jade-rgb) / 0.12);
+}
+
 /* Атрибут hidden должен побеждать авторский display: .btn задаёт
    display: inline-flex, и без этого правила кнопка «Стоп» видна до
    начала запроса. Тот же приём уже применён к .dive-panel и .voice-btn. */

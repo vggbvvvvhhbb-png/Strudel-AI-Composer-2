@@ -1,6 +1,8 @@
-// Голосовой ввод: кнопка микрофона → MediaRecorder → /api/transcribe → текст в поле промпта.
+// Голосовой ввод: кнопка микрофона → MediaRecorder → /api/transcribe → текст в поле.
 // Модуль необязательный: если ключа распознавания нет, кнопка прячется.
 // Автоотправки нет — пользователь сам решает, что отправить.
+// Поле назначения задаётся параметром: тот же ввод работает и в промпте
+// трека, и в поле помощника-агента.
 import { transcribeAudio } from './api/client.js';
 import { log } from './ui.js';
 
@@ -20,9 +22,18 @@ function pickMimeType() {
   return candidates.find((type) => MediaRecorder.isTypeSupported?.(type)) || '';
 }
 
-export function initVoice() {
-  const btn = $('btn-voice');
-  const target = $('prompt-input');
+/**
+ * Голосовой ввод: кнопка микрофона → MediaRecorder → /api/transcribe → текст в поле.
+ *
+ * ПОДКЛЮЧЕНИЕ К АГЕНТУ. Модуль необязательный: если ключа распознавания нет,
+ * кнопка прячется. Кнопку и поле можно задать параметрами — голос нужен и в
+ * промпте трека, и в поле помощника-агента.
+ *
+ * @param {{buttonId?:string, targetId?:string}} options
+ */
+export function initVoice({ buttonId = 'btn-voice', targetId = 'prompt-input' } = {}) {
+  const btn = $(buttonId);
+  const target = $(targetId);
   if (!btn || !target) return;
 
   let recorder = null;

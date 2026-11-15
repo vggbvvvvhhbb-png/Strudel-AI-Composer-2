@@ -20,6 +20,7 @@
 //   test             все тесты
 //   build            продакшен-сборка
 //   bundle:budget    бюджет бандла
+//   gate:a           гейт фазы A: агент проходит запрос гайда (нужен браузер)
 //
 // ОПЦИЯ --release. Добавляет check:licenses --release — ворота публикации.
 // Сейчас они красные: два банка сэмплов без подтверждённой лицензии ждут
@@ -49,6 +50,7 @@ const STEPS = [
   { name: 'test', cmd: 'test', why: 'все тесты' },
   { name: 'build', cmd: 'build', why: 'продакшен-сборка' },
   { name: 'bundle:budget', cmd: 'bundle:budget', why: 'бюджет бандла' },
+  { name: 'gate:a', cmd: 'gate:a', why: 'гейт A: помощник-агент проходит запрос гайда' },
 ];
 
 const RELEASE_STEPS = [
