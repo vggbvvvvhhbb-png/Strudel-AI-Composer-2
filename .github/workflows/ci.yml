@@ -11,8 +11,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Синтаксис
+  # Единые ворота (npm run gate): синтаксис, секреты, пресеты, знания,
+  # навыки, baseline, промты, вкус, реестр лицензий, тесты, сборка и
+  # бюджет бандла. Раньше эти проверки жили в четырёх джобах, и «зелёный
+  # CI» означал «зелёные тесты», а не «проект целиком проходит ворота».
+  gate:
+    name: Ворота проекта
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,50 +25,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run lint
-
-  test:
-    name: Тесты
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm test
-
-  checks:
-    name: Проверки знаний и секретов
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run check:secrets
-      - run: npm run check:presets
-      - run: npm run check:knowledge
-      - run: npm run check:skills
-      - run: npm run check:baseline
-      - run: npm run check:prompts
-      - run: npm run check:taste
-
-  build:
-    name: Сборка и бюджет бандла
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - run: npm run bundle:budget
+      - name: Ворота (npm run gate)
+        run: npm run gate
       - uses: actions/upload-artifact@v4
         with:
           name: dist
@@ -97,7 +59,7 @@ jobs:
   smoke:
     name: Playwright smoke
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [gate]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -16,6 +16,7 @@
     "start": "node server/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
+    "gate": "node scripts/gate.mjs",
     "check:secrets": "node scripts/check-secrets.js",
     "check:presets": "node scripts/check-presets.mjs",
     "check:api": "node scripts/extract-strudel-api.mjs",
