@@ -35,7 +35,7 @@ router.get('/', (req, res) => {
     const labels = readLabels();
     const decided = labels.filter(
       (label) => (label.winner === 'A' || label.winner === 'B')
-        && (label.source ?? 'explicit') === 'explicit',
+        && label.source === 'explicit',
     ).length;
 
     res.json({

@@ -32,11 +32,26 @@ import {
   readLabels,
   readPairs,
 } from '../preference/ledger.js';
+import {
+  getReviewerSession,
+  hasServed,
+  issueReviewerSession,
+  noteServed,
+} from '../preference/session.js';
 
 const router = express.Router();
 
 /** Разрешённые исходы суждения. */
 export const WINNERS = ['A', 'B', 'tie', 'skip'];
+
+/**
+ * Каналы, из которых может прийти метка.
+ *
+ * `tinder` — страница суждения (рецензент слушал и выбрал).
+ * `api` — машинная интеграция: такие метки имеют смысл, но считать их
+ * человеческими нельзя (см. `source` ниже).
+ */
+export const CHANNELS = ['tinder', 'api'];
 
 /**
  * Аудио-признаки одной стороны (L0), измеренные в браузере при рендере.
@@ -67,7 +82,18 @@ export const PreferenceSchema = z.object({
   hashA: z.string().max(80).optional(),
   hashB: z.string().max(80).optional(),
   swapped: z.boolean().optional(),
-  source: z.enum(['explicit', 'implicit']).default('explicit'),
+  // Источник метки — обязательное поле, БЕЗ значения по умолчанию.
+  //
+  // Раньше здесь стояло `.default('explicit')`, и это была главная дыра
+  // проекта: скрипт, отправивший `{pairId, winner}`, получал метку,
+  // помеченную как человеческая, и 60 таких меток разблокировали
+  // выученную цель (порог — 60 живых пар, src/taste/cv.js).
+  // Теперь отсутствие `source` — ошибка 400, а не «человек».
+  source: z.enum(['explicit', 'implicit']),
+  // Канал: откуда пришла метка. `explicit` принимается только из `tinder`.
+  channel: z.enum(CHANNELS).optional(),
+  // Сессия рецензента, выданная сервером в ответе на очередь.
+  sessionId: z.string().max(80).optional(),
   note: z.string().max(200).optional(),
   // Рендер без сэмплов: трек прозвучал неполным. Метка сохраняется (это
   // труд рецензента), но в обучение не идёт — см. server/taste/dataset.js.
@@ -98,11 +124,17 @@ router.get('/queue', (req, res) => {
       ? nextQueueOffset()
       : Number(asked);
     const pairs = buildQueue({ limit: req.query.limit, offset });
+    // Сессия рецензента: сервер выдаёт её сам и запоминает, какие пары в ней
+    // показаны. Метка «человек выбрал» принимается только для пар этой
+    // сессии — см. server/preference/session.js.
+    const session = issueReviewerSession();
+    noteServed(session.id, pairs.map((pair) => pair.pairId ?? pair.id));
     res.json({
       ok: true,
       count: pairs.length,
       offset,
       coverage: labelCoverage(),
+      sessionId: session.id,
       pairs,
     });
   } catch (err) {
@@ -125,9 +157,53 @@ router.post('/', (req, res) => {
     });
     return;
   }
+
+  const label = parsed.data;
+
+  // --- Проверка «это человек» -------------------------------------------------
+  //
+  // Порядок проверок — от дешёвой к дорогой, каждая с понятным текстом:
+  // рецензент должен понять, что именно не так, если метка не прошла.
+  if (label.source === 'explicit') {
+    const channel = label.channel ?? req.get('X-Preference-Channel') ?? null;
+    if (channel !== 'tinder') {
+      res.status(400).json({
+        error: 'Человеческая метка принимается только со страницы суждения (/tinder.html)',
+      });
+      return;
+    }
+
+    const sessionId = label.sessionId ?? req.get('X-Preference-Session') ?? null;
+    const session = getReviewerSession(sessionId);
+    if (!session) {
+      res.status(400).json({
+        error: 'Сессия рецензента не найдена или протухла — обновите страницу суждения',
+      });
+      return;
+    }
+
+    if (!hasServed(session.id, label.pairId)) {
+      res.status(400).json({
+        error: 'Эта пара не была показана в вашей сессии — обновите очередь',
+      });
+      return;
+    }
+
+    // Сравнение двух дорожек без измерений звука — это не сравнение.
+    // Если рендер не удался, честная метка помечается `degraded`:
+    // она сохраняется как труд рецензента, но в обучение не идёт.
+    const hasAudio = Boolean(label.audio?.a && label.audio?.b);
+    if (!hasAudio && label.degraded !== true) {
+      res.status(400).json({
+        error: 'Нет измерений звука для обеих сторон — метка не может считаться человеческой',
+      });
+      return;
+    }
+  }
+
   try {
     const record = {
-      ...parsed.data,
+      ...label,
       at: new Date().toISOString(),
     };
     appendLabel(record);
@@ -185,7 +261,9 @@ router.get('/export', (req, res) => {
     const loserHash = record.winner === 'A' ? record.hashB : record.hashA;
     entry.chosen = winnerHash;
     entry.rejected = loserHash;
-    entry.explicit = true;
+    // Флаг честный: метка без явного `source: 'explicit'` не выдаётся
+    // за человеческую (раньше здесь стояло жёсткое `true`).
+    entry.explicit = record.source === 'explicit';
   }
   res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="preferences.ndjson"');

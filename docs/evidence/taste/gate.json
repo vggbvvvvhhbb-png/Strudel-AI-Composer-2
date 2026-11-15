@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-14T11:57:52.421Z",
+  "checkedAt": "2026-11-15T00:01:19.301Z",
   "machinery": {
     "pass": true,
     "checks": 23,
@@ -7,14 +7,14 @@
   },
   "humanGate": {
     "status": "pending",
-    "decided": 0,
+    "decided": 10,
     "required": 100,
-    "uniquePrompts": 0,
+    "uniquePrompts": 5,
     "requiredPrompts": 50,
     "note": "Метки ставит человек; тест их не заменяет."
   },
   "tasteAdmission": {
-    "decided": 0,
+    "decided": 10,
     "required": 60,
     "status": "pending"
   },
@@ -214,10 +214,10 @@
     {
       "name": "очередь: покрытие считается по разным промтам",
       "passed": true,
-      "detail": "закрыто промтов 0, оценено пар 0",
+      "detail": "закрыто промтов 5, оценено пар 6",
       "numbers": {
-        "judgedPairs": 0,
-        "uniquePrompts": 0,
+        "judgedPairs": 6,
+        "uniquePrompts": 5,
         "promptsNeeded": 50
       }
     }

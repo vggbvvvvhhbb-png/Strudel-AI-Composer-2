@@ -71,7 +71,8 @@ export function trainTaste(pairs, options = {}) {
       diff,
       y: pair.y,
       weight: pair.weight === undefined ? 1 : pair.weight,
-      source: pair.source ?? 'explicit',
+      // Строго: строка без явного источника не считается человеческой.
+      source: pair.source ?? null,
       prompt: pair.prompt ?? null,
     };
   });

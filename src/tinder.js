@@ -55,6 +55,10 @@ let samplesOk = true;
 // Покрытие промтов: сколько РАЗНЫХ промтов закрыто суждениями (приёмка
 // §7.2 требует 50). Число приходит с сервера — оно единственно честное.
 let coverage = { uniquePrompts: 0, promptsNeeded: 50 };
+// Сессия рецензента: её выдаёт сервер вместе с очередью. Без неё метка
+// не будет принята как человеческая — сервер проверяет, что пара была
+// показана именно этой сессии (server/preference/session.js).
+let sessionId = null;
 
 /**
  * Строка прогресса: сколько пар пройдено и сколько разных промтов закрыто.
@@ -304,20 +308,32 @@ async function judge(winner) {
     // надёжность рецензента.
     swapped: Boolean(pair.repeat),
     source: 'explicit',
+    // Канал: сервер принимает человеческую метку только со страницы суждения.
+    channel: 'tinder',
+    // Сессия рецензента (выдана сервером вместе с очередью).
+    sessionId,
     // Аудио-признаки обеих сторон: без них метку нельзя превратить в
     // обучающий пример (см. server/preference/ledger.js).
     audio: current.audio ? { a: current.audio.a, b: current.audio.b } : undefined,
     // Рендер без сэмплов — сравнение неполное (нет ударных и пианино).
     // Такая метка помечается, чтобы не попасть в обучение (см. dataset.js).
-    degraded: !samplesOk,
+    // То же — если звук вообще не удалось измерить: сравнивать нечего.
+    degraded: !samplesOk || !current.audio,
   };
   stopPlayback();
   try {
-    await fetch('/api/preference', {
+    const response = await fetch('/api/preference', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
+    // Ответ сервера проверяем: раньше ошибка 400 молча терялась, и
+    // рецензент думал, что метка записана.
+    if (!response.ok) {
+      const detail = await response.json().catch(() => ({}));
+      say(`Метка не записана: ${detail.error || response.status}`);
+      return;
+    }
   } catch {
     say('Метка не отправилась — проверьте соединение.');
     return;
@@ -339,6 +355,8 @@ async function loadQueue() {
   const data = await response.json();
   if (!data.ok) throw new Error(data.error || 'очередь недоступна');
   queue = data.pairs ?? [];
+  // Сессия рецензента выдаётся вместе с очередью и уходит с каждой меткой.
+  sessionId = data.sessionId ?? null;
   if (data.coverage) {
     coverage = {
       uniquePrompts: data.coverage.uniquePrompts ?? coverage.uniquePrompts,

@@ -88,16 +88,20 @@ describe('реестр пар', () => {
 
 describe('метка с аудио-признаками', () => {
   it('принимает аудио-признаки обеих сторон', async () => {
-    const pairs = buildQueue({ limit: 1 });
-    const pair = pairs[0];
+    // Метка принимается только как человеческая: с каналом страницы
+    // суждения и сессией, выданной сервером вместе с очередью (A0.1).
+    const queue = await (await get('/api/preference/queue?limit=1')).json();
+    const pair = queue.pairs[0];
     const response = await post('/api/preference', {
-      pairId: pair.id,
+      pairId: pair.pairId,
       winner: 'A',
       listenMs: 8000,
       prompt: pair.prompt,
       hashA: pair.a.hash,
       hashB: pair.b.hash,
       source: 'explicit',
+      channel: 'tinder',
+      sessionId: queue.sessionId,
       audio: {
         a: { lufsI: -14.1, truePeakDbtp: -1.2, crestDb: 9.4, clipCount: 0 },
         b: { lufsI: -16.8, truePeakDbtp: -2.1, crestDb: 7.1, clipCount: 0 },
@@ -114,6 +118,7 @@ describe('метка с аудио-признаками', () => {
     const response = await post('/api/preference', {
       pairId: 'p-bad',
       winner: 'A',
+      source: 'explicit',
       audio: { a: { lufsI: 'громко' } },
     });
     expect(response.status).toBe(400);

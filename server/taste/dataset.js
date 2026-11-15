@@ -33,7 +33,11 @@ export function buildRows({ pairs = [], labels = [], featureIds = TASTE_FEATURE_
 
   for (const label of labels) {
     if (label.winner !== 'A' && label.winner !== 'B') continue;
-    if ((label.source ?? 'explicit') !== 'explicit') continue;
+    // Строгое сравнение, без значения по умолчанию: метка без явного
+    // `source: 'explicit'` — не человеческая. Раньше здесь стояло
+    // `label.source ?? 'explicit'`, и автопост без поля source проходил
+    // как человеческая метка.
+    if (label.source !== 'explicit') continue;
     // Рендер без сэмплов: трек прозвучал неполным (нет ударных и пианино).
     // Сравнение «половинок» неполных треков учит модель не тому, поэтому
     // такие метки в выборку не идут — но остаются в реестре как факт.

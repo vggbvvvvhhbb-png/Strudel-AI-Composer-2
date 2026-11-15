@@ -77,7 +77,7 @@ export function leavePromptOutCV(rows, options = {}) {
         y: row.y,
         predicted,
         ok,
-        source: row.source ?? 'explicit',
+        source: row.source ?? null,
       });
     }
     folds.push({
@@ -114,7 +114,7 @@ export function leavePromptOutCV(rows, options = {}) {
  * @returns {object}
  */
 function baselines(rows, predictions) {
-  const explicit = rows.filter((row) => (row.source ?? 'explicit') === 'explicit');
+  const explicit = rows.filter((row) => row.source === 'explicit');
 
   const symbolic = scoreBy(explicit, (row) => {
     if (!Number.isFinite(row.scoreA) || !Number.isFinite(row.scoreB)) return null;
