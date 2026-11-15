@@ -239,11 +239,22 @@ function buildPart(label, muted, solo, calls, region) {
     chain,
     patterns,
     sources,
-    role: detectRole(label, sources),
+    role: detectRole(label, sources, declaredRole(region)),
   };
 }
 
-function detectRole(label, sources) {
+// Роль объявлена компилятором в коде партии: `// role=pad`.
+// Без неё роль пришлось бы угадывать по тексту метки, а у меток вида
+// $P001: роли нет (D-100).
+const ROLE_COMMENT = /\/\/\s*role=([a-z][a-z0-9_]*)/;
+
+function declaredRole(region) {
+  const match = String(region ?? '').match(ROLE_COMMENT);
+  return match ? match[1] : null;
+}
+
+function detectRole(label, sources, declared) {
+  if (declared) return declared;
   const upper = (label || '').toUpperCase();
   const hasSample = sources.some((s) => s.kind === 's' && hasDrumToken(s.value));
   const hasPitch = sources.some((s) => s.kind === 'note' || s.kind === 'n' || s.kind === 'chord');

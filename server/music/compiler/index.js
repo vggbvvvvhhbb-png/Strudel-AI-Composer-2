@@ -173,7 +173,9 @@ export function compileTrackSpec(input) {
     });
     if (part.activeIn.length) {
       const visual = isSampledRole(role) ? '_scope' : '_pianoroll';
-      partLines.push(`$${label}: arrange(${chunks.join(', ')}).${visual}()`);
+      // Роль едет вместе с партией в коде: иначе анализатор вынужден
+      // угадывать её по тексту метки, а у метки $P001: роли нет (D-100).
+      partLines.push(`$${label}: arrange(${chunks.join(', ')}).${visual}() // role=${role}`);
     }
   }
   lines.push(...constants, '', ...partLines);

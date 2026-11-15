@@ -8,6 +8,36 @@ import { PROFILES } from './references.js';
 
 // Критерии и их веса. Экспортируются: калибровка (scripts/calibrate.mjs)
 // перебирает веса, подбирая их под оценки человека.
+
+// Роль партии -> музыкальная функция. Нужна, потому что словарь ролей
+// изменился: анализатор теперь берёт роль из кода (`// role=pad`),
+// а не угадывает по метке (D-100).
+export const ROLE_FUNCTIONS = {
+  kick: 'drums', snare: 'drums', hats: 'drums', perc: 'drums', drums: 'drums',
+  bass: 'bass', sub: 'bass',
+  lead: 'melody', arp: 'melody', melody: 'melody',
+  pad: 'pad', chords: 'pad', texture: 'pad',
+  fx: 'fx',
+};
+
+const clamp01 = (n) => Math.max(0, Math.min(1, n));
+
+/**
+ * Плотность атак на такт, приведённая к числу дорожек.
+ *
+ * Диапазон в профиле задан для типичного трека (4–7 партий). Дорожек
+ * больше — значит больше атак по той же причине: каждая партия играет.
+ * Без масштабирования трек из 100 дорожек получал бы ноль по критерию
+ * плотности, то есть гейт рубил бы ровно то, что мы строим (C3).
+ */
+export function densityTarget(profile, partCount) {
+  const base = profile.density;
+  const n = Math.max(1, Math.round(partCount || 1));
+  const reference = Math.max(1, profile.parts[0]);
+  const scale = n / reference;
+  return [Math.max(1, Math.round(base[0] * scale)), Math.max(2, Math.round(base[1] * scale))];
+}
+
 export const CRITERIA = [
   {
     id: 'tempo',
@@ -26,6 +56,18 @@ export const CRITERIA = [
     value: (m) => m.density,
     target: (p) => p.density,
     describe: (p) => `${p.density[0]}–${p.density[1]} атак на такт`,
+    // Цель считается от числа дорожек (densityTarget).
+    score: (value, profile, metrics) => {
+      const [min, max] = densityTarget(profile, metrics.partCount);
+      if (value >= min && value <= max) return 1;
+      const span = Math.max(1, max - min);
+      const dist = value < min ? min - value : value - max;
+      return clamp01(1 - dist / span);
+    },
+    describeScaled: (profile, metrics) => {
+      const [min, max] = densityTarget(profile, metrics.partCount);
+      return `${min}–${max} атак на такт (${metrics.partCount} партий)`;
+    },
   },
   {
     id: 'groove',
@@ -70,13 +112,24 @@ export const CRITERIA = [
     unit: 'партий',
     value: (m) => m.partCount,
     target: (p) => p.parts,
-    describe: (p) => `${p.parts[0]}–${p.parts[1]} партий`,
+    describe: (p) => `не менее ${p.parts[0]} партий (типично ${p.parts[0]}–${p.parts[1]})`,
+    // Избыток дорожек НЕ штрафуется: 7 — мягкая цель, 12 — был потолок,
+    // 100 — цель фазы C. Штраф за «слишком много партий» рубил бы ровно
+    // то, что мы строим (D-100, C3). Недостаток партий — штрафуется.
+    score: (value, profile) => {
+      const min = Math.max(1, profile.parts[0]);
+      if (value >= min) return 1;
+      return clamp01(value / min);
+    },
     quality: (m) => {
-      // Разнообразие ролей: бас/ударные/мелодия/пады — иначе аранжировка пустая.
+      // Покрытие музыкальных функций: ударные/бас/мелодия — иначе
+      // аранжировка пустая. Роли приходят из кода (`// role=`), поэтому
+      // и библиотечные (kick, lead), и общие (drums, melody) словари
+      // приводим к функциям.
       const need = ['drums', 'bass', 'melody'];
-      const have = m.roles || [];
-      const covered = need.filter((r) => have.includes(r)).length;
-      const bonus = have.includes('pad') || have.includes('arp') || have.includes('hats') ? 0.1 : 0;
+      const functions = new Set((m.roles || []).map((role) => ROLE_FUNCTIONS[role] || role));
+      const covered = need.filter((fn) => functions.has(fn)).length;
+      const bonus = functions.has('pad') || functions.has('fx') ? 0.1 : 0;
       return 0.6 + 0.4 * (covered / need.length) + bonus;
     },
   },
@@ -108,8 +161,6 @@ export const CRITERIA = [
     describe: (p) => `не менее ${Math.round(p.variety * 100)}% партий со своим ритмом`,
   },
 ];
-
-const clamp01 = (n) => Math.max(0, Math.min(1, n));
 
 function round(n, digits = 2) {
   const f = 10 ** digits;
@@ -152,7 +203,13 @@ export function scoreTrack(analysis, profile = PROFILES.generic, weights = {}) {
 
     let score;
     let target;
-    if (criterion.min) {
+    if (criterion.score) {
+      // У критерия своя функция оценки: цель может зависеть от метрик
+      // (плотность — от числа дорожек, аранжировка — от нижней границы).
+      score = value === null ? 0.5 : criterion.score(value, profile, metrics);
+      const range = criterion.target(profile);
+      target = `${range[0]}–${range[1]} ${criterion.unit}`;
+    } else if (criterion.min) {
       const min = criterion.min(profile);
       // Порог в долях (0..1) — это процент, иначе — абсолютная величина.
       target = min <= 1 ? `≥ ${Math.round(min * 100)}%` : `≥ ${min} ${criterion.unit}`;
@@ -173,7 +230,7 @@ export function scoreTrack(analysis, profile = PROFILES.generic, weights = {}) {
       unit: criterion.unit,
       value: value === null ? null : round(value, 3),
       target,
-      targetText: criterion.describe(profile),
+      targetText: criterion.describeScaled ? criterion.describeScaled(profile, metrics) : criterion.describe(profile),
       score: round(score, 3),
       points: round(score * weight, 1),
       status: value === null ? 'na' : score >= 0.8 ? 'ok' : score >= 0.55 ? 'near' : 'bad',
@@ -212,11 +269,11 @@ function issueHint(criterion, analysis, profile) {
     }
     case 'density': {
       const value = v(m);
-      const [min, max] = profile.density;
+      const [min, max] = densityTarget(profile, m.partCount);
       if (value < min) {
-        return `Мало атак: ${value} на такт при цели ${min}–${max}. Добавь движение: больше слотов в барабанах (hh*16), синопсии, больше партий.`;
+        return `Мало атак: ${value} на такт при цели ${min}–${max} (${m.partCount} партий). Добавь движение: больше слотов в барабанах (hh*16), синопсии, больше партий.`;
       }
-      return `Слишком плотно: ${value} атак на такт при цели ${min}–${max}. Убери часть атак, оставь паузы (тильда ~) и разрежи рисунок.`;
+      return `Слишком плотно: ${value} атак на такт при цели ${min}–${max} (${m.partCount} партий). Убери часть атак, оставь паузы (тильда ~) и разрежи рисунок.`;
     }
     case 'groove': {
       const value = v(m);
@@ -236,10 +293,10 @@ function issueHint(criterion, analysis, profile) {
     case 'separation':
       return `Бас и верхние партии слишком близко (разница ${v(m) ?? '—'} полутонов, нужно не менее ${profile.separation}). Опусти бас на 1–2 октавы или подними мелодию, чтобы они не спорили.`;
     case 'arrangement': {
-      const roles = m.roles || [];
-      const missing = ['drums', 'bass', 'melody'].filter((r) => !roles.includes(r));
+      const functions = new Set((m.roles || []).map((role) => ROLE_FUNCTIONS[role] || role));
+      const missing = ['drums', 'bass', 'melody'].filter((fn) => !functions.has(fn));
       const extra = missing.length ? ` Добавь партии: ${missing.join(', ')}.` : '';
-      return `Партий ${v(m)} при цели ${profile.parts[0]}–${profile.parts[1]}.${extra}`;
+      return `Партий ${v(m)} (нужно не менее ${profile.parts[0]}, типично ${profile.parts[0]}–${profile.parts[1]}).${extra}`;
     }
     case 'motion':
       return `Мелодия почти не движется: ${v(m)} разных интервалов при цели ${profile.motion[0]}–${profile.motion[1]}. Используй больше ступеней лада, скачки на терции/квинты, не повторяй одну ноту.`;
