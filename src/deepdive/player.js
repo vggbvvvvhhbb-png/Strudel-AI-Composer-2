@@ -91,7 +91,9 @@ export function createAbPlayer({ onState } = {}) {
   }
 
   // Загружает двойника: WAV из рендера сервера. LUFS приходит из метрик.
-  async function setTwin(url, { lufs = null, lufsEstimated = false } = {}) {
+  // headers — заголовок с токеном доступа: сервер отдаёт WAV только владельцу
+  // токена, поэтому ссылку нельзя отдавать «как есть».
+  async function setTwin(url, { lufs = null, lufsEstimated = false, headers } = {}) {
     twinUrl = url;
     twinLufs = Number.isFinite(Number(lufs)) ? Number(lufs) : null;
     twinLufsEstimated = Boolean(lufsEstimated);
@@ -101,7 +103,7 @@ export function createAbPlayer({ onState } = {}) {
       notify();
       return;
     }
-    const res = await fetch(url);
+    const res = await fetch(url, headers ? { headers } : undefined);
     if (!res.ok) {
       twinBuffer = null;
       applyGains();

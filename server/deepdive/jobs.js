@@ -11,8 +11,10 @@
 //     Это не прячем: после перезапуска GET отдаёт 404, и клиент пишет об этом
 //     пользователю честно.
 //
-// ИДЕНТИФИКАТОР. UUID из randomUUID(): подобрать чужую задачу невозможно,
-// аккаунтов нет — доступ по ссылке, как и задумано (D-084).
+// ИДЕНТИФИКАТОР И ТОКЕН. UUID из randomUUID() — идентификатор задачи,
+// аккаунтов нет. Но одного идентификатора мало: по ссылке видно весь
+// отчёт, поэтому доступ подтверждается ещё и токеном (см. access.js).
+// Токен пишется в job.json — ссылка переживает перезапуск сервера.
 
 import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -49,6 +51,8 @@ export function createJobStore({ root, ttlMs = DEFAULT_TTL_MS } = {}) {
       fileName: job.fileName ?? null,
       model: job.model ?? null,
       separate: Boolean(job.separate),
+      // Токен доступа: без него отчёт не отдаётся даже тому, кто знает id.
+      accessToken: job.accessToken ?? null,
       error: job.error ?? null,
       result: job.result ?? null,
       artifacts: {
@@ -98,6 +102,7 @@ export function createJobStore({ root, ttlMs = DEFAULT_TTL_MS } = {}) {
         fileName: fields.fileName ?? null,
         model: fields.model ?? null,
         separate: Boolean(fields.separate),
+        accessToken: fields.accessToken ?? null,
         workspaceDir: fields.workspaceDir ?? workspaceDir(fields.id),
         inputPath: fields.inputPath ?? null,
         result: null,

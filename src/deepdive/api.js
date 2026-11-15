@@ -14,6 +14,36 @@ import { consumeSSE } from '../api/stream.js';
 /** Как часто опрашивать состояние задачи после обрыва потока. */
 const POLL_INTERVAL_MS = 5000;
 
+/**
+ * Токен доступа к разбору.
+ *
+ * Сервер выдаёт токен вместе с задачей; в ссылке он живёт во фрагменте
+ * (`#t=…`), поэтому сервер его не видит и он не попадает в логи. Здесь он
+ * лежит в памяти вкладки и уходит на сервер заголовком `X-Razbor-Token`.
+ */
+let accessToken = null;
+
+/**
+ * Запомнить токен доступа.
+ * @param {string|null} token
+ */
+export function setAccessToken(token) {
+  accessToken = typeof token === 'string' && token ? token : null;
+}
+
+/**
+ * Текущий токен доступа.
+ * @returns {string|null}
+ */
+export function getAccessToken() {
+  return accessToken;
+}
+
+/** Заголовки запроса с токеном доступа (если он есть). */
+function authHeaders(extra = {}) {
+  return accessToken ? { ...extra, 'X-Razbor-Token': accessToken } : { ...extra };
+}
+
 /** Сколько ждать задачу в сумме, прежде чем признать её потерянной. */
 const POLL_DEADLINE_MS = 3 * 60 * 60 * 1000;
 
@@ -68,7 +98,10 @@ async function consumeResultStream(res, onEvent, emptyMessage) {
  * ссылки /razbor/<job-id>.
  */
 export async function fetchJob(jobId, { signal } = {}) {
-  const res = await fetch(`/api/deepdive/jobs/${encodeURIComponent(jobId)}`, { signal });
+  const res = await fetch(`/api/deepdive/jobs/${encodeURIComponent(jobId)}`, {
+    signal,
+    headers: authHeaders(),
+  });
   if (res.status === 404) {
     const error = new Error('Задача не найдена: разбор не состоялся или результат удалён по TTL');
     error.code = 'JOB_NOT_FOUND';
@@ -128,7 +161,12 @@ export async function analyzeTrack({ file, separate = false, model = 'htdemucs',
 
   await consumeSSE(res, (event) => {
     if (!event || typeof event !== 'object') return;
-    if (event.type === 'job') jobId = event.id ?? jobId;
+    if (event.type === 'job') {
+      jobId = event.id ?? jobId;
+      // Токен приходит один раз, вместе с задачей: дальше он нужен для
+      // состояния, улучшения и скачивания файлов.
+      if (event.accessToken) setAccessToken(event.accessToken);
+    }
     if (event.type === 'error') {
       streamError = new Error(event.message || 'Разбор прерван');
       return;
@@ -155,7 +193,7 @@ export async function analyzeTrack({ file, separate = false, model = 'htdemucs',
 export async function refineTrack({ job, iterations = 3, onEvent, signal }) {
   const res = await fetch('/api/deepdive/refine', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ job, iterations }),
     signal,
   });
@@ -169,7 +207,9 @@ export async function refineTrack({ job, iterations = 3, onEvent, signal }) {
  * Эндпойнт мог быть не развёрнут: 404 превращаем в понятный текст, а не в стектрейс.
  */
 export async function downloadMidi(jobId) {
-  const res = await fetch(`/api/deepdive/jobs/${encodeURIComponent(jobId)}/midi`);
+  const res = await fetch(`/api/deepdive/jobs/${encodeURIComponent(jobId)}/midi`, {
+    headers: authHeaders(),
+  });
   if (!res.ok) {
     // Текст сервера полезнее кода: «задача не найдена» и «эндпойнта нет» — разные вещи.
     const detail = await serverError(res);

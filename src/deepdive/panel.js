@@ -7,7 +7,7 @@
 // Модуль ничего не знает про устройство студии: код в редактор кладётся
 // через существующие syncMixer/syncTransport, сообщения — через log.
 import '../styles/deepdive.css';
-import { analyzeTrack, refineTrack, downloadMidi, fetchJob, waitForJob } from './api.js';
+import { analyzeTrack, refineTrack, downloadMidi, fetchJob, waitForJob, getAccessToken, setAccessToken } from './api.js';
 import { createAbPlayer } from './player.js';
 import { $, el, clear, num, fmtTime, downloadBlob } from './dom.js';
 import {
@@ -76,14 +76,31 @@ export function initDeepDive() {
   setView(flagFromUrl() ? 'dive' : 'studio');
 
   // Прямая ссылка /razbor/<job-id>: открываем разбор по идентификатору.
+  // Токен доступа лежит во фрагменте адреса (#t=…) — сервер его не видит,
+  // берём его сами и передаём дальше заголовком.
   const linkedJob = jobIdFromLocation();
-  if (linkedJob) openJobById(linkedJob);
+  if (linkedJob) {
+    setAccessToken(tokenFromLocation());
+    openJobById(linkedJob);
+  }
 }
 
 /* --- Прямая ссылка на задачу --- */
 
 function jobIdFromLocation() {
   const match = /^\/razbor\/([A-Za-z0-9-]+)\/?$/.exec(window.location.pathname);
+  return match ? match[1] : null;
+}
+
+/**
+ * Токен доступа из фрагмента адреса.
+ *
+ * Фрагмент не уходит на сервер — ни в логи, ни в Referer. Это единственное
+ * место, где токен может лежать в ссылке.
+ */
+function tokenFromLocation() {
+  const hash = window.location.hash || '';
+  const match = /(?:^|[#&])t=([A-Za-z0-9]+)/.exec(hash);
   return match ? match[1] : null;
 }
 
@@ -120,13 +137,20 @@ async function openJobById(jobId) {
 function showPermalink(jobId) {
   const box = $('dive-link');
   if (!box) return;
-  const url = `${window.location.origin}/razbor/${jobId}`;
+  const token = getAccessToken();
   const input = $('dive-link-url');
   const note = $('dive-link-note');
+  // Без токена ссылка бесполезна: сервер отдаёт отчёт только по токену.
+  // Значит, показать её нечего — прячем блок целиком.
+  if (!token) {
+    box.hidden = true;
+    return;
+  }
+  const url = `${window.location.origin}/razbor/${jobId}#t=${token}`;
   box.hidden = false;
   if (input) input.value = url;
   if (note) {
-    note.textContent = 'Разбор идёт на сервере — вкладку можно закрыть и вернуться по этой ссылке.';
+    note.textContent = 'Ссылка содержит токен доступа — передавайте её целиком. Без токена разбор не откроется.';
   }
 }
 
@@ -536,7 +560,12 @@ function loadTwinAudio(payload) {
   }
 
   const { lufs, estimated } = twinLufs(payload);
-  player?.setTwin(url, { lufs, lufsEstimated: estimated }).catch(() => {});
+  const token = getAccessToken();
+  player?.setTwin(url, {
+    lufs,
+    lufsEstimated: estimated,
+    headers: token ? { 'X-Razbor-Token': token } : undefined,
+  }).catch(() => {});
 }
 
 function twinLufs(payload) {

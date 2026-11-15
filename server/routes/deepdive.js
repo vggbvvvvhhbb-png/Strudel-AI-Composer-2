@@ -28,6 +28,12 @@ import { createJobStore } from '../deepdive/jobs.js';
 import { separationQueue } from '../deepdive/queue.js';
 import { acquireLock } from '../deepdive/lock.js';
 import {
+  generateAccessToken,
+  isAuthorized,
+  readToken,
+  permalinkFor,
+} from '../deepdive/access.js';
+import {
   estimateDeepDive,
   formatEstimate,
   isKnownModel,
@@ -69,9 +75,37 @@ const deepdiveLimiter = rateLimit({
 });
 router.use('/api/deepdive', deepdiveLimiter);
 
-/** Прямая ссылка на задачу: без аккаунтов, по идентификатору. */
-function permalinkFor(jobId) {
-  return `/razbor/${jobId}`;
+/**
+ * Прямая ссылка на задачу: без аккаунтов, по идентификатору И токену.
+ *
+ * Токен живёт во фрагменте ссылки — сервер его не видит, клиент достаёт сам
+ * и передаёт заголовком (см. server/deepdive/access.js).
+ *
+ * Режим выдачи ссылок — переменная окружения DEEPDIVE_LINK_MODE:
+ *   token (по умолчанию) — ссылка с токеном, вернуться можно по ней;
+ *   off                  — ссылка не выдаётся вовсе: разбор виден только
+ *                          в той сессии, где он запущен.
+ */
+const LINK_MODE = process.env.DEEPDIVE_LINK_MODE === 'off' ? 'off' : 'token';
+
+/** Ответ без различения «нет задачи» и «нет доступа». */
+function notFound(res) {
+  res.status(404).json({ error: 'Разбор не найден или ссылка недействительна' });
+}
+
+/**
+ * Проверка доступа к задаче.
+ *
+ * Токен обязателен всегда: без него знание идентификатора (UUID) давало бы
+ * доступ к чужому отчёту. Отказ — тоже 404, чтобы по коду ответа нельзя
+ * было проверить, существует ли задача.
+ *
+ * @param {object} req запрос express
+ * @param {object} job задача
+ * @returns {boolean} true — доступ есть
+ */
+function accessGranted(req, job) {
+  return isAuthorized(job, readToken(req));
 }
 
 function sanitizeName(name) {
@@ -175,6 +209,7 @@ router.post('/api/deepdive/analyze', (req, res) => {
     const requestedModel = String(req.body?.model || DEFAULT_SEPARATION_MODEL);
     const model = isKnownModel(requestedModel) ? requestedModel : DEFAULT_SEPARATION_MODEL;
 
+    const accessToken = generateAccessToken();
     const job = jobStore.create({
       id: jobId,
       status: 'running',
@@ -185,6 +220,7 @@ router.post('/api/deepdive/analyze', (req, res) => {
       separate,
       workspaceDir,
       inputPath,
+      accessToken,
     });
 
     res.writeHead(200, {
@@ -196,7 +232,16 @@ router.post('/api/deepdive/analyze', (req, res) => {
     sse(res, { type: 'stage', stage: 'upload', label: 'Файл получен', progress: 0.02 });
     // Идентификатор и ссылка приходят сразу: по ним можно вернуться к
     // разбору позже, даже если вкладку закрыть.
-    sse(res, { type: 'job', id: jobId, permalink: permalinkFor(jobId), separate, model });
+    sse(res, {
+      type: 'job',
+      id: jobId,
+      permalink: LINK_MODE === 'off' ? null : permalinkFor(jobId, accessToken),
+      // Токен уходит в поток один раз: клиент хранит его в памяти и
+      // передаёт серверу заголовком. В ссылке он живёт во фрагменте.
+      accessToken,
+      separate,
+      model,
+    });
 
     const keepalive = startKeepalive(res);
 
@@ -303,7 +348,7 @@ router.post('/api/deepdive/analyze', (req, res) => {
       // Результат уходит на диск: с этого момента он доступен по прямой
       // ссылке /razbor/<job-id>, даже если вкладку закрыть или сервер перезапустить.
       await jobStore.save(job);
-      sse(res, { type: 'result', payload: result, permalink: permalinkFor(jobId) });
+      sse(res, { type: 'result', payload: result, permalink: LINK_MODE === 'off' ? null : permalinkFor(jobId, accessToken) });
     } catch (err) {
       job.status = 'error';
       job.error = err?.message || String(err);
@@ -331,8 +376,8 @@ router.post('/api/deepdive/analyze', (req, res) => {
 router.post('/api/deepdive/refine', async (req, res) => {
   const jobId = String(req.body?.job || '');
   const job = await jobStore.get(jobId);
-  if (!job?.result) {
-    res.status(404).json({ error: 'Разбор не найден — сначала разберите трек' });
+  if (!job?.result || !accessGranted(req, job)) {
+    notFound(res);
     return;
   }
   const iterations = Math.max(1, Math.min(5, Number(req.body?.iterations) || 3));
@@ -412,8 +457,8 @@ router.post('/api/deepdive/refine', async (req, res) => {
  */
 router.get('/api/deepdive/jobs/:id', async (req, res) => {
   const job = await jobStore.get(req.params.id);
-  if (!job) {
-    res.status(404).json({ error: 'Задача не найдена' });
+  if (!job || !accessGranted(req, job)) {
+    notFound(res);
     return;
   }
   res.json({
@@ -423,7 +468,7 @@ router.get('/api/deepdive/jobs/:id', async (req, res) => {
     progress: job.progress,
     result: job.result ?? null,
     error: job.error ?? null,
-    permalink: permalinkFor(job.id),
+    permalink: LINK_MODE === 'off' ? null : permalinkFor(job.id, job.accessToken),
     fromDisk: Boolean(job.fromDisk),
   });
 });
@@ -431,6 +476,10 @@ router.get('/api/deepdive/jobs/:id', async (req, res) => {
 /** WAV двойника — для A/B-плеера. */
 router.get('/api/deepdive/jobs/:id/twin.wav', async (req, res) => {
   const job = await jobStore.get(req.params.id);
+  if (!job || !accessGranted(req, job)) {
+    notFound(res);
+    return;
+  }
   const file = job?.artifacts?.twinWavPath;
   if (!file || !existsSync(file)) {
     res.status(404).json({ error: 'Рендер двойника недоступен' });
@@ -449,9 +498,13 @@ router.get('/api/deepdive/jobs/:id/twin.wav', async (req, res) => {
 /** MIDI двойника: ударные и бас. */
 router.get('/api/deepdive/jobs/:id/midi', async (req, res) => {
   const job = await jobStore.get(req.params.id);
+  if (!job || !accessGranted(req, job)) {
+    notFound(res);
+    return;
+  }
   const result = job?.result;
   if (!result) {
-    res.status(404).json({ error: 'Задача не найдена' });
+    res.status(404).json({ error: 'Отчёт ещё не готов' });
     return;
   }
   const midi = buildMidi({
