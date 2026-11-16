@@ -2,7 +2,8 @@
 //
 //   POST /api/samples/passport  — паспорт звука: скачать превью, измерить,
 //                                  зарегистрировать в пуле с лицензией;
-//   GET  /api/samples/pool      — что в пуле (паспорта, лицензии, атрибуции).
+//   GET  /api/samples/pool      — что в пуле (паспорта, лицензии, атрибуции);
+//   GET  /api/samples/pool/:id/audio — прослушать сэмпл пула до выбора.
 //
 // ЗАЧЕМ ОТДЕЛЬНЫЙ МАРШРУТ. «Охотник» ищет звук, потом должен его услышать
 // и понять. Паспорт — это перевод звука в числа, по которым композитор
@@ -13,10 +14,12 @@
 
 import { Router } from 'express';
 import { z } from 'zod';
+import { createReadStream, existsSync, statSync } from 'node:fs';
+import path from 'node:path';
 
 import { buildPassport } from '../samples/passport.js';
 import { downloadSampleWav } from '../samples/download.js';
-import { addToPool, listPool, searchPool, POOL_AUDIO_DIR } from '../samples/pool.js';
+import { addToPool, listPool, searchPool, getFromPool, POOL_AUDIO_DIR } from '../samples/pool.js';
 import { readWav } from '../deepdive/pipeline/helpers.js';
 
 const router = Router();
@@ -95,6 +98,30 @@ router.get('/api/samples/pool', (req, res) => {
     return;
   }
   res.json({ ok: true, samples: listPool() });
+});
+
+/**
+ * GET /api/samples/pool/:id/audio — WAV сэмпла из пула.
+ *
+ * Отдаётся только файл, зарегистрированный в пуле и лежащий в каталоге
+ * аудио пула: запись в реестре не должна читать произвольные файлы диска.
+ */
+router.get('/api/samples/pool/:id/audio', (req, res) => {
+  const entry = getFromPool(req.params.id);
+  if (!entry) {
+    res.status(404).json({ error: `сэмпл не найден в пуле: ${req.params.id}` });
+    return;
+  }
+  const file = entry.file ? path.resolve(String(entry.file)) : null;
+  const audioDir = path.resolve(POOL_AUDIO_DIR);
+  if (!file || !file.startsWith(`${audioDir}${path.sep}`) || !existsSync(file)) {
+    res.status(404).json({ error: 'аудио сэмпла недоступно: файл не в каталоге пула или отсутствует' });
+    return;
+  }
+  res.setHeader('content-type', 'audio/wav');
+  res.setHeader('content-length', String(statSync(file).size));
+  res.setHeader('cache-control', 'no-store');
+  createReadStream(file).pipe(res);
 });
 
 export default router;
