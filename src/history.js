@@ -6,6 +6,7 @@ import {
 import { captureMixer } from './core/code-model.js';
 import { transportState } from './transport.js';
 import { log } from './ui.js';
+import { fetchAttributions } from './timbre/attribution.js';
 
 const $ = (id) => document.getElementById(id);
 const hooks = { getCode: () => '', load: () => {} };
@@ -39,8 +40,18 @@ function onSavePreset() {
   renderPresets();
 }
 
-function onExport() {
-  const blob = new Blob([exportAll()], { type: 'application/json' });
+async function onExport() {
+  // Атрибуция тембров каталога едет вместе с пресетами (D-126):
+  // CC-BY ассеты, звучащие в коде пресета, получают строку TASL.
+  const payload = JSON.parse(exportAll());
+  const presets = payload.presets ?? [];
+  const { attributions, degraded } = await fetchAttributions(presets.map((preset) => preset.code ?? ''));
+  payload.presets = presets.map((preset, index) => {
+    const lines = attributions[index] ?? [];
+    return lines.length ? { ...preset, attribution: lines } : preset;
+  });
+  if (degraded) log('Экспорт: атрибуция тембров недоступна — при публикации проверьте права вручную', 'error');
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'strudel-presets.json';
