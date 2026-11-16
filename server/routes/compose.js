@@ -6,6 +6,9 @@
 //   compiled   — код собран компилятором
 //   scored     — оценка трека
 //   refined    — улучшение спеки (итерации)
+//   refine_start, rendered, measured, edit_applied, rerendered, refine_done —
+//                измерительный рефайн «Учитель» (D-111), по флагу measuredRefine
+//   measured-refine — итог измерительного рефайна
 //   done       — финальный код
 //   error      — не удалось
 //
@@ -25,6 +28,8 @@ import { resolveProfile } from '../music/references.js';
 import { stripCodeFences } from '../music/extract.js';
 import { buildTrack, detectSpecStyle } from '../music/compose/pipeline.js';
 import { refineSpec } from '../music/compose/refine.js';
+import { refineComposed } from '../music/compose/measured-refine.js';
+import { serverRender, serverMeasure } from '../music/compose/measured-session.js';
 import { scoreWithV2 } from '../music/compose/score-adapter.js';
 import { checkSpec } from '../music/spec/check.js';
 import { validateTrackSpec } from '../../src/schemas/track-spec.schema.js';
@@ -43,6 +48,9 @@ const composeSchema = z.object({
   seed: z.number().int().min(0).max(2 ** 31 - 1).optional(),
   refine: z.boolean().default(true),
   iterations: z.number().int().min(1).max(3).default(2),
+  // Измерительный рефайн (D-111): «Учитель». Выключен по умолчанию —
+  // он требует рендера в браузере и заметно дороже обычной сборки.
+  measuredRefine: z.boolean().default(false),
   // Отчёт о рендере (Audio QA). Приходит из браузера: на сервере аудио нет.
   // Форма проверяется, числа не проверяются — их честность обеспечивает
   // браузерный код тем же DSP-ядром, что и реалтайм.
@@ -220,7 +228,57 @@ router.post('/api/music/compose', async (req, res) => {
       });
     }
 
-    send('done', { code, spec, score, sections: compiled.sections, mode: 'structured' });
+    // Измерительный рефайн («Учитель», D-111). Отдельно от spec-level
+    // refine: он не смотрит на оценку по коду, а меряет звук и правит
+    // спеку по измеренным дефицитам. Требует браузер для рендера — если
+    // его нет, цикл честно не выполняется, и это говорится вслух.
+    let measured = null;
+    if (body.measuredRefine) {
+      try {
+        measured = await refineComposed({
+          spec,
+          code,
+          seed: body.seed ?? 1,
+          render: serverRender,
+          measure: serverMeasure,
+          signal: upstream.signal,
+          onEvent: (event, payload) => send(event, payload),
+        });
+        spec = measured.spec;
+        code = measured.code;
+        compiled = compileForProtocol(spec);
+        score = await scoreCode(code, built.style, body.prompt, audio.report);
+        send('measured-refine', {
+          before: measured.before,
+          after: measured.after,
+          deltas: measured.deltas,
+          iterations: measured.iterations,
+          stoppedBy: measured.stoppedBy,
+          coverage: measured.coverage,
+        });
+      } catch (err) {
+        send('warn', {
+          message: `Измерительный рефайн не выполнен: ${err?.message || err}`,
+        });
+      }
+    }
+
+    send('done', {
+      code,
+      spec,
+      score,
+      sections: compiled.sections,
+      mode: 'structured',
+      measuredRefine: measured
+        ? {
+          stoppedBy: measured.stoppedBy,
+          iterations: measured.iterations.length,
+          deltas: measured.deltas,
+          coverage: measured.coverage,
+          soundChanged: measured.soundChanged,
+        }
+        : null,
+    });
   } catch (err) {
     if (!upstream.signal.aborted) {
       send('error', { message: err?.message || 'Ошибка композиции' });

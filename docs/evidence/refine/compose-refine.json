@@ -1,0 +1,189 @@
+{
+  "checkedAt": "2026-11-16T01:47:05.324Z",
+  "what": "измерительный рефайн поверх compose (D-111): рендер → замер → правка → рендер → замер",
+  "engine": "headless Chromium + Strudel (тот же движок, что и в студии)",
+  "note": "ключи и тела запросов не пишутся; только числа замера",
+  "cases": [
+    {
+      "name": "ambient: тише коридора, правило R2 доводит до нормы",
+      "before": {
+        "l0": 67,
+        "l1": 99.7,
+        "coverage": null,
+        "truePeakDbtp": -4.522302829493703,
+        "lufsI": -16.712541200437894,
+        "clipCount": 0,
+        "motifCoherence": 1,
+        "contourEntropy": 0.5759200477570119,
+        "notes": [
+          "покрытие слоёв не измерялось: рендер идёт одним миксом"
+        ]
+      },
+      "after": {
+        "l0": 100,
+        "l1": 99.7,
+        "coverage": null,
+        "truePeakDbtp": -3.583538613593864,
+        "lufsI": -15.773767209674382,
+        "clipCount": 0,
+        "motifCoherence": 1,
+        "contourEntropy": 0.5759200477570119,
+        "notes": [
+          "покрытие слоёв не измерялось: рендер идёт одним миксом"
+        ]
+      },
+      "deltas": {
+        "l0": 0.33,
+        "l1": 0,
+        "truePeakDbtp": 0.938764,
+        "lufsI": 0.938774,
+        "clipCount": 0,
+        "technical": 0.039586
+      },
+      "iterations": [
+        {
+          "iteration": 1,
+          "rule": "R2",
+          "applied": true,
+          "reason": "громкость -16.712541200437894 LUFS-I вне коридора -16…-12",
+          "deltas": {
+            "l0": 0.33,
+            "l1": 0,
+            "truePeakDbtp": 0.938764,
+            "lufsI": 0.938774,
+            "clipCount": 0
+          }
+        }
+      ],
+      "stoppedBy": "goal",
+      "coverage": null,
+      "soundChanged": true,
+      "fingerprintBefore": {
+        "browser": "chromium",
+        "browser_version": "131.0.6778.33",
+        "os": "win32",
+        "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+        "sample_rate": 48000,
+        "code_sha256": "9cbf71aeef65e289083a65c7c08ebcc72b5c7ba1d67ad2d7814aca2d6ff82e16",
+        "seed": "deterministic-engine"
+      },
+      "fingerprintAfter": {
+        "browser": "chromium",
+        "browser_version": "131.0.6778.33",
+        "os": "win32",
+        "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+        "sample_rate": 48000,
+        "code_sha256": "c0b14e499d4ca68e175d3c04c18322012cbe83429a6fedf0235dc6602bd2bdc9",
+        "seed": "deterministic-engine"
+      },
+      "events": [
+        "refine_start",
+        "rendered",
+        "measured",
+        "edit_applied",
+        "rerendered",
+        "measured",
+        "refine_done"
+      ]
+    },
+    {
+      "name": "techno: микс обрезается, правила улучшают измеримо",
+      "before": {
+        "l0": 33,
+        "l1": 90.6,
+        "coverage": null,
+        "truePeakDbtp": 0.2980314361058084,
+        "lufsI": -13.595850824383051,
+        "clipCount": 10902,
+        "motifCoherence": 0.8333333333333334,
+        "contourEntropy": 0.6531930789167132,
+        "notes": [
+          "покрытие слоёв не измерялось: рендер идёт одним миксом"
+        ]
+      },
+      "after": {
+        "l0": 33,
+        "l1": 90.6,
+        "coverage": null,
+        "truePeakDbtp": 0.2500316645717442,
+        "lufsI": -14.539671117582346,
+        "clipCount": 6249,
+        "motifCoherence": 0.8333333333333334,
+        "contourEntropy": 0.6531930789167132,
+        "notes": [
+          "покрытие слоёв не измерялось: рендер идёт одним миксом"
+        ]
+      },
+      "deltas": {
+        "l0": 0,
+        "l1": 0,
+        "truePeakDbtp": -0.048,
+        "lufsI": -0.94382,
+        "clipCount": -4653,
+        "technical": 0.002666
+      },
+      "iterations": [
+        {
+          "iteration": 1,
+          "rule": "R1",
+          "applied": true,
+          "reason": "пик 0.2980314361058084 dBTP выше потолка -1 dBTP",
+          "deltas": {
+            "l0": 0,
+            "l1": 0,
+            "truePeakDbtp": -0.048,
+            "lufsI": -0.94382,
+            "clipCount": -4653
+          }
+        },
+        {
+          "iteration": 2,
+          "rule": "R1",
+          "applied": true,
+          "reason": "пик 0.2500316645717442 dBTP выше потолка -1 dBTP",
+          "deltas": {
+            "l0": 0,
+            "l1": 0,
+            "truePeakDbtp": 0.063196,
+            "lufsI": -0.948696,
+            "clipCount": -2028
+          },
+          "reverted": true
+        }
+      ],
+      "stoppedBy": "worse",
+      "coverage": null,
+      "soundChanged": true,
+      "fingerprintBefore": {
+        "browser": "chromium",
+        "browser_version": "131.0.6778.33",
+        "os": "win32",
+        "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+        "sample_rate": 48000,
+        "code_sha256": "d2ccf3be312ce564cd4e26d3f92f0da4ba05287b5e7fda0b12559f9a3f40fee8",
+        "seed": "deterministic-engine"
+      },
+      "fingerprintAfter": {
+        "browser": "chromium",
+        "browser_version": "131.0.6778.33",
+        "os": "win32",
+        "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+        "sample_rate": 48000,
+        "code_sha256": "b4eb392c883cdbb92dbdc87a444118b9e6f46a5e8b72fc155cf62594a7aa6c07",
+        "seed": "deterministic-engine"
+      },
+      "events": [
+        "refine_start",
+        "rendered",
+        "measured",
+        "edit_applied",
+        "rerendered",
+        "measured",
+        "edit_applied",
+        "rerendered",
+        "measured",
+        "refine_done"
+      ]
+    }
+  ]
+}
