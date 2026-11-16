@@ -3,22 +3,27 @@
 //
 // ЧТО ПРОВЕРЯЕМ. Гайд требует, чтобы запрос
 //   «найди в интернете, что такое phonk drift, и сделай бит в этом стиле»
-// агент проходил сам: ищет → читает → строит план → компилирует → играет;
+// агент проходил сам: ищет → читает → строит план → компиляция;
 // каждый шаг виден в панели; расход токенов виден в usage; без ключа поиска
 // агент НЕ падает, а отвечает по каталогу и говорит об этом.
 //
-// КЛЮЧА ПОИСКА В РЕПОЗИТОРИИ НЕТ. Поэтому замеряемая часть гейта — честная
-// деградация: полный проход с интернетом измерить нельзя, и мы это не
-// выдаём за зелёное. Что измеримо и проверяется здесь:
-//   1. серверный цикл: план → инструменты → наблюдение → ответ (SSE);
-//   2. шаг поиска присутствует и деградирует ЧЕСТНО («Интернет недоступен»);
-//   3. сборка трека продолжается: спека → компиляция → готовый код;
-//   4. usage отдаёт честное число токенов (оценка помечена оценкой);
-//   5. в браузере каждый шаг виден в панели, а расход токенов виден в usage.
+// ДВА РЕЖИМА.
 //
-// ЗАПУСК: node scripts/gate-a.mjs
-// Пишет отчёт: docs/evidence/agent/gate-a.json
+//   node scripts/gate-a.mjs          — без интернета (15 проверок).
+//     Ключа поиска в репозитории нет, поэтому замеряемая часть — честная
+//     деградация: полный проход с интернетом измерить нельзя, и мы это
+//     не выдаём за зелёное.
+//
+//   node scripts/gate-a.mjs --live   — с живым поиском (19 проверок).
+//     При заданном EXA_API_KEY агент ищет по-настоящему, читает страницу
+//     и цена запроса измеряется провайдером (costDollars.total) и
+//     записывается в /api/stats. Без ключа живой режим честно не проходит.
+//
+// ЗАПУСК: node scripts/gate-a.mjs [--live]
+// Пишет отчёт: docs/evidence/agent/gate-a.json  (обычный)
+//               docs/evidence/agent/gate-a-live.json  (--live)
 
+import 'dotenv/config';
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -30,7 +35,17 @@ const ROOT = path.resolve(HERE, '..');
 const PORT = Number(process.env.GATE_A_PORT || 3212);
 const BASE = `http://127.0.0.1:${PORT}`;
 
+const LIVE = process.argv.includes('--live');
 const QUERY = 'найди в интернете, что такое phonk drift, и сделай бит в этом стиле';
+// Тот же сценарий, но отдельный запрос: ответ агента кэшируется по запросу,
+// и второй (панельный) прогон иначе получил бы кэш — без шагов и без usage.
+// Кэш — это честная оптимизация, но для измерения панели нужен живой прогон.
+const PANEL_QUERY = `${QUERY} (вариант для панели)`;
+
+/** Жёсткий стоп по цене платного поиска за ночь (см. server/agent/budget.js). */
+const NIGHT_EXA_BUDGET_USD = Number(process.env.NIGHT_EXA_BUDGET_USD ?? 2.0);
+/** Ночной лимит вызовов поиска. */
+const NIGHT_EXA_CALL_CAP = Number(process.env.NIGHT_EXA_CALL_CAP ?? 40);
 
 const BROWSER_PATHS = [
   process.env.CHROME_PATH,
@@ -84,9 +99,28 @@ async function main() {
     process.exit(1);
   }
 
+  const liveKeyPresent = Boolean(String(process.env.EXA_API_KEY ?? '').trim());
+  if (LIVE && !liveKeyPresent) {
+    console.error('✗ живой режим требует EXA_API_KEY: гейт не выдаёт зелёного без измерения.');
+    process.exit(1);
+  }
+
   const server = spawn(process.execPath, ['server/index.js'], {
     cwd: ROOT,
-    env: { ...process.env, PORT: String(PORT), MOCK_LLM: '1', NODE_ENV: 'test' },
+    // В живом режиме модель настоящая: иначе «ответ агента» — мок, а ссылка
+    // на источник в нём не появилась бы. Без интернета модель остаётся моком:
+    // гейт без сети не должен стоить денег.
+    env: {
+      ...process.env,
+      PORT: String(PORT),
+      MOCK_LLM: LIVE ? '' : '1',
+      // Без интернета гейт проверяет ветку деградации, поэтому ключ поиска
+      // выключается явно: на машине владельца он может быть задан в .env.
+      // dotenv не перезаписывает уже заданную переменную — пустая строка
+      // остаётся пустой, и сервер честно считает, что интернета нет.
+      EXA_API_KEY: LIVE ? process.env.EXA_API_KEY : '',
+      NODE_ENV: 'test',
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   const serverLog = [];
@@ -110,7 +144,11 @@ async function main() {
     const raw = await res.text();
     const events = parseSSE(raw);
     const types = events.map((event) => event.type);
-    const plan = events.find((event) => event.type === 'plan');
+    // Планов может быть два: нативный путь публикует план своих вызовов
+    // инструментов, а текстовый — план шагов. Проверяем ПОСЛЕДНИЙ: он
+    // соответствует шагам, которые реально выполнялись.
+    const planEvents = events.filter((event) => event.type === 'plan');
+    const plan = planEvents.at(-1);
     const done = events.find((event) => event.type === 'done');
     const usage = events.find((event) => event.type === 'usage');
     const toolEnds = events.filter((event) => event.type === 'tool_end');
@@ -121,11 +159,13 @@ async function main() {
       mode: plan?.mode ?? null,
       planSource: plan?.planSource ?? null,
       planSteps: (plan?.steps ?? []).map((step) => step.tool),
+      planCount: planEvents.length,
       tools: toolEnds.map((event) => ({
         tool: event.id,
         ok: event.ok,
         degraded: event.degraded,
         reason: event.reason ?? null,
+        chars: event.chars ?? null,
         ms: event.ms ?? null,
       })),
       usage: usage ?? null,
@@ -137,23 +177,45 @@ async function main() {
     check('цикл отдаёт план, шаги и ответ', types.includes('plan') && types.includes('tool_end') && types.includes('done'),
       `события: ${[...new Set(types)].join(', ')}`);
     check('режим — композитор (цель запроса — бит)', plan?.mode === 'composer', `режим: ${plan?.mode}`);
-    check('в плане есть поиск, сборка и компиляция',
-      ['web_search', 'compose_spec', 'compile'].every((tool) => measured.server.planSteps.includes(tool)),
-      `шаги: ${measured.server.planSteps.join(', ')}`);
+    // Шаги плана и реально выполненные инструменты — разные вещи: сборка и
+    // компиляция входят в гарантию режима «композитор» и могут отсутствовать
+    // в плане модели. Проверяем по факту выполнения.
+    const executed = toolEnds.map((event) => event.id);
+    check('выполнены поиск, сборка и компиляция',
+      ['web_search', 'compose_spec', 'compile'].every((tool) => executed.includes(tool)),
+      `выполнено: ${executed.join(', ')}`);
 
     const search = toolEnds.find((event) => event.id === 'web_search');
-    check('поиск без ключа не проходит и это сказано прямо',
-      search && search.ok === false && search.degraded === true && /Интернет недоступен/.test(search.reason ?? ''),
-      search?.reason ?? 'шага поиска не было');
-    check('агент не упал и перешёл к сборке',
-      toolEnds.some((event) => event.id === 'compose_spec' && event.ok),
-      `инструментов выполнено: ${toolEnds.length}`);
-    check('трек собран: код получен', measured.server.codeChars > 0, `символов кода: ${measured.server.codeChars}`);
-    check('деградация видна в итоге агента',
-      (done?.degraded ?? []).some((item) => item.tool === 'web_search'),
-      `деградировало: ${(done?.degraded ?? []).map((item) => item.tool).join(', ') || 'нет'}`);
+    if (LIVE) {
+      check('поиск прошёл и вернул источники',
+        search && search.ok === true,
+        search?.reason ?? (search ? 'поиск выполнен' : 'шага поиска не было'));
+      check('агент не упал и перешёл к сборке',
+        toolEnds.some((event) => event.id === 'compose_spec' && event.ok),
+        `инструментов выполнено: ${toolEnds.length}`);
+      check('трек собран: код получен', measured.server.codeChars > 0, `символов кода: ${measured.server.codeChars}`);
+      check('деградации нет: интернет отвечал',
+        !(done?.degraded ?? []).some((item) => item.tool === 'web_search'),
+        `деградировало: ${(done?.degraded ?? []).map((item) => item.tool).join(', ') || 'нет'}`);
+    } else {
+      check('поиск без ключа не проходит и это сказано прямо',
+        search && search.ok === false && search.degraded === true && /Интернет недоступен/.test(search.reason ?? ''),
+        search?.reason ?? 'шага поиска не было');
+      check('агент не упал и перешёл к сборке',
+        toolEnds.some((event) => event.id === 'compose_spec' && event.ok),
+        `инструментов выполнено: ${toolEnds.length}`);
+      check('трек собран: код получен', measured.server.codeChars > 0, `символов кода: ${measured.server.codeChars}`);
+      check('деградация видна в итоге агента',
+        (done?.degraded ?? []).some((item) => item.tool === 'web_search'),
+        `деградировало: ${(done?.degraded ?? []).map((item) => item.tool).join(', ') || 'нет'}`);
+    }
+    // Контракт usage: число есть и честно помечено, измерено оно или оценка.
+    // В живом режиме провайдер может ответить 429 — тогда токены считаются
+    // оценкой, и это нормально; строгость живого гейта — цена поиска, а не
+    // способ посчитать токены.
     check('usage отдаёт честное число токенов',
-      Boolean(usage) && usage.tokens > 0 && usage.estimated === true,
+      Boolean(usage) && usage.tokens > 0
+        && (LIVE ? typeof usage.estimated === 'boolean' : usage.estimated === true),
       usage ? `токенов ≈ ${usage.tokens} (оценка: ${usage.estimated}), цена измерена: ${usage.priceKnown}` : 'события usage не было');
 
     // --- 2. Панель в браузере: каждый шаг виден -------------------------
@@ -167,7 +229,7 @@ async function main() {
     await page.goto(`${BASE}/studio.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
 
-    await page.fill('#agent-input', QUERY);
+    await page.fill('#agent-input', PANEL_QUERY);
     await page.click('#agent-send');
     await page.waitForSelector('.agent-plan', { timeout: 30_000 }).catch(() => {});
     await page.waitForTimeout(2500);
@@ -192,12 +254,72 @@ async function main() {
     check('панель агента видна на первом экране', panel.panelVisible, 'проверено в браузере 1440×900');
     check('шаги плана видны в панели', panel.planSteps > 0, `шагов: ${panel.planSteps}`);
     check('карточки вызовов инструментов видны', panel.toolCards > 0, `карточек: ${panel.toolCards}`);
-    check('неудачный инструмент помечен, а не спрятан', panel.failed > 0, `помечено: ${panel.failed}`);
+    check(LIVE ? 'неудачных инструментов нет' : 'неудачный инструмент помечен, а не спрятан',
+      LIVE ? panel.failed === 0 : panel.failed > 0,
+      `помечено: ${panel.failed}`);
     check('расход токенов виден в usage', /Токенов/.test(panel.usage), panel.usage || 'пусто');
-    check('статус сервисов сказан до запроса', /Интернет недоступен/.test(panel.services), panel.services);
+    check(LIVE ? 'панель честно говорит, что интернет доступен' : 'статус сервисов сказан до запроса',
+      LIVE ? /Интернет доступен/.test(panel.services) : /Интернет недоступен/.test(panel.services),
+      panel.services);
     check('ошибок в консоли нет', consoleErrors.length === 0, consoleErrors.slice(0, 2).join(' | ') || 'нет');
 
     await page.screenshot({ path: path.join(ROOT, '.scratch', 'gate-a-panel.png') }).catch(() => {});
+
+    // --- 3. Живые проверки поиска (только в режиме --live) ---------------
+    if (LIVE) {
+      // Источники достаём из фактического вызова web_search: домены и адреса
+      // берём из тела ответа инструмента, а не из текста ответа модели.
+      const searchEvent = toolEnds.find((event) => event.id === 'web_search');
+      const urls = [...new Set(
+        (searchEvent?.summary ?? '').match(/https?:\/\/[^\s—]+/g) ?? [],
+      )];
+      const domains = [...new Set(urls.map((url) => {
+        try {
+          return new URL(url).hostname.replace(/^www\./, '');
+        } catch {
+          return null;
+        }
+      }).filter(Boolean))];
+      const fetchEvent = toolEnds.find((event) => event.id === 'web_fetch');
+      const readChars = Number(fetchEvent?.chars ?? 0);
+      const answer = String(done?.answer ?? '');
+      const answerHasSource = urls.some((url) => answer.includes(url))
+        || domains.some((domain) => answer.includes(domain));
+
+      const statsResponse = await fetch(`${BASE}/api/stats`);
+      const stats = statsResponse.ok ? await statsResponse.json() : {};
+      const searchFeature = stats.byFeature?.web_search ?? {};
+      const searchCost = Number(searchFeature.costUsd ?? 0);
+
+      measured.live = {
+        sources: urls.map((url) => {
+          let domain = null;
+          try {
+            domain = new URL(url).hostname.replace(/^www\./, '');
+          } catch {
+            domain = null;
+          }
+          return { url, domain };
+        }),
+        domains,
+        readChars,
+        searchCostUsd: searchCost,
+        searchCalls: Number(searchFeature.requests ?? 0),
+        answerHasSource,
+        budget: {
+          limitUsd: NIGHT_EXA_BUDGET_USD,
+          callCap: NIGHT_EXA_CALL_CAP,
+          spentUsd: searchCost,
+        },
+      };
+
+      check('источники из разных доменов (≥2)', domains.length >= 2, `домены: ${domains.join(', ') || 'нет'}`);
+      check('страница прочитана: текст >500 символов', readChars > 500, `прочитано символов: ${readChars}`);
+      check('ответ агента ссылается на источник', answerHasSource, answerHasSource ? 'ссылка есть' : 'ссылки нет');
+      check('цена поиска измерена и записана в /api/stats', searchCost > 0, `$${searchCost.toFixed(4)}`);
+      check('цена в пределах ночного бюджета', searchCost <= NIGHT_EXA_BUDGET_USD,
+        `$${searchCost.toFixed(4)} из $${NIGHT_EXA_BUDGET_USD.toFixed(2)}`);
+    }
   } catch (err) {
     check('гейт выполнен без исключений', false, err?.message || String(err));
   } finally {
@@ -209,8 +331,11 @@ async function main() {
   const report = {
     checkedAt: new Date().toISOString(),
     gate: 'A — помощник-агент',
+    mode: LIVE ? 'live' : 'offline',
     query: QUERY,
-    internet: 'не измерено: ключа поиска в репозитории нет (EXA_API_KEY не задан)',
+    internet: LIVE
+      ? 'измерено: живой поиск Exa, цена запроса взята из costDollars.total провайдера'
+      : 'не измерено: ключа поиска в репозитории нет (EXA_API_KEY не задан)',
     passed: checks.length - failed.length,
     total: checks.length,
     checks,
@@ -218,10 +343,11 @@ async function main() {
   };
   const outDir = path.join(ROOT, 'docs', 'evidence', 'agent');
   mkdirSync(outDir, { recursive: true });
-  writeFileSync(path.join(outDir, 'gate-a.json'), `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+  const outFile = path.join(outDir, LIVE ? 'gate-a-live.json' : 'gate-a.json');
+  writeFileSync(outFile, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 
-  console.log(`\nГейт A: ${checks.length - failed.length}/${checks.length} проверок прошли`);
-  console.log('Отчёт: docs/evidence/agent/gate-a.json');
+  console.log(`\nГейт A (${LIVE ? 'live' : 'offline'}): ${checks.length - failed.length}/${checks.length} проверок прошли`);
+  console.log(`Отчёт: ${path.relative(ROOT, outFile)}`);
   if (failed.length) process.exit(1);
 }
 

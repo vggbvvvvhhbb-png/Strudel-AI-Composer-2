@@ -249,15 +249,33 @@ describe('расход токенов и память', () => {
   it('ответ из кэша — токены не потрачены, и это сказано прямо', async () => {
     completeChat.mockResolvedValue(planJson([
       { tool: 'library_search', args: { query: 'kick' } },
-    ], 'composer'));
+    ], 'research'));
     streamChat.mockImplementation(async function* () { yield 'ок' });
 
+    // Кэш применяется к ответам без измерений. Ответ композитора содержит
+    // собранный трек — это измерение, поэтому такие ответы не кэшируются,
+    // и проверять кэш нужно на режиме, который измерений не делает.
     const prompt = 'второй одинаковый запрос для проверки кэша 7';
-    await collect({ prompt, mode: 'composer', env: {} });
-    const events = await collect({ prompt, mode: 'composer', env: {} });
+    await collect({ prompt, mode: 'research', env: {} });
+    const events = await collect({ prompt, mode: 'research', env: {} });
     const usage = events.find((event) => event.type === 'usage');
     expect(usage.cached).toBe(true);
     expect(usage.tokens).toBe(0);
+  });
+
+  it('режим «композитор» обещает трек: план без сборки всё равно даёт код', async () => {
+    // Модель ограничилась библиотекой и сборку не запланировала.
+    completeChat.mockResolvedValue(planJson([
+      { tool: 'library_search', args: { query: 'kick' } },
+    ], 'composer'));
+    streamChat.mockImplementation(async function* () { yield 'ок'; });
+
+    const events = await collect({ prompt: 'сделай бит в стиле техно 91', mode: 'composer', env: {} });
+    const done = events.find((event) => event.type === 'done');
+    const used = done.toolsUsed ?? [];
+    expect(used).toContain('compose_spec');
+    expect(used).toContain('compile');
+    expect(String(done.track?.code ?? '').length).toBeGreaterThan(0);
   });
 
   it('предыдущие реплики попадают в промпт ответчика', async () => {

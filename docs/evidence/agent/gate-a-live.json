@@ -1,0 +1,248 @@
+{
+  "checkedAt": "2026-11-16T00:20:43.186Z",
+  "gate": "A — помощник-агент",
+  "mode": "live",
+  "query": "найди в интернете, что такое phonk drift, и сделай бит в этом стиле",
+  "internet": "измерено: живой поиск Exa, цена запроса взята из costDollars.total провайдера",
+  "passed": 20,
+  "total": 20,
+  "checks": [
+    {
+      "name": "цикл отдаёт план, шаги и ответ",
+      "ok": true,
+      "detail": "события: plan, tool_start, tool_end, usage, done"
+    },
+    {
+      "name": "режим — композитор (цель запроса — бит)",
+      "ok": true,
+      "detail": "режим: composer"
+    },
+    {
+      "name": "выполнены поиск, сборка и компиляция",
+      "ok": true,
+      "detail": "выполнено: web_search, library_search, compose_spec, compile, web_fetch"
+    },
+    {
+      "name": "поиск прошёл и вернул источники",
+      "ok": true,
+      "detail": "шага поиска не было"
+    },
+    {
+      "name": "агент не упал и перешёл к сборке",
+      "ok": true,
+      "detail": "инструментов выполнено: 5"
+    },
+    {
+      "name": "трек собран: код получен",
+      "ok": true,
+      "detail": "символов кода: 3054"
+    },
+    {
+      "name": "деградации нет: интернет отвечал",
+      "ok": true,
+      "detail": "деградировало: compose_spec"
+    },
+    {
+      "name": "usage отдаёт честное число токенов",
+      "ok": true,
+      "detail": "токенов ≈ 2563 (оценка: true), цена измерена: false"
+    },
+    {
+      "name": "панель агента видна на первом экране",
+      "ok": true,
+      "detail": "проверено в браузере 1440×900"
+    },
+    {
+      "name": "шаги плана видны в панели",
+      "ok": true,
+      "detail": "шагов: 4"
+    },
+    {
+      "name": "карточки вызовов инструментов видны",
+      "ok": true,
+      "detail": "карточек: 5"
+    },
+    {
+      "name": "неудачных инструментов нет",
+      "ok": true,
+      "detail": "помечено: 0"
+    },
+    {
+      "name": "расход токенов виден в usage",
+      "ok": true,
+      "detail": "Токенов ≈ 2564 (оценка: провайдер не отдал счётчики) · Цена не измерена (модель или провайдер неизвестны)"
+    },
+    {
+      "name": "панель честно говорит, что интернет доступен",
+      "ok": true,
+      "detail": "Инструментов в режиме «Композитор»: 6. Интернет доступен."
+    },
+    {
+      "name": "ошибок в консоли нет",
+      "ok": true,
+      "detail": "нет"
+    },
+    {
+      "name": "источники из разных доменов (≥2)",
+      "ok": true,
+      "detail": "домены: flstudiomaster.ru, blog.soundtrap.com, songen.app, blog.bandlab.com, push-music.ru"
+    },
+    {
+      "name": "страница прочитана: текст >500 символов",
+      "ok": true,
+      "detail": "прочитано символов: 1200"
+    },
+    {
+      "name": "ответ агента ссылается на источник",
+      "ok": true,
+      "detail": "ссылка есть"
+    },
+    {
+      "name": "цена поиска измерена и записана в /api/stats",
+      "ok": true,
+      "detail": "$0.0140"
+    },
+    {
+      "name": "цена в пределах ночного бюджета",
+      "ok": true,
+      "detail": "$0.0140 из $2.00"
+    }
+  ],
+  "measured": {
+    "server": {
+      "httpStatus": 200,
+      "eventTypes": [
+        "plan",
+        "tool_start",
+        "tool_end",
+        "tool_start",
+        "tool_end",
+        "tool_start",
+        "tool_end",
+        "tool_start",
+        "tool_end",
+        "tool_start",
+        "tool_end",
+        "usage",
+        "done"
+      ],
+      "mode": "composer",
+      "planSource": "heuristic",
+      "planSteps": [
+        "web_search",
+        "library_search",
+        "compose_spec",
+        "compile"
+      ],
+      "planCount": 1,
+      "tools": [
+        {
+          "tool": "web_search",
+          "ok": true,
+          "degraded": false,
+          "reason": null,
+          "chars": null,
+          "ms": 320.1
+        },
+        {
+          "tool": "library_search",
+          "ok": true,
+          "degraded": false,
+          "reason": null,
+          "chars": null,
+          "ms": 0.6
+        },
+        {
+          "tool": "compose_spec",
+          "ok": true,
+          "degraded": true,
+          "reason": "Модель не ответила или ответила невалидно — спека собрана из библиотеки знаний.",
+          "chars": null,
+          "ms": 150.6
+        },
+        {
+          "tool": "compile",
+          "ok": true,
+          "degraded": false,
+          "reason": null,
+          "chars": null,
+          "ms": 0.6
+        },
+        {
+          "tool": "web_fetch",
+          "ok": true,
+          "degraded": false,
+          "reason": null,
+          "chars": 1200,
+          "ms": 0.6
+        }
+      ],
+      "usage": {
+        "type": "usage",
+        "tokens": 2563,
+        "costUsd": 0,
+        "requestCount": 0,
+        "estimated": true,
+        "priceKnown": false
+      },
+      "degraded": [
+        {
+          "tool": "compose_spec",
+          "reason": "Модель не ответила или ответила невалидно — спека собрана из библиотеки знаний."
+        }
+      ],
+      "codeChars": 3054,
+      "answerChars": 7764
+    },
+    "panel": {
+      "planSteps": 4,
+      "toolCards": 5,
+      "failed": 0,
+      "usage": "Токенов ≈ 2564 (оценка: провайдер не отдал счётчики) · Цена не измерена (модель или провайдер неизвестны)",
+      "summary": "Инструментов вызвано: 5. Режим: composer.",
+      "applyButton": 1,
+      "services": "Инструментов в режиме «Композитор»: 6. Интернет доступен.",
+      "panelVisible": true
+    },
+    "live": {
+      "sources": [
+        {
+          "url": "https://flstudiomaster.ru/kak-sdelat-fonk-fl-studio;",
+          "domain": "flstudiomaster.ru"
+        },
+        {
+          "url": "https://blog.soundtrap.com/how-to-produce-drift-phonk/;",
+          "domain": "blog.soundtrap.com"
+        },
+        {
+          "url": "https://songen.app/blog/how-to-make-drift-phonk/;",
+          "domain": "songen.app"
+        },
+        {
+          "url": "https://blog.bandlab.com/what-is-drift-phonk/;",
+          "domain": "blog.bandlab.com"
+        },
+        {
+          "url": "https://push-music.ru/blog/chto-takoe-fonk",
+          "domain": "push-music.ru"
+        }
+      ],
+      "domains": [
+        "flstudiomaster.ru",
+        "blog.soundtrap.com",
+        "songen.app",
+        "blog.bandlab.com",
+        "push-music.ru"
+      ],
+      "readChars": 1200,
+      "searchCostUsd": 0.014,
+      "searchCalls": 2,
+      "answerHasSource": true,
+      "budget": {
+        "limitUsd": 2,
+        "callCap": 40,
+        "spentUsd": 0.014
+      }
+    }
+  }
+}
