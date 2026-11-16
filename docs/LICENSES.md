@@ -169,3 +169,41 @@ curl -s 'https://api.github.com/repos/<owner>/<repo>' | grep '"license"'
 |---|---|---|---|---|---|
 | Glass_ToolAgainstGlassJar_Phrase_1 | basharov | CC0 1.0 | «Glass_ToolAgainstGlassJar_Phrase_1» by basharov — CC0 1.0 — https://freesound.org/people/basharov/sounds/406350/ | [ссылка](https://freesound.org/people/basharov/sounds/406350/) | 2026-11-16 |
 <!-- licenses:pool:end -->
+
+## 9. Каталог Timbre Palette — релизный слой (D-126)
+
+*Обновлено 17.11.2026. Каталог пресетов — релизный слой: права на каждый
+ассет обязательны (`rights_status=approved` для публикации), реестр —
+`server/music/data/timbre/`, ворота — `check:licenses` / `check:release`.
+Пул «Охотника» (§8) остаётся локальным рабочим слоем и релиз не блокирует.*
+
+| Источник | Что внутри | Лицензия | Первоисточник | Проверено | Статус |
+|---|---|---|---|---|---|
+| **VSCO 2 Community Edition** (`sgossner/VSCO-2-CE`) | Оркестр: Keys (Upright Piano, Organ), Strings (Solo Violin, Violin/Cello/Viola Section, Harp, Solo Contrabass), Brass, Woodwinds, Percussion; исходные WAV + MappingChart | **CC0-1.0** | [LICENSE в репозитории](https://github.com/sgossner/VSCO-2-CE/blob/master/LICENSE) · GitHub API `license.spdx_id=CC0-1.0` · [официальная страница](https://versilian-studios.com/vsco-community/) | 17.11.2026 | источник `approved`; ассеты импортируются с поштучной записью прав |
+| **VCSL** (`sgossner/VCSL`) | Универсальная CC0-библиотека (>4000 сэмплов), расширение VSCO 2 CE | **CC0-1.0** | [LICENSE в репозитории](https://github.com/sgossner/VCSL/blob/master/LICENSE) · GitHub API `license.spdx_id=CC0-1.0` | 17.11.2026 | источник `approved`; лицензия конкретного поднабора фиксируется при импорте |
+
+**Атрибуция поднаборов.** CC0 кредит не требует, но происхождение
+сохраняется: `Keys/Upright Piano` — Simon Dalzell (Ivy Audio), зима
+2015–16; Info.txt: «Bearer is granted right to redistribute this sample
+set by Versilian Studios LLC. Credit to both original author and
+Versilian Studios is encouraged». Кредит вносится в строку атрибуции
+ассета при импорте.
+
+**Не берём сейчас (осознанно).** Salamander Grand Piano (CC BY 3.0,
+~1.18 ГБ, 16 velocity-слоёв) — SFZ-зоны переносятся вручную, следующий
+цикл. NSynth (CC BY 4.0, 305 979 нот, 16 кГц) — исследовательский корпус
+для тембровых экспериментов, не продакшн-банк. Freesound — до решения
+владельца по правам и коммерческому статусу (D-127): бесплатное
+использование API официально только некоммерческое («You can use the
+Freesound API for free only for non-commercial purposes»,
+[API terms of use](https://freesound.org/docs/api/terms_of_use.html),
+проверено 17.11.2026); с июля 2026 у авторов отдельные настройки
+отношения к генеративному ИИ (`gen_ai_preference` в Sound Instance API),
+независимые от лицензии записи — для ML-пайплайна записи с запретом
+ИИ-использования консервативно исключаются.
+
+**Банки §3 перепроверены 17.11.2026:** `dirt-samples` — GitHub API
+`license: null` (без изменений); `shabda:piano` — манифест
+`piano.json?strudel=1` отдаёт 10 WAV-файлов без Freesound id и лицензий,
+подтвердить права по первоисточнику невозможно. Варианты и рекомендация —
+D-127, решение владельца открыто (D-099).

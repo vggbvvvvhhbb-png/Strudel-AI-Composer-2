@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-16T23:08:05.182Z",
+  "generatedAt": "2026-11-16T23:32:12.795Z",
   "mode": "mechanism",
   "ok": true,
   "releaseBlocked": true,
@@ -44,6 +44,21 @@
       "attribution": "Банк сэмплов: https://github.com/ilesinge/shabda — лицензия наследуется от Freesound: у каждого сэмпла своя"
     }
   ],
+  "timbre": {
+    "ok": true,
+    "releaseBlocked": false,
+    "totals": {
+      "sources": 2,
+      "assets": 0,
+      "presets": 0,
+      "zones": 0,
+      "approvedAssets": 0,
+      "usedAssets": 0
+    },
+    "issues": [],
+    "unapprovedAssets": [],
+    "presets": []
+  },
   "checks": [
     {
       "name": "Банки из кода есть в реестре лицензий",
@@ -52,7 +67,8 @@
       "numbers": {
         "used": 2,
         "missing": []
-      }
+      },
+      "releaseOnly": false
     },
     {
       "name": "Реестр не шире списка банков в коде",
@@ -60,7 +76,8 @@
       "detail": "лишних записей нет",
       "numbers": {
         "extra": []
-      }
+      },
+      "releaseOnly": false
     },
     {
       "name": "У каждой записи есть лицензия, источник, дата и вердикт",
@@ -68,7 +85,8 @@
       "detail": "все записи полные",
       "numbers": {
         "incomplete": []
-      }
+      },
+      "releaseOnly": false
     },
     {
       "name": "Каждый банк из манифеста описан в реестре",
@@ -76,7 +94,8 @@
       "detail": "пропусков нет",
       "numbers": {
         "missing": []
-      }
+      },
+      "releaseOnly": false
     },
     {
       "name": "Публичный релиз не заблокирован",
@@ -88,7 +107,35 @@
           "shabda:piano"
         ],
         "names": 219
-      }
+      },
+      "releaseOnly": true
+    },
+    {
+      "name": "Каталог Timbre: реестр прав полон и ссылки целы",
+      "passed": true,
+      "detail": "источников 2, ассетов 0, пресетов 0, зон 0",
+      "numbers": {
+        "totals": {
+          "sources": 2,
+          "assets": 0,
+          "presets": 0,
+          "zones": 0,
+          "approvedAssets": 0,
+          "usedAssets": 0
+        },
+        "issues": []
+      },
+      "releaseOnly": false
+    },
+    {
+      "name": "Ассеты каталога Timbre подтверждены для релиза",
+      "passed": true,
+      "detail": "все ассеты публикуемого набора approved (или каталог пуст)",
+      "numbers": {
+        "unapproved": [],
+        "usedAssets": 0
+      },
+      "releaseOnly": true
     }
   ]
 }
