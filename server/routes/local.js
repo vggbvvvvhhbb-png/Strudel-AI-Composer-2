@@ -11,10 +11,13 @@
 // Эндпоинты:
 //   GET  /api/local/status            — настроен ли демон, что он умеет, что в очереди;
 //   POST /api/local/tasks             — поставить задачу в демон;
+//   GET  /api/local/tasks             — очередь демона (список задач);
 //   GET  /api/local/tasks/:id         — статус задачи;
-//   GET  /api/local/tasks/:id/stream  — прогресс задачи в SSE (прокси).
+//   GET  /api/local/tasks/:id/stream  — прогресс задачи в SSE (прокси);
+//   GET  /api/local/tasks/:id/audio   — WAV готового рендера (прокси).
 
 import express from 'express';
+import { Readable } from 'node:stream';
 
 import { createDaemonClient } from '../../local/client.mjs';
 
@@ -104,6 +107,21 @@ router.post('/tasks', async (req, res) => {
   }
 });
 
+// Очередь демона: список задач виден в интерфейсе, а не только в консоли.
+router.get('/tasks', async (_req, res) => {
+  const client = daemon();
+  if (!client) {
+    res.status(503).json({ error: 'Локальный демон не настроен (LOCAL_DAEMON_URL).' });
+    return;
+  }
+  try {
+    const list = await client.list();
+    res.json(list);
+  } catch (err) {
+    daemonError(res, err);
+  }
+});
+
 // Статус задачи.
 router.get('/tasks/:id', async (req, res) => {
   const client = daemon();
@@ -143,6 +161,34 @@ router.get('/tasks/:id/stream', async (req, res) => {
     if (event.type === 'done' || event.type === 'error') res.end();
   }, { baseUrl: DAEMON_URL, token: DAEMON_TOKEN });
   req.on('close', () => stop());
+});
+
+// WAV готового рендера: прокси от демона. Токен демона остаётся на сервере —
+// браузер ходит только сюда, секрет в клиент не попадает.
+router.get('/tasks/:id/audio', async (req, res) => {
+  if (!DAEMON_URL) {
+    res.status(503).json({ error: 'Локальный демон не настроен (LOCAL_DAEMON_URL).' });
+    return;
+  }
+  try {
+    const upstream = await fetch(`${DAEMON_URL.replace(/\/+$/, '')}/tasks/${encodeURIComponent(req.params.id)}/audio`, {
+      headers: DAEMON_TOKEN ? { authorization: `Bearer ${DAEMON_TOKEN}` } : {},
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!upstream.ok) {
+      const body = await upstream.json().catch(() => ({}));
+      res.status(upstream.status).json({ error: body?.error || `демон ответил HTTP ${upstream.status}` });
+      return;
+    }
+    res.setHeader('content-type', upstream.headers.get('content-type') || 'audio/wav');
+    const length = upstream.headers.get('content-length');
+    if (length) res.setHeader('content-length', length);
+    res.setHeader('cache-control', 'no-store');
+    Readable.fromWeb(upstream.body).pipe(res);
+  } catch (err) {
+    if (!res.headersSent) daemonError(res, err);
+    else res.end();
+  }
 });
 
 export default router;

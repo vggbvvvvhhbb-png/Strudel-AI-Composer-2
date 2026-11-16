@@ -110,4 +110,21 @@ describe('маршруты локального демона', () => {
     const res = await fetch(`${base}/api/local/tasks/00000000-0000-0000-0000-000000000000`);
     expect(res.status).toBe(404);
   });
+
+  it('очередь демона видна списком задач со статистикой', async () => {
+    const res = await fetch(`${base}/api/local/tasks`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(Array.isArray(body.tasks)).toBe(true);
+    expect(body.stats).toHaveProperty('total');
+    // Ранее поставленная задача рендера обязана быть в списке.
+    expect(body.tasks.some((task) => task.type === 'render')).toBe(true);
+  });
+
+  it('аудио несуществующей задачи — 404 от демона через прокси', async () => {
+    const res = await fetch(`${base}/api/local/tasks/00000000-0000-0000-0000-000000000000/audio`);
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body.error).toBeTruthy();
+  });
 });

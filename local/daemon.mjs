@@ -24,6 +24,7 @@
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
+import { createReadStream, existsSync, statSync } from 'node:fs';
 import { timingSafeEqual } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
@@ -99,8 +100,8 @@ function authorized(req, token) {
  * Собирает демон.
  * @returns {Promise<{server:http.Server, queue:DurableQueue, registry:object}>}
  */
-export async function createDaemon({ token = TOKEN, stateDir = STATE_DIR, log = console.log } = {}) {
-  const registry = createTaskRegistry({ stateDir });
+export async function createDaemon({ token = TOKEN, stateDir = STATE_DIR, log = console.log, renderFactory } = {}) {
+  const registry = createTaskRegistry({ stateDir, renderFactory });
   const queue = new DurableQueue({
     dir: stateDir,
     concurrency: 1,
@@ -120,6 +121,12 @@ export async function createDaemon({ token = TOKEN, stateDir = STATE_DIR, log = 
       const runner = registry.tasks[task.type];
       if (!runner) {
         return Promise.reject(new Error(`неизвестный тип задачи: ${task.type}`));
+      }
+      // Рендер без своего пути пишет WAV в каталог рендеров демона: только
+      // оттуда аудио отдаётся наружу (маршрут /tasks/:id/audio). Чужой путь
+      // клиента остаётся возможным для записи, но не для чтения через HTTP.
+      if (task.type === 'render' && !task.payload?.outPath) {
+        task.payload = { ...task.payload, outPath: path.join(stateDir, 'renders', `${task.id}.wav`) };
       }
       return runner(task.payload, helpers);
     },
@@ -181,15 +188,38 @@ export async function createDaemon({ token = TOKEN, stateDir = STATE_DIR, log = 
         return;
       }
 
-      const taskMatch = /^\/tasks\/([\w-]+)(\/stream)?$/.exec(url.pathname);
+      const taskMatch = /^\/tasks\/([\w-]+)(\/stream|\/audio)?$/.exec(url.pathname);
       if (taskMatch) {
-        const [, id, stream] = taskMatch;
+        const [, id, suffix] = taskMatch;
         const task = queue.get(id);
         if (!task) {
           sendJson(res, 404, { error: `задача не найдена: ${id}` });
           return;
         }
-        if (stream) {
+        if (suffix === '/audio') {
+          // WAV готового рендера — чтобы результат можно было услышать,
+          // а не только увидеть в метриках. Отдаём только файлы из каталога
+          // рендеров демона: путь из задачи не должен читать произвольные
+          // файлы машины.
+          const wavPath = task.result?.wavPath ? path.resolve(String(task.result.wavPath)) : null;
+          const rendersDir = path.resolve(stateDir, 'renders');
+          if (task.state !== 'done' || !wavPath || !wavPath.startsWith(`${rendersDir}${path.sep}`)) {
+            sendJson(res, 404, { error: 'аудио недоступно: рендер не завершён или файл вне каталога рендеров' });
+            return;
+          }
+          if (!existsSync(wavPath)) {
+            sendJson(res, 404, { error: 'файл рендера не найден на диске' });
+            return;
+          }
+          res.writeHead(200, {
+            'content-type': 'audio/wav',
+            'content-length': statSync(wavPath).size,
+            'cache-control': 'no-store',
+          });
+          createReadStream(wavPath).pipe(res);
+          return;
+        }
+        if (suffix === '/stream') {
           // SSE: события задачи по мере их появления. Отдельный поток, чтобы
           // долгая задача не блокировала обычные запросы.
           res.writeHead(200, {
