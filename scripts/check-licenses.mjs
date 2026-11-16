@@ -1,4 +1,4 @@
-// Гейт лицензий сэмпл-банков.
+// Гейт лицензий сэмпл-банков и каталога Timbre Palette.
 //
 //   node scripts/check-licenses.mjs           # механизм реестра
 //   node scripts/check-licenses.mjs --release # ворота публикации
@@ -7,19 +7,26 @@
 //   * каждый банк, который грузит приложение, есть в реестре лицензий;
 //   * в каждой записи есть лицензия, первоисточник, дата проверки и вердикт;
 //   * список банков в коде и в реестре — один и тот же (иначе банк можно
-//     добавить «по памяти», а лицензия останется непроверенной).
+//     добавить «по памяти», а лицензия останется непроверенной);
+//   * каталог Timbre (D-126): каждый ассет имеет полную запись прав,
+//     ссылки пресетов и зон целы, alias живут в неймспейсе tp_ и не
+//     конфликтуют с банками/синтезаторами. Регистрация звукового источника
+//     в обход этого реестра запрещена: каталог — единый источник истины
+//     пресетов, гейт читает его напрямую.
 //
 // ЧТО ИЗМЕРЯЕТСЯ (содержание):
 //   сколько банков и сколько имён сэмплов мы грузим без подтверждённой
 //   лицензии. Сейчас это 2 банка и 219 имён: лицензия dirt-samples не
 //   подтверждена (LICENSE-файла нет), а у shabda:piano лицензия каждого
 //   сэмпла наследуется от Freesound и в манифесте не отдаётся.
+//   Плюс ассеты каталога Timbre без rights_status=approved.
 //
 // ЧТО ЗНАЧИТ КРАСНЫЙ ЦВЕТ. Публичный релиз заблокирован, пока нет письменного
-// решения владельца (docs/DECISIONS.md, D-099). Это не сбой гейта, а
-// измерение: гейт зелёный (реестр полон и проверяем), а ворота публикации
-// красные (решения нет). В CI гейт механизма зелёный; `check:release`
-// запускается вручную перед публикацией.
+// решения владельца (docs/DECISIONS.md, D-099) и пока в публикуемом наборе
+// есть ассеты без подтверждённых прав. Это не сбой гейта, а измерение:
+// гейт зелёный (реестр полон и проверяем), а ворота публикации красные
+// (решения нет). В CI гейт механизма зелёный; `check:release` запускается
+// вручную перед публикацией.
 //
 // Пишет docs/evidence/licenses/gate.json.
 
@@ -29,6 +36,7 @@ import { fileURLToPath } from 'node:url';
 
 import { auditLicenses, loadRegistry, licenseReport } from '../server/music/licenses.js';
 import { SAMPLE_SETS } from '../src/sample-banks.js';
+import { auditTimbre, loadTimbreCatalog, timbreReport } from '../server/samples/timbre.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
@@ -44,9 +52,10 @@ const checks = [];
  * @param {boolean} passed
  * @param {string} detail
  * @param {object} [numbers]
+ * @param {{releaseOnly?: boolean}} [options] releaseOnly — проверка ворот публикации, не механики
  */
-function check(name, passed, detail, numbers = null) {
-  checks.push({ name, passed: Boolean(passed), detail, numbers });
+function check(name, passed, detail, numbers = null, { releaseOnly = false } = {}) {
+  checks.push({ name, passed: Boolean(passed), detail, numbers, releaseOnly });
 }
 
 const registry = loadRegistry();
@@ -105,6 +114,34 @@ check(
       + `${audit.totals.unresolvedNames} имён сэмплов — ждём решения владельца (D-099)`
     : 'блокеров нет',
   { unresolved: unresolved.map((row) => row.key), names: audit.totals.unresolvedNames },
+  { releaseOnly: true },
+);
+
+// --- 4. Каталог Timbre Palette (D-126): asset-level права ---
+
+const timbreCatalog = loadTimbreCatalog();
+const bankNames = Object.values(registry.banks ?? {}).flatMap((bank) => bank.names ?? []);
+const timbreAudit = auditTimbre(timbreCatalog, { bankNames });
+
+check(
+  'Каталог Timbre: реестр прав полон и ссылки целы',
+  timbreAudit.ok,
+  timbreAudit.ok
+    ? `источников ${timbreAudit.totals.sources}, ассетов ${timbreAudit.totals.assets}, `
+      + `пресетов ${timbreAudit.totals.presets}, зон ${timbreAudit.totals.zones}`
+    : timbreAudit.issues.map((issue) => issue.detail).join('; '),
+  { totals: timbreAudit.totals, issues: timbreAudit.issues },
+);
+
+check(
+  'Ассеты каталога Timbre подтверждены для релиза',
+  !timbreAudit.releaseBlocked,
+  timbreAudit.releaseBlocked
+    ? `заблокирован: ${timbreAudit.unapprovedAssets.length} ассет(ов) пресетов без rights_status=approved: `
+      + timbreAudit.unapprovedAssets.join(', ')
+    : 'все ассеты публикуемого набора approved (или каталог пуст)',
+  { unapproved: timbreAudit.unapprovedAssets, usedAssets: timbreAudit.totals.usedAssets },
+  { releaseOnly: true },
 );
 
 // --- Вывод ---
@@ -119,19 +156,23 @@ console.log(`подтверждено: ${audit.totals.confirmed} банка(ов
 for (const row of audit.banks) {
   console.log(`  • ${row.key}: ${row.license ?? 'нет данных'} — ${row.verdict ?? 'вердикт не задан'}${row.reason ? ` (${row.reason})` : ''}`);
 }
+console.log(`каталог Timbre: источников ${timbreAudit.totals.sources}, ассетов ${timbreAudit.totals.assets} (approved ${timbreAudit.totals.approvedAssets}), пресетов ${timbreAudit.totals.presets}, зон ${timbreAudit.totals.zones}`);
 
 const mechanismOk = checks
-  .filter((item) => item.name !== 'Публичный релиз не заблокирован')
+  .filter((item) => !item.releaseOnly)
   .every((item) => item.passed);
+
+const releaseBlocked = audit.releaseBlocked || timbreAudit.releaseBlocked;
 
 const evidence = {
   generatedAt: new Date().toISOString(),
   mode: releaseMode ? 'release' : 'mechanism',
   ok: mechanismOk,
-  releaseBlocked: audit.releaseBlocked,
+  releaseBlocked,
   totals: audit.totals,
   usedBanks: SAMPLE_SETS,
   banks: licenseReport(registry).banks,
+  timbre: timbreReport(timbreCatalog, { bankNames }),
   checks,
 };
 mkdirSync(evidenceDir, { recursive: true });
@@ -144,11 +185,14 @@ if (!mechanismOk) {
   console.log('механика реестра: КРАСНЫЙ');
   process.exit(1);
 }
-console.log(`механика реестра: зелёная (${checks.length - 1} проверок)`);
+console.log(`механика реестра: зелёная (${checks.filter((item) => !item.releaseOnly).length} проверок)`);
 
-if (releaseMode && audit.releaseBlocked) {
+if (releaseMode && releaseBlocked) {
   console.log('');
   console.log('ворота публикации: КРАСНЫЕ — решение владельца по лицензиям не принято (D-099)');
+  if (timbreAudit.releaseBlocked) {
+    console.log(`ассеты каталога без approved: ${timbreAudit.unapprovedAssets.join(', ')}`);
+  }
   process.exit(2);
 }
 if (releaseMode) {

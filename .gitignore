@@ -49,3 +49,7 @@ local/.state/
 # Аудиофайлы локального пула сэмплов «Охотника» (D-115). Реестр записей
 # (data/samples/pool.json) в git идёт, сами звуки — нет.
 data/samples/audio/
+
+# Аудио каталога Timbre Palette (D-126). Манифесты прав и пресетов
+# (server/music/data/timbre/) в git идут, сами звуки — нет, по образцу пула.
+data/timbre/audio/

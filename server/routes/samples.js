@@ -13,6 +13,7 @@
 // отклоняется на входе, а в записи лежит строка атрибуции.
 
 import { Router } from 'express';
+import express from 'express';
 import { z } from 'zod';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import path from 'node:path';
@@ -21,6 +22,8 @@ import { buildPassport } from '../samples/passport.js';
 import { downloadSampleWav } from '../samples/download.js';
 import { addToPool, listPool, searchPool, getFromPool, POOL_AUDIO_DIR } from '../samples/pool.js';
 import { readWav } from '../deepdive/pipeline/helpers.js';
+import { loadTimbreCatalog, timbreReport, attributionLinesForCode } from '../samples/timbre.js';
+import { loadRegistry } from '../music/licenses.js';
 
 const router = Router();
 
@@ -122,6 +125,35 @@ router.get('/api/samples/pool/:id/audio', (req, res) => {
   res.setHeader('content-length', String(statSync(file).size));
   res.setHeader('cache-control', 'no-store');
   createReadStream(file).pipe(res);
+});
+
+/**
+ * GET /api/timbre/catalog — каталог пресетов Timbre Palette (D-126).
+ *
+ * Публичные метаданные пресетов и статус прав. Грузится лениво по запросу
+ * UI, а не в основном чанке. Каталог пуст — честный пустой каталог.
+ */
+router.get('/api/timbre/catalog', (req, res) => {
+  const registry = loadRegistry();
+  const bankNames = Object.values(registry.banks ?? {}).flatMap((bank) => bank.names ?? []);
+  res.json(timbreReport(loadTimbreCatalog(), { bankNames }));
+});
+
+/**
+ * POST /api/timbre/attribution — строки атрибуции (TASL) для кода треков.
+ *
+ * Экспорт и шеринг обязаны нести атрибуцию CC-BY ассетов, которые звучат
+ * в коде. Логика одна на сервере и в гейте (server/samples/timbre.js).
+ * Тело: {codes: string[]} — до 64 кодов за запрос.
+ */
+router.post('/api/timbre/attribution', express.json({ limit: '2mb' }), (req, res) => {
+  const codes = Array.isArray(req.body?.codes) ? req.body.codes : null;
+  if (!codes || codes.length > 64 || codes.some((code) => typeof code !== 'string')) {
+    res.status(400).json({ error: 'нужен массив codes (до 64 строк)' });
+    return;
+  }
+  const catalog = loadTimbreCatalog();
+  res.json({ attributions: codes.map((code) => attributionLinesForCode(code, catalog)) });
 });
 
 export default router;
