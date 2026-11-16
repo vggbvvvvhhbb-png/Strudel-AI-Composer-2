@@ -537,7 +537,7 @@ node scripts/render-wav.mjs code.js --out twin.wav --metrics twin.json
 - Vitest для тестов
 
 ## Жёсткие инварианты (нарушение = откат)
-1. Вся тестовая база зелёная на каждом чекпоинте (88 файлов, 1317 тестов — измерено 16.11.2026)
+1. Вся тестовая база зелёная на каждом чекпоинте (88 файлов, 1318 тестов — измерено 16.11.2026)
 2. Компилятор и IR расширять, не переписывать с нуля
 3. Ключи — только env, check:secrets зелёный
 4. Лицензии: каждый новый сэмпл/шрифт/модель — запись в docs/LICENSES.md
@@ -570,4 +570,4 @@ conventional commits: chore: / fix: / feat: / test: / docs:
 - server/deepdive/refine/loop.js — рефайн-цикл
 - server/music/compose/refine.js — рефайн-цикл поверх compose (D-111)
 - src/schemas/track-spec.schema.js — схема спека (идентичность партии)
-- docs/DECISIONS.md — журнал решений (до D-119, новое с D-120)
+- docs/DECISIONS.md — журнал решений (до D-120, новое с D-121)
