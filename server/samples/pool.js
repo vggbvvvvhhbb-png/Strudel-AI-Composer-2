@@ -221,15 +221,14 @@ export function poolLicensesMarkdown({ file = POOL_FILE } = {}) {
   lines.push('|---|---|---|---|---|---|');
   for (const entry of entries) {
     const license = entry.licenseId === 'cc-by' ? 'CC BY 4.0' : (entry.licenseId === 'cc0' ? 'CC0 1.0' : (entry.license ?? '—'));
-    lines.push([
-      `| ${entry.name ?? entry.id}`,
+    lines.push('| ' + [
+      entry.name ?? entry.id,
       entry.author ?? '—',
       license,
       entry.attribution ?? '—',
       entry.url ? `[ссылка](${entry.url})` : '—',
       (entry.addedAt ?? '').slice(0, 10) || '—',
-      '|',
-    ].join(' '));
+    ].map((cell) => String(cell).replaceAll('|', '\\|')).join(' | ') + ' |');
   }
   return lines.join('\n');
 }

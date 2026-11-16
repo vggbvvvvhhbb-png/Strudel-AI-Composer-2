@@ -92,7 +92,7 @@ export function createTaskRegistry({ stateDir, renderFactory = createRenderWorke
     /**
      * Рендер кода в WAV тем же движком, что и на сервере.
      *
-     * @param {object} payload {code, fromCycle, toCycle, sampleRate, cps, outPath}
+     * @param {object} payload {code, fromCycle, toCycle, sampleRate, cps, outPath, poolSamples}
      * @param {{progress:(event:object)=>void}} helpers
      */
     async render(payload, helpers) {
@@ -117,6 +117,7 @@ export function createTaskRegistry({ stateDir, renderFactory = createRenderWorke
         cps: payload?.cps,
         wantWav: payload?.wantWav !== false,
         wantEvents: payload?.wantEvents !== false,
+        poolSamples: payload?.poolSamples,
       });
       const wallMs = Date.now() - started;
 

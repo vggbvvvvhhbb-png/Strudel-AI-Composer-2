@@ -165,5 +165,7 @@ curl -s 'https://api.github.com/repos/<owner>/<repo>' | grep '"license"'
 
 *Раздел генерируется из `data/samples/pool.json` — скриптом `npm run licenses:pool`. Пул живёт на машине владельца; в публичный релиз он не входит, но лицензия каждого сэмпла обязана быть видна.*
 
-Записей нет: пул пуст.
+| Сэмпл | Автор | Лицензия | Атрибуция (TASL) | Источник | Добавлен |
+|---|---|---|---|---|---|
+| Glass_ToolAgainstGlassJar_Phrase_1 | basharov | CC0 1.0 | «Glass_ToolAgainstGlassJar_Phrase_1» by basharov — CC0 1.0 — https://freesound.org/people/basharov/sounds/406350/ | [ссылка](https://freesound.org/people/basharov/sounds/406350/) | 2026-11-16 |
 <!-- licenses:pool:end -->

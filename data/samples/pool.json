@@ -1,5 +1,94 @@
 {
-  "updatedAt": null,
-  "note": "Реестр локального пула сэмплов «Охотника» (D-115). Паспорт — измеренные признаки звука, а не пересказ. Запись без лицензии и атрибуции в пул не попадает. Аудиофайлы лежат в data/samples/audio/ и в git не идут.",
-  "samples": {}
+  "updatedAt": "2026-11-16T14:29:22.662Z",
+  "note": "Реестр локального пула сэмплов. Паспорт — измеренные признаки, не пересказ.",
+  "samples": {
+    "406350": {
+      "id": "406350",
+      "name": "Glass_ToolAgainstGlassJar_Phrase_1",
+      "author": "basharov",
+      "url": "https://freesound.org/people/basharov/sounds/406350/",
+      "source": "freesound",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "licenseId": "cc0",
+      "file": "F:\\ГЕНЕРАЦИЯ ФОТОК\\Новая папка\\Strudel AI Composer\\data\\samples\\audio\\406350.wav",
+      "passport": {
+        "name": "Glass_ToolAgainstGlassJar_Phrase_1",
+        "source": "https://freesound.org/people/basharov/sounds/406350/",
+        "durationS": 7.581,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -27.44,
+          "peakDbfs": -3.39,
+          "crestDb": 32.84
+        },
+        "spectral": {
+          "centroidHz": 3611.4,
+          "rolloffHz": 5862.4,
+          "flatness": 0.04326,
+          "bands": {
+            "sub": -70.47,
+            "low": -60.98,
+            "lowMid": -55.01,
+            "mid": -48.8,
+            "highMid": -40.97,
+            "high": -38.5
+          }
+        },
+        "transients": {
+          "count": 62,
+          "densityPerSec": 8.178,
+          "timesS": [
+            0.0116,
+            0.0697,
+            0.2032,
+            0.267,
+            0.4296,
+            0.4876,
+            0.6269,
+            0.7256,
+            0.8475,
+            0.9462,
+            1.0043,
+            1.1436,
+            1.2249,
+            1.3061,
+            1.4048,
+            1.5093,
+            1.6254,
+            1.7241,
+            1.8866,
+            2.0434,
+            2.1246,
+            2.2465,
+            2.3452,
+            2.5078,
+            2.7806,
+            2.9199,
+            3.0186,
+            3.0824,
+            3.2044,
+            3.3611,
+            3.6339,
+            3.6978
+          ]
+        },
+        "tonal": {
+          "f0Hz": 232.46,
+          "note": "A#",
+          "voicedRatio": 0.213
+        },
+        "tempo": {
+          "bpm": 129.2,
+          "confidence": 0.131
+        },
+        "character": [
+          "яркий",
+          "плотный"
+        ]
+      },
+      "addedAt": "2026-11-16T14:29:22.662Z",
+      "attribution": "«Glass_ToolAgainstGlassJar_Phrase_1» by basharov — CC0 1.0 — https://freesound.org/people/basharov/sounds/406350/"
+    }
+  }
 }

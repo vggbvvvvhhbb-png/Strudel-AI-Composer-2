@@ -1,0 +1,84 @@
+{
+  "gate": "E",
+  "mode": "live",
+  "date": "2026-11-16T14:29:26.189Z",
+  "query": "glass hit metallic",
+  "wallSeconds": 6,
+  "budgetSeconds": 180,
+  "passed": 10,
+  "failed": 0,
+  "noData": 1,
+  "checks": [
+    {
+      "id": "search",
+      "title": "живой поиск Freesound",
+      "ok": true,
+      "detail": "5 результатов за 0.3 с, отклонено 0"
+    },
+    {
+      "id": "passport",
+      "title": "скачивание и паспорт звука",
+      "ok": true,
+      "detail": "7.581 с, центроид 3611.4 Гц, 2.2 с"
+    },
+    {
+      "id": "license",
+      "title": "лицензия и атрибуция в пуле",
+      "ok": true,
+      "detail": "«Glass_ToolAgainstGlassJar_Phrase_1» by basharov — CC0 1.0 — https://freesound.org/people/basharov/sounds/406350/"
+    },
+    {
+      "id": "plan",
+      "title": "план вокруг паспорта собран",
+      "ok": true,
+      "detail": "fallback=true, 0.5 с"
+    },
+    {
+      "id": "llm",
+      "title": "LLM-шаг композитора",
+      "ok": "no-data",
+      "detail": "провайдер недоступен — план из библиотеки (честная деградация)"
+    },
+    {
+      "id": "measured",
+      "title": "измеренные признаки применены или честно «нет данных»",
+      "ok": true,
+      "detail": "{\"sound\":\"hunter_406350\",\"key\":null,\"bpm\":null,\"attacksPerBar\":15,\"harmonyRerooted\":false}"
+    },
+    {
+      "id": "compile",
+      "title": "код содержит сэмпл пула",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "id": "audible",
+      "title": "найденный сэмпл звучит в рендере",
+      "ok": true,
+      "detail": "120 событий из 288, рендер 1.8 с"
+    },
+    {
+      "id": "l0",
+      "title": "рендер без клиппинга",
+      "ok": true,
+      "detail": "true peak -6.56 dBTP, LUFS-I -19.9"
+    },
+    {
+      "id": "registry",
+      "title": "реестр лицензий пула содержит сэмпл",
+      "ok": true,
+      "detail": "всего в пуле: 1"
+    },
+    {
+      "id": "budget",
+      "title": "end-to-end ≤180 с",
+      "ok": true,
+      "detail": "5.9 с"
+    }
+  ],
+  "machine": {
+    "platform": "win32",
+    "cpus": 12,
+    "node": "v24.14.1"
+  }
+}

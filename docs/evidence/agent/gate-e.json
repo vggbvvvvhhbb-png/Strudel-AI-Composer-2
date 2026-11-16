@@ -1,0 +1,72 @@
+{
+  "gate": "E",
+  "mode": "offline",
+  "date": "2026-11-16T14:29:13.934Z",
+  "query": null,
+  "wallSeconds": 3,
+  "budgetSeconds": 180,
+  "passed": 9,
+  "failed": 0,
+  "noData": 0,
+  "checks": [
+    {
+      "id": "degrade",
+      "title": "без ключа поиск честно деградирует",
+      "ok": true,
+      "detail": "Поиск сэмплов недоступен: не задан FREESOUND_API_KEY. Продолжаю по локальной библиотеке."
+    },
+    {
+      "id": "honest",
+      "title": "слабый паспорт: тон и темп — «нет данных»",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "id": "plan",
+      "title": "план вокруг паспорта проходит проверку",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "id": "meta",
+      "title": "измеренные тон и темп в мете",
+      "ok": true,
+      "detail": "Amin 120 BPM"
+    },
+    {
+      "id": "traversal",
+      "title": "обход каталога в pool-audio отвергается",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "id": "missing",
+      "title": "несуществующий sampleId — честный отказ",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "id": "audible",
+      "title": "сэмпл пула звучит в рендере",
+      "ok": true,
+      "detail": "64 событий сэмпла из 248"
+    },
+    {
+      "id": "l0",
+      "title": "рендер без клиппинга",
+      "ok": true,
+      "detail": "true peak -2.38 dBTP, клиппинг 0"
+    },
+    {
+      "id": "fingerprint",
+      "title": "паспорт рендера знает о сэмплах пула",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "machine": {
+    "platform": "win32",
+    "cpus": 12,
+    "node": "v24.14.1"
+  }
+}

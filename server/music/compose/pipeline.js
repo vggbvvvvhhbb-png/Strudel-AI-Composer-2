@@ -8,6 +8,7 @@ import { minedDigest, minedStats } from '../mining/library.js';
 import { matchMinedPattern } from '../mining/groove.js';
 import { compileForProtocol } from './compiled.js';
 import { compileTrackSpec } from '../compiler/index.js';
+import { applySamplePlan, passportHints, sampleDigest } from './sample-plan.js';
 
 const SPEC_STYLES = TrackSpecSchema.shape.meta.shape.style.options;
 const SECTION_KINDS = TrackSpecSchema.shape.structure.shape.sections.element.shape.name.options;
@@ -277,7 +278,7 @@ export function repairSpec(raw, style) {
   return next;
 }
 
-function specMessages(prompt, style) {
+function specMessages(prompt, style, sampleBlock = '') {
   const system = [
     'Ты — композитор. Спланируй трек, не пиши JavaScript или Strudel-код.',
     'Верни строго один JSON-объект TrackSpec без текста вокруг.',
@@ -301,6 +302,7 @@ function specMessages(prompt, style) {
     'reasoning? — короткое объяснение плана.',
     'План: 2..12 секций, всего 16..96 циклов; энергия и набор активных ролей различаются; гармония развивается.',
     'Никаких верхнеуровневых harmony, form, motif, automation; никаких recipe/variant.',
+    ...(sampleBlock ? ['', sampleBlock] : []),
     '',
     `Белый список для стиля «${style}» — бери звуки и рисунки отсюда:`,
     styleDigest(style),
@@ -437,9 +439,9 @@ export function fallbackSpec(style, seed = 1) {
  * @param {number} [options.seed]
  * @returns {Promise<{raw: object|null, text: string}>}
  */
-async function askModel({ prompt, style, completeChat, seed, signal, onUsage }) {
+async function askModel({ prompt, style, completeChat, seed, signal, onUsage, sampleBlock }) {
   const text = await completeChat({
-    messages: specMessages(prompt, style),
+    messages: specMessages(prompt, style, sampleBlock),
     temperature: 0.4,
     signal,
     onUsage,
@@ -470,6 +472,7 @@ export async function buildTrack({
   signal,
   onEvent,
   onUsage,
+  sampleEntry = null,
 }) {
   const trackStyle = SPEC_STYLES.includes(style) ? style : detectSpecStyle(prompt);
   const emit = (event, payload) => {
@@ -477,6 +480,12 @@ export async function buildTrack({
   };
 
   emit('style', { style: trackStyle });
+
+  // Паспорт сэмпла (D-119): измеренные признаки идут и в промпт модели,
+  // и в детерминированную правку готовой спеки — модель не может их потерять.
+  const sampleHints = sampleEntry ? passportHints(sampleEntry.passport) : null;
+  const sampleBlock = sampleEntry ? sampleDigest(sampleEntry, sampleHints) : '';
+  if (sampleEntry) emit('sample', { id: sampleEntry.id, name: sampleEntry.name ?? null, hints: sampleHints });
 
   let spec = null;
   let raw = null;
@@ -490,7 +499,7 @@ export async function buildTrack({
     modelCalls += 1;
     let answer;
     try {
-      answer = await askModel({ prompt, style: trackStyle, completeChat, seed, signal, onUsage });
+      answer = await askModel({ prompt, style: trackStyle, completeChat, seed, signal, onUsage, sampleBlock });
     } catch (err) {
       if (signal?.aborted) throw err;
       emit('warn', { message: `Модель не ответила: ${err.message || err}` });
@@ -518,7 +527,7 @@ export async function buildTrack({
         modelCalls += 1;
         const fixed = await completeChat({
           messages: [
-            { role: 'system', content: specMessages(prompt, trackStyle)[0].content },
+            { role: 'system', content: specMessages(prompt, trackStyle, sampleBlock)[0].content },
             {
               role: 'user',
               content: [
@@ -566,7 +575,19 @@ export async function buildTrack({
     emit('fallback', { message: 'Модель не дала валидную спеку — собран запасной план из библиотеки' });
   }
 
-  emit('spec', { spec, attempts: modelCalls, usedFallback, errors: lastErrors });
+  let sampleApplied = null;
+  if (sampleEntry) {
+    const { spec: withSample, applied } = applySamplePlan(spec, { entry: sampleEntry, hints: sampleHints });
+    const check = validatePlan(withSample);
+    if (check.ok) {
+      spec = check.spec;
+      sampleApplied = applied;
+    } else {
+      emit('warn', { message: `План вокруг сэмпла не прошёл проверку: ${check.errors.join('; ')}` });
+    }
+  }
+
+  emit('spec', { spec, attempts: modelCalls, usedFallback, errors: lastErrors, sample: sampleApplied });
 
   // Компиляция — чистая детерминированная функция.
   spec = validateTrackSpec(spec);
@@ -579,7 +600,7 @@ export async function buildTrack({
     trace: compiled.trace,
   });
 
-  return { spec, compiled, style: trackStyle, attempts: modelCalls, usedFallback, seed, raw, errors: lastErrors };
+  return { spec, compiled, style: trackStyle, attempts: modelCalls, usedFallback, seed, raw, errors: lastErrors, sample: sampleApplied };
 }
 
 export { SPEC_STYLES, SPEC_ROLES, SECTION_KINDS };

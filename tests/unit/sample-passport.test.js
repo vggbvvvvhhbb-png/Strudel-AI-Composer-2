@@ -219,6 +219,26 @@ describe('pool: записи и поиск', () => {
     expect(markdown).toContain('licenses:pool');
   });
 
+  it('строка таблицы лицензий — настоящие 6 ячеек, а не одна склеенная', () => {
+    const file = tempPoolFile();
+    addToPool({
+      id: 'g',
+      name: 'Glass | Hit',
+      author: 'ann',
+      url: 'https://freesound.org/people/ann/sounds/2/',
+      license: 'Attribution',
+    }, { file });
+    const markdown = poolLicensesMarkdown({ file });
+    const row = markdown.split('\n').find((line) => line.includes('ann'));
+    expect(row).toBeTruthy();
+    // 6 ячеек = 7 неэкранированных разделителей; '|' внутри имени экранирован.
+    const separators = row.match(/(?<!\\)\|/g) ?? [];
+    expect(separators.length).toBe(7);
+    expect(row).toContain('Glass \\| Hit');
+    expect(row.startsWith('| ')).toBe(true);
+    expect(row.endsWith(' |')).toBe(true);
+  });
+
   it('пустой пул даёт честный отчёт без выдуманных записей', () => {
     const file = tempPoolFile();
     const pool = readPool(file);

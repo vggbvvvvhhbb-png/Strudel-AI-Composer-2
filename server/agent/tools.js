@@ -26,7 +26,7 @@ import {
 } from './freesound.js';
 import { buildPassport } from '../samples/passport.js';
 import { downloadSampleWav } from '../samples/download.js';
-import { addToPool, searchPool, POOL_AUDIO_DIR } from '../samples/pool.js';
+import { addToPool, searchPool, getFromPool, POOL_AUDIO_DIR } from '../samples/pool.js';
 import { readWav } from '../deepdive/pipeline/helpers.js';
 import { compileTrackSpec } from '../music/compiler/index.js';
 import { buildTrack } from '../music/compose/pipeline.js';
@@ -115,13 +115,23 @@ export const TOOLS = [
     title: 'Сборка спеки трека',
     description:
       'Собирает спеку трека по описанию: план → спека → компиляция → оценка. Если модель '
-      + 'недоступна, спека собирается из библиотеки, и в ответе будет честная отметка об этом.',
+      + 'недоступна, спека собирается из библиотеки, и в ответе будет честная отметка об этом. '
+      + 'С sampleId из локального пула трек строится вокруг измеренных признаков сэмпла '
+      + '(тон → тональность, темп атак → BPM, плотность → ритм), а не вокруг названия.',
     schema: z.object({
       prompt: z.string().min(3).max(PROMPT_MAX),
       style: z.string().max(40).optional(),
       seed: z.number().int().optional(),
+      sampleId: z.string().min(1).max(80).optional(),
     }),
     async run(args, ctx) {
+      let sampleEntry = null;
+      if (args.sampleId) {
+        sampleEntry = getFromPool(args.sampleId);
+        if (!sampleEntry) {
+          return { ok: false, degraded: false, reason: `сэмпл «${args.sampleId}» не найден в локальном пуле — сначала sample_passport` };
+        }
+      }
       const result = await buildTrack({
         prompt: args.prompt,
         style: args.style,
@@ -129,6 +139,7 @@ export const TOOLS = [
         completeChat: ctx.completeChat,
         signal: ctx.signal,
         onUsage: ctx.onUsage,
+        sampleEntry,
       });
       return {
         ok: true,
@@ -142,6 +153,7 @@ export const TOOLS = [
         // Почему спека модели не прошла: без этого агент не может понять,
         // что именно чинить, и просто повторяет тот же запрос.
         errors: result.errors ?? null,
+        sample: result.sample ?? null,
         spec: result.spec,
         code: result.compiled?.code ?? null,
         parts: result.compiled?.parts ?? null,

@@ -28,6 +28,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 
+import { POOL_AUDIO_DIR } from '../../samples/pool.js';
+
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../../..');
 
@@ -87,7 +89,15 @@ export async function buildRenderBundle({ outFile = BUNDLE_FILE, esbuild } = {})
   return outFile;
 }
 
-/** Статический сервер: страница + наш бандл + UMD-движок Strudel. */
+/** WAV пула «Охотника» для браузера: только имя файла, без путей (D-119). */
+export function poolAudioFile(name) {
+  if (typeof name !== 'string' || !/^[\w-]+\.wav$/.test(name)) return null;
+  const file = path.join(POOL_AUDIO_DIR, name);
+  if (!file.startsWith(POOL_AUDIO_DIR + path.sep)) return null;
+  return existsSync(file) ? file : null;
+}
+
+/** Статический сервер: страница + наш бандл + UMD-движок Strudel + WAV пула. */
 function startServer() {
   const routes = {
     '/': { file: PAGE_FILE, type: 'text/html; charset=utf-8' },
@@ -100,6 +110,23 @@ function startServer() {
     if (url.pathname === '/favicon.ico') {
       res.writeHead(204);
       res.end();
+      return;
+    }
+    if (url.pathname.startsWith('/pool-audio/')) {
+      const file = poolAudioFile(url.pathname.slice('/pool-audio/'.length));
+      if (!file) {
+        res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+        res.end('not found');
+        return;
+      }
+      try {
+        const body = await readFile(file);
+        res.writeHead(200, { 'content-type': 'audio/wav', 'cache-control': 'no-store' });
+        res.end(body);
+      } catch (err) {
+        res.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
+        res.end(String(err && err.message));
+      }
       return;
     }
     const route = routes[url.pathname];
@@ -176,6 +203,10 @@ export async function createRenderWorker(options = {}) {
      */
     async render(args) {
       const startedAt = Date.now();
+      // Сэмплы пула «Охотника» (D-119): браузер грузит их с этого же сервера.
+      const poolSamples = (Array.isArray(args.poolSamples) ? args.poolSamples : [])
+        .filter((s) => s && /^[\w-]+$/.test(String(s.id)) && /^[\w:-]+$/.test(String(s.sound)))
+        .map((s) => ({ id: String(s.id), sound: String(s.sound) }));
       const payload = await page.evaluate((a) => window.__renderTwin.render(a), {
         code: args.code,
         fromCycle: args.fromCycle ?? 0,
@@ -184,6 +215,7 @@ export async function createRenderWorker(options = {}) {
         cps: args.cps ?? DEFAULT_CPS,
         wantWav: args.wantWav !== false,
         wantEvents: args.wantEvents !== false,
+        poolSamples,
       });
       const wav = payload.wavBase64 ? Buffer.from(payload.wavBase64, 'base64') : null;
       const fingerprint = {
@@ -194,6 +226,8 @@ export async function createRenderWorker(options = {}) {
         sample_rate: payload.sampleRate,
         code_sha256: codeFingerprint(args.code),
         seed: 'deterministic-engine',
+        // Сэмплы пула — внешнее состояние рендера: без них паспорт неполон.
+        ...(poolSamples.length ? { pool_samples: poolSamples.map((s) => s.sound).sort() } : {}),
       };
       return {
         ok: true,

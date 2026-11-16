@@ -66,6 +66,7 @@ for (const name of STRUDEL_METHODS) {
 
 let adapter = null;
 let initError = null;
+const loadedPoolSamples = new Set();
 
 /** base64 из байтов — кусками, чтобы не раздувать стек на длинном рендере. */
 function bytesToBase64(bytes) {
@@ -106,10 +107,24 @@ async function render(args) {
     cps = 0.5,
     wantWav = true,
     wantEvents = true,
+    poolSamples = [],
   } = args || {};
 
   if (!code || typeof code !== 'string') throw new Error('Нет кода для рендера');
   if (!adapter) throw new Error(initError ? 'Движок не инициализирован: ' + initError : 'Движок не инициализирован');
+
+  // Сэмплы пула «Охотника» (D-119): грузятся с того же локального сервера,
+  // что и страница рендера. Ошибка загрузки — ошибка рендера: молча играть
+  // бит без найденного звука нельзя.
+  const fresh = poolSamples.filter((s) => s?.sound && s?.id && !loadedPoolSamples.has(s.sound));
+  if (fresh.length) {
+    const map = Object.fromEntries(fresh.map((s) => [s.sound, `/pool-audio/${s.id}.wav`]));
+    const loaded = await adapter.loadSamples({ sources: [map] });
+    if (!loaded.ok || loaded.failed) {
+      throw new Error('Сэмплы пула не загрузились: ' + (loaded.errors || []).join('; '));
+    }
+    fresh.forEach((s) => loadedPoolSamples.add(s.sound));
+  }
 
   const startedAt = performance.now();
 
