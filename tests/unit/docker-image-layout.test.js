@@ -17,6 +17,7 @@ import { join, dirname, resolve, relative } from 'node:path';
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const DOCKERFILE = readFileSync(join(ROOT, 'Dockerfile'), 'utf8');
 const DOCKERIGNORE = readFileSync(join(ROOT, '.dockerignore'), 'utf8');
+const CI_WORKFLOW = readFileSync(join(ROOT, '.github', 'workflows', 'ci.yml'), 'utf8');
 
 /** Все .js/.mjs файлы каталога (рекурсивно). */
 function sourceFiles(dir) {
@@ -90,5 +91,15 @@ describe('образ приложения', () => {
   it('клиент локального демона попадает в образ', () => {
     // Конкретная причина падения: /app/local/client.mjs
     expect(DOCKERFILE).toMatch(/^COPY\s+local\s+\.\/local/m);
+  });
+
+  it('CI поднимает образ с HOST=0.0.0.0 — иначе порт извне не достать', () => {
+    // Дефект, который держал CI красным много прогонов подряд: сервер
+    // по умолчанию слушает 127.0.0.1 (server/config.js), docker-compose
+    // задаёт HOST=0.0.0.0, а `docker run` в CI — нет. Опубликованный порт
+    // оставался недостижим, и health-check не проходил никогда.
+    const runLine = CI_WORKFLOW.split(/\r?\n/).find((line) => line.includes('docker run'));
+    expect(runLine).toBeTruthy();
+    expect(runLine).toMatch(/HOST=0\.0\.0\.0/);
   });
 });

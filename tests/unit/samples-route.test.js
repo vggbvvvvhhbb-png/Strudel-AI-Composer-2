@@ -8,7 +8,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import express from 'express';
 import { once } from 'node:events';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -37,6 +37,11 @@ beforeAll(async () => {
   await once(server, 'listening');
   base = `http://127.0.0.1:${server.address().port}`;
   tmpDir = await mkdtemp(path.join(tmpdir(), 'strudel-pool-route-'));
+  // Каталог звуков пула в git не входит (data/samples/audio/ в .gitignore),
+  // поэтому на свежей машине — и на CI — его нет. Тест создаёт его сам:
+  // иначе запись файла падает с ENOENT. Каталог намеренно НЕ удаляется —
+  // на машине владельца там лежит настоящий пул.
+  await mkdir(POOL_AUDIO_DIR, { recursive: true });
 });
 
 afterAll(async () => {

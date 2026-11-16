@@ -47,8 +47,11 @@ jobs:
         run: docker build -t strudel-ai-composer:ci .
       - name: Образ поднимается и отвечает
         run: |
-          docker run -d --name ci-app -p 3001:3001 -e MOCK_LLM=1 strudel-ai-composer:ci
-          for i in $(seq 1 30); do
+          # HOST=0.0.0.0 обязателен: сервер по умолчанию слушает 127.0.0.1
+          # (config.host), и опубликованный порт извне контейнера недостижим.
+          # docker-compose.yml задаёт HOST явно — здесь то же самое.
+          docker run -d --name ci-app -p 3001:3001 -e MOCK_LLM=1 -e HOST=0.0.0.0 strudel-ai-composer:ci
+          for i in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:3001/api/health >/dev/null 2>&1; then
               echo "health ok"; exit 0
             fi
