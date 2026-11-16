@@ -4,6 +4,8 @@ import { ROLES as SPEC_ROLES, SAMPLED_ROLES, ROLE_RE } from '../../../src/schema
 import { checkSpec } from '../spec/check.js';
 import { formsForStyle, roleFor, rolesForStyle, selectPattern } from '../knowledge/index.js';
 import { detectStyle } from '../references.js';
+import { minedDigest, minedStats } from '../mining/library.js';
+import { matchMinedPattern } from '../mining/groove.js';
 import { compileForProtocol } from './compiled.js';
 import { compileTrackSpec } from '../compiler/index.js';
 
@@ -72,10 +74,11 @@ function validatePlan(raw) {
  * @param {string} style
  * @returns {string}
  */
-function styleDigest(style) {
+export function styleDigest(style) {
   const libraryStyle = knowledgeStyle(style);
   const roles = rolesForStyle(libraryStyle);
-  if (!roles.length) return '';
+  const mined = minedDigest(libraryStyle);
+  if (!roles.length && !mined) return '';
   const lines = roles.map((role) => {
     const info = roleFor(libraryStyle, role);
     const sampled = SAMPLED_ROLES.has(role);
@@ -86,6 +89,10 @@ function styleDigest(style) {
       : `sound — '${sounds[0] ?? 'sine'}'`;
     return `- ${role}: ${soundText}; pattern — один из: ${patterns.join(' / ') || '—'}`;
   });
+  // Измеренная статистика стиля (D-112) — числа из паспортов разбора.
+  // Редкий стиль (мало разборов) в промпт не попадает: вывод по двум
+  // трекам — это не «стиль», а выдумка.
+  if (mined) lines.push(mined);
   return lines.join('\n');
 }
 
@@ -384,6 +391,7 @@ export function fallbackSpec(style, seed = 1) {
     harmony: harmonies[(index + i) % harmonies.length],
   }));
   const roles = {};
+  const mined = minedStats(libraryStyle);
   source.forEach((section) => {
     for (const role of section.roles || []) {
       if (!SPEC_ROLES.includes(role)) continue;
@@ -398,6 +406,18 @@ export function fallbackSpec(style, seed = 1) {
       if (!roles[role].activeIn.includes(section.kind)) roles[role].activeIn.push(section.kind);
     }
   });
+  // Измеренный грув стиля (D-112) выбирает ударный рисунок из библиотеки
+  // знаний: ближе всего к измеренной гистограмме атак. Если измерений нет
+  // (стиль редкий или паспортов мало) — рисунок остаётся прежним.
+  if (mined) {
+    for (const role of Object.keys(roles)) {
+      if (!SAMPLED_ROLES.has(role)) continue;
+      const info = roleFor(libraryStyle, role);
+      const candidates = Array.isArray(info?.patterns) ? info.patterns : [];
+      const match = matchMinedPattern(candidates, mined);
+      if (match) roles[role].pattern = match.pattern;
+    }
+  }
   const bpm = { techno: 132, house: 122, 'lo-fi': 78, ambient: 64, dubstep: 140, synthwave: 100, trap: 140, jazz: 118, rock: 128, cinematic: 90 }[canonicalStyle];
   return validateTrackSpec({
     meta: { style: canonicalStyle, bpm, key: 'Cmin' },

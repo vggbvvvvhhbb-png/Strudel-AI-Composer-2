@@ -50,7 +50,8 @@
     "lint": "node scripts/lint-syntax.mjs",
     "bundle:budget": "node scripts/bundle-budget.mjs",
     "smoke": "node tests/smoke/smoke.mjs",
-    "corpus": "node scripts/build-corpus.mjs"
+    "corpus": "node scripts/build-corpus.mjs",
+    "mine:passports": "node scripts/mine-passports.mjs --batch"
   },
   "dependencies": {
     "@strudel/web": "1.3.0",
