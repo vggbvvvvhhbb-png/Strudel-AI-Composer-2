@@ -15,7 +15,7 @@
 
 import { z } from 'zod';
 
-export const AGENT_MODES = ['chat', 'research', 'composer', 'director'];
+export const AGENT_MODES = ['chat', 'research', 'composer', 'director', 'hunter'];
 
 export const PlanStepSchema = z.object({
   tool: z.string().min(1).max(64),
@@ -59,6 +59,30 @@ export function heuristicPlan(prompt) {
   const wantsCompose = /(сделай|собери|создай|напиши|придумай|сгенерируй).{0,40}(бит|трек|компози|beat|loop|сэмпл)/.test(text)
     || /(бит|трек|композиция)/.test(text) && /(сделай|собери|создай|напиши)/.test(text);
   const wantsDirector = /(поменяй|замени|сделай (ещ|тише|громче|мрачн|светлее)|правк|измени|отредактируй|тембр)/.test(text);
+  const wantsHunter = /(редк|необычн|странн|экзотич|стеклян|кристалл|причудлив).{0,40}(звук|сэмпл|удар|тон|шум)|(найди|найди-нибудь).{0,40}(редкий|необычный|странный).{0,20}(звук|сэмпл)/.test(text);
+
+  if (wantsHunter) {
+    steps.push({
+      tool: 'freesound_search',
+      args: { query: request.slice(0, 200), license: 'cc0', durationMax: 30, numResults: 8 },
+      why: 'найти редкий звук со свободной лицензией',
+    });
+    steps.push({
+      tool: 'compose_spec',
+      args: { prompt: request.slice(0, 400) },
+      why: 'собрать бит вокруг найденного звука',
+    });
+    steps.push({
+      tool: 'compile',
+      args: {},
+      why: 'скомпилировать спеку в играющий код',
+    });
+    return {
+      mode: 'hunter',
+      goal: request.slice(0, 600) || 'Найти редкий звук и собрать бит',
+      steps,
+    };
+  }
 
   if (wantsResearch) {
     steps.push({

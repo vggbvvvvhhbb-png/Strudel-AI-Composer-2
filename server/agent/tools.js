@@ -20,6 +20,10 @@ import { z } from 'zod';
 
 import { librarySearch } from './library.js';
 import { webSearch, webFetch } from './web.js';
+import {
+  freesoundSearch,
+  freesoundBudgetState,
+} from './freesound.js';
 import { compileTrackSpec } from '../music/compiler/index.js';
 import { buildTrack } from '../music/compose/pipeline.js';
 import { usageSummary, recordUsage } from '../stats.js';
@@ -383,6 +387,43 @@ export const TOOLS = [
     }),
     async run(args, ctx) {
       const result = await webFetch(args, { env: ctx.env, fetchImpl: ctx.fetchImpl });
+      return { ok: result.ok, degraded: Boolean(result.degraded), reason: result.reason ?? null, ...result };
+    },
+  },
+  {
+    id: 'freesound_search',
+    title: 'Поиск сэмплов в Freesound',
+    description:
+      'Ищет редкие звуки в Freesound. Берутся только свободные лицензии: CC0 или Attribution '
+      + '(нужна атрибуция). Ограничение по длительности есть. Без ключа провайдера инструмент '
+      + 'честно сообщает, что поиск недоступен, и агент продолжает по локальной библиотеке.',
+    schema: z.object({
+      query: z.string().min(2).max(200),
+      license: z.enum(['cc0', 'by']).default('cc0'),
+      durationMax: z.number().int().min(1).max(300).default(30),
+      sort: z.enum(['relevance', 'rating_desc', 'duration_desc', 'duration_asc']).default('relevance'),
+      numResults: z.number().int().min(1).max(20).default(5),
+    }),
+    async run(args, ctx) {
+      const result = await freesoundSearch(args, {
+        env: ctx.env,
+        fetchImpl: ctx.fetchImpl,
+        now: ctx.now,
+        budgetState: ctx.freesoundBudgetState ?? freesoundBudgetState,
+      });
+      // Запрос к Freesound тарифицируется по числу обращений: считаем его.
+      // Ошибка тоже считается — обращение к провайдеру уже было.
+      if (result.ok || result.requestSent) {
+        recordUsage({
+          model: 'freesound-search',
+          provider: 'freesound',
+          feature: 'freesound_search',
+          tool: 'freesound_search',
+          costUsd: 0,
+          estimated: false,
+          durationMs: ctx.durationMs ?? 0,
+        });
+      }
       return { ok: result.ok, degraded: Boolean(result.degraded), reason: result.reason ?? null, ...result };
     },
   },

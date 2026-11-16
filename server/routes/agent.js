@@ -17,6 +17,7 @@ import { runAgent } from '../agent/loop.js';
 import { toolManifest } from '../agent/tools.js';
 import { MODES } from '../agent/modes.js';
 import { webServicesStatus } from '../agent/web.js';
+import { freesoundStatus } from '../agent/freesound.js';
 import { checkLimit } from '../agent/guard.js';
 
 const router = express.Router();
@@ -51,6 +52,8 @@ router.get('/tools', (_req, res) => {
     })),
     tools: toolManifest(),
     services: webServicesStatus(),
+    // Поиск сэмплов — отдельная способность с отдельным ключом (D-114).
+    freesound: freesoundStatus(),
     limits: { requestsPerMinute: AGENT_RATE_LIMIT },
   });
 });

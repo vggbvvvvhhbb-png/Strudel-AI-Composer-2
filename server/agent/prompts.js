@@ -96,7 +96,7 @@ export function plannerMessages({ mode, prompt, tools = null, context = {}, hist
         '',
         'Формат ответа:',
         '{',
-        '  "mode": "chat|research|composer|director",',
+        '  "mode": "chat|research|composer|director|hunter",',
         '  "goal": "одно предложение: что нужно получить",',
         '  "steps": [ { "tool": "id_инструмента", "args": { ... }, "why": "зачем этот шаг" } ]',
         '}',

@@ -59,6 +59,22 @@ export const MODES = {
       + 'Код обязан быть пригоден для исполнения в студии.',
     shortInstruction: 'Спека → код, без пересказов.',
   },
+  hunter: {
+    id: 'hunter',
+    label: 'Охотник',
+    hint: 'Ищет редкий звук в Freesound (только CC0/CC-BY), берёт его паспорт и собирает бит.',
+    maxSteps: 8,
+    maxToolCalls: 10,
+    maxSources: 6,
+    maxTokens: 3200,
+    tools: ['freesound_search', 'library_search', 'compose_spec', 'compile', 'usage_report'],
+    instruction:
+      'Сначала найди звук (freesound_search): запрос — по описанию звука, лицензия — cc0 или by. '
+      + 'Потом собери трек вокруг найденного (compose_spec) и скомпилируй (compile). '
+      + 'Без ключа Freesound поиск не сработает — скажи это прямо и собери бит по описанию '
+      + 'и библиотеке. Несвободные звуки не предлагай.',
+    shortInstruction: 'Редкий звук → бит вокруг него.',
+  },
   director: {
     id: 'director',
     label: 'Дирижёр',

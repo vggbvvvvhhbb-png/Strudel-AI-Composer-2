@@ -87,6 +87,8 @@ export function detectMode(prompt) {
   const wantsResearch = /(найди|поищи|загугли|что такое|в интернете|источник|статья)/.test(text);
   const wantsDirector = /(поменяй|замени|сделай (тише|громче|мрачн|светлее)|правк|тембр|микс)/.test(text);
   const wantsComposition = /(сделай|собери|создай|напиши|бит|трек|компози)/.test(text);
+  const wantsHunter = /(редк|необычн|странн|экзотич).{0,40}(звук|сэмпл|удар)|(редкий|необычный|странный).{0,20}(звук|сэмпл)/.test(text);
+  if (wantsHunter) return 'hunter';
   if (wantsComposition && !wantsDirector) return 'composer';
   if (wantsResearch) return 'research';
   if (wantsDirector) return 'director';
@@ -136,6 +138,13 @@ function summarize(tool, result) {
     if (!result.text) return `не прочитано: ${result.reason ?? '—'}`;
     // Превью текста остаётся: по нему модель отвечает по содержанию страницы.
     return `прочитано ${String(result.text).length} симв. (${result.source ?? 'fetch'}): ${String(result.text).slice(0, 400)}`;
+  }
+  if (tool === 'freesound_search') {
+    if (!result.available) return `поиск сэмплов недоступен: ${result.reason}`;
+    const count = (result.results ?? []).length;
+    const rejected = Number(result.filteredOut ?? 0);
+    const list = (result.results ?? []).map((r) => `${r.name} (${r.licenseId}, ${r.duration ?? '?'} с)`).join('; ') || 'ничего не найдено';
+    return `${count} сэмплов${rejected ? `, отклонено по лицензии: ${rejected}` : ''}: ${list}`;
   }
   if (tool === 'usage_report') {
     return `стоимость ${JSON.stringify(result.costUsd ?? result.night ?? null)}`;
