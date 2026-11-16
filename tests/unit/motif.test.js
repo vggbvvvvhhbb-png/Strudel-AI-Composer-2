@@ -84,7 +84,12 @@ describe('мотив: трансформации', () => {
   it('ретроград читает рисунок задом наперёд', () => {
     const back = retrogradeMotif(motif);
     expect(back.degrees).toEqual([...motif.degrees].reverse());
-    expect(back.steps).toEqual([...motif.steps].reverse());
+    // Сетка восходящая: звучащий порядок — перевёрнутые ступени. Переворот
+    // сетки вместе со ступенями отменил бы ретроград (motifToMini сортирует
+    // по шагу) и увёл бы каденцию на первую ноту фразы.
+    expect(back.steps).toEqual(motif.steps);
+    const sounding = motifToMini(back).split(' ').map((token) => Number(token.split('@')[0]));
+    expect(sounding).toEqual([...motif.degrees].reverse());
   });
 
   it('аугментация растягивает ритм и не выходит за такт', () => {

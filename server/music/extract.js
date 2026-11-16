@@ -150,6 +150,27 @@ function numArg(value) {
   return m ? Number(m[0]) : null;
 }
 
+// Сдвиг по корням аккордов: компилятор пишет `.add(n("<0 5>").slow(4))`.
+// Без него анализатор видел ступени БЕЗ гармонии — то, что звучит, и то,
+// что измерялось, были разными нотами (D-123). Сканер не разворачивает
+// вложенные вызовы: строка '<0 5>' приходит в strings, а вложенный slow —
+// внутри сырого аргумента add, его разбираем отдельно.
+function rootShiftFromExpression(exprCalls) {
+  const addCall = exprCalls.find((call) => call.method && call.name === 'add'
+    && /^<\s*-?\d+(?:\s+-?\d+)*\s*>$/.test(call.strings[0] ?? ''));
+  if (!addCall) return null;
+  const roots = addCall.strings[0].trim().slice(1, -1).trim().split(/\s+/).map(Number);
+  if (!roots.length || roots.some((value) => !Number.isFinite(value))) return null;
+  let rootSlow = 1;
+  const rawInner = addCall.args.find((arg) => typeof arg === 'string' && arg.includes('.slow('));
+  if (rawInner) {
+    const slowCall = scanCalls(rawInner).find((call) => call.method && call.name === 'slow');
+    rootSlow = slowCall ? numArg(slowCall.args[0]) ?? 1 : 1;
+  }
+  if (!(rootSlow >= 1)) rootSlow = 1;
+  return { roots, rootSlow };
+}
+
 /**
  * Убирает markdown-обёртку и посторонний текст из ответа модели.
  * LLM иногда оборачивает код в ``` ... ``` или пишет пояснение перед кодом.
@@ -311,12 +332,17 @@ function buildPart(label, muted, solo, calls, region, constants = new Map(), for
     if (!expression) return;
     // Номер куска — это номер секции: компилятор кладёт секции по порядку.
     const section = formSections[index] ?? null;
-    for (const call of scanCalls(expression)) {
+    const exprCalls = scanCalls(expression);
+    const shift = rootShiftFromExpression(exprCalls);
+    for (const call of exprCalls) {
       if (call.method) continue;
       if (!['note', 'n', 'chord', 's'].includes(call.name)) continue;
       const value = call.strings[0];
       if (value === undefined) continue;
-      resolved.push({ kind: call.name, value, bars: chunk.bars, section });
+      resolved.push({
+        kind: call.name, value, bars: chunk.bars, section,
+        roots: shift?.roots ?? null, rootSlow: shift?.rootSlow ?? 1,
+      });
     }
   });
 
@@ -422,7 +448,12 @@ export function partEvents(part, key) {
       } else if (source.kind === 'n') {
         const degree = Number(value);
         if (Number.isFinite(degree)) {
-          const midi = degreeToMidi(degree, key);
+          // Сдвиг по корням аккордов: звучит ступень + корень текущего
+          // такта. Без этого метрики мерили паттерн, а не музыку (D-123).
+          const shift = source.roots
+            ? source.roots[Math.floor(ev.begin / (source.rootSlow || 1)) % source.roots.length]
+            : 0;
+          const midi = degreeToMidi(degree + shift, key);
           if (midi !== null) midis = [midi];
         }
       } else if (source.kind === 'chord') {
@@ -471,12 +502,37 @@ export function partEvents(part, key) {
     if (ev.begin >= 1 - EPS) continue;
     if (!ev.midis || !ev.midis.length) continue;
     if (!bySection.has(ev.section)) bySection.set(ev.section, []);
-    for (const midi of ev.midis) bySection.get(ev.section).push({ midi, begin: ev.begin });
+    for (const midi of ev.midis) {
+      bySection.get(ev.section).push({
+        midi, begin: ev.begin,
+        degree: ev.kind === 'n' ? Number(ev.value) : null,
+      });
+    }
   }
-  const sections = [...bySection.entries()].map(([name, items]) => ({
-    name,
-    notes: items.sort((a, b) => a.begin - b.begin),
-  }));
+  // Гармония секции: корень ПОСЛЕДНЕГО такта. Паттерн — один такт и
+  // повторяется, а корни идут со своим slow; каденция фразы звучит
+  // в последнем такте секции, не в первом (D-123).
+  const harmonyBySection = new Map();
+  for (const source of part.sources) {
+    if (!source.section || !source.roots?.length) continue;
+    const bars = Number.isFinite(source.bars) && source.bars > 0 ? source.bars : 1;
+    const slow = source.rootSlow || 1;
+    harmonyBySection.set(source.section, {
+      lastRoot: source.roots[Math.floor((bars - 1) / slow) % source.roots.length],
+    });
+  }
+  const sections = [...bySection.entries()].map(([name, items]) => {
+    const sorted = items.sort((a, b) => a.begin - b.begin);
+    const harmony = harmonyBySection.get(name) ?? null;
+    const lastDegree = sorted[sorted.length - 1]?.degree;
+    return {
+      name,
+      notes: sorted,
+      harmony: Boolean(harmony),
+      lastRoot: harmony?.lastRoot ?? null,
+      lastDegreeRaw: Number.isFinite(lastDegree) ? lastDegree : null,
+    };
+  });
 
   return {
     events,
