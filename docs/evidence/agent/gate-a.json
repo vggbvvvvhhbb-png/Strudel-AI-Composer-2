@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-16T14:01:29.015Z",
+  "checkedAt": "2026-11-16T14:31:16.623Z",
   "gate": "A — помощник-агент",
   "mode": "offline",
   "query": "найди в интернете, что такое phonk drift, и сделай бит в этом стиле",
@@ -138,7 +138,7 @@
           "degraded": false,
           "reason": null,
           "chars": null,
-          "ms": 14.9
+          "ms": 15.4
         },
         {
           "tool": "compile",
