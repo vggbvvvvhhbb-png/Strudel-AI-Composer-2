@@ -22,7 +22,8 @@ import { librarySearch } from './library.js';
 import { webSearch, webFetch } from './web.js';
 import { compileTrackSpec } from '../music/compiler/index.js';
 import { buildTrack } from '../music/compose/pipeline.js';
-import { usageSummary } from '../stats.js';
+import { usageSummary, recordUsage } from '../stats.js';
+import { searchBudgetState } from './budget.js';
 import { applyTransform, TRANSFORMS } from '../../src/ir/transforms.js';
 import { safeValidateIR } from '../../src/ir/schema.js';
 import { symbolicReport } from '../../src/oracle/report.js';
@@ -345,7 +346,26 @@ export const TOOLS = [
       depth: z.enum(['basic', 'deep']).default('basic'),
     }),
     async run(args, ctx) {
-      const result = await webSearch(args, { env: ctx.env, fetchImpl: ctx.fetchImpl });
+      const result = await webSearch(args, {
+        env: ctx.env,
+        fetchImpl: ctx.fetchImpl,
+        budgetState: ctx.budgetState ?? searchBudgetState,
+      });
+      // Цена поиска измерена провайдером (costDollars.total) — записываем её
+      // как измеренную, а не как оценку (D-102). Модель в этом счётчике не
+      // участвует: у Exa своя единица — доллары за запрос.
+      const cost = Number(result?.costDollars?.total ?? 0);
+      if (result?.ok && cost > 0) {
+        recordUsage({
+          model: 'exa-search',
+          provider: 'exa',
+          feature: 'web_search',
+          tool: 'web_search',
+          costUsd: cost,
+          estimated: false,
+          durationMs: ctx.durationMs ?? 0,
+        });
+      }
       return { ok: result.ok, degraded: Boolean(result.degraded), reason: result.reason ?? null, ...result };
     },
   },
@@ -358,6 +378,8 @@ export const TOOLS = [
     schema: z.object({
       url: z.string().min(8).max(500),
       maxChars: z.number().int().min(200).max(20_000).default(4000),
+      // Текст, который уже пришёл из поиска: тогда страницу не качаем второй раз.
+      text: z.string().max(20_000).optional(),
     }),
     async run(args, ctx) {
       const result = await webFetch(args, { env: ctx.env, fetchImpl: ctx.fetchImpl });

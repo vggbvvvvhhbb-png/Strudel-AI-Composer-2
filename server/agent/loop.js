@@ -127,10 +127,15 @@ function summarize(tool, result) {
   }
   if (tool === 'web_search') {
     if (!result.available) return `интернет недоступен: ${result.reason}`;
-    return (result.results ?? []).map((r) => `${r.title} — ${r.url}`).join('; ') || 'ничего не найдено';
+    const count = (result.results ?? []).length;
+    const cost = Number(result.costDollars?.total ?? 0);
+    const list = (result.results ?? []).map((r) => `${r.title} — ${r.url}`).join('; ') || 'ничего не найдено';
+    return `${count} результатов${cost > 0 ? `, цена $${cost}` : ''}: ${list}`;
   }
   if (tool === 'web_fetch') {
-    return result.text ? String(result.text).slice(0, 400) : `не прочитано: ${result.reason ?? '—'}`;
+    if (!result.text) return `не прочитано: ${result.reason ?? '—'}`;
+    // Превью текста остаётся: по нему модель отвечает по содержанию страницы.
+    return `прочитано ${String(result.text).length} симв. (${result.source ?? 'fetch'}): ${String(result.text).slice(0, 400)}`;
   }
   if (tool === 'usage_report') {
     return `стоимость ${JSON.stringify(result.costUsd ?? result.night ?? null)}`;
@@ -165,6 +170,65 @@ export function deterministicAnswer({ plan, observations, degraded }) {
   }
   lines.push('', '(Ответ собран без модели: LLM недоступен или не ответил.)');
   return lines.join('\n');
+}
+
+/**
+ * Режим «композитор» обещает трек — значит, трек будет собран.
+ *
+ * Модель (и нативный путь, и текстовый план) может ограничиться поиском:
+ * вызвать web_search, web_fetch и библиотеку, но не compose_spec. Тогда
+ * агент отвечает словами на запрос «сделай бит» — режим не выполнил свою
+ * задачу. Поэтому сборка и компиляция — гарантия режима, а не пожелание
+ * модели: если спеки нет, собираем её, если кода нет — компилируем.
+ *
+ * @param {object} options
+ * @returns {Promise<object[]>} события, которые нужно отдать клиенту
+ */
+async function ensureComposed({ mode, ctx, bag, observations, degradedTools, prompt, called }) {
+  const events = [];
+  if (mode.id !== 'composer') return events;
+
+  const run = async (tool, args, why) => {
+    events.push({ type: 'tool_start', id: tool, why });
+    const result = await runTool(tool, args, ctx);
+    const ok = Boolean(result?.ok);
+    const degraded = Boolean(result?.degraded);
+    const summary = summarize(tool, result ?? {});
+    observations.push({
+      tool,
+      ok,
+      degraded,
+      reason: result?.reason ?? null,
+      summary,
+      code: result?.code ?? null,
+      chars: null,
+    });
+    if (degraded || !ok) degradedTools.push({ tool, reason: result?.reason ?? 'без причины' });
+    if (ok && tool === 'compose_spec') {
+      bag.spec = result.spec ?? null;
+      bag.code = result.code ?? bag.code;
+      ctx.currentSpec = bag.spec;
+    }
+    if (ok && tool === 'compile') bag.code = result.code ?? bag.code;
+    events.push({
+      type: 'tool_end',
+      id: tool,
+      ok,
+      degraded,
+      reason: result?.reason ?? null,
+      summary,
+      chars: null,
+      ms: 0,
+    });
+  };
+
+  if (!called.has('compose_spec') && !bag.spec) {
+    await run('compose_spec', { prompt: String(prompt ?? '').slice(0, 400) }, 'режим «композитор» обещает трек');
+  }
+  if (!called.has('compile')) {
+    await run('compile', {}, 'скомпилировать спеку в играющий код');
+  }
+  return events;
 }
 
 /**
@@ -276,6 +340,19 @@ export async function* runAgent({
     if (!fellBack && nativeResult) {
       const observations = nativeResult.observations ?? [];
       const degradedTools = nativeResult.degradedTools ?? [];
+      const bag = nativeResult.bag ?? { spec: null, code: currentCode, ir: currentIr };
+      // Режим «композитор» обещает трек: если модель ограничилась поиском,
+      // сборка и компиляция выполняются всё равно.
+      const composed = await ensureComposed({
+        mode,
+        ctx,
+        bag,
+        observations,
+        degradedTools,
+        prompt,
+        called: new Set(observations.map((obs) => obs.tool)),
+      });
+      for (const event of composed) yield event;
       let answer = nativeResult.answer ?? '';
       let answerSource = nativeResult.answerSource ?? 'model';
       if (!answer) {
@@ -298,8 +375,8 @@ export async function* runAgent({
       if (cacheable && !usesMeasurements && answer.trim()) {
         answerCache.set(key, {
           answer,
-          code: nativeResult.bag?.code ?? null,
-          spec: nativeResult.bag?.spec ?? null,
+          code: bag.code ?? null,
+          spec: bag.spec ?? null,
           toolsUsed: nativeResult.toolsUsed ?? [],
         });
       }
@@ -460,6 +537,9 @@ export async function* runAgent({
       reason: result?.reason ?? null,
       summary: summarize(step.tool, result ?? {}),
       code: step.tool === 'compose_spec' ? result?.code ?? null : step.tool === 'compile' ? result?.code ?? null : null,
+      // Длина прочитанного текста: «страница прочитана» — измеримое
+      // утверждение, а не «инструмент отработал».
+      chars: typeof result?.text === 'string' ? result.text.length : null,
     };
     observations.push(observation);
     if (degraded || !ok) degradedTools.push({ tool: step.tool, reason: result?.reason ?? 'без причины' });
@@ -469,11 +549,15 @@ export async function* runAgent({
     // лишь заголовок. Шаг видно в панели отдельной карточкой.
     if (ok && step.tool === 'web_search' && allowed.has('web_fetch')
       && !queue.some((item) => item.tool === 'web_fetch')) {
-      const url = (result?.results ?? []).map((item) => item?.url).find(Boolean);
+      // Берём результат с текстом страницы: он уже оплачен поиском, поэтому
+      // вторую загрузку не делаем. Если текста нет — читаем страницу отдельно.
+      const found = (result?.results ?? []).filter((item) => item?.url);
+      const withText = found.find((item) => (item.textChars ?? String(item.text ?? '').length) >= 500);
+      const url = (withText ?? found[0])?.url;
       if (url) {
         queue.push({
           tool: 'web_fetch',
-          args: { url },
+          args: withText?.text ? { url, text: withText.text } : { url },
           why: 'прочитать найденную страницу (шаг добавлен после поиска)',
         });
       }
@@ -487,11 +571,25 @@ export async function* runAgent({
       degraded,
       reason: result?.reason ?? null,
       summary: observation.summary,
+      chars: observation.chars,
       ms,
     };
   }
 
   // --- Ответ ------------------------------------------------------------
+  // Режим «композитор» обещает трек: если ни план, ни модель не дошли до
+  // сборки, собираем и компилируем сейчас — иначе режим ответит словами.
+  const composed = await ensureComposed({
+    mode,
+    ctx,
+    bag,
+    observations,
+    degradedTools,
+    prompt,
+    called: new Set(observations.map((obs) => obs.tool)),
+  });
+  for (const event of composed) yield event;
+
   const usesMeasurements = observations.some((obs) => obs.tool === 'compose_spec' || obs.tool === 'edit_ir');
   const cacheable = isCacheable({ hasHistory: history.length > 0, usesMeasurements });
   const key = cacheKey({ question: prompt, mode: mode.id, catalogVersion: catalogVersion() });

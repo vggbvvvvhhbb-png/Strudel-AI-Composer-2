@@ -105,6 +105,18 @@ export async function webSearch({ query, numResults = 5, depth = 'basic' } = {},
       reason: `Интернет недоступен: не задан ${status.search.env}. Отвечаю по локальной библиотеке.`,
     };
   }
+  // Бюджет ночи — стоп, а не предупреждение: если исчерпан, поиск не идёт.
+  if (ctx.budgetState) {
+    const budget = ctx.budgetState();
+    if (budget.exhausted) {
+      return {
+        ok: false,
+        available: true,
+        degraded: true,
+        reason: `Поиск не выполнен: ${budget.reason}. Отвечаю по локальной библиотеке.`,
+      };
+    }
+  }
   const key = String(env[status.search.env] ?? '').trim();
   const doFetch = ctx.fetchImpl ?? fetch;
   try {
@@ -122,13 +134,29 @@ export async function webSearch({ query, numResults = 5, depth = 'basic' } = {},
       return { ok: false, available: true, degraded: true, reason: `поиск вернул ${res.status}` };
     }
     const json = await res.json();
-    const results = (json.results ?? []).map((item) => ({
-      title: item.title ?? null,
-      url: item.url ?? null,
-      snippet: (item.text ?? item.snippet ?? '').slice(0, 600),
-      publishedDate: item.publishedDate ?? null,
-    }));
-    return { ok: true, available: true, degraded: false, query: text, results, depth };
+    const results = (json.results ?? []).map((item) => {
+      // Текст страницы приходит из поиска (contents.text): до 10 результатов
+      // с содержимым входят в цену поиска, отдельная платная загрузка не
+      // нужна. Поэтому сохраняем текст целиком, а не только обрезок.
+      const pageText = String(item.text ?? item.snippet ?? '');
+      return {
+        title: item.title ?? null,
+        url: item.url ?? null,
+        snippet: pageText.slice(0, 600),
+        text: pageText,
+        textChars: pageText.length,
+        publishedDate: item.publishedDate ?? null,
+      };
+    });
+    // Цена запроса измеряется провайдером: costDollars.total — это факт,
+    // а не оценка по числу токенов (D-102).
+    const cost = json.costDollars && typeof json.costDollars === 'object'
+      ? {
+        total: Number(json.costDollars.total ?? 0),
+        search: json.costDollars.search ?? null,
+      }
+      : null;
+    return { ok: true, available: true, degraded: false, query: text, results, depth, costDollars: cost };
   } catch (err) {
     return { ok: false, available: true, degraded: true, reason: `поиск не удался: ${err?.message || err}` };
   }
@@ -137,11 +165,15 @@ export async function webSearch({ query, numResults = 5, depth = 'basic' } = {},
 /**
  * Чтение страницы.
  *
- * @param {{url:string, maxChars?:number}} args
+ * Если текст уже есть (он приходит из поиска — contents.text входит в цену
+ * поиска), страницу второй раз не качаем: отдаём готовый текст. Отдельная
+ * загрузка нужна только когда текста нет.
+ *
+ * @param {{url:string, maxChars?:number, text?:string|null}} args
  * @param {{env?:object, fetchImpl?:Function}} [ctx]
  * @returns {Promise<object>}
  */
-export async function webFetch({ url, maxChars = 4000 } = {}, ctx = {}) {
+export async function webFetch({ url, maxChars = 4000, text = null } = {}, ctx = {}) {
   const env = ctx.env ?? process.env;
   const status = webServicesStatus(env);
   if (!status.search.configured) {
@@ -154,6 +186,20 @@ export async function webFetch({ url, maxChars = 4000 } = {}, ctx = {}) {
   }
   const check = checkFetchUrl(url);
   if (!check.ok) return { ok: false, available: true, degraded: true, reason: check.reason };
+
+  const given = String(text ?? '').trim();
+  if (given.length) {
+    return {
+      ok: true,
+      available: true,
+      degraded: false,
+      url: check.url,
+      text: given.slice(0, Math.max(200, Math.min(20_000, Number(maxChars) || 4000))),
+      truncated: false,
+      source: 'search',
+    };
+  }
+
   const doFetch = ctx.fetchImpl ?? fetch;
   try {
     const res = await doFetch(check.url, {
@@ -164,14 +210,15 @@ export async function webFetch({ url, maxChars = 4000 } = {}, ctx = {}) {
     if (!res.ok) return { ok: false, available: true, degraded: true, reason: `страница вернула ${res.status}` };
     const buffer = Buffer.from(await res.arrayBuffer());
     const body = buffer.subarray(0, FETCH_MAX_BYTES).toString('utf8');
-    const text = body.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const pageText = body.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     return {
       ok: true,
       available: true,
       degraded: false,
       url: check.url,
-      text: text.slice(0, Math.max(200, Math.min(20_000, Number(maxChars) || 4000))),
+      text: pageText.slice(0, Math.max(200, Math.min(20_000, Number(maxChars) || 4000))),
       truncated: body.length >= FETCH_MAX_BYTES,
+      source: 'fetch',
     };
   } catch (err) {
     return { ok: false, available: true, degraded: true, reason: `страница не прочитана: ${err?.message || err}` };
