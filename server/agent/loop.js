@@ -203,6 +203,9 @@ export function deterministicAnswer({ plan, observations, degraded }) {
 async function ensureComposed({ mode, ctx, bag, observations, degradedTools, prompt, called }) {
   const events = [];
   if (mode.id !== 'composer') return events;
+  // Спека, собранная в нативном цикле, живёт в bag; ctx — отдельный объект.
+  // Без синхронизации compile видел «нет спеки» при уже собранной спеке.
+  ctx.currentSpec = bag.spec ?? ctx.currentSpec;
 
   const run = async (tool, args, why) => {
     events.push({ type: 'tool_start', id: tool, why });
@@ -276,6 +279,7 @@ export async function* runAgent({
   const guard = new SessionGuard({
     maxSteps: mode.maxSteps,
     maxToolCalls: mode.maxToolCalls,
+    maxWallMs: mode.maxWallMs,
   });
 
   const ctx = {
@@ -336,6 +340,8 @@ export async function* runAgent({
         fetchImpl,
         guard,
         completeChatTools: nativeCaller,
+        completeChat: ctx.completeChat,
+        onUsage: ctx.onUsage,
       })) {
         if (event.type === 'native_result') {
           nativeResult = event;

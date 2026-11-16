@@ -76,6 +76,8 @@ function toolResultText(result) {
  *   fetchImpl?: Function,
  *   guard: object,
  *   completeChatTools: Function,
+ *   completeChat?: Function|null,
+ *   onUsage?: Function|null,
  * }} options
  * @returns {AsyncGenerator<object>} события агента
  */
@@ -90,6 +92,8 @@ export async function* runNativeAgent({
   fetchImpl,
   guard,
   completeChatTools,
+  completeChat = null,
+  onUsage = null,
 } = {}) {
   const tools = toolApiSchemas(mode.tools);
   const bag = { spec: null, code: currentCode, ir: currentIr };
@@ -216,6 +220,10 @@ export async function* runNativeAgent({
         // Спека сессии: компиляция и правка дорожки берут её отсюда, а не из
         // выдумки модели — выдуманная спека ломала бы компиляцию.
         currentSpec: bag.spec,
+        // Без completeChat инструмент compose_spec всегда уходил в запасной
+        // путь: модель не вызывалась вовсе, и «спека модели» не рождалась.
+        completeChat,
+        onUsage,
       });
       const ms = Math.round((performance.now() - startedAt) * 10) / 10;
 
@@ -238,6 +246,7 @@ export async function* runNativeAgent({
         degraded,
         reason: result?.reason ?? null,
         summary: summarizeNative(call.name, result ?? {}),
+        chars: typeof result?.text === 'string' ? result.text.length : null,
         code: call.name === 'compose_spec' || call.name === 'compile' ? result?.code ?? null : null,
       };
       observations.push(observation);
@@ -251,6 +260,7 @@ export async function* runNativeAgent({
         degraded,
         reason: result?.reason ?? null,
         summary: observation.summary,
+        chars: typeof result?.text === 'string' ? result.text.length : null,
         ms,
       };
 

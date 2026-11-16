@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-16T00:20:43.186Z",
+  "checkedAt": "2026-11-16T17:16:11.295Z",
   "gate": "A — помощник-агент",
   "mode": "live",
   "query": "найди в интернете, что такое phonk drift, и сделай бит в этом стиле",
@@ -10,7 +10,7 @@
     {
       "name": "цикл отдаёт план, шаги и ответ",
       "ok": true,
-      "detail": "события: plan, tool_start, tool_end, usage, done"
+      "detail": "события: plan, tool_start, tool_end, text, usage, done"
     },
     {
       "name": "режим — композитор (цель запроса — бит)",
@@ -20,32 +20,32 @@
     {
       "name": "выполнены поиск, сборка и компиляция",
       "ok": true,
-      "detail": "выполнено: web_search, library_search, compose_spec, compile, web_fetch"
+      "detail": "выполнено: web_search, web_fetch, web_fetch, library_search, library_search, library_search, library_search, library_search, compose_spec, compile"
     },
     {
       "name": "поиск прошёл и вернул источники",
       "ok": true,
-      "detail": "шага поиска не было"
+      "detail": "поиск выполнен"
     },
     {
       "name": "агент не упал и перешёл к сборке",
       "ok": true,
-      "detail": "инструментов выполнено: 5"
+      "detail": "инструментов выполнено: 10"
     },
     {
       "name": "трек собран: код получен",
       "ok": true,
-      "detail": "символов кода: 3054"
+      "detail": "символов кода: 5939"
     },
     {
       "name": "деградации нет: интернет отвечал",
       "ok": true,
-      "detail": "деградировало: compose_spec"
+      "detail": "деградировало: нет"
     },
     {
       "name": "usage отдаёт честное число токенов",
       "ok": true,
-      "detail": "токенов ≈ 2563 (оценка: true), цена измерена: false"
+      "detail": "токенов ≈ 77844 (оценка: false), цена измерена: true"
     },
     {
       "name": "панель агента видна на первом экране",
@@ -55,12 +55,12 @@
     {
       "name": "шаги плана видны в панели",
       "ok": true,
-      "detail": "шагов: 4"
+      "detail": "шагов: 1"
     },
     {
       "name": "карточки вызовов инструментов видны",
       "ok": true,
-      "detail": "карточек: 5"
+      "detail": "карточек: 7"
     },
     {
       "name": "неудачных инструментов нет",
@@ -70,7 +70,7 @@
     {
       "name": "расход токенов виден в usage",
       "ok": true,
-      "detail": "Токенов ≈ 2564 (оценка: провайдер не отдал счётчики) · Цена не измерена (модель или провайдер неизвестны)"
+      "detail": "Токенов: 60110 · Цена: $0.0076 · учтённых вызовов модели: 8"
     },
     {
       "name": "панель честно говорит, что интернет доступен",
@@ -85,12 +85,12 @@
     {
       "name": "источники из разных доменов (≥2)",
       "ok": true,
-      "detail": "домены: flstudiomaster.ru, blog.soundtrap.com, songen.app, blog.bandlab.com, push-music.ru"
+      "detail": "домены: native-instruments.com, en.wikipedia.org, blog.soundtrap.com, vilarcorp.com, emastered.com"
     },
     {
       "name": "страница прочитана: текст >500 символов",
       "ok": true,
-      "detail": "прочитано символов: 1200"
+      "detail": "прочитано символов: 6000"
     },
     {
       "name": "ответ агента ссылается на источник",
@@ -109,6 +109,10 @@
     }
   ],
   "measured": {
+    "timings": {
+      "apiCycleMs": 206433,
+      "panelWaitMs": 116501
+    },
     "server": {
       "httpStatus": 200,
       "eventTypes": [
@@ -123,16 +127,23 @@
         "tool_end",
         "tool_start",
         "tool_end",
+        "tool_start",
+        "tool_end",
+        "tool_start",
+        "tool_end",
+        "tool_end",
+        "tool_start",
+        "tool_end",
+        "tool_start",
+        "tool_end",
+        "text",
         "usage",
         "done"
       ],
       "mode": "composer",
-      "planSource": "heuristic",
+      "planSource": "model",
       "planSteps": [
-        "web_search",
-        "library_search",
-        "compose_spec",
-        "compile"
+        "web_search"
       ],
       "planCount": 1,
       "tools": [
@@ -142,7 +153,23 @@
           "degraded": false,
           "reason": null,
           "chars": null,
-          "ms": 320.1
+          "ms": 1650.6
+        },
+        {
+          "tool": "web_fetch",
+          "ok": true,
+          "degraded": false,
+          "reason": null,
+          "chars": 6000,
+          "ms": 1091.7
+        },
+        {
+          "tool": "web_fetch",
+          "ok": true,
+          "degraded": false,
+          "reason": null,
+          "chars": 6000,
+          "ms": 533.3
         },
         {
           "tool": "library_search",
@@ -150,15 +177,47 @@
           "degraded": false,
           "reason": null,
           "chars": null,
-          "ms": 0.6
+          "ms": 8.6
+        },
+        {
+          "tool": "library_search",
+          "ok": true,
+          "degraded": false,
+          "reason": null,
+          "chars": null,
+          "ms": 0.3
+        },
+        {
+          "tool": "library_search",
+          "ok": true,
+          "degraded": false,
+          "reason": null,
+          "chars": null,
+          "ms": 0.3
+        },
+        {
+          "tool": "library_search",
+          "ok": true,
+          "degraded": false,
+          "reason": null,
+          "chars": null,
+          "ms": 0.2
+        },
+        {
+          "tool": "library_search",
+          "ok": false,
+          "degraded": false,
+          "reason": "инструмент library_search уже вызван 4 раз(а) — лимит 4",
+          "chars": null,
+          "ms": 0
         },
         {
           "tool": "compose_spec",
           "ok": true,
-          "degraded": true,
-          "reason": "Модель не ответила или ответила невалидно — спека собрана из библиотеки знаний.",
+          "degraded": false,
+          "reason": null,
           "chars": null,
-          "ms": 150.6
+          "ms": 79017.7
         },
         {
           "tool": "compile",
@@ -166,75 +225,64 @@
           "degraded": false,
           "reason": null,
           "chars": null,
-          "ms": 0.6
-        },
-        {
-          "tool": "web_fetch",
-          "ok": true,
-          "degraded": false,
-          "reason": null,
-          "chars": 1200,
-          "ms": 0.6
+          "ms": 0.7
         }
       ],
       "usage": {
         "type": "usage",
-        "tokens": 2563,
-        "costUsd": 0,
-        "requestCount": 0,
-        "estimated": true,
-        "priceKnown": false
+        "tokens": 77844,
+        "costUsd": 0.007844,
+        "requestCount": 10,
+        "estimated": false,
+        "priceKnown": true
       },
-      "degraded": [
-        {
-          "tool": "compose_spec",
-          "reason": "Модель не ответила или ответила невалидно — спека собрана из библиотеки знаний."
-        }
-      ],
-      "codeChars": 3054,
-      "answerChars": 7764
+      "degraded": [],
+      "codeChars": 5939,
+      "answerChars": 6444
     },
     "panel": {
-      "planSteps": 4,
-      "toolCards": 5,
+      "planSteps": 1,
+      "toolCards": 7,
       "failed": 0,
-      "usage": "Токенов ≈ 2564 (оценка: провайдер не отдал счётчики) · Цена не измерена (модель или провайдер неизвестны)",
-      "summary": "Инструментов вызвано: 5. Режим: composer.",
+      "usage": "Токенов: 60110 · Цена: $0.0076 · учтённых вызовов модели: 8",
+      "summary": "Инструментов вызвано: 7. Режим: composer.",
       "applyButton": 1,
       "services": "Инструментов в режиме «Композитор»: 6. Интернет доступен.",
+      "streamText": "lence], [8, BASS_4], [4, silence])._pianoroll() // role=bass\n$CHORDS: arrange([8, silence], [8, silence], [8, CHORDS_2], [4, silence], [8, CHORDS_4], [4, silence])._pianoroll() // role=chords\n$HATS: arrange([8, HATS_0], [8, HATS_1], [8, HATS_2], [4, silence], [8, HATS_4], [4, HATS_5])._scope() // role=hats\n$KICK: arrange([8, silence], [8, KICK_1], [8, KICK_2], [4, silence], [8, KICK_4], [4, silence])._scope() // role=kick\n$LEAD: arrange([8, silence], [8, silence], [8, LEAD_2], [4, silence], [8, LEAD_4], [4, silence])._pianoroll() // role=lead\n$PAD: arrange([8, silence], [8, silence], [8, silence], [4, PAD_3], [8, silence], [4, silence])._pianoroll() // role=pad\n$SNARE: arrange([8, silence], [8, silence], [8, SNARE_2], [4, silence], [8, SNARE_4], [4, silence])._scope() // role=snare\n$SUB: arrange([8, SUB_0], [8, SUB_1], [8, SUB_2], [4, silence], [8, SUB_4], [4, silence])._pianoroll() // role=sub\n$TEXTURE: arrange([8, TEXTURE_0], [8, silence], [8, silence], [4, TEXTURE_3], [8, silence], [4, TEXTURE_5])._pianoroll() // role=texture\n```Часть инструментов не дала данных: • compose_spec: Модель не ответила или ответила невалидно — спека собрана из библиотеки знаний.↓ Взять код в редактор",
+      "warnings": 1,
       "panelVisible": true
     },
     "live": {
       "sources": [
         {
-          "url": "https://flstudiomaster.ru/kak-sdelat-fonk-fl-studio;",
-          "domain": "flstudiomaster.ru"
+          "url": "https://www.native-instruments.com/blogs/blog/phonk-music;",
+          "domain": "native-instruments.com"
+        },
+        {
+          "url": "https://en.wikipedia.org/wiki/Phonk;",
+          "domain": "en.wikipedia.org"
         },
         {
           "url": "https://blog.soundtrap.com/how-to-produce-drift-phonk/;",
           "domain": "blog.soundtrap.com"
         },
         {
-          "url": "https://songen.app/blog/how-to-make-drift-phonk/;",
-          "domain": "songen.app"
+          "url": "https://vilarcorp.com/phonk-vs-drift-phonk-vs-memphis-phonk/;",
+          "domain": "vilarcorp.com"
         },
         {
-          "url": "https://blog.bandlab.com/what-is-drift-phonk/;",
-          "domain": "blog.bandlab.com"
-        },
-        {
-          "url": "https://push-music.ru/blog/chto-takoe-fonk",
-          "domain": "push-music.ru"
+          "url": "https://emastered.com/blog/what-is-drift-phonk",
+          "domain": "emastered.com"
         }
       ],
       "domains": [
-        "flstudiomaster.ru",
+        "native-instruments.com",
+        "en.wikipedia.org",
         "blog.soundtrap.com",
-        "songen.app",
-        "blog.bandlab.com",
-        "push-music.ru"
+        "vilarcorp.com",
+        "emastered.com"
       ],
-      "readChars": 1200,
+      "readChars": 6000,
       "searchCostUsd": 0.014,
       "searchCalls": 2,
       "answerHasSource": true,
@@ -243,6 +291,10 @@
         "callCap": 40,
         "spentUsd": 0.014
       }
-    }
+    },
+    "serverLogTail": [
+      "Strudel AI Composer: http://127.0.0.1:3212",
+      "Провайдеры LLM: openai"
+    ]
   }
 }

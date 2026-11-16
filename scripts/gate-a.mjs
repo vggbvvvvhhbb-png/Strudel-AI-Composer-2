@@ -136,12 +136,14 @@ async function main() {
     }
 
     // --- 1. Серверный цикл на запросе гайда ----------------------------
+    const apiStarted = Date.now();
     const res = await fetch(`${BASE}/api/agent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: QUERY }),
     });
     const raw = await res.text();
+    measured.timings = { apiCycleMs: Date.now() - apiStarted };
     const events = parseSSE(raw);
     const types = events.map((event) => event.type);
     // Планов может быть два: нативный путь публикует план своих вызовов
@@ -232,7 +234,27 @@ async function main() {
     await page.fill('#agent-input', PANEL_QUERY);
     await page.click('#agent-send');
     await page.waitForSelector('.agent-plan', { timeout: 30_000 }).catch(() => {});
-    await page.waitForTimeout(2500);
+    if (LIVE) {
+      // Живой цикл — это минуты (модель + поиск + чтения): usage приходит
+      // последним событием. Замер через 2.5 с ловил пустую панель и выдавал
+      // ложный провал. Ждём именно факт расхода, а не фиксированную паузу.
+      // Второй живой цикл (панель) идёт после API-цикла и медленнее:
+      // 300 с не хватило (замер 16.11.2026 — 5 карточек, usage ещё не пришёл).
+      // Лимит времени гарда поднят до 420 с (режим composer), плюс сборка
+      // после цикла — ждём до 900 с и замеряем, сколько заняло на самом деле.
+      const panelStarted = Date.now();
+      // waitForFunction(fn, arg, options): опции — ТРЕТИЙ аргумент. Вторым
+      // они молча становились arg, и ожидание жило по дефолтным 30 с
+      // (замер 16.11.2026: panelWaitMs=30016 при цикле в 3 минуты).
+      await page.waitForFunction(
+        () => /Токенов|кэша/.test(document.querySelector('#agent-usage')?.textContent ?? ''),
+        null,
+        { timeout: 900_000, polling: 1000 },
+      ).catch(() => {});
+      measured.timings.panelWaitMs = Date.now() - panelStarted;
+    } else {
+      await page.waitForTimeout(2500);
+    }
 
     const panel = await page.evaluate(() => ({
       planSteps: document.querySelectorAll('.agent-step').length,
@@ -242,6 +264,10 @@ async function main() {
       summary: document.querySelector('#agent-summary')?.textContent?.trim() ?? '',
       applyButton: document.querySelectorAll('.agent-apply button').length,
       services: document.querySelector('#agent-services')?.textContent?.trim() ?? '',
+      // Диагностика: текст потока и предупреждения — по ним видно, оборвался
+      // ли цикл по лимиту времени или ещё работает.
+      streamText: (document.querySelector('#agent-stream')?.textContent ?? '').slice(-1200),
+      warnings: document.querySelectorAll('#agent-stream .agent-warn').length,
       panelVisible: (() => {
         const node = document.querySelector('.agent-panel');
         if (!node) return false;
@@ -257,7 +283,7 @@ async function main() {
     check(LIVE ? 'неудачных инструментов нет' : 'неудачный инструмент помечен, а не спрятан',
       LIVE ? panel.failed === 0 : panel.failed > 0,
       `помечено: ${panel.failed}`);
-    check('расход токенов виден в usage', /Токенов/.test(panel.usage), panel.usage || 'пусто');
+    check('расход токенов виден в usage', /Токенов|кэша/.test(panel.usage), panel.usage || 'пусто');
     check(LIVE ? 'панель честно говорит, что интернет доступен' : 'статус сервисов сказан до запроса',
       LIVE ? /Интернет доступен/.test(panel.services) : /Интернет недоступен/.test(panel.services),
       panel.services);
@@ -328,6 +354,9 @@ async function main() {
   }
 
   const failed = checks.filter((item) => !item.ok);
+  // Хвост лога сервера — в отчёт: без него «usage пусто» не диагностируется
+  // (видно, был ли таймаут провайдера, лимит гарда или ошибка цикла).
+  measured.serverLogTail = serverLog.join('').split('\n').filter(Boolean).slice(-40);
   const report = {
     checkedAt: new Date().toISOString(),
     gate: 'A — помощник-агент',

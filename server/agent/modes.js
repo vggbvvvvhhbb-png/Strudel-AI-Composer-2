@@ -17,6 +17,7 @@ export const MODES = {
     maxToolCalls: 2,
     maxSources: 0,
     maxTokens: 1200,
+    maxWallMs: 60_000,
     tools: [],
     instruction:
       'Отвечай кратко и по делу. Инструменты недоступны в этом режиме: опирайся на знания '
@@ -31,6 +32,7 @@ export const MODES = {
     maxToolCalls: 8,
     maxSources: 6,
     maxTokens: 2600,
+    maxWallMs: 240_000,
     tools: ['web_search', 'web_fetch', 'library_search'],
     instruction:
       'Сначала найди факты (web_search), потом прочитай нужные страницы (web_fetch), потом '
@@ -42,10 +44,17 @@ export const MODES = {
     id: 'composer',
     label: 'Композитор',
     hint: 'Спека → компиляция → готовый код трека.',
-    maxSteps: 8,
-    maxToolCalls: 10,
+    // Живой прогон гейта A (16.11.2026): поиск + 2 чтения + 4 поиска по
+    // библиотеке + спека = 8 шагов, и на compile лимит уже кончался.
+    // Полный цикл требует до 12 шагов — лимит поднят по замеру, не на глаз.
+    maxSteps: 12,
+    maxToolCalls: 14,
     maxSources: 4,
     maxTokens: 3200,
+    // Живой прогон 16.11.2026: дефолтные 120 с гарда обрезали цикл на середине
+    // (поиск + чтения + сборка занимают минуты, один вызов модели — до 120 с).
+    // Лимит поднят по замеру: панель не получала usage, цикл умирал по времени.
+    maxWallMs: 420_000,
     // ВЕБ-ИНСТРУМЕНТЫ ТОЖЕ ЕСТЬ: чтобы сделать бит в стиле, нужно понять
     // стиль. Гейт A требует ровно этого пути — «найди в интернете, что такое
     // phonk drift, и сделай бит в этом стиле»: поиск, чтение, план, сборка.
@@ -67,6 +76,7 @@ export const MODES = {
     maxToolCalls: 10,
     maxSources: 6,
     maxTokens: 3200,
+    maxWallMs: 300_000,
     tools: ['freesound_search', 'sample_passport', 'pool_search', 'library_search', 'compose_spec', 'compile', 'usage_report'],
     instruction:
       'Сначала найди звук (freesound_search): запрос — по описанию звука, лицензия — cc0 или by. '
@@ -84,6 +94,7 @@ export const MODES = {
     maxToolCalls: 8,
     maxSources: 0,
     maxTokens: 2400,
+    maxWallMs: 240_000,
     tools: ['library_search', 'edit_ir', 'usage_report'],
     instruction:
       'Правь существующий трек через типографированные операции (edit_ir): они меняют одну '
