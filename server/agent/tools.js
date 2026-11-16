@@ -24,6 +24,10 @@ import {
   freesoundSearch,
   freesoundBudgetState,
 } from './freesound.js';
+import { buildPassport } from '../samples/passport.js';
+import { downloadSampleWav } from '../samples/download.js';
+import { addToPool, searchPool, POOL_AUDIO_DIR } from '../samples/pool.js';
+import { readWav } from '../deepdive/pipeline/helpers.js';
 import { compileTrackSpec } from '../music/compiler/index.js';
 import { buildTrack } from '../music/compose/pipeline.js';
 import { usageSummary, recordUsage } from '../stats.js';
@@ -425,6 +429,89 @@ export const TOOLS = [
         });
       }
       return { ok: result.ok, degraded: Boolean(result.degraded), reason: result.reason ?? null, ...result };
+    },
+  },
+  {
+    id: 'sample_passport',
+    title: 'Паспорт звука',
+    description:
+      'Скачивает превью найденного сэмпла, измеряет его (тембр, транзиенты, тон, темп) '
+      + 'и кладёт в локальный пул с лицензией и строкой атрибуции. Работает только '
+      + 'с разрешёнными лицензиями (CC0/CC-BY).',
+    schema: z.object({
+      id: z.string().min(1).max(80),
+      previewUrl: z.string().url().max(500),
+      name: z.string().max(200).optional(),
+      author: z.string().max(120).optional(),
+      url: z.string().max(500).optional(),
+      license: z.string().max(120).optional(),
+      licenseId: z.enum(['cc0', 'cc-by']).optional(),
+    }),
+    async run(args) {
+      const download = await downloadSampleWav({
+        previewUrl: args.previewUrl,
+        outDir: POOL_AUDIO_DIR,
+        id: args.id,
+      });
+      if (!download.ok) {
+        return { ok: false, degraded: true, reason: `превью не скачалось: ${download.error}` };
+      }
+      const audio = await readWav(download.wavPath);
+      const passport = buildPassport(audio.channels, audio.sampleRate, {
+        name: args.name ?? args.id,
+        source: args.url ?? args.previewUrl,
+      });
+      const added = addToPool({
+        id: args.id,
+        name: args.name ?? args.id,
+        author: args.author ?? null,
+        url: args.url ?? null,
+        license: args.license ?? null,
+        licenseId: args.licenseId ?? null,
+        passport,
+        file: download.wavPath,
+      });
+      if (!added.ok) {
+        return { ok: false, degraded: false, reason: added.reason };
+      }
+      return {
+        ok: true,
+        degraded: false,
+        id: args.id,
+        passport,
+        attribution: added.entry.attribution,
+        licenseId: added.entry.licenseId,
+      };
+    },
+  },
+  {
+    id: 'pool_search',
+    title: 'Поиск по локальному пулу',
+    description:
+      'Ищет по локальному пулу сэмплов: описание звука («стеклянный удар с металлическим '
+      + 'хвостом») сопоставляется с измеренными признаками записанных сэмплов.',
+    schema: z.object({
+      query: z.string().min(2).max(200),
+      limit: z.number().int().min(1).max(20).default(10),
+    }),
+    async run(args) {
+      const results = searchPool(args.query, { limit: args.limit });
+      return {
+        ok: true,
+        degraded: false,
+        query: args.query,
+        found: results.length,
+        results: results.map((item) => ({
+          id: item.entry.id,
+          name: item.entry.name,
+          licenseId: item.entry.licenseId,
+          attribution: item.entry.attribution,
+          score: item.score,
+          matched: item.matched,
+          character: item.entry.passport?.character ?? null,
+          durationS: item.entry.passport?.durationS ?? null,
+        })),
+      };
     },
   },
   {

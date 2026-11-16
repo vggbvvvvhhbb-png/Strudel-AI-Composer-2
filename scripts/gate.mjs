@@ -17,6 +17,7 @@
 //   check:prompts    пул промтов свежий
 //   check:taste      механика обучения цела
 //   check:licenses   реестр лицензий полон (механика)
+//   licenses:pool    раздел лицензий пула «Охотника» актуален (D-115)
 //   test             все тесты
 //   build            продакшен-сборка
 //   bundle:budget    бюджет бандла
@@ -47,6 +48,7 @@ const STEPS = [
   { name: 'check:prompts', cmd: 'check:prompts', why: 'пул промтов свежий' },
   { name: 'check:taste', cmd: 'check:taste', why: 'механика обучения цела' },
   { name: 'check:licenses', cmd: 'check:licenses', why: 'реестр лицензий полон' },
+  { name: 'licenses:pool', cmd: 'licenses:pool -- --check', why: 'раздел лицензий пула актуален' },
   { name: 'test', cmd: 'test', why: 'все тесты' },
   { name: 'build', cmd: 'build', why: 'продакшен-сборка' },
   { name: 'bundle:budget', cmd: 'bundle:budget', why: 'бюджет бандла' },

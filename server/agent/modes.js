@@ -67,12 +67,13 @@ export const MODES = {
     maxToolCalls: 10,
     maxSources: 6,
     maxTokens: 3200,
-    tools: ['freesound_search', 'library_search', 'compose_spec', 'compile', 'usage_report'],
+    tools: ['freesound_search', 'sample_passport', 'pool_search', 'library_search', 'compose_spec', 'compile', 'usage_report'],
     instruction:
       'Сначала найди звук (freesound_search): запрос — по описанию звука, лицензия — cc0 или by. '
-      + 'Потом собери трек вокруг найденного (compose_spec) и скомпилируй (compile). '
-      + 'Без ключа Freesound поиск не сработает — скажи это прямо и собери бит по описанию '
-      + 'и библиотеке. Несвободные звуки не предлагай.',
+      + 'Потом сними его паспорт (sample_passport) — измеренные признаки нужны, чтобы строить бит '
+      + 'вокруг звука, а не угадывать его тембр. Дальше собери трек (compose_spec) и скомпилируй '
+      + '(compile). Без ключа Freesound поиск не сработает — скажи это прямо и собери бит по '
+      + 'описанию и библиотеке. Несвободные звуки не предлагай.',
     shortInstruction: 'Редкий звук → бит вокруг него.',
   },
   director: {

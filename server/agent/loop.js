@@ -146,6 +146,13 @@ function summarize(tool, result) {
     const list = (result.results ?? []).map((r) => `${r.name} (${r.licenseId}, ${r.duration ?? '?'} с)`).join('; ') || 'ничего не найдено';
     return `${count} сэмплов${rejected ? `, отклонено по лицензии: ${rejected}` : ''}: ${list}`;
   }
+  if (tool === 'sample_passport') {
+    const passport = result.passport ?? {};
+    return `паспорт «${result.id ?? ''}»: ${Number(passport.durationS ?? 0)} с, центроид ${passport.spectral?.centroidHz ?? '—'} Гц, атак ${passport.transients?.count ?? '—'}, характер: ${(passport.character ?? []).join(', ') || '—'}`;
+  }
+  if (tool === 'pool_search') {
+    return `${result.found ?? 0} совпадений в пуле: ${(result.results ?? []).map((item) => `${item.name} (${item.licenseId})`).join('; ') || 'ничего не найдено'}`;
+  }
   if (tool === 'usage_report') {
     return `стоимость ${JSON.stringify(result.costUsd ?? result.night ?? null)}`;
   }

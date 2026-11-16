@@ -157,3 +157,13 @@ curl -s 'https://api.github.com/repos/<owner>/<repo>' | grep '"license"'
 | `public/demo/preview.wav` | Демо обложки: 4,0 с, mono 24 кГц, −18,2 LUFS | **наша** — сгенерировано из нашего кода нашим движком | `demo/preview.js` → `npm run build:demo` (рендер в headless Chromium, тот же движок, что в студии) |
 
 Демо собрано **только из чистых осцилляторов** (`s("sawtooth"/"square"/"sine"/"triangle")`), без сэмплов: ни один сторонний банк в него не попадает, поэтому файл не создаёт лицензионного риска и играет офлайн. Паспорт рендера (движок, sha256 кода, sample rate) лежит рядом в `public/demo/preview.json` и проверяется тестом `tests/unit/landing-demo.test.js`.
+
+---
+
+<!-- licenses:pool:start -->
+## 8. Локальный пул сэмплов «Охотника» (D-115)
+
+*Раздел генерируется из `data/samples/pool.json` — скриптом `npm run licenses:pool`. Пул живёт на машине владельца; в публичный релиз он не входит, но лицензия каждого сэмпла обязана быть видна.*
+
+Записей нет: пул пуст.
+<!-- licenses:pool:end -->

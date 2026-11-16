@@ -9,10 +9,17 @@
 // ПРАВИЛО. «Не нашёл запрета» ≠ «разрешено». Банк считается подтверждённым
 // только если в реестре стоит вердикт «разрешено по умолчанию». Всё остальное
 // — «требует решения владельца», и публичный релиз заблокирован.
+//
+// ОХОТНИК (D-115). Сэмплы, скачанные в локальный пул, — отдельный слой
+// реестра: у каждого своя лицензия (CC0 или CC-BY) и своя строка атрибуции.
+// Они считаются в том же отчёте, но не блокируют банковый релиз: пул живёт
+// на машине владельца и в публичный релиз не входит.
 
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { poolLicenseRegistry } from '../samples/pool.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const dataDir = join(here, 'data');
@@ -25,12 +32,18 @@ export const VERDICT_DECISION = 'требует решения владельц�
 /**
  * Прочитать реестры: манифесты банков (какие имена есть) и лицензии
  * (что с ними по праву).
- * @returns {{banks: object, licenses: object}}
+ * @returns {{banks: object, licenses: object, pool: object}}
  */
 export function loadRegistry() {
   const banks = JSON.parse(readFileSync(join(dataDir, 'sample-banks.json'), 'utf8'));
   const licenses = JSON.parse(readFileSync(join(dataDir, 'sample-licenses.json'), 'utf8'));
-  return { banks: banks.banks ?? {}, licenses: licenses.banks ?? {} };
+  let pool = { samples: {}, totals: { samples: 0, cc0: 0, ccBy: 0 } };
+  try {
+    pool = poolLicenseRegistry();
+  } catch {
+    // Пула нет — это «нет данных», а не ошибка: счётчик остаётся нулевым.
+  }
+  return { banks: banks.banks ?? {}, licenses: licenses.banks ?? {}, pool };
 }
 
 /**
@@ -142,6 +155,7 @@ export function licenseReport(registry = loadRegistry()) {
     ok: audit.ok,
     releaseBlocked: audit.releaseBlocked,
     totals: audit.totals,
+    pool: registry.pool ?? { samples: {}, totals: { samples: 0, cc0: 0, ccBy: 0 } },
     banks: audit.banks.map((row) => ({
       key: row.key,
       names: row.names,

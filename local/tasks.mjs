@@ -197,6 +197,28 @@ export function createTaskRegistry({ stateDir, renderFactory = createRenderWorke
       });
       return { ok: true, ...result };
     },
+
+    /**
+     * Паспорт звука: измерение файла тем же DSP, что и на сервере (D-115).
+     *
+     * Тяжёлое считается здесь, на машине владельца: измерение звука не должно
+     * занимать сервер. Результат тот же — паспорт собирается общим модулем
+     * server/samples/passport.js.
+     *
+     * @param {object} payload {path, name, source}
+     */
+    async passport(payload) {
+      const filePath = String(payload?.path ?? '');
+      if (!filePath) throw new Error('passport: нужен путь к файлу (path)');
+      const { readWav } = await import('../server/deepdive/pipeline/helpers.js');
+      const { buildPassport } = await import('../server/samples/passport.js');
+      const audio = await readWav(filePath);
+      const passport = buildPassport(audio.channels, audio.sampleRate, {
+        name: payload?.name ?? null,
+        source: payload?.source ?? filePath,
+      });
+      return { ok: true, passport };
+    },
   };
 
   return {

@@ -12,6 +12,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { runTool, toolById, toolManifest, toolApiSchemas } from '../../server/agent/tools.js';
+import { MODES } from '../../server/agent/modes.js';
 import { fallbackSpec } from '../../server/music/compose/pipeline.js';
 import { planIR } from '../../src/ir/intent.js';
 
@@ -166,6 +167,35 @@ describe('usage_report', () => {
     expect(result.ok).toBe(true);
     expect(result).toHaveProperty('totalTokens');
     expect(result).toHaveProperty('byModel');
+  });
+});
+
+describe('sample_passport и pool_search (D-115)', () => {
+  it('режим «Охотник» ведёт через паспорт и пул', () => {
+    expect(MODES.hunter.tools).toContain('freesound_search');
+    expect(MODES.hunter.tools).toContain('sample_passport');
+    expect(MODES.hunter.tools).toContain('pool_search');
+  });
+
+  it('паспорт не качает с чужого хоста — честный отказ до сети', async () => {
+    const result = await runTool('sample_passport', {
+      id: 'test-foreign',
+      previewUrl: 'https://evil.example.com/sound.mp3',
+      licenseId: 'cc0',
+    });
+    expect(result.ok).toBe(false);
+    expect(result.degraded).toBe(true);
+    expect(result.reason).toMatch(/не в списке разрешённых/);
+  });
+
+  it('поиск по пулу отдаёт лицензию и атрибуцию каждого совпадения', async () => {
+    const result = await runTool('pool_search', { query: 'стеклянный удар' });
+    expect(result.ok).toBe(true);
+    expect(result.found).toBe(result.results.length);
+    for (const item of result.results) {
+      expect(['cc0', 'cc-by']).toContain(item.licenseId);
+      expect(item.attribution).toBeTruthy();
+    }
   });
 });
 
