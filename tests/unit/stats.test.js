@@ -37,11 +37,11 @@ function stubProvider({ promptTokens = 1000, completionTokens = 500 } = {}) {
 }
 
 describe('таблица цен', () => {
-  it('знает модель владельца (gpt-6-luna через APInex)', () => {
+  it('знает модель владельца (gpt-6-luna через relay.fast, D-120)', () => {
     const price = priceOf('gpt-6-luna');
     expect(price.known).toBe(true);
-    expect(price.prompt).toBe(0.075);
-    expect(price.completion).toBe(0.075);
+    expect(price.prompt).toBe(0.008);
+    expect(price.completion).toBe(0.04);
   });
 
   it('знает модель по умолчанию для Anthropic (claude-sonnet-4-5)', () => {
@@ -53,11 +53,11 @@ describe('таблица цен', () => {
     expect(price.completion).toBe(15);
   });
 
-  it('свободные модели шлюза (free/) — честный ноль, а не «нет данных»', () => {
+  it('префикс free/ больше не означает «бесплатно» (правило APInex, D-120)', () => {
+    // На relay.fast free-моделей нет: молча считать free/… бесплатным нельзя.
     const price = priceOf('free/gpt-6-luna');
-    expect(price.known).toBe(true);
-    expect(price.reason).toBe('free-tier');
-    expect(price.prompt).toBe(0);
+    expect(price.known).toBe(false);
+    expect(price.reason).toBe('unknown-model');
   });
 
   it('неизвестная модель помечается как «цена неизвестна»', () => {
@@ -81,7 +81,7 @@ describe('запись и агрегаты', () => {
     const summary = usageSummary();
     expect(summary.requests).toBe(1);
     expect(summary.promptTokens).toBe(1_000_000);
-    expect(summary.costUsd).toBeCloseTo(0.15, 6);
+    expect(summary.costUsd).toBeCloseTo(0.048, 6);
   });
 
   it('группирует по фиче, сессии, суткам и операции', () => {
@@ -115,6 +115,14 @@ describe('запись и агрегаты', () => {
     recordUsage({ model: 'whisper-large-v3-turbo', costUsd: 0.5 });
     expect(usageSummary().costUsd).toBe(0.5);
     expect(usageSummary().unpricedModels.length).toBe(0);
+  });
+
+  it('сервис с явной ценой 0 (Freesound) — не «модель без цены»', () => {
+    // Freesound бесплатен, но это измеренный факт, а не дыра в таблице цен.
+    recordUsage({ model: 'freesound-search', provider: 'freesound', costUsd: 0 });
+    const summary = usageSummary();
+    expect(summary.requests).toBe(1);
+    expect(summary.unpricedModels.length).toBe(0);
   });
 });
 

@@ -7,10 +7,14 @@
 // ЗАЧЕМ ПЕРЕПИСЫВАТЬ (A0.2). До этой правки `recordUsage` была определена,
 // но не вызывалась нигде: токены складывались в локальный массив маршрута и
 // умирали. При этом таблица цен не содержала ни одной модели, которая
-// реально работает (у владельца — gpt-6-luna через APInex), так что даже
+// реально работает (у владельца — gpt-6-luna через шлюз), так что даже
 // включённый учёт показал бы ноль. Теперь цена считается по каждому
 // вызову LLM, а неизвестные модели попадают в отдельный список — молча
 // считать их бесплатными нельзя.
+//
+// D-120: шлюз владельца сменился с APInex на relay.fast. Цены APInex
+// (плоские 0.075/0.075) к relay.fast НЕ применяются: там другая тарифная
+// сетка, и перенос старой цены завышал бы расход примерно в 9 раз.
 
 import { currentUsageContext } from './llm/context.js';
 
@@ -38,26 +42,21 @@ const state = {
 /**
  * Цена за 1 млн токенов: prompt / completion, в долларах.
  *
- * Источники (проверены 15.11.2026):
- *   • APInex — apinex.bond/models: плоская ставка, вход = выход.
- *     Именно через этот шлюз владелец работает (OPENAI_BASE_URL).
+ * Источники (проверены 16.11.2026):
+ *   • relay.fast — шлюз владельца (OPENAI_BASE_URL=https://relay.fast/v1).
+ *     Цены ИЗМЕРЕНЫ: дельта /v1/dashboard/billing/usage до/после вызова
+ *     совпала с расчётом по токенам (D-120). Тариф зависит от источника
+ *     маршрутизации; здесь ставки источника ключа владельца (GPT Team/Plus).
+ *     Другие модели шлюза добавляются только после замера — иначе они
+ *     попадают в unpricedModels («нет данных»), а не считаются бесплатно.
  *   • OpenAI — platform.openai.com/docs/pricing
  *   • Anthropic — assets.claude.com (List Prices, 22.09.2026)
  *   • Groq — console.groq.com/docs/models
- *
- * Модели с префиксом `free/` на APInex бесплатны — это правило шлюза,
- * поэтому цена 0 у них честная, а не «нет данных».
  */
 export const PRICING = {
-  // --- APInex (шлюз владельца) ---
-  'gpt-6-luna': { prompt: 0.075, completion: 0.075 },
-  'gpt-6-luna-decisions': { prompt: 0.1, completion: 0.1 },
-  'gpt-6.1-terra': { prompt: 0.17, completion: 0.17 },
-  'gpt-6.1-sol': { prompt: 0.3, completion: 0.3 },
-  'gpt-6-astra': { prompt: 0.5, completion: 0.5 },
-  'gemini-4-carbon': { prompt: 0.6, completion: 0.6 },
-  'claude-sonnet-5.5': { prompt: 0.4, completion: 0.4 },
-  'claude-fable-5.2': { prompt: 1, completion: 1 },
+  // --- relay.fast (шлюз владельца, D-120; измерено 16.11.2026) ---
+  'gpt-6-luna': { prompt: 0.008, completion: 0.04 },
+  'gpt-5.6-luna': { prompt: 0.016, completion: 0.096 },
 
   // --- OpenAI ---
   'gpt-4o-mini': { prompt: 0.15, completion: 0.6 },
@@ -106,10 +105,6 @@ export function priceOf(model) {
   const name = String(model || 'unknown');
   const direct = PRICING[name];
   if (direct) return { ...direct, known: true, reason: 'table' };
-  // Бесплатные модели шлюза APInex: префикс free/.
-  if (name.startsWith('free/')) {
-    return { prompt: 0, completion: 0, known: true, reason: 'free-tier' };
-  }
   // Транскрипция тарифицируется по секундам звука — цену вызывает код
   // транскрипции, но модель считается известной, а не «без цены».
   if (name in TRANSCRIPTION_PRICES_PER_HOUR) {
@@ -171,7 +166,11 @@ export function recordUsage(event) {
   modelStats.costUsd += costUsd;
   state.byModel.set(model, modelStats);
 
-  if (!price.known) {
+  // В «модели без цены» попадают только LLM-модели с неизвестной ставкой за
+  // токены. Счётчики сервисов с другой единицей тарификации (Exa — доллары
+  // за запрос, Freesound — бесплатный API) передают явный costUsd и сюда
+  // не относятся: «нет данных» о них нет.
+  if (!price.known && !Number.isFinite(event.costUsd)) {
     const unknown = state.unpricedModels.get(model) || { model, requests: 0, promptTokens: 0, completionTokens: 0 };
     unknown.requests += 1;
     unknown.promptTokens += promptTokens;

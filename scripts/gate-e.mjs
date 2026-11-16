@@ -26,6 +26,7 @@ import { runTool } from '../server/agent/tools.js';
 import { getFromPool, poolLicenseRegistry, POOL_AUDIO_DIR } from '../server/samples/pool.js';
 import { buildTrack, fallbackSpec } from '../server/music/compose/pipeline.js';
 import { completeChat } from '../server/llm/router.js';
+import { usageSummary } from '../server/stats.js';
 import { createRenderWorker, poolAudioFile } from '../server/deepdive/render/render-worker.mjs';
 import { sampleSoundName, passportHints, applySamplePlan } from '../server/music/compose/sample-plan.js';
 import { checkSpec } from '../server/music/spec/check.js';
@@ -160,6 +161,8 @@ async function main() {
       check('plan', 'план вокруг паспорта собран', Boolean(hunter) && hunter.sound === sampleSoundName(pick.id), `fallback=${build.usedFallback}, ${((Date.now() - t) / 1000).toFixed(1)} с`);
       check('llm', 'LLM-шаг композитора', build.usedFallback ? 'no-data' : true, build.usedFallback ? 'провайдер недоступен — план из библиотеки (честная деградация)' : `модель ответила, попыток ${build.attempts}`);
       check('measured', 'измеренные признаки применены или честно «нет данных»', build.sample !== null, JSON.stringify(build.sample));
+      const usage = usageSummary();
+      check('price', 'цена LLM записана в учёт', usage.requests > 0 && usage.costUsd > 0, `${usage.requests} вызовов, $${usage.costUsd}, моделей без цены: ${usage.unpricedModels.length}`);
 
       // 5. Компиляция и рендер: сэмпл СЛЫШЕН.
       const sound = sampleSoundName(pick.id);
@@ -200,6 +203,7 @@ async function main() {
       failed,
       noData,
       checks,
+      usage: LIVE ? (() => { const u = usageSummary(); return { requests: u.requests, totalTokens: u.totalTokens, costUsd: u.costUsd, byModel: u.byModel, unpricedModels: u.unpricedModels }; })() : null,
       machine: { platform: process.platform, cpus: os.cpus().length, node: process.version },
     };
     const outFile = path.join(ROOT, 'docs', 'evidence', 'agent', LIVE ? 'gate-e-live.json' : 'gate-e.json');
