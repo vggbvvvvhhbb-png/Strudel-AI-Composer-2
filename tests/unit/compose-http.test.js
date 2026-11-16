@@ -3,7 +3,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
 import { once } from 'node:events';
-import { fallbackSpec } from '../../server/music/compose/pipeline.js';
+import { fallbackSpec, normalizeSpec, repairSpec } from '../../server/music/compose/pipeline.js';
 import { TrackSpecSchema } from '../../src/schemas/track-spec.schema.js';
 import { compileTrackSpec } from '../../server/music/compiler/index.js';
 import { runStrudel } from '../../server/music/strudel-runtime.mjs';
@@ -51,7 +51,13 @@ describe('канонический TrackSpec через HTTP и SSE', () => {
     const planned = events.find((e) => e.type === 'spec');
     expect(planned.usedFallback).toBe(false);
     expect(planned.attempts).toBe(1);
-    expect(TrackSpecSchema.parse(planned.spec)).toEqual(spec);
+    // Спека в ответе — канонизированная моделью: repairSpec проставляет
+    // явное поле role (D-100: роль стала атрибутом партии, а не ключом).
+    const canonical = repairSpec(normalizeSpec(spec, 'techno'), 'techno');
+    expect(TrackSpecSchema.parse(planned.spec)).toEqual(canonical);
+    for (const [id, part] of Object.entries(canonical.parts.roles)) {
+      expect(part.role, `роль партии ${id}`).toBe(id);
+    }
     const compiled = events.find((e) => e.type === 'compiled');
     for (const field of ['code', 'parts', 'sections', 'warnings', 'trace']) expect(compiled).toHaveProperty(field);
     const done = events.at(-1);

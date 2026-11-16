@@ -15,6 +15,13 @@ process.env.MOCK_LLM = '1';
 
 const { default: router } = await import('../../server/routes/agent.js');
 
+// Тесты деградации обязаны проверять ветку «ключа поиска нет» независимо от
+// машины: на сервере разработчика EXA_API_KEY может быть задан в .env, и
+// тест обязан всё равно исполнить ветку «недоступно». Ключ убираем ПОСЛЕ
+// импорта: server/config.js поднимает dotenv, который снова его положит.
+// Статус внешних сервисов читается из process.env на каждый запрос.
+delete process.env.EXA_API_KEY;
+
 let server;
 let base;
 
