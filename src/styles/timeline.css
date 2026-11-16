@@ -1,0 +1,247 @@
+/* ============================================================
+   Таймлайн дорожек (фаза F): главный экран студии.
+   Строки компактные — 100 дорожек помещаются скроллом, группы
+   сворачиваются. Цвет семьи — слева, у каждой строки.
+   ============================================================ */
+
+.track-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  padding: var(--sp-3);
+  min-height: 120px;
+}
+
+.tl-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.tl-title {
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-mono);
+}
+
+.tl-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--mint);
+}
+
+/* Полоса секций: ширина пропорциональна тактам. */
+.tl-sections {
+  display: flex;
+  gap: 2px;
+  min-height: 22px;
+}
+
+.tl-section {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--mint);
+  background: rgb(var(--jade-rgb) / 0.1);
+  border: 1px solid rgb(var(--jade-rgb) / 0.2);
+  border-radius: var(--radius-xs);
+  padding: 2px 6px;
+}
+
+.tl-section-free {
+  color: var(--text-dim);
+  background: transparent;
+  border-style: dashed;
+}
+
+.tl-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  max-height: 46vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--jade-rgb) / 0.25) transparent;
+}
+
+/* --- Группа --- */
+.tl-group {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  border-left: 3px solid var(--tl-color, var(--jade));
+  background: rgb(var(--black-rgb) / 0.12);
+}
+
+.tl-group-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 4px 8px;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.tl-group-head::-webkit-details-marker {
+  display: none;
+}
+
+.tl-group-head::before {
+  content: '▾';
+  color: var(--tl-color, var(--jade));
+  font-size: 10px;
+}
+
+.tl-group:not([open]) .tl-group-head::before {
+  content: '▸';
+}
+
+.tl-group-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tl-group-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  background: rgb(var(--jade-rgb) / 0.08);
+  border-radius: 8px;
+  padding: 0 6px;
+}
+
+.tl-group-head .tl-chip {
+  margin-left: 0;
+}
+
+.tl-group-head .tl-chip:first-of-type {
+  margin-left: auto;
+}
+
+/* Цвета семей: приглушённые, различимые в обеих темах. */
+.tl-group-drums { --tl-color: #e0a44a; }
+.tl-group-bass { --tl-color: #b06ad4; }
+.tl-group-lead { --tl-color: #2fe0a0; }
+.tl-group-arp { --tl-color: #6fd6e8; }
+.tl-group-chords { --tl-color: #8fbf6f; }
+.tl-group-strings { --tl-color: #d4a06a; }
+.tl-group-brass { --tl-color: #e0c04a; }
+.tl-group-woodwinds { --tl-color: #7fd4a8; }
+.tl-group-keys { --tl-color: #7fa8e0; }
+.tl-group-choir { --tl-color: #d48fb0; }
+.tl-group-pads { --tl-color: #6a8fd4; }
+.tl-group-fx { --tl-color: #a0a0a0; }
+.tl-group-other { --tl-color: #8a8a8a; }
+
+/* --- Строка дорожки --- */
+.tl-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.tl-row {
+  display: grid;
+  grid-template-columns: minmax(72px, 130px) minmax(48px, 90px) 24px 24px minmax(60px, 1fr);
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-top: 1px solid rgb(var(--jade-rgb) / 0.06);
+  font-size: 12px;
+}
+
+.tl-row.is-muted {
+  opacity: 0.45;
+}
+
+.tl-row.is-muted .tl-name {
+  text-decoration: line-through;
+}
+
+.tl-name {
+  font-family: var(--font-mono);
+  color: var(--text);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tl-role {
+  font-size: 10px;
+  color: var(--text-dim);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tl-chip {
+  width: 22px;
+  height: 20px;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+
+.tl-chip:hover {
+  border-color: var(--tl-color, var(--jade));
+  color: var(--text);
+}
+
+.tl-chip[aria-pressed='true'] {
+  background: var(--tl-color, var(--jade));
+  border-color: var(--tl-color, var(--jade));
+  color: rgb(var(--black-rgb) / 0.85);
+}
+
+.tl-fader {
+  width: 100%;
+  min-width: 48px;
+  accent-color: var(--tl-color, var(--jade));
+  height: 14px;
+}
+
+/* --- Пустое состояние: не пустой экран, а приглашение --- */
+.tl-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+}
+
+/* Играет — строки чуть подсвечены (тот же класс, что у микшера). */
+html.playing .tl-row:not(.is-muted) .tl-name {
+  color: var(--mint);
+}
+
+@media (max-width: 860px) {
+  .tl-body {
+    max-height: none;
+  }
+
+  .tl-row {
+    grid-template-columns: minmax(64px, 1fr) 24px 24px minmax(48px, 80px);
+  }
+
+  .tl-role {
+    display: none;
+  }
+}

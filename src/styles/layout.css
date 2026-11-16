@@ -15,7 +15,9 @@ body {
 body {
   margin: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* Шапка / колонки / микшер-док / транспорт. Док на шагах 1–2 скрыт —
+     его строка схлопывается в ноль. */
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   overflow: hidden;
   font-family: var(--font-ui);
   color: var(--text);

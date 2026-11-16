@@ -4,11 +4,16 @@
 // подбирают по метрикам (GR 1–3 дБ на пиках) и на слух. Поэтому у каждого
 // пресета есть `source: 'project'` — измеренным коридором это не является.
 //
-// Правила, общие для всех пресетов:
+// Правила, общие для пресетов:
 //   - потолок лимитера −1 dBTP (приёмка по true peak, не по sample peak);
 //   - lookahead 5 мс (окно 4–16 мс по §7);
 //   - glue-компрессор мягкий: ratio ≤ 4, threshold −18…−24 дБ;
 //   - полочные фильтры не трогают середину: ±3 дБ максимум.
+//
+// ИСКЛЮЧЕНИЕ — оркестр (D-121). Замер демо-оперы (SESSION_REPORT §1.4):
+// общий порог −20 дБ жал 66-дорожечный оркестр примерно на 5 дБ — плотный
+// микс постоянно сидел выше порога. Оркестровый пресет поднят по замеру:
+// порог −7 дБ, ratio 4, makeup +1 дБ, потолок −1.2 dBTP.
 
 export const MASTER_PRESETS = {
   flat: {
@@ -135,9 +140,44 @@ export const MASTER_PRESETS = {
       eq: { lowShelfHz: 90, lowShelfDb: 1, highShelfHz: 9000, highShelfDb: 0.5 },
     },
   },
+  orchestral: {
+    id: 'orchestral',
+    label: 'Оркестр',
+    source: 'project',
+    params: {
+      ceilingDb: -1.2,
+      lookaheadMs: 5,
+      comp: { thresholdDb: -7, ratio: 4, kneeDb: 6, attackMs: 30, releaseMs: 250, makeupDb: 1 },
+      eq: { lowShelfHz: 90, lowShelfDb: 0, highShelfHz: 9000, highShelfDb: 0 },
+    },
+  },
 };
 
 /** Пресет по стилю; неизвестный стиль → нейтральный. */
 export function masterPresetFor(style) {
   return MASTER_PRESETS[style] ?? MASTER_PRESETS.flat;
+}
+
+/** Стиль спека (`lo-fi`) → идентификатор пресета (`lofi`). */
+const STYLE_ALIASES = { 'lo-fi': 'lofi', 'drum-and-bass': 'dnb' };
+
+/**
+ * Пресет мастера по коду трека.
+ *
+ * Стиль читается из первой строки компилятора (`// cinematic — 90 BPM, …`).
+ * Оркестровый пресет включается, когда стиль cinematic/orchestral и партий
+ * много (≥24): плотный оркестр нельзя жать порогом −20 дБ (D-121).
+ * Малый cinematic-состав остаётся на обычном cinematic-пресете.
+ *
+ * @param {string} code
+ * @returns {object} пресет из MASTER_PRESETS
+ */
+export function masterPresetForCode(code) {
+  const text = String(code ?? '');
+  const style = (/^[ \t]*\/\/[ \t]*([a-z-]+)/i.exec(text)?.[1] ?? '').toLowerCase();
+  const parts = (text.match(/^[ \t]*[_S]?\$[ \t]*[A-Za-z]\w*[ \t]*:/gm) ?? []).length;
+  if ((style === 'cinematic' || style === 'orchestral') && parts >= 24) {
+    return MASTER_PRESETS.orchestral;
+  }
+  return masterPresetFor(STYLE_ALIASES[style] ?? style);
 }

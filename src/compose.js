@@ -341,6 +341,13 @@ function renderSpec(event) {
 // Длина блока пропорциональна числу тактов — глаз сразу видит,
 // где трек держится, а где проносится.
 function renderTimeline(sections) {
+  // Таймлайн дорожек (src/timeline.js) показывает ту же форму в шапке.
+  // В node-тестах окна нет — событие только для браузера.
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('compose:sections', {
+      detail: sections.map((s) => ({ name: s.kind ?? s.name, bars: s.bars, harmony: s.harmony })),
+    }));
+  }
   if (!els.timeline || !sections.length) return;
   els.timeline.hidden = false;
 

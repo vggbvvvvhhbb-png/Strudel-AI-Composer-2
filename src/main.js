@@ -5,6 +5,8 @@ import './styles/compose.css';
 import './styles/animations.css';
 import './styles/steps.css';
 import './styles/agent.css';
+import './styles/timeline.css';
+import './styles/panels.css';
 import { initEditor } from './editor.js';
 import { initUI } from './ui.js';
 import { initCompose } from './compose.js';
@@ -19,10 +21,24 @@ import { codeFromHash } from './core/share.js';
 import { initDeepDive } from './deepdive/panel.js';
 import { initStudioSteps } from './studio-steps.js';
 import { initAgentPanel } from './agent-panel.js';
+import { initTimeline, syncTimeline } from './timeline.js';
+import { initLocalPanel } from './local-panel.js';
+import { initPoolPanel } from './pool-panel.js';
 
 const editor = initEditor();
 
 initUI({ editor });
+// Таймлайн дорожек — главный экран студии: группы, цвета, mute/solo, форма.
+initTimeline({
+  getCode: () => document.getElementById('code-input')?.value ?? '',
+  setCode: (code) => {
+    const el = document.getElementById('code-input');
+    if (!el) return;
+    el.value = code;
+    syncMixer(code);
+    syncTransport(code);
+  },
+});
 // Движок (725 КБ) грузится динамически: оболочка студии рисуется сразу,
 // а звуковой движок приезжает следом и к моменту, когда до него дотянется
 // пользователь, уже готов. Ошибка загрузки — в лог, а не в консоль молча.
@@ -50,10 +66,15 @@ initAgentPanel({
     el.value = code;
     syncMixer(code);
     syncTransport(code);
+    syncTimeline(code);
   },
 });
 
-// Мобильная шторка микшера
+// Локальный счёт и пул сэмплов: демон на машине владельца, свои звуки.
+initLocalPanel({ getCode: () => document.getElementById('code-input')?.value ?? '' });
+initPoolPanel();
+
+// Мобильная шторка: метрики, локальный счёт и пул сэмплов.
 document.getElementById('mixer-toggle')?.addEventListener('click', () => {
   document.querySelector('.col-right')?.classList.toggle('open');
 });
@@ -66,6 +87,7 @@ initHistory({
     el.value = applyMixerState(code, mixer);
     syncMixer(el.value);
     syncTransport(el.value);
+    syncTimeline(el.value);
   },
 });
 
@@ -75,6 +97,7 @@ if (shared) {
   const el = document.getElementById('code-input');
   el.value = shared;
   syncMixer(shared);
+  syncTimeline(shared);
   const st = document.getElementById('status');
   st.hidden = false;
   st.textContent = '🔗 Загружен трек по ссылке — нажмите ▶, чтобы играть';

@@ -4,6 +4,7 @@ import { generateCode, fixCode } from './api/client.js';
 import { staticValidate, dryValidate } from './core/validator.js';
 import { initMixer, syncMixer } from './mixer.js';
 import { initTransport, syncTransport } from './transport.js';
+import { syncTimeline } from './timeline.js';
 import { initImprove } from './improve.js';
 import { initMusicPanel, analyzeCurrent } from './music-panel.js';
 import { initIrPanel } from './ir-panel.js';
@@ -11,6 +12,15 @@ import { initCompose } from './compose.js';
 import { makeShareLink } from './core/share.js';
 import { pushHistory } from './core/storage.js';
 import { renderHistory } from './history.js';
+
+// Единая синхронизация панелей после любой смены кода: микшер, транспорт
+// и таймлайн дорожек. Быстрые пути панелей не перестраивают DOM, если
+// состав партий не менялся, — вызывать можно часто, в том числе при drag.
+function syncPanels(code) {
+  syncMixer(code);
+  syncTransport(code);
+  syncTimeline(code);
+}
 
 const $ = (id) => document.getElementById(id);
 const state = { busy: false, generating: false, abort: null };
@@ -112,6 +122,7 @@ async function runPrompt() {
     log('Проверяю и исполняю…');
     const outcome = await runValidated(codeEl.value, (status) => setStatus(status));
     codeEl.value = outcome.code;
+    syncPanels(codeEl.value);
     if (outcome.ok) {
       log('Играет ✓', 'ok');
       // Трек играет — студия переходит на шаг «Слушайте».
@@ -144,6 +155,7 @@ async function playCode() {
   try {
     const outcome = await runValidated(code, (status) => setStatus(status));
     $('code-input').value = outcome.code;
+    syncPanels(outcome.code);
     if (outcome.ok) log('Играет ✓', 'ok');
     else log(`Ошибка: ${outcome.error}`, 'error');
   } finally {
@@ -157,11 +169,11 @@ export function initUI({ editor: editorApi } = {}) {
 
   initMixer({
     getCode: () => codeEl.value,
-    setCode: (code) => { codeEl.value = code; },
+    setCode: (code) => { codeEl.value = code; syncPanels(code); },
   });
   initTransport({
     getCode: () => codeEl.value,
-    setCode: (code) => { codeEl.value = code; },
+    setCode: (code) => { codeEl.value = code; syncPanels(code); },
   });
   initImprove({
     getCode: () => codeEl.value,
@@ -172,6 +184,7 @@ export function initUI({ editor: editorApi } = {}) {
       try {
         const res = await runValidated(code, (s) => setStatus(s));
         codeEl.value = res.code;
+        syncPanels(res.code);
         if (res.ok) log('Играет ✓', 'ok');
         else log(`Ошибка: ${res.error}`, 'error');
       } finally {
@@ -181,11 +194,12 @@ export function initUI({ editor: editorApi } = {}) {
   });
   initMusicPanel({
     getCode: () => codeEl.value,
-    setCode: (code) => { codeEl.value = code; },
+    setCode: (code) => { codeEl.value = code; syncPanels(code); },
     applyCode: async (code) => {
       codeEl.value = code;
       const res = await runValidated(code, (s) => setStatus(s));
       codeEl.value = res.code;
+      syncPanels(res.code);
       if (res.ok) log('Играет ✓', 'ok');
       else log(`Ошибка: ${res.error}`, 'error');
     },
@@ -204,6 +218,7 @@ export function initUI({ editor: editorApi } = {}) {
       codeEl.value = code;
       const res = await runValidated(code, (s) => setStatus(s));
       codeEl.value = res.code;
+      syncPanels(res.code);
       if (res.ok) log('Играет ✓', 'ok');
       else log(`Ошибка: ${res.error}`, 'error');
     },
@@ -214,11 +229,12 @@ export function initUI({ editor: editorApi } = {}) {
   // что и у разбора, — код проверяется и исполняется одинаково.
   initCompose({
     getCode: () => codeEl.value,
-    setCode: (code) => { codeEl.value = code; },
+    setCode: (code) => { codeEl.value = code; syncPanels(code); },
     applyCode: async (code) => {
       codeEl.value = code;
       const res = await runValidated(code, (s) => setStatus(s));
       codeEl.value = res.code;
+      syncPanels(res.code);
       if (res.ok) log('Играет ✓', 'ok');
       else log(`Ошибка: ${res.error}`, 'error');
       await analyzeCurrent().catch(() => {});
@@ -226,13 +242,12 @@ export function initUI({ editor: editorApi } = {}) {
     log,
   });
 
-  // Ручные правки в редакторе синхронизируют микшер и транспорт.
+  // Ручные правки в редакторе синхронизируют микшер, транспорт и таймлайн.
   let syncTimer;
   codeEl.addEventListener('input', () => {
     clearTimeout(syncTimer);
     syncTimer = setTimeout(() => {
-      syncMixer(codeEl.value);
-      syncTransport(codeEl.value);
+      syncPanels(codeEl.value);
     }, 400);
   });
 
@@ -319,6 +334,7 @@ export function initUI({ editor: editorApi } = {}) {
     reset();
     $('prompt-input').value = '';
     $('code-input').value = '';
+    syncPanels('');
     $('log').replaceChildren();
     setStatus('');
     log('Сброшено: код, лог и звук');

@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { MasterChain } from '../../src/audio/dsp/master.js';
 import { LoudnessMeter } from '../../src/audio/dsp/loudness-stream.js';
 import { measureLoudness } from '../../src/audio/dsp/loudness.js';
-import { MASTER_PRESETS, masterPresetFor } from '../../src/audio/master-presets.js';
+import { MASTER_PRESETS, masterPresetFor, masterPresetForCode } from '../../src/audio/master-presets.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '../..');
@@ -438,10 +438,40 @@ describe('пресеты мастера', () => {
     expect(masterPresetFor('нетакого-стиля').id).toBe('flat');
   });
 
-  it('у всех пресетов одинаковый потолок и lookahead', () => {
+  it('у всех пресетов одинаковый lookahead; потолок −1, кроме оркестра (D-121)', () => {
     for (const preset of Object.values(MASTER_PRESETS)) {
-      expect(preset.params.ceilingDb).toBe(-1);
       expect(preset.params.lookaheadMs).toBe(5);
+      if (preset.id === 'orchestral') {
+        expect(preset.params.ceilingDb).toBe(-1.2);
+      } else {
+        expect(preset.params.ceilingDb).toBe(-1);
+      }
     }
+  });
+
+  it('оркестровый пресет не жмёт плотный микс порогом −20 (замер §1.4)', () => {
+    const preset = masterPresetFor('orchestral');
+    expect(preset.params.comp.thresholdDb).toBe(-7);
+    expect(preset.params.comp.ratio).toBe(4);
+    expect(preset.params.comp.makeupDb).toBe(1);
+    expect(preset.params.ceilingDb).toBeLessThanOrEqual(-1);
+  });
+
+  it('masterPresetForCode: опера (cinematic, ≥24 партий) → оркестровый пресет', () => {
+    const parts = Array.from({ length: 30 }, (_, i) => `$P${String(i + 1).padStart(3, '0')}: note("c3") // role=violin`).join('\n');
+    const code = `// cinematic — 90 BPM, C minor\nsetCpm(90/4)\n${parts}`;
+    expect(masterPresetForCode(code).id).toBe('orchestral');
+  });
+
+  it('masterPresetForCode: малый cinematic-состав остаётся на cinematic', () => {
+    const code = '// cinematic — 90 BPM, C minor\n$LEAD: note("c4")\n$BASS: note("c2")';
+    expect(masterPresetForCode(code).id).toBe('cinematic');
+  });
+
+  it('masterPresetForCode: стиль спека сопоставляется с пресетом, muted-партии считаются', () => {
+    expect(masterPresetForCode('// lo-fi — 80 BPM\n_$DRUMS: s("bd")').id).toBe('lofi');
+    expect(masterPresetForCode('// techno — 128 BPM\n$KICK: s("bd")').id).toBe('techno');
+    expect(masterPresetForCode('').id).toBe('flat');
+    expect(masterPresetForCode('setCpm(1)').id).toBe('flat');
   });
 });

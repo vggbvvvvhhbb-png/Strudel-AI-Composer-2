@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-11-16T17:15:29.292Z",
+  "injected": {
+    "codeChars": 41388,
+    "rows": 102,
+    "groups": 10
+  },
+  "fps": {
+    "frames": 173,
+    "wallMs": 3099,
+    "fps": 55.8,
+    "avgFrameMs": 17.9,
+    "maxFrameMs": 18.3,
+    "framesOver50ms": 0,
+    "muteToggles": 23,
+    "maxToggleMs": 9.5,
+    "rowsAfter": 102,
+    "hidden": false,
+    "viewport": "1440x900"
+  },
+  "rebuild": {
+    "rebuildIncludingDebounceMs": 607,
+    "rows": 102
+  },
+  "consoleErrors": []
+}

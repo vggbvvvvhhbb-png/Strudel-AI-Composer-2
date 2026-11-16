@@ -29,7 +29,7 @@ import { accentOf } from './accents.js';
 import { createStudioGraph } from './audio/graph.js';
 import { createEngineAdapter } from './audio/engine/adapter.js';
 import { SAMPLE_SETS } from './sample-banks.js';
-import { masterPresetFor } from './audio/master-presets.js';
+import { masterPresetFor, masterPresetForCode } from './audio/master-presets.js';
 import { renderAndMeasure, audioBufferToChannels } from './audio/render/offline.js';
 import { allSamplesReady } from './samples-ready.js';
 
@@ -219,6 +219,24 @@ export function studioGraph() {
   return graph;
 }
 
+let appliedMasterId = null;
+
+/**
+ * Мастер под стиль трека: оркестр не жмётся порогом −20 дБ (D-121).
+ * Пресет меняется только при смене стиля — лишний патч пересоздаёт
+ * компрессор и лимитер без нужды.
+ */
+function applyMasterForCode(code) {
+  if (!graph) return;
+  const preset = masterPresetForCode(code);
+  if (preset.id === appliedMasterId) return;
+  // makeupDb сбрасывается явно: worklet мержит comp-патч, и +1 дБ оркестра
+  // не должен пережить переключение на обычный пресет.
+  graph.setMasterParams({ ...preset.params, comp: { makeupDb: 0, ...preset.params.comp } });
+  appliedMasterId = preset.id;
+  console.info(`[studio] мастер-пресет: ${preset.label}`);
+}
+
 /** Адаптер движка — для позиции, темпа и офлайн-рендера. */
 export function engineAdapter() {
   return adapter;
@@ -285,6 +303,7 @@ export async function evaluateCode(code) {
   // Сэмплы нужны до первого звука: иначе ударные и пианино молчат
   // («sound bd not found») до конца загрузки манифеста.
   await waitForSamples();
+  applyMasterForCode(code);
   planCache = visualPlan(code);
   if (visualRoot) visualRoot.replaceChildren();
   drawSeq = 0;  lastError = null;

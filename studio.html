@@ -103,6 +103,37 @@
           </details>
         </section>
 
+        <!-- Помощник-агент: слева, как в IDE. План, вызовы инструментов и
+             ответ — раздельно. Доступен на всех шагах: с ним пишут трек. -->
+        <section class="panel agent-panel" aria-label="Помощник-агент">
+          <h2 class="panel-title">Помощник</h2>
+          <p class="hint agent-hint">
+            Агент сам выбирает инструменты: ищет по библиотеке, собирает спеку, компилирует
+            и правит трек. Каждый шаг виден отдельно от ответа.
+          </p>
+          <div class="agent-head">
+            <label class="visually-hidden" for="agent-mode">Режим агента</label>
+            <select id="agent-mode"></select>
+            <span id="agent-services" class="agent-services"></span>
+          </div>
+          <label class="visually-hidden" for="agent-input">Запрос агенту</label>
+          <textarea
+            id="agent-input"
+            rows="2"
+            placeholder="Например: найди в интернете, что такое phonk drift, и сделай бит в этом стиле"
+          ></textarea>
+          <div class="row">
+            <button id="agent-send" class="btn primary" type="button">Спросить</button>
+            <button id="agent-stop" class="btn ghost" type="button" hidden>Стоп</button>
+            <!-- Голосовой ввод в поле агента. Кнопка появляется только если
+                 сервер подтвердил наличие ключа распознавания. -->
+            <button id="agent-voice" class="voice-btn" type="button" hidden aria-label="Голосовой ввод агенту">🎤</button>
+          </div>
+          <div id="agent-stream" class="agent-stream" aria-live="polite"></div>
+          <div id="agent-summary" class="agent-summary"></div>
+          <div id="agent-usage" class="agent-usage"></div>
+        </section>
+
         <!-- ШАГ 3 — инженерные панели (показываются только на шаге «Правьте») -->
         <div id="step-advanced" class="step-advanced">
           <details class="panel studio-details">
@@ -144,9 +175,13 @@
         </div>
       </aside>
 
-      <!-- Центр: визуализация (главный экран шага 2) + редактор (шаг 3). -->
+      <!-- Центр: таймлайн дорожек (главный экран) + визуализация + редактор. -->
       <section class="col-center">
         <div id="status" class="status" hidden></div>
+
+        <!-- Таймлайн дорожек: группы, цвета, mute/solo, форма трека.
+             Содержимое рисует src/timeline.js; пустое состояние — с демо. -->
+        <section id="track-timeline" class="track-timeline" aria-label="Таймлайн дорожек"></section>
 
         <section id="compose-timeline" class="compose-timeline" hidden aria-label="Таймлайн секций">
           <div class="compose-timeline-head">
@@ -172,34 +207,8 @@
           <div id="strudel-container" aria-label="Визуализация партий"></div>
         </div>
 
-        <!-- ШАГ 2 — СЛУШАЙТЕ: оценка трека и понятные действия. -->
-        <section id="step-listen" class="panel studio-card" aria-label="Что получилось">
-          <h2 class="panel-title">Что получилось</h2>
-          <p class="hint studio-hint">
-            Оценка считается по объективным метрикам: темп, плотность, грув, лад, диапазон,
-            регистры.
-          </p>
-
-          <div id="music-score"></div>
-          <div id="music-criteria"></div>
-          <div id="music-issues"></div>
-          <div id="music-variants"></div>
-
-          <details class="studio-details studio-details-inline">
-            <summary>Стиль-референс <span class="studio-summary-hint">(необязательно)</span></summary>
-            <label class="field-label" for="music-style">Стиль-референс</label>
-            <select id="music-style"></select>
-          </details>
-
-          <div class="row studio-actions">
-            <button id="btn-analyze" class="btn" type="button">🎼 Разобрать трек</button>
-            <button id="btn-refine" class="btn" type="button">🛠 Исправить по замечаниям</button>
-            <button id="btn-variants" class="btn ghost" type="button">🎲 Сравнить два варианта</button>
-            <button id="btn-play-code" class="btn" type="button">▶ Играть</button>
-            <button id="btn-share" class="btn ghost" type="button">🔗 Поделиться</button>
-            <button id="btn-show-code" class="btn primary" type="button">👁 Показать код</button>
-          </div>
-        </section>
+        <!-- ШАГ 2 «Слушайте» (оценка и действия) живёт в правой колонке:
+             метрики всегда на виду, центр отдан таймлайну и партитуре. -->
 
         <section id="diff-panel" class="panel diff" hidden>
           <div class="row spread">
@@ -241,42 +250,64 @@
         </div>
       </section>
 
-      <!-- Правая колонка: микшер (показывается на шаге «Правьте») -->
+      <!-- Правая колонка: метрики трека, локальный счёт и пул сэмплов. -->
       <aside class="col-right">
-        <!-- Помощник-агент: план, вызовы инструментов и ответ — раздельно. -->
-        <section class="panel agent-panel" aria-label="Помощник-агент">
-          <h2 class="panel-title">Помощник</h2>
-          <p class="hint agent-hint">
-            Агент сам выбирает инструменты: ищет по библиотеке, собирает спеку, компилирует
-            и правит трек. Каждый шаг виден отдельно от ответа.
+        <!-- ШАГ 2 — СЛУШАЙТЕ: оценка трека и понятные действия. -->
+        <section id="step-listen" class="panel studio-card" aria-label="Что получилось">
+          <h2 class="panel-title">Что получилось</h2>
+          <p class="hint studio-hint">
+            Оценка считается по объективным метрикам: темп, плотность, грув, лад, диапазон,
+            регистры.
           </p>
-          <div class="agent-head">
-            <label class="visually-hidden" for="agent-mode">Режим агента</label>
-            <select id="agent-mode"></select>
-            <span id="agent-services" class="agent-services"></span>
+
+          <div id="music-score"></div>
+          <div id="music-criteria"></div>
+          <div id="music-issues"></div>
+          <div id="music-variants"></div>
+
+          <details class="studio-details studio-details-inline">
+            <summary>Стиль-референс <span class="studio-summary-hint">(необязательно)</span></summary>
+            <label class="field-label" for="music-style">Стиль-референс</label>
+            <select id="music-style"></select>
+          </details>
+
+          <div class="row studio-actions">
+            <button id="btn-analyze" class="btn" type="button">🎼 Разобрать трек</button>
+            <button id="btn-refine" class="btn" type="button">🛠 Исправить по замечаниям</button>
+            <button id="btn-variants" class="btn ghost" type="button">🎲 Сравнить два варианта</button>
+            <button id="btn-play-code" class="btn" type="button">▶ Играть</button>
+            <button id="btn-share" class="btn ghost" type="button">🔗 Поделиться</button>
+            <button id="btn-show-code" class="btn primary" type="button">👁 Показать код</button>
           </div>
-          <label class="visually-hidden" for="agent-input">Запрос агенту</label>
-          <textarea
-            id="agent-input"
-            rows="2"
-            placeholder="Например: найди в интернете, что такое phonk drift, и сделай бит в этом стиле"
-          ></textarea>
-          <div class="row">
-            <button id="agent-send" class="btn primary" type="button">Спросить</button>
-            <button id="agent-stop" class="btn ghost" type="button" hidden>Стоп</button>
-            <!-- Голосовой ввод в поле агента. Кнопка появляется только если
-                 сервер подтвердил наличие ключа распознавания. -->
-            <button id="agent-voice" class="voice-btn" type="button" hidden aria-label="Голосовой ввод агенту">🎤</button>
-          </div>
-          <div id="agent-stream" class="agent-stream" aria-live="polite"></div>
-          <div id="agent-summary" class="agent-summary"></div>
-          <div id="agent-usage" class="agent-usage"></div>
         </section>
 
-        <section class="panel" id="mixer-panel" aria-label="Микшер">
-          <h2 class="panel-title">Микшер</h2>
-          <div id="mixer" class="mixer"></div>
-          <p class="hint">M — заглушить партию, S — соло, ползунок — громкость. Индикатор показывает, что партия звучит сейчас.</p>
+        <!-- Локальный счёт (фаза B, D-097): демон на машине владельца.
+             Прогресс и очередь видны, результат можно прослушать. -->
+        <section class="panel" id="local-panel" aria-label="Локальный счёт">
+          <h2 class="panel-title">Локальный счёт</h2>
+          <p id="local-status" class="hint">Проверяем демон…</p>
+          <div class="row">
+            <button id="btn-local-render" class="btn primary" type="button" disabled>🖥 Считать локально</button>
+            <label class="visually-hidden" for="local-bars">Тактов для рендера</label>
+            <select id="local-bars">
+              <option value="8">8 тактов</option>
+              <option value="16" selected>16 тактов</option>
+              <option value="32">32 такта</option>
+            </select>
+          </div>
+          <div id="local-progress-wrap" hidden>
+            <div class="local-progress"><div id="local-progress-bar" class="local-progress-bar"></div></div>
+            <p id="local-stage" class="hint"></p>
+          </div>
+          <div id="local-queue" class="local-queue"></div>
+          <audio id="local-audio" controls hidden></audio>
+        </section>
+
+        <!-- Пул сэмплов (D-115): прослушать до выбора, паспорт рядом. -->
+        <section class="panel" id="pool-panel" aria-label="Пул сэмплов">
+          <h2 class="panel-title">Пул сэмплов</h2>
+          <p class="hint">Свои звуки с паспортами: прослушайте перед выбором.</p>
+          <div id="pool-list" class="pool-list"><p class="hint">Загрузка…</p></div>
         </section>
       </aside>
 
@@ -427,17 +458,24 @@
       </section>
     </main>
 
-    <!-- Нижний транспорт -->
-    <!-- На мобильном правая колонка выезжает шторкой: в ней теперь помощник
-         и микшер, поэтому кнопка называется «Помощник». -->
+    <!-- Нижний док: микшер над транспортом (шаг «Правьте»). Каналы идут
+         горизонтально с прокруткой — 100 дорожек не ломают раскладку. -->
+    <section class="panel mixer-dock" id="mixer-panel" aria-label="Микшер">
+      <h2 class="panel-title">Микшер</h2>
+      <div id="mixer" class="mixer"></div>
+      <p class="hint">M — заглушить партию, S — соло, ползунок — громкость. Индикатор показывает, что партия звучит сейчас.</p>
+    </section>
+
+    <!-- На мобильном правая колонка выезжает шторкой: в ней метрики,
+         локальный счёт и пул сэмплов. Агент и микшер доступны без шторки. -->
     <button
       id="mixer-toggle"
       class="btn mixer-toggle"
       type="button"
-      title="Помощник-агент и микшер"
-      aria-label="Показать помощника и микшер"
+      title="Метрики, локальный счёт и пул сэмплов"
+      aria-label="Показать метрики, локальный счёт и пул сэмплов"
     >
-      ☰ Помощник
+      ☰ Метрики
     </button>
     <footer class="transport" aria-label="Транспорт">
       <button id="btn-play" class="btn primary btn-play" type="button" aria-pressed="false">▶</button>

@@ -1,0 +1,150 @@
+/* ============================================================
+   Фаза F: нижний док микшера, панель локального счёта, пул сэмплов.
+   Микшер переехал из правой колонки вниз: каналы горизонтально,
+   100 дорожек не ломают раскладку.
+   ============================================================ */
+
+/* --- Микшер-док над транспортом --- */
+.mixer-dock {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  padding: var(--sp-2) var(--sp-5);
+  position: relative;
+  z-index: 19;
+}
+
+.mixer-dock .panel-title {
+  margin-bottom: var(--sp-1);
+}
+
+.mixer-dock .mixer {
+  flex-direction: row;
+  overflow-x: auto;
+  padding-bottom: var(--sp-1);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--jade-rgb) / 0.25) transparent;
+}
+
+.mixer-dock .mixer .channel {
+  flex: 0 0 180px;
+}
+
+.mixer-dock .hint {
+  margin: var(--sp-1) 0 0;
+}
+
+/* --- Локальный счёт --- */
+.local-progress {
+  height: 8px;
+  border-radius: 4px;
+  background: rgb(var(--white-rgb) / 0.07);
+  overflow: hidden;
+  margin-top: var(--sp-2);
+}
+
+.local-progress-bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--jade), var(--jade-bright));
+  transition: width 0.3s ease-out;
+}
+
+.local-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--sp-2);
+}
+
+.local-task {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 3px 8px;
+}
+
+.local-task.is-done {
+  color: var(--mint);
+  border-color: rgb(var(--jade-rgb) / 0.3);
+}
+
+.local-task.is-error {
+  color: var(--danger-text);
+}
+
+#local-audio {
+  width: 100%;
+  margin-top: var(--sp-2);
+  height: 36px;
+}
+
+/* --- Пул сэмплов --- */
+.pool-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.pool-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  padding: var(--sp-2) var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pool-item-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.pool-item-name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pool-license {
+  margin-left: auto;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--mint);
+  border: 1px solid rgb(var(--jade-rgb) / 0.3);
+  border-radius: 8px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+.pool-passport {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.pool-item audio {
+  width: 100%;
+  height: 32px;
+}
+
+@media (max-width: 860px) {
+  .mixer-dock {
+    padding: var(--sp-2) var(--sp-3);
+  }
+
+  .mixer-dock .mixer .channel {
+    flex-basis: 160px;
+  }
+}
