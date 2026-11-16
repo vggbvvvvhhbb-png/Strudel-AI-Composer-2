@@ -537,7 +537,7 @@ node scripts/render-wav.mjs code.js --out twin.wav --metrics twin.json
 - Vitest для тестов
 
 ## Жёсткие инварианты (нарушение = откат)
-1. Вся тестовая база зелёная на каждом чекпоинте (61 файл, ~966 тестов)
+1. Вся тестовая база зелёная на каждом чекпоинте (81 файл, 1209 тестов — измерено 16.11.2026)
 2. Компилятор и IR расширять, не переписывать с нуля
 3. Ключи — только env, check:secrets зелёный
 4. Лицензии: каждый новый сэмпл/шрифт/модель — запись в docs/LICENSES.md
@@ -560,13 +560,14 @@ node scripts/render-wav.mjs code.js --out twin.wav --metrics twin.json
 conventional commits: chore: / fix: / feat: / test: / docs:
 
 ## Архитектурные решения
-- Источник истины — IR (D-098), TrackSpec остаётся адаптером
+- Источник истины — TrackSpec + идентичность партии (D-100, D-105, D-106); IR живёт параллельным миром
 - Local-first: тяжёлое (рендер, сепарация) считается на машине владельца (D-097)
-- Потолок частей — 12 ролей, цель — 100 дорожек через новую схему идентичности
+- Потолок ролей снят: роль — атрибут партии, идентичность — ключ (`P001`, `VIOLIN_1`); цель — 100 дорожек
 
 ## Ключевые файлы
 - server/music/compiler/index.js — компилятор спека → Strudel
 - src/ir/compiler.js — IR-компилятор (мотивы, sidechain, трансформы)
 - server/deepdive/refine/loop.js — рефайн-цикл
-- src/schemas/track-spec.schema.js — схема спека (12 ролей)
-- docs/DECISIONS.md — журнал решений (до D-096, новое с D-097)
+- server/music/compose/refine.js — рефайн-цикл поверх compose (D-111)
+- src/schemas/track-spec.schema.js — схема спека (идентичность партии)
+- docs/DECISIONS.md — журнал решений (до D-110, новое с D-111)
