@@ -244,3 +244,21 @@ OGG-пресеты в git (`data/timbre/audio/`, 41 файл, 6.2 МБ — D-130
 механика TASL — `attributionLinesForCode` (D-126), подключена к экспорту
 и шерингу. Organa нумерованные файлы без MappingChart пропущены осознанно:
 корни не угадываются.
+
+## 10. Инфраструктура базы знаний «Музыкальный интеллект» (D-134, 18.11.2026)
+
+| Компонент | Версия | Лицензия | Ссылка (первоисточник) | Проверено | Вердикт |
+|---|---|---|---|---|---|
+| **nomic-embed-text** (Nomic AI, через Ollama) | v1.5, 137M параметров, F16, 768 измерений | **Apache-2.0** (веса и код; карточка HF `license: apache-2.0`, лицензия в `ollama show` — Apache License 2.0). Обучающий корпус опубликован полностью (`contrastors`) | [карточка HF](https://huggingface.co/nomic-ai/nomic-embed-text-v1.5) · [Ollama library](https://ollama.com/library/nomic-embed-text) | 18.11.2026 | `разрешено по умолчанию` |
+| **pg** (node-postgres) | 8.23.1 | **MIT** (`node_modules/pg/LICENSE`, Brian Carlson) | [LICENSE](https://github.com/brianc/node-postgres/blob/master/LICENSE) | 18.11.2026 | `разрешено по умолчанию`; dev-зависимость (миграции/загрузчик), в клиентский бандл не попадает |
+| **Supabase** (проект владельца `igxqmszaqnhqtfgdvpdh`, eu-west-1) | SaaS | Сервис, не распространяемый артефакт; платформа с открытым кодом (Apache-2.0), данные проекта — владельца | [supabase.com](https://supabase.com) | 18.11.2026 | инфраструктура; ключи только в `.env` |
+| **Ollama** (локальный рантайм) | 0.40.14 | **MIT** | [LICENSE](https://github.com/ollama/ollama/blob/main/LICENSE) | 18.11.2026 | `разрешено по умолчанию`; уже стоял на машине владельца |
+
+**Замечание по nomic-embed-text.** Модель требует task-префиксов:
+документы эмбеддятся как `search_document: <текст>`, запросы как
+`search_query: <текст>` (карточка HF, раздел Task instruction prefixes).
+Клиент эмбеддингов обязан их ставить — иначе качество поиска деградирует.
+Сниппеты золотого датасета пишутся проектом самостоятельно (source: own)
+или берутся из уже верифицированной библиотеки `server/music/knowledge/`
+(source: theory/own, `check:knowledge`); чужой код без совместимой
+лицензии в базу не попадает.

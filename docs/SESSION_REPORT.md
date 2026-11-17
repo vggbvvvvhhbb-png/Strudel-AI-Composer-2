@@ -1986,3 +1986,108 @@ OfflineAudioContext (пул `Ei`/`Qu` без проверки контекста
   (≥60 пар / ≥50 промтов) не закрыты — нужны люди; тембровые метки
   собираются отдельно и в эти счётчики не входят.
 - Docker-демон локально не запущен — сборка образа проверяется только CI.
+
+## 26. Сессия «Музыкальный интеллект» (18.11.2026): RAG-база знаний, валидатор, петля self-correction
+
+*Цель: дать ассистенту «музыкальное образование» — жёсткий системный промпт
+с теорией, RAG на Supabase + pgvector, золотой датасет паттернов Strudel,
+валидатор и петля self-correction, интеграция в studio. Владелец выдал
+Supabase-проект (ключи — только в `.env`, в репо не попали).*
+
+### 26.1. Фаза A — разведка и baseline (ничего не менялось)
+
+**Состояние репозитория (проверено командами):**
+- Ветка `feat/timbre-palette`, дерево чистое, HEAD `bea5c2a` — совпадает
+  с промтом сессии (коммиты `4f5306f`, `49e77b4`, `0c12b21`, `bea5c2a`).
+- `npm test` → **1465 тестов / 100 файлов**, зелёные, 13.6 с — совпадает с §25.
+- `npm run gate` → **14/14**, 65.3 с (lint 35.1 с, test 14.6 с, gate:a 15/15).
+- Побочные изменения ворот (pool.json, evidence/*.json) восстановлены
+  `git checkout` — в коммиты не попали.
+- Живой стенд: `/api/health` 200 (version 0.2.0, providers: openai),
+  `/api/timbre/catalog` 200 (10 пресетов / 41 ассет approved), `/studio.html`
+  200. Точный коммит образа стенда из среды не читается — «нет данных»;
+  по HANDOFF стенд развёрнут на D-129 (17.11 13:38 UTC), этап 4
+  (D-131/D-132) — только локально, push/merge PR #3 ждёт владельца.
+
+**Карта кода (проверено чтением):**
+- Каталог Timbre Palette: `server/music/data/timbre/{presets,assets,sources,zones,strudel-map}.json`.
+  Реальные id (все CC0-1.0 через ассеты VSCO2-CE/VCSL, rights approved):
+  `tp-upright-piano-v1`, `tp-upright-soft-v1`, `tp-solo-violin-v1`,
+  `tp-violin-section-v1`, `tp-viola-section-v1`, `tp-cello-section-v1`,
+  `tp-harp-v1`, `tp-contrabass-sus-v1`, `tp-contrabass-pizz-v1`,
+  `tp-solo-violin-pizz-v1`. Лицензия живёт на ассете, не на пресете.
+  Резолвер: `server/samples/timbre-resolver.js` (детерминированный каскад,
+  `resolveTimbre()` :67, профиль warm → центроид 1200).
+- LLM: `server/llm/router.js` (цепочка openai→groq→ollama→anthropic,
+  `completeChat` с json_schema, function-calling), шлюз владельца relay.fast
+  (D-120). **Embeddings в роутере нет** — grep пуст.
+- Промпты: `server/prompts/{system,critic,fix,improve}.md`, загрузка
+  `server/prompts.js`. Агент: `server/agent/{loop,prompts,tools}.js`
+  (15 инструментов, SSE).
+- Compose: `server/music/compose/pipeline.js` — LLM пишет спеку TrackSpec;
+  **петля self-correction на уровне спеки уже есть** (`buildTrack` :469,
+  повторный вызов с ошибками :530–557). Фаза F строит валидатор уровня
+  КОДА и переиспользует этот паттерн, не пишет второй движок.
+- Валидация на настоящем Strudel в Node: `server/music/strudel-runtime.mjs`
+  (UMD-бандл @strudel/web 1.3.0 через `new Function`, `runStrudel` →
+  `queryArc` :144). Линт: `server/skills/lint.js` (`lintExample` :302).
+- «Минимум 16 тактов»: `server/music/spec/check.js:4` `MIN_BARS = 16`
+  (MAX_BARS = 96) — относится к компиляции TrackSpec, не к одиночным
+  сниппетам знаний (те валидируются parse + queryArc + lint).
+- База знаний уже есть и верифицирована: `server/music/knowledge/`
+  (progressions ~500 стр., forms, roles, descriptor, automation,
+  transitions; `check:knowledge` гоняет паттерны через настоящий Strudel).
+- Supabase/pgvector/embeddings в коде отсутствовали (greenfield);
+  прежнее решение «Supabase не нужен для 20 пресетов» (DECISIONS :3525)
+  относилось к каталогу тембров и не пересматривается — база знаний
+  паттернов новый объём.
+- Зонд-образец: `scripts/probe-timbre-ui.mjs` (playwright-core, сервер с
+  `MOCK_LLM=1` и `STRUDEL_DATA_DIR` во временном каталоге).
+
+**Supabase (подключение проверено):**
+- Проект `igxqmszaqnhqtfgdvpdh`, REST доступен, anon-ключ валиден
+  (PGRST205 на несуществующую таблицу — ключ принят).
+- Прямой хост `db.<ref>.supabase.co` не резолвится (новые проекты —
+  только pooler). Регион найден перебором pooler-хостов: **eu-west-1**,
+  подключение успешно. Строка `WA1jJjAcaJ61fAht` из переписки —
+  подтверждённый пароль БД (допущение проверено подключением).
+- БД пустая; расширения: plpgsql, pg_stat_statements, uuid-ossp,
+  pgcrypto, supabase_vault. **pgvector ещё не установлен** — ставится
+  миграцией фазы D.
+- SSL pooler-а — самоподписанный CA Supabase; подключение с
+  `rejectUnauthorized: false` (стандартная практика для pooler без
+  установленного CA; зафиксировано в решении).
+- Для миграций добавлен dev-зависимость `pg` (MIT). Ключи и параметры —
+  только в `.env` (gitignore покрыт).
+
+**Embeddings (замер доступности):**
+- relay.fast: `/embeddings` → 404 model_not_found для
+  text-embedding-3-small и ada-002; в `/models` (80 моделей)
+  embed-моделей нет.
+- Выбран локальный путь (local-first, D-097): Ollama 0.40.14 на машине
+  владельца, `nomic-embed-text` (Apache-2.0, 768 измерений). Сервер поднят
+  headless (`ollama serve`; GUI-запуск падает на известном дефекте иконки
+  Windows). **Замер:** первый вызов 1887 мс (прогрев модели), батч из 3
+  текстов — 57 мс, размерность 768 подтверждена. Карточка модели требует
+  префиксов `search_document:`/`search_query:` — учтено в D-134.
+  Решение зафиксировано: **D-134**, лицензии — `docs/LICENSES.md` §10.
+
+**Расхождения промта сессии с реальностью:**
+1. Числа baseline совпали полностью (1465/100, 14/14); время ворот
+   65.3 с против 64.8 с в промте — шум машины, не регресс.
+2. «superdough 1.3.0» — это бандл внутри `@strudel/web` 1.3.0
+   (прямая зависимость), отдельного пакета superdough в package.json нет.
+3. Вымышленные id пресетов из черновиков (`cc0_rhodes_warm`,
+   `cc0_kit_lofi`) в каталоге отсутствуют — подтверждено; в датасет
+   пойдут только 10 реальных `tp-*`.
+4. Петля self-correction уже существует на уровне спеки — фаза F
+   расширяет её на уровень кода, а не строит с нуля.
+
+**Допущения (безопасные, зафиксированы):**
+- Пароль БД — строка из переписки (проверено подключением).
+- Pooler SSL без проверки CA (самоподписанный CA Supabase).
+- `pg` — dev-зависимость только для миграций/загрузчика, в прод-бандл
+  не попадает.
+- Эмбеддинги — nomic-embed-text 768 локально; если модель не заведётся,
+  честное «нет данных» и вопрос владельцу о провайдере, не подмена
+  детерминированным хешем за «семантику».

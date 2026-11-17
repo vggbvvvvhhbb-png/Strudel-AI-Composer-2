@@ -70,6 +70,7 @@
     "concurrently": "^9.2.5",
     "esbuild": "0.21.5",
     "ffmpeg-static": "5.2.0",
+    "pg": "^8.23.1",
     "vite": "^5.4.0",
     "vitest": "^2.1.9"
   }
