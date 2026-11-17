@@ -93,6 +93,33 @@ describe('образ приложения', () => {
     expect(DOCKERFILE).toMatch(/^COPY\s+local\s+\.\/local/m);
   });
 
+  it('аудио каталога Timbre Palette попадает в образ', () => {
+    // Дефект этапа 2: каталог пресетов вне git, а Dockerfile копировал
+    // только server/src/scripts/skills/local. На сервере /api/timbre/presets
+    // отдавал 10 пресетов, но same-origin раздача звука (server/routes/samples.js)
+    // искала файлы в <root>/data/timbre/audio/<alias>/<file> и не находила
+    // их: пресет был, звука не было. Каталог копируется явной строкой COPY.
+    expect(DOCKERFILE).toMatch(/^COPY\s+data\/timbre\/audio\s+\.\/data\/timbre\/audio/m);
+  });
+
+  it('аудио каталога Timbre Palette не исключён из контекста сборки', () => {
+    // Обратная сторона: если data/timbre/audio попадёт в .dockerignore,
+    // COPY выше отдаст пустоту — и баг вернётся молча, уже на сервере.
+    // Исключать можно только содержимое каталога (originals), но не его
+    // самого и не его предков — иначе в контексте не останется файлов.
+    const ignored = ignoredDirs();
+    const forbidden = ['data', 'data/timbre', 'data/timbre/audio'];
+    expect(forbidden.filter((dir) => ignored.has(dir))).toEqual([]);
+  });
+
+  it('банк-исходник Timbre Palette не тащится в образ', () => {
+    // data/timbre/audio/originals — оригиналы WAV (74.7 МБ), импортный слой.
+    // В рантайме сервер читает только OGG-пресеты, поэтому исходники
+    // исключаются из контекста: образ не растёт на 75 МБ зря.
+    const ignored = ignoredDirs();
+    expect(ignored.has('data/timbre/audio/originals')).toBe(true);
+  });
+
   it('CI поднимает образ с HOST=0.0.0.0 — иначе порт извне не достать', () => {
     // Дефект, который держал CI красным много прогонов подряд: сервер
     // по умолчанию слушает 127.0.0.1 (server/config.js), docker-compose

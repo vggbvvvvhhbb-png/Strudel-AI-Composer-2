@@ -22,6 +22,7 @@ sudo rsync -a --delete \
   --exclude 'node_modules' \
   --exclude '.env' \
   --exclude '.env.example' \
+  --exclude 'data/timbre/audio/originals' \
   ./ "${APP_DIR}/"
 
 # .env на сервере создаётся один раз и дальше не перетирается деплоем.

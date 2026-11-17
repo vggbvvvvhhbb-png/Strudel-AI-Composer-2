@@ -17,6 +17,10 @@ tests
 .env.*
 !.env.example
 
+# Банк-исходник Timbre Palette (оригиналы WAV, 74.7 МБ) — импортный слой:
+# в рантайме сервер читает только OGG-пресеты из data/timbre/audio/<alias>/.
+data/timbre/audio/originals
+
 # Служебное.
 server.log
 server.log.err
