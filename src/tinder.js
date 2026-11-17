@@ -23,8 +23,11 @@ import { measureTruePeak } from './audio/dsp/truepeak.js';
 const els = {
   start: document.getElementById('btn-start'),
   replay: document.getElementById('btn-replay'),
+  skip: document.getElementById('btn-skip'),
+  mode: document.getElementById('pair-mode'),
   status: document.getElementById('status'),
   prompt: document.getElementById('prompt'),
+  context: document.getElementById('pair-context'),
   progress: document.getElementById('progress'),
   log: document.getElementById('log'),
 };
@@ -59,13 +62,23 @@ let coverage = { uniquePrompts: 0, promptsNeeded: 50 };
 // не будет принята как человеческая — сервер проверяет, что пара была
 // показана именно этой сессии (server/preference/session.js).
 let sessionId = null;
+// Тип очереди (D-132): 'track' — композиция, 'timbre' — одна и та же
+// партия с двумя instrumentId. Тембровые метки не закрывают промты
+// корпуса: их прогресс считается отдельно.
+let mode = 'track';
+let started = false;
+let timbreJudged = 0;
+
+const FAMILY_LABELS = { keys: 'клавишные', strings: 'струнные', bass: 'бас' };
 
 /**
  * Строка прогресса: сколько пар пройдено и сколько разных промтов закрыто.
  */
 function updateProgress() {
-  els.progress.textContent = `${index} / ${queue.length}`
-    + ` · промтов ${coverage.uniquePrompts}/${coverage.promptsNeeded}`;
+  els.progress.textContent = mode === 'timbre'
+    ? `${index} / ${queue.length} · тембров ${timbreJudged}`
+    : `${index} / ${queue.length}`
+      + ` · промтов ${coverage.uniquePrompts}/${coverage.promptsNeeded}`;
 }
 
 /**
@@ -80,13 +93,14 @@ async function refreshCoverage() {
   try {
     const response = await fetch('/api/preference/stats');
     const data = await response.json();
+    if (Number.isFinite(data?.timbreJudged)) timbreJudged = data.timbreJudged;
     if (Number.isFinite(data?.uniquePrompts)) {
       coverage = {
         uniquePrompts: data.uniquePrompts,
         promptsNeeded: data.promptsNeeded ?? coverage.promptsNeeded,
       };
-      updateProgress();
     }
+    updateProgress();
   } catch {
     /* прогресс не критичен — не мешаем суждению */
   }
@@ -256,11 +270,22 @@ async function showCurrent() {
     say('Очередь закончилась. Спасибо — метки сохранены.');
     updateProgress();
     els.replay.disabled = true;
+    els.skip.disabled = true;
     return;
   }
   const pair = queue[index];
   current = pair;
   els.prompt.textContent = pair.prompt;
+  // Тембровая пара (D-132): контекст партии виден, имена пресетов скрыты —
+  // стороны переставлены, оценивается звук, а не название инструмента.
+  if (pair.type === 'timbre') {
+    els.context.hidden = false;
+    els.context.textContent = `Партия ${pair.role} · ${FAMILY_LABELS[pair.family] ?? pair.family} · стиль ${pair.style}. `
+      + 'Музыкальная партия одна и та же — меняется только инструмент.';
+  } else {
+    els.context.hidden = true;
+    els.context.textContent = '';
+  }
   updateProgress();
   say('Готовим пару: рендерим оба варианта…');
 
@@ -280,11 +305,12 @@ async function showCurrent() {
 
     play(a.buffer, gains.a, current.aOnLeft ? -1 : 1);
     els.replay.disabled = false;
+    els.skip.disabled = false;
     const degradedNote = samplesOk
       ? ''
       : ' ВНИМАНИЕ: сэмплы не загрузились — треки неполные, такая метка не попадёт в обучение.';
     say(`Слушайте. Громкость выровнена (цель ${gains.target.toFixed(1)} LUFS). `
-      + 'Клавиши: ← лучше A, → лучше B, ↓ ничья, Space — ещё раз.' + degradedNote);
+      + 'Клавиши: ← лучше A, → лучше B, ↓ ничья, ↑ ни один, Space — ещё раз.' + degradedNote);
   } catch (err) {
     say(`Не удалось подготовить пару: ${err?.message || err}`);
   }
@@ -292,7 +318,7 @@ async function showCurrent() {
 
 /**
  * Запись суждения.
- * @param {'A'|'B'|'tie'} winner
+ * @param {'A'|'B'|'tie'|'skip'} winner
  */
 async function judge(winner) {
   if (!current) return;
@@ -313,6 +339,8 @@ async function judge(winner) {
     channel: 'tinder',
     // Сессия рецензента (выдана сервером вместе с очередью).
     sessionId,
+    // Тип пары (D-132): тембровые метки не входят в гейт композиции.
+    ...(pair.type === 'timbre' ? { pairType: 'timbre' } : {}),
     // Аудио-признаки обеих сторон: без них метку нельзя превратить в
     // обучающий пример (см. server/preference/ledger.js).
     audio: current.audio ? { a: current.audio.a, b: current.audio.b } : undefined,
@@ -340,7 +368,8 @@ async function judge(winner) {
     return;
   }
   const item = document.createElement('li');
-  item.textContent = `${pair.prompt} → ${winner === 'tie' ? 'ничья' : winner}`;
+  const verdict = winner === 'tie' ? 'ничья' : winner === 'skip' ? 'ни один' : winner;
+  item.textContent = `${pair.prompt} → ${verdict}`;
   els.log.prepend(item);
   index += 1;
   current = null;
@@ -350,9 +379,9 @@ async function judge(winner) {
   await showCurrent();
 }
 
-/** Загрузка очереди. */
+/** Загрузка очереди выбранного типа (треки или тембры). */
 async function loadQueue() {
-  const response = await fetch(`/api/preference/queue?limit=${QUEUE_SIZE}`);
+  const response = await fetch(`/api/preference/queue?limit=${QUEUE_SIZE}&type=${mode}`);
   const data = await response.json();
   if (!data.ok) throw new Error(data.error || 'очередь недоступна');
   queue = data.pairs ?? [];
@@ -363,11 +392,13 @@ async function loadQueue() {
       uniquePrompts: data.coverage.uniquePrompts ?? coverage.uniquePrompts,
       promptsNeeded: data.coverage.promptsNeeded ?? coverage.promptsNeeded,
     };
+    if (Number.isFinite(data.coverage.timbreJudged)) timbreJudged = data.coverage.timbreJudged;
   }
 }
 
 els.start.addEventListener('click', async () => {
   els.start.disabled = true;
+  started = true;
   say('Готовим студию…');
   try {
     const { unlockAudio, initEngine, ensureSamples } = await getEngine();
@@ -390,8 +421,38 @@ els.start.addEventListener('click', async () => {
   } catch (err) {
     say(`Не удалось начать: ${err?.message || err}`);
     els.start.disabled = false;
+    started = false;
   }
 });
+
+// Смена типа очереди: тембры — одна и та же партия с двумя instrumentId
+// (D-132). Сессия и очередь запрашиваются заново: старые pairId в новой
+// сессии не обслуживались, и метка по ним не прошла бы проверку сервера.
+els.mode?.addEventListener('change', async () => {
+  mode = els.mode.value === 'timbre' ? 'timbre' : 'track';
+  stopPlayback();
+  queue = [];
+  index = 0;
+  current = null;
+  els.replay.disabled = true;
+  els.skip.disabled = true;
+  updateProgress();
+  if (!started) {
+    say(mode === 'timbre'
+      ? 'Тембры: одна и та же партия, два инструмента. Нажмите «Начать».'
+      : 'Нажмите «Начать» — браузер спросит разрешение на звук.');
+    return;
+  }
+  say('Загружаем очередь…');
+  try {
+    await loadQueue();
+    await showCurrent();
+  } catch (err) {
+    say(`Очередь не загрузилась: ${err?.message || err}`);
+  }
+});
+
+els.skip.addEventListener('click', () => judge('skip'));
 
 els.replay.addEventListener('click', () => {
   if (!current?.buffers) return;
@@ -409,6 +470,9 @@ document.addEventListener('keydown', (event) => {
   } else if (event.key === 'ArrowDown') {
     event.preventDefault();
     judge('tie');
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    judge('skip');
   } else if (event.key === ' ') {
     event.preventDefault();
     els.replay.click();

@@ -32,6 +32,7 @@ import {
   readLabels,
   promptPool,
   labelCoverage,
+  pairTypeOf,
   REQUIRED_UNIQUE_PROMPTS,
 } from '../server/preference/ledger.js';
 
@@ -282,9 +283,19 @@ check(
 
 const pairs = readPairs();
 const labels = readLabels();
+const pairsById = new Map(pairs.map((pair) => [pair.pairId, pair]));
+// Человеческий гейт композиции считает только трековые пары: тембровые
+// суждения (D-132) — о звуке, не о композиции, и засчитывать их в
+// ≥60 пар / ≥100 суждений было бы подменой измерения.
 const decided = labels.filter(
   (label) => (label.winner === 'A' || label.winner === 'B')
-    && label.source === 'explicit',
+    && label.source === 'explicit'
+    && pairTypeOf(label, pairsById) !== 'timbre',
+).length;
+const timbreDecided = labels.filter(
+  (label) => (label.winner === 'A' || label.winner === 'B')
+    && label.source === 'explicit'
+    && pairTypeOf(label, pairsById) === 'timbre',
 ).length;
 
 // --- 8. очередь пар ---
@@ -329,6 +340,8 @@ const report = {
     required: 100,
     uniquePrompts: promptCoverage.uniquePrompts,
     requiredPrompts: REQUIRED_UNIQUE_PROMPTS,
+    // Тембровые суждения (D-132) — отдельный счётчик, в гейт не входят.
+    timbreDecided,
     note: 'Метки ставит человек; тест их не заменяет.',
   },
   tasteAdmission: {
@@ -350,6 +363,7 @@ console.log('');
 console.log(`механика: ${report.machinery.pass ? 'зелёная' : 'КРАСНАЯ'} (${checks.length} проверок)`);
 console.log(`живых пар: ${decided} (для допуска модели нужно 60, для приёмки проекта — 100)`);
 console.log(`разных промтов закрыто: ${promptCoverage.uniquePrompts} (для приёмки нужно ${REQUIRED_UNIQUE_PROMPTS})`);
+console.log(`тембровых суждений: ${timbreDecided} (отдельный счётчик, в гейт композиции не входят)`);
 console.log('Записано: docs/evidence/taste/gate.json');
 
 if (!report.machinery.pass) process.exit(1);

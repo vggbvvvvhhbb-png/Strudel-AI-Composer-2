@@ -47,7 +47,7 @@ function presetCoverage(presetId, catalog) {
 }
 
 /** Все ассеты пресета approved? (релизный слой, fail-closed) */
-function presetApproved(presetId, catalog) {
+export function presetApproved(presetId, catalog) {
   const assetIds = catalog.zones
     .filter((zone) => zone.instrument_id === presetId)
     .map((zone) => zone.asset_id);

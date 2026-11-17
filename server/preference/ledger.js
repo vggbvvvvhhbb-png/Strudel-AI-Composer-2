@@ -109,6 +109,20 @@ export function promptPool() {
 }
 
 /**
+ * Тип пары: 'track' (композиция, IR) или 'timbre' (тембр, D-132).
+ * Смотрится в реестре пар; запасной вариант — поле метки. Старые пары
+ * и метки без типа — трековые (обратная совместимость).
+ *
+ * @param {object} record метка
+ * @param {Map<string,object>} [pairsById]
+ * @returns {'track'|'timbre'}
+ */
+export function pairTypeOf(record, pairsById = new Map(readPairs().map((pair) => [pair.pairId, pair]))) {
+  const type = pairsById.get(record.pairId)?.type ?? record.pairType;
+  return type === 'timbre' ? 'timbre' : 'track';
+}
+
+/**
  * Смещение очереди: сколько пар рецензент уже закрыл.
  *
  * Зачем: очередь всегда начиналась с нуля, и каждый сеанс предлагал одни и
@@ -118,15 +132,20 @@ export function promptPool() {
  * индексу оценённой пары, поэтому непройденные пары возвращаются, а
  * пройденные не повторяются.
  *
+ * Тип очереди разделяет счётчики: тембровые пары (D-132) живут в своём
+ * индексном пространстве и не двигают смещение трековой очереди.
+ *
+ * @param {'track'|'timbre'} [type]
  * @returns {number}
  */
-export function nextQueueOffset() {
+export function nextQueueOffset(type = 'track') {
   const pairs = new Map(readPairs().map((pair) => [pair.pairId, pair]));
   let max = -1;
   for (const record of readLabels()) {
     const winner = record.winner;
     // Ничья — тоже суждение (промт закрыт), «пропуск» — нет.
     if (winner !== 'A' && winner !== 'B' && winner !== 'tie') continue;
+    if (pairTypeOf(record, pairs) !== type) continue;
     const index = pairs.get(record.pairId)?.index;
     if (Number.isInteger(index) && index > max) max = index;
   }
@@ -140,15 +159,24 @@ export function nextQueueOffset() {
  * оценено», а «сколько разных промтов услышано». Считается по реестру пар
  * (там промт надёжнее, чем в самой метке), с запасным вариантом из метки.
  *
- * @returns {{judgedPairs:number, uniquePrompts:number, promptsNeeded:number}}
+ * Тембровые пары (D-132) в покрытие НЕ входят: их промты — не промты
+ * корпуса Baseline-0, и засчитывать их в приёмку ≥50 промтов было бы
+ * подменой измерения. Они считаются отдельно (timbreJudged).
+ *
+ * @returns {{judgedPairs:number, uniquePrompts:number, promptsNeeded:number, timbreJudged:number}}
  */
 export function labelCoverage() {
   const pairs = new Map(readPairs().map((pair) => [pair.pairId, pair]));
   const prompts = new Set();
   const judged = new Set();
+  const timbreJudged = new Set();
   for (const record of readLabels()) {
     const winner = record.winner;
     if (winner !== 'A' && winner !== 'B' && winner !== 'tie') continue;
+    if (pairTypeOf(record, pairs) === 'timbre') {
+      timbreJudged.add(record.pairId);
+      continue;
+    }
     judged.add(record.pairId);
     const prompt = pairs.get(record.pairId)?.prompt ?? record.prompt;
     if (prompt) prompts.add(prompt);
@@ -157,6 +185,7 @@ export function labelCoverage() {
     judgedPairs: judged.size,
     uniquePrompts: prompts.size,
     promptsNeeded: REQUIRED_UNIQUE_PROMPTS,
+    timbreJudged: timbreJudged.size,
   };
 }
 
