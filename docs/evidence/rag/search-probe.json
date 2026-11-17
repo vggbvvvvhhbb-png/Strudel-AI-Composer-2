@@ -1,0 +1,250 @@
+{
+  "date": "2026-11-17T23:03:41.734Z",
+  "ollamaAvailable": true,
+  "queries": [
+    {
+      "query": "тёплые джазовые аккорды пианино для lofi",
+      "filters": {
+        "genre": [
+          "lofi"
+        ],
+        "roles": [
+          "chords"
+        ]
+      },
+      "semantic": true,
+      "local": {
+        "stage": "tonic",
+        "degraded": true,
+        "reason": "фильтры ослаблены до стадии «tonic» (мало точных совпадений)",
+        "top": [
+          {
+            "id": "kb-lofi-am-warm-chords",
+            "score": 0.56
+          },
+          {
+            "id": "kb-lofi-eb-dorian-soul-vamp",
+            "score": 0.2
+          },
+          {
+            "id": "kb-funk-g-dorian-clav-stabs",
+            "score": 0.1
+          }
+        ]
+      },
+      "supabase": {
+        "stage": "tonic",
+        "degraded": true,
+        "reason": "фильтры ослаблены до стадии «tonic» (мало точных совпадений)",
+        "top": [
+          {
+            "id": "kb-lofi-am-warm-chords",
+            "score": 0.8321
+          },
+          {
+            "id": "kb-funk-g-dorian-clav-stabs",
+            "score": 0.7158
+          },
+          {
+            "id": "kb-house-gm-deep-chords",
+            "score": 0.6855
+          }
+        ]
+      }
+    },
+    {
+      "query": "кислотный бас для техно",
+      "filters": {
+        "genre": [
+          "techno"
+        ],
+        "roles": [
+          "bass"
+        ]
+      },
+      "semantic": true,
+      "local": {
+        "stage": "tonic",
+        "degraded": true,
+        "reason": "фильтры ослаблены до стадии «tonic» (мало точных совпадений)",
+        "top": [
+          {
+            "id": "kb-techno-fm-acid-bass",
+            "score": 0.5667
+          },
+          {
+            "id": "kb-dnb-dm-reese-bass",
+            "score": 0.2
+          },
+          {
+            "id": "kb-funk-g-dorian-bassline",
+            "score": 0.2
+          }
+        ]
+      },
+      "supabase": {
+        "stage": "tonic",
+        "degraded": true,
+        "reason": "фильтры ослаблены до стадии «tonic» (мало точных совпадений)",
+        "top": [
+          {
+            "id": "kb-techno-fm-acid-bass",
+            "score": 0.7819
+          },
+          {
+            "id": "kb-jazz-bb-major-walking-bass",
+            "score": 0.738
+          },
+          {
+            "id": "kb-funk-g-dorian-bassline",
+            "score": 0.7315
+          }
+        ]
+      }
+    },
+    {
+      "query": "эпические струны для кино",
+      "filters": {
+        "genre": [
+          "cinematic"
+        ]
+      },
+      "semantic": true,
+      "local": {
+        "stage": "exact",
+        "degraded": false,
+        "reason": null,
+        "top": [
+          {
+            "id": "kb-cinematic-em-strings-epic",
+            "score": 0.4
+          },
+          {
+            "id": "kb-ambient-c-lydian-shimmer",
+            "score": 0
+          },
+          {
+            "id": "kb-cinematic-em-pizz-ostinato",
+            "score": 0
+          }
+        ]
+      },
+      "supabase": {
+        "stage": "exact",
+        "degraded": false,
+        "reason": null,
+        "top": [
+          {
+            "id": "kb-cinematic-em-strings-epic",
+            "score": 0.7686
+          },
+          {
+            "id": "kb-orchestral-gm-pizz-bass-pulse",
+            "score": 0.6946
+          },
+          {
+            "id": "kb-orchestral-dm-viola-inner-voice",
+            "score": 0.6945
+          }
+        ]
+      }
+    },
+    {
+      "query": "трэповые хэты с роллами",
+      "filters": {
+        "genre": [
+          "trap"
+        ],
+        "roles": [
+          "hats"
+        ]
+      },
+      "semantic": true,
+      "local": {
+        "stage": "tonic",
+        "degraded": true,
+        "reason": "фильтры ослаблены до стадии «tonic» (мало точных совпадений)",
+        "top": [
+          {
+            "id": "kb-trap-am-hat-rolls",
+            "score": 0.3333
+          },
+          {
+            "id": "kb-dnb-dm-breakbeat",
+            "score": 0.1667
+          },
+          {
+            "id": "kb-house-c-major-fourfloor",
+            "score": 0.1667
+          }
+        ]
+      },
+      "supabase": {
+        "stage": "tonic",
+        "degraded": true,
+        "reason": "фильтры ослаблены до стадии «tonic» (мало точных совпадений)",
+        "top": [
+          {
+            "id": "kb-trap-am-hat-rolls",
+            "score": 0.8579
+          },
+          {
+            "id": "kb-techno-fm-minimal-drums",
+            "score": 0.7179
+          },
+          {
+            "id": "kb-house-c-major-fourfloor",
+            "score": 0.6776
+          }
+        ]
+      }
+    },
+    {
+      "query": "светлый эмбиент пэд",
+      "filters": {
+        "roles": [
+          "pad"
+        ]
+      },
+      "semantic": true,
+      "local": {
+        "stage": "exact",
+        "degraded": false,
+        "reason": null,
+        "top": [
+          {
+            "id": "kb-ambient-c-lydian-shimmer",
+            "score": 0.5
+          },
+          {
+            "id": "kb-ambient-d-dorian-pad",
+            "score": 0.3667
+          },
+          {
+            "id": "kb-synthwave-am-retro-pad",
+            "score": 0.2
+          }
+        ]
+      },
+      "supabase": {
+        "stage": "exact",
+        "degraded": false,
+        "reason": null,
+        "top": [
+          {
+            "id": "kb-synthwave-am-retro-pad",
+            "score": 0.7358
+          },
+          {
+            "id": "kb-ambient-c-lydian-shimmer",
+            "score": 0.7035
+          },
+          {
+            "id": "kb-ambient-d-dorian-pad",
+            "score": 0.6965
+          }
+        ]
+      }
+    }
+  ]
+}

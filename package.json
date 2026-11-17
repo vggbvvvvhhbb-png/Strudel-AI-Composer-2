@@ -53,7 +53,10 @@
     "corpus": "node scripts/build-corpus.mjs",
     "mine:passports": "node scripts/mine-passports.mjs --batch",
     "licenses:pool": "node scripts/sync-pool-licenses.mjs",
-    "gate:e": "node scripts/gate-e.mjs"
+    "gate:e": "node scripts/gate-e.mjs",
+    "rag:migrate": "node scripts/rag-migrate.mjs",
+    "rag:upload": "node scripts/rag-upload.mjs",
+    "rag:probe": "node scripts/rag-search-probe.mjs"
   },
   "dependencies": {
     "@strudel/web": "1.3.0",
