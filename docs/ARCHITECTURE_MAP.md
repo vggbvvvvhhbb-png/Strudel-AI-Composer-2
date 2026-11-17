@@ -507,3 +507,33 @@ Pre-commit hook `.githooks/pre-commit` → только `check-secrets.js`.
 `docs/BRIEF.md` · `docs/SPIKE-AUDIO.md` · `docs/AUDIO-QA.md` · `docs/MUSIC-ANALYSIS.md` ·
 `docs/IR.md` · `docs/METRICS.md` · `docs/METRICS-V2.md` · `docs/COMPOSE.md` ·
 `docs/DECISIONS.md` · `F:\ГЕНЕРАЦИЯ ФОТОК\producers-deep-dive-v2.md` (план владельца v2).
+
+## 9. Музыкальный интеллект — RAG-база знаний (сессия 18.11.2026, D-134…D-141)
+
+Новый контур `server/rag/` — «музыкальное образование» ассистента.
+Не трогает существующие compose/агент/тиндер; счётчики вкуса и
+DPO-экспорт изолированы (инвариант D-132).
+
+| Модуль | Роль |
+|---|---|
+| `server/rag/schema.js` | Zod-схема записи знания (D-135): tonic+mode раздельно, роли из канона 12, bpm null≠0, chromatic-флаг, сверка пресетов с каталогом через zones |
+| `server/rag/harmony.js` | Правила гармонии: функции T/S/D по ладам, граф переходов, каденции, замены (тритоновая/backdoor/вторичная доминанта), MODE_INTERVALS, самопроверка |
+| `server/rag/music-check.js` | Нормализация тоники, питч-классы, принадлежность нот ладу по событиям queryArc |
+| `server/rag/dataset/entries.json` + `dataset.js` | Золотой датасет 35 записей (D-136), загрузчик с fail-closed валидацией |
+| `server/rag/search-core.js` | Ядро гибридного поиска: стадии exact→tonic→genre-roles→all, косинус/лексика, детерминированный тай-брейк |
+| `server/rag/store-local.js` / `store-supabase.js` | Интерфейс KnowledgeStore: память (тесты/офлайн) и Supabase/pgvector (RPC match_knowledge, `<=>`, HNSW, RLS без политик) |
+| `server/rag/migrations/001_knowledge.sql` | pgvector 0.8.2, vector(768), GIN по тегам, RPC; журнал `_rag_migrations` |
+| `server/rag/embeddings.js` | Ollama nomic-embed-text 768, префиксы search_document/search_query, честная деградация |
+| `server/rag/db.js` | Postgres-подключение (pooler eu-west-1), креды только env |
+| `server/rag/prompt.js` | Версионированный промпт mi-1.0.0 (D-138): теория + инструментарий (белый список из system.md, пресеты из каталога) + формат ответа |
+| `server/rag/parse-response.js` | Парсер: обоснование + блок кода, устойчив к вариациям |
+| `server/rag/code-validator.js` | 5 классов ошибок: syntax/runtime/empty-part/scale (с тактом)/unknown-sound (D-139) |
+| `server/rag/loop.js` | Петля self-correction до 3 попыток, структурный фидбек, честный отказ |
+| `server/rag/explain.js` | Детерминированное объяснение кода: прогрессии, функции, каденции, советы замен (D-140) |
+| `server/routes/rag.js` | /api/rag/{status,assist,explain}; feature 'rag-assist' в учёте цены |
+| `src/rag-assist.js` + панель в studio.html | UI: шаги отдельно от обоснования, применение кода по кнопке |
+| `scripts/rag-{migrate,upload,search-probe,eval}.mjs`, `scripts/probe-rag-ui.mjs` | Миграции, идемпотентная загрузка, зонды, оценка качества |
+
+Тесты: `tests/unit/rag-*.test.js` (schema/harmony/music-check/dataset/
+search-core/stores/embeddings/prompt/validator-loop/explain/route).
+Зонды: `docs/evidence/rag/`. Решения: D-134…D-141, эксперимент E-021.
