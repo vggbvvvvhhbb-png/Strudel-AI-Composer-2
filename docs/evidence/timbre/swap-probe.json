@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-11-17T00:05:14.649Z",
+  "scenario": "Сделай пианино в первой партии теплее, но сохрани мелодию",
+  "part": "PIANO_1",
+  "range": [
+    57,
+    72
+  ],
+  "eventsCount": 24,
+  "candidates": [
+    {
+      "id": "tp-upright-soft-v1",
+      "score": 3.878,
+      "reasons": [
+        "диапазон партии 57..72 перекрыт покрытием пресета 30..78 (root-ноты 36, 48, 60, 72)",
+        "роль «chords» есть у пресета",
+        "профиль «warm» совпал с timbreProfile пресета",
+        "семейство keys близко стилю «lo-fi»",
+        "центроид 454 Гц против цели 1200 Гц (профиль «warm»): +0.38"
+      ]
+    },
+    {
+      "id": "tp-violin-section-v1",
+      "score": 3,
+      "reasons": [
+        "диапазон партии 57..72 перекрыт покрытием пресета 37..80 (root-ноты 43, 60, 67, 74)",
+        "роль «chords» есть у пресета",
+        "профиль «warm» совпал с timbreProfile пресета",
+        "центроид 2485 Гц против цели 1200 Гц (профиль «warm»): +0.00"
+      ]
+    },
+    {
+      "id": "tp-viola-section-v1",
+      "score": 2.823,
+      "reasons": [
+        "диапазон партии 57..72 перекрыт покрытием пресета 30..66 (root-ноты 36, 43, 50, 60)",
+        "роль «chords» есть у пресета",
+        "тег «warm» есть у пресета",
+        "центроид 987 Гц против цели 1200 Гц (профиль «warm»): +0.82"
+      ]
+    },
+    {
+      "id": "tp-upright-piano-v1",
+      "score": 1.901,
+      "reasons": [
+        "диапазон партии 57..72 перекрыт покрытием пресета 31..79 (root-ноты 37, 49, 61, 73)",
+        "роль «chords» есть у пресета",
+        "семейство keys близко стилю «lo-fi»",
+        "центроид 481 Гц против цели 1200 Гц (профиль «warm»): +0.40"
+      ]
+    }
+  ],
+  "chosen": "tp-upright-soft-v1",
+  "diff": {
+    "changed": {
+      "parts.roles.PIANO_1.instrumentId": "tp-upright-soft-v1",
+      "sound": "piano -> tp_upright_soft_v1"
+    },
+    "unchanged": [
+      "pattern",
+      "gainPattern",
+      "effects",
+      "activeIn",
+      "structure",
+      "meta",
+      "BASS_1"
+    ]
+  },
+  "invariantEvents": true,
+  "render": {
+    "before": {
+      "wallMs": 1566,
+      "renderMs": 1418,
+      "lufsI": -20.359871192935056,
+      "fingerprint": {
+        "browser": "chromium",
+        "browser_version": "157.0.8103.51",
+        "os": "win32",
+        "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+        "sample_rate": 48000,
+        "code_sha256": "b52b2293c78716209d8996943c74012d0559f39c968d6a164d32957fa4cbfb40",
+        "seed": "deterministic-engine"
+      }
+    },
+    "after": {
+      "wallMs": 1712,
+      "renderMs": 1518,
+      "lufsI": -21.767216424493267,
+      "firstNote": {
+        "onsetMs": 1,
+        "rmsDbfsFirst250ms": -41.58
+      },
+      "fingerprint": {
+        "browser": "chromium",
+        "browser_version": "157.0.8103.51",
+        "os": "win32",
+        "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+        "sample_rate": 48000,
+        "code_sha256": "2c4a529699019da2621e1321849fcf2a66ea0d6d038ea8f11a7c1379c7fbb8ae",
+        "seed": "deterministic-engine",
+        "timbre_presets": [
+          "tp_upright_soft_v1"
+        ]
+      }
+    },
+    "timbrePresetsInFingerprint": [
+      "tp_upright_soft_v1"
+    ],
+    "consoleErrors": 0,
+    "soundNotFound": 0
+  },
+  "ok": true
+}
