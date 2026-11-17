@@ -6,6 +6,7 @@
 // Данные с сервера вставляются только через textContent.
 
 import { composeTrack, composeVariants, composeMutate } from './api/client.js';
+import { parseParts, getPartGain, setPartGain, setPartMuted } from './core/code-model.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -68,6 +69,49 @@ export function initCompose({ getCode, setCode, applyCode, log } = {}) {
 async function applyCode(code) {
   if (hooks.applyCode) await hooks.applyCode(code);
   else if (hooks.setCode) hooks.setCode(code);
+}
+
+/* --- Смена инструмента партии (этап 4, D-131) --- */
+
+/** Есть ли партия в последней спеке: от этого зависит путь правки тембра. */
+export function specHasPart(id) {
+  return Boolean(lastSpec?.parts?.roles?.[id]);
+}
+
+/**
+ * Типизированная правка setInstrument по спеке (D-105/D-128) с перекомпиляцией.
+ * Секционные override звука сохраняются компилятором; музыкальные события
+ * не меняются — меняется только источник звука.
+ *
+ * Микшер переносится минимально: только ЯВНЫЕ gain и mute текущего кода
+ * (без них перекомпиляция потеряла бы работу микшера; .gain(0.8) по умолчанию
+ * не дописывается — это изменило бы громкость партий без правки).
+ *
+ * @param {string} id идентификатор партии
+ * @param {string|null} instrumentId пресет каталога или null для сброса
+ * @returns {Promise<{ok:boolean, code?:string, error?:string}>}
+ */
+export async function applyInstrumentToSpec(id, instrumentId) {
+  if (!specHasPart(id)) return { ok: false, error: `партии «${id}» нет в последней спеке` };
+  const { applyPartEdit } = await import('./music/part-edit.js');
+  const edit = applyPartEdit(lastSpec, { id, op: 'setInstrument', params: { instrumentId } });
+  if (!edit.ok) return { ok: false, error: edit.error };
+  const [{ compileTrackSpec }, { fetchTimbreCatalog }] = await Promise.all([
+    import('../server/music/compiler/index.js'),
+    import('./timbre/register.js'),
+  ]);
+  // Каталог нужен компилятору до сборки: без него instrumentId — ошибка.
+  await fetchTimbreCatalog();
+  const oldCode = hooks.getCode();
+  let code = compileTrackSpec(edit.spec);
+  for (const part of parseParts(oldCode)) {
+    if (part.muted) code = setPartMuted(code, part.label, true);
+    const gain = getPartGain(oldCode, part.label);
+    if (gain !== null) code = setPartGain(code, part.label, gain);
+  }
+  lastSpec = edit.spec;
+  await applyCode(code);
+  return { ok: true, code };
 }
 
 /* --- Запуск пайплайна --- */

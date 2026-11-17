@@ -99,6 +99,58 @@ export function getPartGain(code, label) {
   return m ? Number(m[1]) : null;
 }
 
+// Звук партии живёт в `.s("…")`: в свободном коде — в регионе самой партии,
+// в коде из спеки — в её секционных константах `const LABEL_N = …`
+// (компилятор выносит тело каждой секции туда). Имена сэмплов внутри
+// groups (`s("bd")` без точки) не трогаются: пресеты — для тональных партий.
+const SOUND_CALL = /\.s\s*\(\s*(["'])([^"']*)\1\s*\)/;
+
+function soundLineIndices(code, label) {
+  const part = findPart(code, label);
+  if (!part) return [];
+  const constRe = new RegExp(`^[ \\t]*const ${label}_\\d+\\s*=`);
+  const indices = [];
+  code.split('\n').forEach((text, i) => {
+    if ((i >= part.startLine && i <= part.endLine) || constRe.test(text)) indices.push(i);
+  });
+  return indices;
+}
+
+/** Текущий звук партии (первый `.s("…")` в её регионе/константах) или null. */
+export function getPartSound(code, label) {
+  const lines = code.split('\n');
+  for (const i of soundLineIndices(code, label)) {
+    const m = lines[i].match(SOUND_CALL);
+    if (m) return m[2];
+  }
+  return null;
+}
+
+/**
+ * Заменить звук партии на уровне кода (этап 4, D-131): тот же механизм,
+ * что микшер, — редактор остаётся источником истины, пресет и шеринг
+ * сохраняют состояние. Меняется ТОЛЬКО аргумент `.s()`: ноты, ритм и
+ * структура не трогаются (инвариант D-128).
+ *
+ * Для кода из спеки с секционными override звука предпочтителен путь
+ * спеки (setInstrument → компилятор): он сохраняет override. Этот путь
+ * заменяет звук во всех секциях партии — осознанное ограничение MVP.
+ */
+export function setPartSound(code, label, sound) {
+  if (typeof sound !== 'string' || !/^[\w:-]+$/.test(sound)) return code;
+  const indices = soundLineIndices(code, label);
+  if (!indices.length) return code;
+  const lines = code.split('\n');
+  let changed = false;
+  for (const i of indices) {
+    if (SOUND_CALL.test(lines[i])) {
+      lines[i] = lines[i].replace(SOUND_CALL, `.s(${JSON.stringify(sound)})`);
+      changed = true;
+    }
+  }
+  return changed ? lines.join('\n') : code;
+}
+
 // BPM живёт в `setCpm(bpm/4)`; голое число трактуется как CPM и умножается на 4.
 export function getBpm(code) {
   const m = code.match(/setCpm\s*\(\s*([\d.]+)\s*(\/\s*4\s*)?\)/);

@@ -252,6 +252,12 @@ export function attributionLinesForCode(code, catalog = loadTimbreCatalog()) {
 
 /**
  * Отчёт каталога для API и ворот: аудит + публичные метаданные пресетов.
+ *
+ * Карточка пресета в UI (этап 4, D-131) строится из этих полей: имя,
+ * лицензия, строка паспорта (descriptor), превью и атрибуция. Превью —
+ * файл зоны, ближайшей к середине клавиатуры (C4, MIDI 60): детерминированный
+ * выбор, а не «первый попавшийся».
+ *
  * @param {object} [catalog]
  * @param {{bankNames?: string[]}} [options]
  */
@@ -263,16 +269,32 @@ export function timbreReport(catalog = loadTimbreCatalog(), options = {}) {
     totals: audit.totals,
     issues: audit.issues,
     unapprovedAssets: audit.unapprovedAssets,
-    presets: Object.entries(catalog.presets).map(([id, preset]) => ({
-      id,
-      name: preset.name,
-      family: preset.family,
-      roles: preset.roles ?? [],
-      strudelAlias: preset.strudelAlias,
-      tags: preset.tags ?? [],
-      version: preset.version,
-      timbreProfile: preset.timbreProfile ?? null,
-    })),
+    presets: Object.entries(catalog.presets).map(([id, preset]) => {
+      const zoneAssets = catalog.zones
+        .filter((zone) => zone.instrument_id === id)
+        .map((zone) => ({ zone, asset: catalog.assets[zone.asset_id] }))
+        .filter((entry) => entry.asset);
+      const licenses = [...new Set(zoneAssets.map(({ asset }) => asset.license).filter(Boolean))].sort();
+      const middle = zoneAssets.slice().sort(
+        (x, y) => Math.abs(x.zone.root_key - 60) - Math.abs(y.zone.root_key - 60)
+          || x.zone.root_key - y.zone.root_key,
+      )[0] ?? null;
+      return {
+        id,
+        name: preset.name,
+        family: preset.family,
+        roles: preset.roles ?? [],
+        strudelAlias: preset.strudelAlias,
+        tags: preset.tags ?? [],
+        version: preset.version,
+        timbreProfile: preset.timbreProfile ?? null,
+        licenses,
+        license: licenses.length ? licenses.join(' + ') : null,
+        descriptor: preset.descriptor ?? null,
+        preview: middle ? `/timbre-audio/${middle.asset.file}` : null,
+        attribution: middle ? (middle.asset.attribution ?? attributionForAsset(middle.asset)) : null,
+      };
+    }),
   };
 }
 

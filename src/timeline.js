@@ -9,7 +9,7 @@
 // сворачиваются, перестроение только при смене состава партий.
 
 import { getEngine } from './engine-loader.js';
-import { parseParts, setPartMuted, setPartSolo, unsoloAll, setPartGain, getPartGain } from './core/code-model.js';
+import { parseParts, setPartMuted, setPartSolo, unsoloAll, setPartGain, getPartGain, getPartSound } from './core/code-model.js';
 import { staticValidate } from './core/validator.js';
 import { groupOf } from './music/expand.js';
 import { log } from './ui.js';
@@ -57,6 +57,13 @@ function roleOf(part, code) {
   return String(part.label || '').toLowerCase().replace(/_\d+$/, '') || 'other';
 }
 
+// Стиль из шапки компилятора: `// lo-fi — 84 BPM, …`. Нужен резолверу
+// тембра (аффинитет семейства к стилю); у свободного кода стиля нет.
+function styleOf(code) {
+  const m = code.match(/^\/\/\s*([a-z][a-z-]*)\s+—\s+\d+\s+BPM/m);
+  return m ? m[1] : null;
+}
+
 function mutate(code) {
   setEditorCode(code);
   applyLive(code);
@@ -92,6 +99,29 @@ function trackRow(part, role) {
   roleTag.className = 'tl-role';
   roleTag.textContent = role;
 
+  // Чип звука (этап 4, D-131): открывает панель выбора инструмента.
+  // У партий с groups (ударные) заменяемого .s() нет — чипа нет.
+  const sound = getPartSound(currentCode(), part.label);
+  let soundBtn = null;
+  if (sound) {
+    soundBtn = document.createElement('button');
+    soundBtn.type = 'button';
+    soundBtn.className = 'tl-sound';
+    soundBtn.textContent = sound;
+    soundBtn.title = `Звук партии ${part.label}: ${sound} — нажмите, чтобы выбрать инструмент`;
+    soundBtn.addEventListener('click', async () => {
+      const { openTimbrePicker } = await import('./timbre/picker.js');
+      openTimbrePicker({
+        label: part.label,
+        role,
+        family: groupOf(role),
+        style: styleOf(currentCode()),
+        getCode: currentCode,
+        applyCode: mutate,
+      });
+    });
+  }
+
   const muteBtn = document.createElement('button');
   muteBtn.type = 'button';
   muteBtn.className = 'tl-chip';
@@ -124,7 +154,7 @@ function trackRow(part, role) {
     mutate(setPartGain(currentCode(), part.label, Number(fader.value)));
   });
 
-  row.append(name, roleTag, muteBtn, soloBtn, fader);
+  row.append(name, roleTag, ...(soundBtn ? [soundBtn] : []), muteBtn, soloBtn, fader);
   return row;
 }
 
@@ -324,6 +354,14 @@ export function syncTimeline(code) {
       const chips = row.querySelectorAll('.tl-chip');
       chips[0]?.setAttribute('aria-pressed', String(Boolean(part.muted)));
       chips[1]?.setAttribute('aria-pressed', String(state.solo === part.label));
+      // Смена инструмента не меняет состав партий: чип звука обновляется
+      // здесь, иначе панель применила бы пресет, а строка показывала старый.
+      const soundBtn = row.querySelector('.tl-sound');
+      if (soundBtn) {
+        const sound = getPartSound(code, part.label);
+        soundBtn.textContent = sound ?? '—';
+        soundBtn.title = `Звук партии ${part.label}: ${sound ?? '—'} — нажмите, чтобы выбрать инструмент`;
+      }
     });
     return;
   }
