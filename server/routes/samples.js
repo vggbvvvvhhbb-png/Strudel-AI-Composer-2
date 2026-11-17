@@ -13,14 +13,18 @@
 // отклоняется на входе, а в записи лежит строка атрибуции.
 
 import { Router } from 'express';
+import express from 'express';
 import { z } from 'zod';
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { buildPassport } from '../samples/passport.js';
 import { downloadSampleWav } from '../samples/download.js';
 import { addToPool, listPool, searchPool, getFromPool, POOL_AUDIO_DIR } from '../samples/pool.js';
 import { readWav } from '../deepdive/pipeline/helpers.js';
+import { loadTimbreCatalog, timbreReport, attributionLinesForCode, timbreAudioFile, TIMBRE_DIR } from '../samples/timbre.js';
+import { resolveTimbre } from '../samples/timbre-resolver.js';
+import { loadRegistry } from '../music/licenses.js';
 
 const router = Router();
 
@@ -122,6 +126,82 @@ router.get('/api/samples/pool/:id/audio', (req, res) => {
   res.setHeader('content-length', String(statSync(file).size));
   res.setHeader('cache-control', 'no-store');
   createReadStream(file).pipe(res);
+});
+
+/**
+ * GET /api/timbre/catalog — каталог пресетов Timbre Palette (D-126).
+ *
+ * Публичные метаданные пресетов и статус прав. Грузится лениво по запросу
+ * UI, а не в основном чанке. Каталог пуст — честный пустой каталог.
+ */
+router.get('/api/timbre/catalog', (req, res) => {
+  const registry = loadRegistry();
+  const bankNames = Object.values(registry.banks ?? {}).flatMap((bank) => bank.names ?? []);
+  const catalog = loadTimbreCatalog();
+  const report = timbreReport(catalog, { bankNames });
+  // Strudel-совместимая карта для samples(map, base): регистрация и прогрев
+  // в браузере строятся из неё, а не из самодельных путей (D-126/D-128).
+  let sampleMap = { _base: '/timbre-audio/' };
+  try {
+    sampleMap = JSON.parse(readFileSync(path.join(TIMBRE_DIR, 'strudel-map.json'), 'utf8'));
+  } catch {
+    // Карты нет — каталог пуст или не импортирован: честная деградация.
+  }
+  res.json({ ...report, sampleMap });
+});
+
+/**
+ * GET /api/timbre/resolve — подбор пресета под партию (Resolver v1, D-128).
+ * Параметры: role, family, low/high (MIDI-диапазон), profile, style, limit.
+ */
+router.get('/api/timbre/resolve', (req, res) => {
+  const query = {};
+  if (req.query.role) query.role = String(req.query.role);
+  if (req.query.family) query.family = String(req.query.family);
+  if (req.query.profile) query.profile = String(req.query.profile);
+  if (req.query.style) query.style = String(req.query.style);
+  const low = Number(req.query.low);
+  const high = Number(req.query.high);
+  if (Number.isFinite(low) && Number.isFinite(high)) query.range = [low, high];
+  const limit = Number(req.query.limit);
+  if (Number.isFinite(limit)) query.limit = limit;
+  res.json({ candidates: resolveTimbre(query) });
+});
+
+/**
+ * GET /timbre-audio/:alias/:file — OGG пресета, same-origin (D-128).
+ *
+ * Пропуск — запись в реестре: файл обязан быть зарегистрированным ассетом
+ * пресета. Обход пути и незарегистрированные файлы — 404. Отказ загрузки
+ * для пресета — ошибка рендера, а не тихая подмена синтезатором.
+ */
+router.get('/timbre-audio/:alias/:file', (req, res) => {
+  const file = timbreAudioFile(req.params.alias, req.params.file);
+  if (!file) {
+    res.status(404).json({ error: 'файл пресета не найден или не зарегистрирован в каталоге' });
+    return;
+  }
+  res.setHeader('content-type', 'audio/ogg');
+  res.setHeader('content-length', String(statSync(file).size));
+  res.setHeader('cache-control', 'no-store');
+  createReadStream(file).pipe(res);
+});
+
+/**
+ * POST /api/timbre/attribution — строки атрибуции (TASL) для кода треков.
+ *
+ * Экспорт и шеринг обязаны нести атрибуцию CC-BY ассетов, которые звучат
+ * в коде. Логика одна на сервере и в гейте (server/samples/timbre.js).
+ * Тело: {codes: string[]} — до 64 кодов за запрос.
+ */
+router.post('/api/timbre/attribution', express.json({ limit: '2mb' }), (req, res) => {
+  const codes = Array.isArray(req.body?.codes) ? req.body.codes : null;
+  if (!codes || codes.length > 64 || codes.some((code) => typeof code !== 'string')) {
+    res.status(400).json({ error: 'нужен массив codes (до 64 строк)' });
+    return;
+  }
+  const catalog = loadTimbreCatalog();
+  res.json({ attributions: codes.map((code) => attributionLinesForCode(code, catalog)) });
 });
 
 export default router;

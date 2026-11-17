@@ -10,6 +10,8 @@ import { describe, it, expect } from 'vitest';
 import { applyPartEdit, applyPartEdits, PART_OPS } from '../../src/music/part-edit.js';
 import { expandPlan } from '../../src/music/expand.js';
 import { compileTrackSpec } from '../../server/music/compiler/index.js';
+// Побочный эффект: регистрирует серверный загрузчик каталога в компиляторе.
+import '../../server/samples/timbre.js';
 import { validateTrackSpec } from '../../src/schemas/track-spec.schema.js';
 
 function specWithVoices(count = 6) {
@@ -140,5 +142,50 @@ describe('правки дорожки по id', () => {
   it('набор операций объявлен явно', () => {
     expect(Object.keys(PART_OPS)).toContain('setSound');
     expect(Object.keys(PART_OPS)).toContain('setSectionPattern');
+  });
+});
+
+describe('смена инструмента пресетом каталога (D-128)', () => {
+  it('setInstrument меняет только instrumentId целевой дорожки', () => {
+    const spec = specWithVoices();
+    const before = compileTrackSpec(spec);
+    const result = applyPartEdit(spec, { id: 'VIOLIN_1', op: 'setInstrument', params: { instrumentId: 'tp-solo-violin-v1' } });
+    expect(result.ok).toBe(true);
+    expect(result.spec.parts.roles.VIOLIN_1.instrumentId).toBe('tp-solo-violin-v1');
+    // Ноты/ритм/эффекты не тронуты.
+    const { instrumentId, ...rest } = result.spec.parts.roles.VIOLIN_1;
+    expect(rest).toEqual(spec.parts.roles.VIOLIN_1);
+    // Код остальных дорожек побайтово тот же.
+    const after = compileTrackSpec(result.spec);
+    for (const label of Object.keys(spec.parts.roles).filter((id) => id !== 'VIOLIN_1')) {
+      expect(partLines(after, label)).toEqual(partLines(before, label));
+    }
+  });
+
+  it('невалидный формат instrumentId отвергается', () => {
+    const spec = specWithVoices();
+    for (const instrumentId of ['piano', 'tp_', 'TP-PIANO-V1', 'tp-piano-v1; hush()', 42]) {
+      const result = applyPartEdit(spec, { id: 'VIOLIN_1', op: 'setInstrument', params: { instrumentId } });
+      expect(result.ok).toBe(false);
+    }
+  });
+
+  it('null сбрасывает instrumentId', () => {
+    const spec = specWithVoices();
+    const set = applyPartEdit(spec, { id: 'VIOLIN_1', op: 'setInstrument', params: { instrumentId: 'tp-solo-violin-v1' } });
+    const reset = applyPartEdit(set.spec, { id: 'VIOLIN_1', op: 'setInstrument', params: { instrumentId: null } });
+    expect(reset.ok).toBe(true);
+    expect(reset.spec.parts.roles.VIOLIN_1.instrumentId).toBeUndefined();
+  });
+
+  it('setTimbreProfile принимает только warm/bright/dark/soft или null', () => {
+    const spec = specWithVoices();
+    const ok = applyPartEdit(spec, { id: 'VIOLIN_1', op: 'setTimbreProfile', params: { timbreProfile: 'dark' } });
+    expect(ok.ok).toBe(true);
+    expect(ok.spec.parts.roles.VIOLIN_1.timbreProfile).toBe('dark');
+    const reset = applyPartEdit(ok.spec, { id: 'VIOLIN_1', op: 'setTimbreProfile', params: { timbreProfile: null } });
+    expect(reset.spec.parts.roles.VIOLIN_1.timbreProfile).toBeUndefined();
+    const bad = applyPartEdit(spec, { id: 'VIOLIN_1', op: 'setTimbreProfile', params: { timbreProfile: 'loud' } });
+    expect(bad.ok).toBe(false);
   });
 });

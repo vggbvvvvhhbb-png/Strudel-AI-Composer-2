@@ -1,0 +1,37 @@
+{
+  "note": "Источники (пакеты) каталога Timbre Palette. Права на уровне пакета подтверждены по первоисточнику; каждый ассет всё равно обязан иметь собственную запись в assets.json (лицензия пакета не заменяет проверку файла). Модель: sources -> sample_assets -> instrument_presets -> sample_zones (D-126).",
+  "sources": {
+    "vsco2-ce": {
+      "name": "VSCO 2 Community Edition",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-17",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "rights_status": "approved",
+      "rights_notes": "LICENSE (CC0 1.0 Universal) в репозитории подтверждён 17.11.2026: GitHub API license.spdx_id=CC0-1.0 + raw LICENSE. Отдельные поднаборы несут рекомендацию кредита: Keys/Upright Piano — Simon Dalzell (Ivy Audio), Info.txt: «Bearer is granted right to redistribute this sample set by Versilian Studios LLC. Credit to both original author and Versilian Studios is encouraged». Кредит сохраняется в атрибуции ассета.",
+      "attribution": "VSCO 2 Community Edition — Versilian Studios LLC — CC0 1.0 — https://github.com/sgossner/VSCO-2-CE"
+    },
+    "vcsl": {
+      "name": "Versilian Community Sample Library (VCSL)",
+      "source_url": "https://github.com/sgossner/VCSL",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-17",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "rights_status": "approved",
+      "rights_notes": "LICENSE (CC0 1.0 Universal) в репозитории подтверждён 17.11.2026: GitHub API license.spdx_id=CC0-1.0 + raw LICENSE. Лицензия конкретного поднабора фиксируется при импорте ассета (промт: «фиксировать лицензию конкретного набора, не всей коллекции»).",
+      "attribution": "Versilian Community Sample Library — Versilian Studios LLC — CC0 1.0 — https://github.com/sgossner/VCSL"
+    }
+  }
+}

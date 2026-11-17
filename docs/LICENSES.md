@@ -169,3 +169,78 @@ curl -s 'https://api.github.com/repos/<owner>/<repo>' | grep '"license"'
 |---|---|---|---|---|---|
 | Glass_ToolAgainstGlassJar_Phrase_1 | basharov | CC0 1.0 | «Glass_ToolAgainstGlassJar_Phrase_1» by basharov — CC0 1.0 — https://freesound.org/people/basharov/sounds/406350/ | [ссылка](https://freesound.org/people/basharov/sounds/406350/) | 2026-11-16 |
 <!-- licenses:pool:end -->
+
+## 9. Каталог Timbre Palette — релизный слой (D-126)
+
+*Обновлено 17.11.2026. Каталог пресетов — релизный слой: права на каждый
+ассет обязательны (`rights_status=approved` для публикации), реестр —
+`server/music/data/timbre/`, ворота — `check:licenses` / `check:release`.
+Пул «Охотника» (§8) остаётся локальным рабочим слоем и релиз не блокирует.*
+
+| Источник | Что внутри | Лицензия | Первоисточник | Проверено | Статус |
+|---|---|---|---|---|---|
+| **VSCO 2 Community Edition** (`sgossner/VSCO-2-CE`) | Оркестр: Keys (Upright Piano, Organ), Strings (Solo Violin, Violin/Cello/Viola Section, Harp, Solo Contrabass), Brass, Woodwinds, Percussion; исходные WAV + MappingChart | **CC0-1.0** | [LICENSE в репозитории](https://github.com/sgossner/VSCO-2-CE/blob/master/LICENSE) · GitHub API `license.spdx_id=CC0-1.0` · [официальная страница](https://versilian-studios.com/vsco-community/) | 17.11.2026 | источник `approved`; ассеты импортируются с поштучной записью прав |
+| **VCSL** (`sgossner/VCSL`) | Универсальная CC0-библиотека (>4000 сэмплов), расширение VSCO 2 CE | **CC0-1.0** | [LICENSE в репозитории](https://github.com/sgossner/VCSL/blob/master/LICENSE) · GitHub API `license.spdx_id=CC0-1.0` | 17.11.2026 | источник `approved`; лицензия конкретного поднабора фиксируется при импорте |
+
+**Атрибуция поднаборов.** CC0 кредит не требует, но происхождение
+сохраняется: `Keys/Upright Piano` — Simon Dalzell (Ivy Audio), зима
+2015–16; Info.txt: «Bearer is granted right to redistribute this sample
+set by Versilian Studios LLC. Credit to both original author and
+Versilian Studios is encouraged». Кредит вносится в строку атрибуции
+ассета при импорте.
+
+**Не берём сейчас (осознанно).** Salamander Grand Piano (CC BY 3.0,
+~1.18 ГБ, 16 velocity-слоёв) — SFZ-зоны переносятся вручную, следующий
+цикл. NSynth (CC BY 4.0, 305 979 нот, 16 кГц) — исследовательский корпус
+для тембровых экспериментов, не продакшн-банк. Freesound — до решения
+владельца по правам и коммерческому статусу (D-127): бесплатное
+использование API официально только некоммерческое («You can use the
+Freesound API for free only for non-commercial purposes»,
+[API terms of use](https://freesound.org/docs/api/terms_of_use.html),
+проверено 17.11.2026); с июля 2026 у авторов отдельные настройки
+отношения к генеративному ИИ (`gen_ai_preference` в Sound Instance API),
+независимые от лицензии записи — для ML-пайплайна записи с запретом
+ИИ-использования консервативно исключаются.
+
+**Банки §3 перепроверены 17.11.2026:** `dirt-samples` — GitHub API
+`license: null` (без изменений); `shabda:piano` — манифест
+`piano.json?strudel=1` отдаёт 10 WAV-файлов без Freesound id и лицензий,
+подтвердить права по первоисточнику невозможно. Варианты и рекомендация —
+D-127, решение владельца открыто (D-099).
+
+### 9.1. Импортированные ассеты каталога (17.11.2026, D-128)
+
+Импорт `scripts/import-timbre.mjs` по манифесту
+`scripts/timbre-import-manifest.json`: **10 пресетов / 41 ассет**, все
+`rights_status=approved`, лицензия **CC0-1.0**. Поштучные записи прав
+(источник, URL, автор, лицензия, дата проверки, sha256 оригинала и
+производного, TASL-атрибуция, паспорт) — в реестре
+`server/music/data/timbre/{sources,assets,presets,zones}.json`; реестр —
+единственный источник истины, эта секция — сводка.
+
+| Пресет | Источник | Ассетов | Корни (MIDI) |
+|---|---|---|---|
+| `tp-upright-piano-v1` | VSCO 2 CE · Keys/Upright Piano (Simon Dalzell, Ivy Audio) | 4 | 37, 49, 61, 73 |
+| `tp-upright-soft-v1` | VSCO 2 CE · Keys/Upright Piano (pp-слой) | 4 | 36, 48, 60, 72 |
+| `tp-solo-violin-v1` | VSCO 2 CE · Strings/Solo Violin (ArcoVib) | 5 | 55, 60, 64, 69, 72 |
+| `tp-solo-violin-pizz-v1` | VSCO 2 CE · Strings/Solo Violin (Pizz) | 4 | 55, 60, 64, 69 |
+| `tp-violin-section-v1` | VSCO 2 CE · Strings/Violin Section (susVib) | 4 | 43, 60, 67, 74 |
+| `tp-viola-section-v1` | VSCO 2 CE · Strings/Viola Section | 4 | 36, 43, 50, 60 |
+| `tp-cello-section-v1` | VSCO 2 CE · Strings/Cello Section | 4 | 24, 31, 48, 55 |
+| `tp-contrabass-sus-v1` | VSCO 2 CE · Strings/Solo Contrabass (sus) | 4 | 24, 28, 33, 37 |
+| `tp-contrabass-pizz-v1` | VSCO 2 CE · Strings/Solo Contrabass (pizz) | 4 | 24, 28, 33, 37 |
+| `tp-harp-v1` | VSCO 2 CE · Strings/Harp | 4 | 48, 55, 72, 76 |
+
+**Производные файлы.** Оригиналы WAV не изменяются (контроль sha256);
+для движка создан производный OGG (libvorbis q5, без обрезки/нормализации/
+сведения в моно) — это дериватив CC0-оригинала, лицензия наследуется.
+OGG-пресеты в git (`data/timbre/audio/`, 41 файл, 6.2 МБ — D-130), манифесты
+и реестр — в git; банк-исходник (WAV, 74.7 МБ) вне git.
+Право на распространение проверено по реестру: у всех 41 ассета
+`license: CC0-1.0`, `rights_status: approved`, `commercial_use: true`,
+`redistribution: true` (регресс — `tests/unit/docker-image-layout.test.js`).
+Атрибуция при экспорте/шеринге: CC0 — строка происхождения (кредит не
+обязателен, но сохраняется: Simon Dalzell / Ivy Audio / Versilian Studios);
+механика TASL — `attributionLinesForCode` (D-126), подключена к экспорту
+и шерингу. Organa нумерованные файлы без MappingChart пропущены осознанно:
+корни не угадываются.

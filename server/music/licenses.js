@@ -20,6 +20,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { poolLicenseRegistry } from '../samples/pool.js';
+import { loadTimbreCatalog, timbreReport } from '../samples/timbre.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const dataDir = join(here, 'data');
@@ -151,11 +152,14 @@ export function attributionFor(entry) {
  */
 export function licenseReport(registry = loadRegistry()) {
   const audit = auditLicenses(registry);
+  const bankNames = Object.values(registry.banks ?? {}).flatMap((bank) => bank.names ?? []);
+  const timbre = timbreReport(loadTimbreCatalog(), { bankNames });
   return {
-    ok: audit.ok,
-    releaseBlocked: audit.releaseBlocked,
+    ok: audit.ok && timbre.ok,
+    releaseBlocked: audit.releaseBlocked || timbre.releaseBlocked,
     totals: audit.totals,
     pool: registry.pool ?? { samples: {}, totals: { samples: 0, cc0: 0, ccBy: 0 } },
+    timbre,
     banks: audit.banks.map((row) => ({
       key: row.key,
       names: row.names,

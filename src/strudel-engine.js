@@ -20,6 +20,7 @@ import {
   superdough,
   Pattern,
   samples,
+  loadBuffer,
 } from '@strudel/web';
 import { highlightBlock } from './core/highlight.js';
 import { visualPlan } from './core/visual-plan.js';
@@ -32,6 +33,7 @@ import { SAMPLE_SETS } from './sample-banks.js';
 import { masterPresetFor, masterPresetForCode } from './audio/master-presets.js';
 import { renderAndMeasure, audioBufferToChannels } from './audio/render/offline.js';
 import { allSamplesReady } from './samples-ready.js';
+import { ensureTimbreForCode } from './timbre/register.js';
 
 export { visualPlan };
 
@@ -67,6 +69,7 @@ const strudelApi = {
   registerSynthSounds,
   superdough,
   samples,
+  loadBuffer,
 };
 
 function dpr() {
@@ -303,6 +306,18 @@ export async function evaluateCode(code) {
   // Сэмплы нужны до первого звука: иначе ударные и пианино молчат
   // («sound bd not found») до конца загрузки манифеста.
   await waitForSamples();
+  // Пресеты Timbre (D-128): прогрев конкретных файлов ДО первого звука.
+  // Отказ — ошибка исполнения, а не тихая подмена синтезатором.
+  if (code.includes('tp_')) {
+    try {
+      const timbre = await ensureTimbreForCode(code, adapter);
+      if (!timbre.ok) {
+        return { ok: false, error: `Пресеты тембра не загрузились: ${timbre.errors.join('; ')}` };
+      }
+    } catch (error) {
+      return { ok: false, error: `Каталог тембров недоступен: ${String(error?.message || error)}` };
+    }
+  }
   applyMasterForCode(code);
   planCache = visualPlan(code);
   if (visualRoot) visualRoot.replaceChildren();
@@ -360,6 +375,13 @@ export async function renderTrackOffline({ code, bars = [0, 16], sampleRate = 48
   await waitForSamples();
   const target = code ?? currentCode;
   if (!target) throw new Error('Нет кода для рендера');
+  // Пресеты Timbre (D-128): отказ прогрева — ошибка рендера (образец D-119).
+  if (target.includes('tp_')) {
+    const timbre = await ensureTimbreForCode(target, adapter);
+    if (!timbre.ok) {
+      throw new Error(`Пресеты тембра не загрузились: ${timbre.errors.join('; ')}`);
+    }
+  }
   const restore = currentCode && currentCode !== target ? currentCode : null;
 
   try {

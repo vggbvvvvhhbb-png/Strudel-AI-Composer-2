@@ -1,0 +1,64 @@
+{
+  "_base": "/timbre-audio/",
+  "tp_upright_piano_v1": {
+    "c#2": "tp_upright_piano_v1/cs2.ogg",
+    "c#3": "tp_upright_piano_v1/cs3.ogg",
+    "c#4": "tp_upright_piano_v1/cs4.ogg",
+    "c#5": "tp_upright_piano_v1/cs5.ogg"
+  },
+  "tp_upright_soft_v1": {
+    "c2": "tp_upright_soft_v1/c2.ogg",
+    "c3": "tp_upright_soft_v1/c3.ogg",
+    "c4": "tp_upright_soft_v1/c4.ogg",
+    "c5": "tp_upright_soft_v1/c5.ogg"
+  },
+  "tp_solo_violin_v1": {
+    "g3": "tp_solo_violin_v1/g3.ogg",
+    "c4": "tp_solo_violin_v1/c4.ogg",
+    "e4": "tp_solo_violin_v1/e4.ogg",
+    "a4": "tp_solo_violin_v1/a4.ogg",
+    "c5": "tp_solo_violin_v1/c5.ogg"
+  },
+  "tp_violin_section_v1": {
+    "g2": "tp_violin_section_v1/g2.ogg",
+    "c4": "tp_violin_section_v1/c4.ogg",
+    "g4": "tp_violin_section_v1/g4.ogg",
+    "d5": "tp_violin_section_v1/d5.ogg"
+  },
+  "tp_viola_section_v1": {
+    "c2": "tp_viola_section_v1/c2.ogg",
+    "g2": "tp_viola_section_v1/g2.ogg",
+    "d3": "tp_viola_section_v1/d3.ogg",
+    "c4": "tp_viola_section_v1/c4.ogg"
+  },
+  "tp_cello_section_v1": {
+    "c1": "tp_cello_section_v1/c1.ogg",
+    "g1": "tp_cello_section_v1/g1.ogg",
+    "c3": "tp_cello_section_v1/c3.ogg",
+    "g3": "tp_cello_section_v1/g3.ogg"
+  },
+  "tp_harp_v1": {
+    "c3": "tp_harp_v1/c3.ogg",
+    "g3": "tp_harp_v1/g3.ogg",
+    "c5": "tp_harp_v1/c5.ogg",
+    "e5": "tp_harp_v1/e5.ogg"
+  },
+  "tp_contrabass_sus_v1": {
+    "c1": "tp_contrabass_sus_v1/c1.ogg",
+    "e1": "tp_contrabass_sus_v1/e1.ogg",
+    "a1": "tp_contrabass_sus_v1/a1.ogg",
+    "c#2": "tp_contrabass_sus_v1/cs2.ogg"
+  },
+  "tp_contrabass_pizz_v1": {
+    "c1": "tp_contrabass_pizz_v1/c1.ogg",
+    "e1": "tp_contrabass_pizz_v1/e1.ogg",
+    "a1": "tp_contrabass_pizz_v1/a1.ogg",
+    "c#2": "tp_contrabass_pizz_v1/cs2.ogg"
+  },
+  "tp_solo_violin_pizz_v1": {
+    "g3": "tp_solo_violin_pizz_v1/g3.ogg",
+    "c4": "tp_solo_violin_pizz_v1/c4.ogg",
+    "e4": "tp_solo_violin_pizz_v1/e4.ogg",
+    "a4": "tp_solo_violin_pizz_v1/a4.ogg"
+  }
+}

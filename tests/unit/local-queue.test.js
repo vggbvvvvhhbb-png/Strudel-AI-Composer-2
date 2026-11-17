@@ -36,6 +36,30 @@ async function waitTerminal(queue, id, timeoutMs = 5000) {
   throw new Error('задача не дошла до финального состояния');
 }
 
+/**
+ * Ждёт события, удовлетворяющего предикату. Возвращает true/false.
+ *
+ * ЗАЧЕМ ОТДЕЛЬНАЯ ОЖИДАЛКА. Состояние задачи становится 'done' ДО того,
+ * как очередь допишет журнал и отправит событие 'task_done'
+ * (local/queue.mjs:230 против :236). Поэтому «дождался финального
+ * состояния» ≠ «событие уже дошло»: между этими двумя моментами стоит
+ * await журнала. Под нагрузкой полного прогона дописывание задерживалось
+ * на миллисекунды — и проверка падала. Ждём именно событие; сила
+ * проверки не меняется (событие обязано прийти за отведённое время).
+ *
+ * @param {object[]} events
+ * @param {(event:object)=>boolean} predicate
+ * @param {number} timeoutMs
+ */
+async function waitForEvent(events, predicate, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (events.some(predicate)) return true;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  return false;
+}
+
 describe('очередь демона', () => {
   it('задача выполняется и её результат виден', async () => {
     const dir = await tempDir();
@@ -153,8 +177,10 @@ describe('очередь демона', () => {
     await queue.init();
     const task = await queue.enqueue('render', {});
     await waitTerminal(queue, task.id);
-    expect(events.some((event) => event.type === 'progress' && event.stage === 'render')).toBe(true);
-    expect(events.some((event) => event.type === 'task_done')).toBe(true);
+    expect(
+      await waitForEvent(events, (event) => event.type === 'progress' && event.stage === 'render'),
+    ).toBe(true);
+    expect(await waitForEvent(events, (event) => event.type === 'task_done')).toBe(true);
     await rm(dir, { recursive: true, force: true });
   });
 });

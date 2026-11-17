@@ -39,6 +39,15 @@ COPY skills ./skills
 # local/client.mjs на старте. Без этого каталога сервер не поднимается
 # (ERR_MODULE_NOT_FOUND, контейнер уходит в рестарт).
 COPY local ./local
+# data/timbre/audio/ — аудио каталога Timbre Palette (D-128, D-130). Без него
+# пресеты в рантайме есть, а звука нет: /api/timbre/presets отдаёт каталог,
+# но same-origin раздача сэмплов (server/routes/samples.js) ищет файлы в
+# <root>/data/timbre/audio/<alias>/<file>. OGG-пресеты (41 файл, 6.2 МБ,
+# CC0-1.0) лежат в git — иначе CI, собирающий образ из чистого checkout,
+# падал бы на этой строке с "COPY failed: no such file or directory".
+# Исходный банк (data/timbre/audio/originals, WAV 74.7 МБ) — импортный слой,
+# в рантайме не нужен и исключён из контекста сборки (.dockerignore).
+COPY data/timbre/audio ./data/timbre/audio
 
 # Ключи — только через окружение (docker compose env_file), в образе их нет.
 EXPOSE 3001

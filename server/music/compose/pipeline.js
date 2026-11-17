@@ -8,6 +8,8 @@ import { minedDigest, minedStats } from '../mining/library.js';
 import { matchMinedPattern } from '../mining/groove.js';
 import { compileForProtocol } from './compiled.js';
 import { compileTrackSpec } from '../compiler/index.js';
+// Регистрирует серверный загрузчик каталога Timbre в общем компиляторе (D-128).
+import '../../samples/timbre.js';
 import { applySamplePlan, passportHints, sampleDigest } from './sample-plan.js';
 
 const SPEC_STYLES = TrackSpecSchema.shape.meta.shape.style.options;

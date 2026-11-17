@@ -21,7 +21,7 @@
 // перехватывают контекст друг у друга (docs/HANDOFF.md:28-43).
 // => Рендеры строго последовательные. Это ограничение движка, не воркера.
 
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
@@ -29,6 +29,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 
 import { POOL_AUDIO_DIR } from '../../samples/pool.js';
+import { timbreAudioFile, loadTimbreCatalog, TIMBRE_DIR } from '../../samples/timbre.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../../..');
@@ -129,6 +130,25 @@ function startServer() {
       }
       return;
     }
+    // OGG пресетов Timbre Palette (D-128): пропуск — запись в реестре.
+    if (url.pathname.startsWith('/timbre-audio/')) {
+      const rest = url.pathname.slice('/timbre-audio/'.length).split('/');
+      const file = rest.length === 2 ? timbreAudioFile(rest[0], rest[1]) : null;
+      if (!file) {
+        res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+        res.end('not found');
+        return;
+      }
+      try {
+        const body = await readFile(file);
+        res.writeHead(200, { 'content-type': 'audio/ogg', 'cache-control': 'no-store' });
+        res.end(body);
+      } catch (err) {
+        res.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
+        res.end(String(err && err.message));
+      }
+      return;
+    }
     const route = routes[url.pathname];
     if (!route) {
       res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
@@ -155,6 +175,39 @@ function startServer() {
  *
  * @param {{headless?:boolean, timeoutMs?:number, browser?:object}} [options]
  */
+/**
+ * Карта и alias пресетов для рендера (D-128). Alias берутся из кода
+ * (в кавычках) или из явного списка. Если код просит tp_, которого нет
+ * в реестре, — ошибка: тихая подмена синтезатором запрещена.
+ *
+ * @param {string} code
+ * @param {string[]} [explicitAliases]
+ * @returns {{map: object, aliases: string[]}|null}
+ */
+function timbrePayloadForCode(code, explicitAliases) {
+  const text = String(code ?? '');
+  const catalog = loadTimbreCatalog();
+  const known = Object.values(catalog.presets).map((preset) => preset.strudelAlias).filter(Boolean);
+  const quoted = (alias) => new RegExp(`["']${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`).test(text);
+  const aliases = (Array.isArray(explicitAliases) && explicitAliases.length
+    ? explicitAliases
+    : known.filter(quoted)).filter((alias) => known.includes(alias));
+  const unknownTp = [...text.matchAll(/["'](tp_[a-z0-9_]+)["']/g)]
+    .map((match) => match[1])
+    .filter((alias) => !known.includes(alias));
+  if (unknownTp.length) {
+    throw new Error(`Пресеты не найдены в каталоге Timbre: ${[...new Set(unknownTp)].join(', ')}`);
+  }
+  if (!aliases.length) return null;
+  let map = { _base: '/timbre-audio/' };
+  try {
+    map = JSON.parse(readFileSync(path.join(TIMBRE_DIR, 'strudel-map.json'), 'utf8'));
+  } catch {
+    throw new Error('Strudel-карта каталога Timbre не найдена: выполните scripts/import-timbre.mjs');
+  }
+  return { map, aliases: [...aliases].sort() };
+}
+
 export async function createRenderWorker(options = {}) {
   if (!existsSync(BUNDLE_FILE)) {
     await buildRenderBundle(options);
@@ -207,6 +260,9 @@ export async function createRenderWorker(options = {}) {
       const poolSamples = (Array.isArray(args.poolSamples) ? args.poolSamples : [])
         .filter((s) => s && /^[\w-]+$/.test(String(s.id)) && /^[\w:-]+$/.test(String(s.sound)))
         .map((s) => ({ id: String(s.id), sound: String(s.sound) }));
+      // Пресеты Timbre (D-128): alias из кода или явный список; карта — из
+      // реестра каталога. Неизвестный tp_ alias в коде — ошибка рендера.
+      const timbre = timbrePayloadForCode(args.code, args.timbreAliases);
       const payload = await page.evaluate((a) => window.__renderTwin.render(a), {
         code: args.code,
         fromCycle: args.fromCycle ?? 0,
@@ -216,6 +272,7 @@ export async function createRenderWorker(options = {}) {
         wantWav: args.wantWav !== false,
         wantEvents: args.wantEvents !== false,
         poolSamples,
+        timbre,
       });
       const wav = payload.wavBase64 ? Buffer.from(payload.wavBase64, 'base64') : null;
       const fingerprint = {
@@ -228,6 +285,8 @@ export async function createRenderWorker(options = {}) {
         seed: 'deterministic-engine',
         // Сэмплы пула — внешнее состояние рендера: без них паспорт неполон.
         ...(poolSamples.length ? { pool_samples: poolSamples.map((s) => s.sound).sort() } : {}),
+        // Пресеты Timbre — тоже внешнее состояние (D-128).
+        ...(timbre ? { timbre_presets: timbre.aliases } : {}),
       };
       return {
         ok: true,

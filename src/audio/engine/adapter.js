@@ -91,6 +91,33 @@ export function createEngineAdapter(strudel, { maxPolyphony = DEFAULT_MAX_POLYPH
       };
     },
 
+    /**
+     * Прогрев конкретных аудиофайлов (D-128): fetch + decode ДО первого
+     * звука. Манифест ≠ загруженные файлы: superdough грузит их лениво при
+     * первом триггере, поэтому первая нота нового пресета может молчать.
+     * loadBuffer — публичный API @strudel/web (проверено по исходникам
+     * superdough), кэш буферов общий: прогретый файл звучит и в офлайн-рендере.
+     *
+     * @param {string[]} urls полные URL файлов
+     * @returns {Promise<{ok:boolean, total:number, failed:number, errors:string[]}>}
+     */
+    async warmSamples(urls = []) {
+      const ctx = context ?? strudel.getAudioContext?.();
+      if (!ctx) {
+        return { ok: false, total: urls.length, failed: urls.length, errors: ['аудиоконтекст не инициализирован'] };
+      }
+      const results = await Promise.allSettled(
+        urls.map((url) => strudel.loadBuffer(url, ctx, url)),
+      );
+      const failed = results.filter((r) => r.status === 'rejected');
+      return {
+        ok: failed.length === 0,
+        total: results.length,
+        failed: failed.length,
+        errors: failed.map((f) => String(f.reason?.message || f.reason)),
+      };
+    },
+
     /** Исполняет код паттерна. */
     async evaluate(code, plan) {
       lastError = null;

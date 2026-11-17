@@ -31,7 +31,7 @@ function Invoke-Ssh([string]$Command) {
 Write-Output '==> Архив исходников'
 Push-Location $root
 try {
-  & tar -czf $archive --exclude='./.git' --exclude='./node_modules' --exclude='./dist' --exclude='./.env' --exclude='./.sharrowkin' .
+  & tar -czf $archive --exclude='./.git' --exclude='./node_modules' --exclude='./dist' --exclude='./.env' --exclude='./.sharrowkin' --exclude='./.scratch' --exclude='./data/timbre/audio/originals' .
   if ($LASTEXITCODE -ne 0) { throw "tar вернул код ${LASTEXITCODE}" }
 } finally {
   Pop-Location

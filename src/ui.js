@@ -12,6 +12,7 @@ import { initCompose } from './compose.js';
 import { makeShareLink } from './core/share.js';
 import { pushHistory } from './core/storage.js';
 import { renderHistory } from './history.js';
+import { fetchAttributions } from './timbre/attribution.js';
 
 // Единая синхронизация панелей после любой смены кода: микшер, транспорт
 // и таймлайн дорожек. Быстрые пути панелей не перестраивают DOM, если
@@ -319,6 +320,12 @@ export function initUI({ editor: editorApi } = {}) {
         : 'Ссылка на трек скопирована',
       'ok',
     );
+    // Атрибуция тембров каталога: CC-BY ассеты обязаны быть видны при
+    // шеринге (D-126). Пресеты не используются — тишина, это честно.
+    const { attributions, degraded } = await fetchAttributions([code]);
+    const lines = attributions[0] ?? [];
+    if (lines.length) log(`Атрибуция тембров: ${lines.join(' · ')}`, 'ok');
+    else if (degraded) log('Атрибуция тембров недоступна — при публикации проверьте права вручную', 'error');
   });
   $('btn-play-code').addEventListener('click', playCode);
   $('btn-stop').addEventListener('click', () => {
