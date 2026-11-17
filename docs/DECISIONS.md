@@ -3901,7 +3901,7 @@ instrumentId; громкость только гейном; рандомизац
 **Проблема (измерена).** Зонд этапа 4 при мгновенном суждении (без паузы на
 прослушивание) ловит в трековом режиме `InvalidAccessError: cannot connect
 to an AudioNode belonging to a different audio context`. Минимальный
-воспроизводитель (`.scratch/probe-filter-identity.mjs`): после рендера пары
+воспроизводитель (`tests/spike/offline-context-retention.probe.mjs`): после рендера пары
 тиндера 3 последовательных `adapter.renderCodeOffline` кода с эффектами
 (`.lpf(800).room(0.3)`) — первый ок, второй и третий падают; падает и
 вариант только с `.lpf`. Трейс создания узлов показывает: фильтры,

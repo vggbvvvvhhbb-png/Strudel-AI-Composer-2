@@ -516,7 +516,9 @@ sha256 файла и `maxAbsDiff` по PCM (16 бит). Три паттерна:
 подряд сколько угодно раз в одной странице — тиндер рендерит обе стороны
 пары и следующие пары без перезагрузки.
 
-**Метод.** Минимальный воспроизводитель (`.scratch/probe-filter-identity.mjs`,
+**Метод.** Минимальный воспроизводитель
+(`tests/spike/offline-context-retention.probe.mjs`, запуск
+`npm run build && node tests/spike/offline-context-retention.probe.mjs`,
 Chromium + playwright-core): после рендера пары тиндера три последовательных
 `renderCodeOffline` кода `note("c3 e3 g3").s("sawtooth").lpf(800).room(0.3)`
 (4 цикла). Трейс создания узлов (`createBiquadFilter` с идентификатором и
