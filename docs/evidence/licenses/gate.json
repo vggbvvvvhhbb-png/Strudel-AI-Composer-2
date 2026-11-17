@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-11-16T23:32:12.795Z",
-  "mode": "mechanism",
+  "generatedAt": "2026-11-17T00:08:55.733Z",
+  "mode": "release",
   "ok": true,
   "releaseBlocked": true,
   "totals": {
@@ -49,15 +49,202 @@
     "releaseBlocked": false,
     "totals": {
       "sources": 2,
-      "assets": 0,
-      "presets": 0,
-      "zones": 0,
-      "approvedAssets": 0,
-      "usedAssets": 0
+      "assets": 41,
+      "presets": 10,
+      "zones": 41,
+      "approvedAssets": 41,
+      "usedAssets": 41
     },
     "issues": [],
     "unapprovedAssets": [],
-    "presets": []
+    "presets": [
+      {
+        "id": "tp-upright-piano-v1",
+        "name": "Upright Piano (dyn1)",
+        "family": "keys",
+        "roles": [
+          "chords",
+          "lead"
+        ],
+        "strudelAlias": "tp_upright_piano_v1",
+        "tags": [
+          "acoustic",
+          "piano",
+          "bright",
+          "dynamic"
+        ],
+        "version": "1",
+        "timbreProfile": "bright"
+      },
+      {
+        "id": "tp-upright-soft-v1",
+        "name": "Upright Nr1 (pp, мягкое)",
+        "family": "keys",
+        "roles": [
+          "chords",
+          "lead"
+        ],
+        "strudelAlias": "tp_upright_soft_v1",
+        "tags": [
+          "acoustic",
+          "piano",
+          "soft",
+          "warm",
+          "intimate"
+        ],
+        "version": "1",
+        "timbreProfile": "warm"
+      },
+      {
+        "id": "tp-solo-violin-v1",
+        "name": "Solo Violin (arco vib, p)",
+        "family": "strings",
+        "roles": [
+          "lead"
+        ],
+        "strudelAlias": "tp_solo_violin_v1",
+        "tags": [
+          "solo",
+          "violin",
+          "vibrato",
+          "expressive",
+          "bright"
+        ],
+        "version": "1",
+        "timbreProfile": "bright"
+      },
+      {
+        "id": "tp-violin-section-v1",
+        "name": "Violin Section (sus vib)",
+        "family": "strings",
+        "roles": [
+          "pad",
+          "chords"
+        ],
+        "strudelAlias": "tp_violin_section_v1",
+        "tags": [
+          "ensemble",
+          "violin",
+          "sustain",
+          "vibrato",
+          "warm"
+        ],
+        "version": "1",
+        "timbreProfile": "warm"
+      },
+      {
+        "id": "tp-viola-section-v1",
+        "name": "Viola Section (sus vib)",
+        "family": "strings",
+        "roles": [
+          "pad",
+          "chords"
+        ],
+        "strudelAlias": "tp_viola_section_v1",
+        "tags": [
+          "ensemble",
+          "viola",
+          "sustain",
+          "dark",
+          "warm"
+        ],
+        "version": "1",
+        "timbreProfile": "dark"
+      },
+      {
+        "id": "tp-cello-section-v1",
+        "name": "Cello Section (sus vib)",
+        "family": "strings",
+        "roles": [
+          "bass",
+          "pad"
+        ],
+        "strudelAlias": "tp_cello_section_v1",
+        "tags": [
+          "ensemble",
+          "cello",
+          "sustain",
+          "dark",
+          "warm"
+        ],
+        "version": "1",
+        "timbreProfile": "dark"
+      },
+      {
+        "id": "tp-harp-v1",
+        "name": "Harp (mf)",
+        "family": "strings",
+        "roles": [
+          "arp",
+          "texture"
+        ],
+        "strudelAlias": "tp_harp_v1",
+        "tags": [
+          "plucked",
+          "harp",
+          "delicate",
+          "bright"
+        ],
+        "version": "1",
+        "timbreProfile": "bright"
+      },
+      {
+        "id": "tp-contrabass-sus-v1",
+        "name": "Solo Contrabass (sus, non vib)",
+        "family": "bass",
+        "roles": [
+          "bass",
+          "sub"
+        ],
+        "strudelAlias": "tp_contrabass_sus_v1",
+        "tags": [
+          "acoustic",
+          "contrabass",
+          "sustain",
+          "dark",
+          "warm"
+        ],
+        "version": "1",
+        "timbreProfile": "dark"
+      },
+      {
+        "id": "tp-contrabass-pizz-v1",
+        "name": "Solo Contrabass (pizz)",
+        "family": "bass",
+        "roles": [
+          "bass"
+        ],
+        "strudelAlias": "tp_contrabass_pizz_v1",
+        "tags": [
+          "acoustic",
+          "contrabass",
+          "plucked",
+          "short",
+          "jazz"
+        ],
+        "version": "1",
+        "timbreProfile": "warm"
+      },
+      {
+        "id": "tp-solo-violin-pizz-v1",
+        "name": "Solo Violin (pizz, p)",
+        "family": "strings",
+        "roles": [
+          "lead",
+          "arp"
+        ],
+        "strudelAlias": "tp_solo_violin_pizz_v1",
+        "tags": [
+          "solo",
+          "violin",
+          "plucked",
+          "playful",
+          "short"
+        ],
+        "version": "1",
+        "timbreProfile": "bright"
+      }
+    ]
   },
   "checks": [
     {
@@ -113,15 +300,15 @@
     {
       "name": "Каталог Timbre: реестр прав полон и ссылки целы",
       "passed": true,
-      "detail": "источников 2, ассетов 0, пресетов 0, зон 0",
+      "detail": "источников 2, ассетов 41, пресетов 10, зон 41",
       "numbers": {
         "totals": {
           "sources": 2,
-          "assets": 0,
-          "presets": 0,
-          "zones": 0,
-          "approvedAssets": 0,
-          "usedAssets": 0
+          "assets": 41,
+          "presets": 10,
+          "zones": 41,
+          "approvedAssets": 41,
+          "usedAssets": 41
         },
         "issues": []
       },
@@ -133,7 +320,7 @@
       "detail": "все ассеты публикуемого набора approved (или каталог пуст)",
       "numbers": {
         "unapproved": [],
-        "usedAssets": 0
+        "usedAssets": 41
       },
       "releaseOnly": true
     }

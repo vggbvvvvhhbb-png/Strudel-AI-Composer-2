@@ -207,3 +207,36 @@ Freesound API for free only for non-commercial purposes»,
 `piano.json?strudel=1` отдаёт 10 WAV-файлов без Freesound id и лицензий,
 подтвердить права по первоисточнику невозможно. Варианты и рекомендация —
 D-127, решение владельца открыто (D-099).
+
+### 9.1. Импортированные ассеты каталога (17.11.2026, D-128)
+
+Импорт `scripts/import-timbre.mjs` по манифесту
+`scripts/timbre-import-manifest.json`: **10 пресетов / 41 ассет**, все
+`rights_status=approved`, лицензия **CC0-1.0**. Поштучные записи прав
+(источник, URL, автор, лицензия, дата проверки, sha256 оригинала и
+производного, TASL-атрибуция, паспорт) — в реестре
+`server/music/data/timbre/{sources,assets,presets,zones}.json`; реестр —
+единственный источник истины, эта секция — сводка.
+
+| Пресет | Источник | Ассетов | Корни (MIDI) |
+|---|---|---|---|
+| `tp-upright-piano-v1` | VSCO 2 CE · Keys/Upright Piano (Simon Dalzell, Ivy Audio) | 4 | 37, 49, 61, 73 |
+| `tp-upright-soft-v1` | VSCO 2 CE · Keys/Upright Piano (pp-слой) | 4 | 36, 48, 60, 72 |
+| `tp-solo-violin-v1` | VSCO 2 CE · Strings/Solo Violin (ArcoVib) | 5 | 55, 60, 64, 69, 72 |
+| `tp-solo-violin-pizz-v1` | VSCO 2 CE · Strings/Solo Violin (Pizz) | 4 | 55, 60, 64, 69 |
+| `tp-violin-section-v1` | VSCO 2 CE · Strings/Violin Section (susVib) | 4 | 43, 60, 67, 74 |
+| `tp-viola-section-v1` | VSCO 2 CE · Strings/Viola Section | 4 | 36, 43, 50, 60 |
+| `tp-cello-section-v1` | VSCO 2 CE · Strings/Cello Section | 4 | 24, 31, 48, 55 |
+| `tp-contrabass-sus-v1` | VSCO 2 CE · Strings/Solo Contrabass (sus) | 4 | 24, 28, 33, 37 |
+| `tp-contrabass-pizz-v1` | VSCO 2 CE · Strings/Solo Contrabass (pizz) | 4 | 24, 28, 33, 37 |
+| `tp-harp-v1` | VSCO 2 CE · Strings/Harp | 4 | 48, 55, 72, 76 |
+
+**Производные файлы.** Оригиналы WAV не изменяются (контроль sha256);
+для движка создан производный OGG (libvorbis q5, без обрезки/нормализации/
+сведения в моно) — это дериватив CC0-оригинала, лицензия наследуется.
+Аудио вне git (`data/timbre/audio/`), манифесты и реестр — в git.
+Атрибуция при экспорте/шеринге: CC0 — строка происхождения (кредит не
+обязателен, но сохраняется: Simon Dalzell / Ivy Audio / Versilian Studios);
+механика TASL — `attributionLinesForCode` (D-126), подключена к экспорту
+и шерингу. Organa нумерованные файлы без MappingChart пропущены осознанно:
+корни не угадываются.
