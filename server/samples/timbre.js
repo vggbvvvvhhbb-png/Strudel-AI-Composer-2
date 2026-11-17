@@ -19,6 +19,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { registerTimbreCatalogLoader } from '../music/compiler/timbre-catalog.js';
+
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 /** Каталог манифестов Timbre Palette (в git; аудио — вне git). */
@@ -269,3 +271,34 @@ export function timbreReport(catalog = loadTimbreCatalog(), options = {}) {
     })),
   };
 }
+
+/**
+ * Файл аудио каталога для same-origin раздачи (по образцу poolAudioFile, D-119).
+ *
+ * Доступ разрешён ТОЛЬКО к файлу, зарегистрированному в реестре за пресетом:
+ * запись в каталоге — единственный пропуск, произвольные файлы каталога
+ * (и тем более вне его) не читаются. Обход пути отвергается.
+ *
+ * @param {string} alias strudelAlias пресета
+ * @param {string} file имя файла (например c4.ogg)
+ * @param {{catalog?: object, audioDir?: string}} [options]
+ * @returns {string|null} абсолютный путь или null
+ */
+export function timbreAudioFile(alias, file, { catalog = loadTimbreCatalog(), audioDir = TIMBRE_AUDIO_DIR } = {}) {
+  if (typeof alias !== 'string' || typeof file !== 'string') return null;
+  if (!/^[\w.-]+\.ogg$/.test(file)) return null;
+  const preset = Object.values(catalog.presets).find((entry) => entry.strudelAlias === alias);
+  if (!preset) return null;
+  const relative = `${alias}/${file}`;
+  const asset = Object.values(catalog.assets).find((entry) => entry.file === relative);
+  if (!asset) return null;
+  const base = path.resolve(audioDir);
+  const full = path.resolve(base, relative);
+  if (!full.startsWith(base + path.sep)) return null;
+  return existsSync(full) ? full : null;
+}
+
+// Общий компилятор не имеет права импортировать node:fs (его тянет и
+// браузер), поэтому серверный загрузчик каталога регистрируется здесь —
+// при импорте этого модуля (D-128).
+registerTimbreCatalogLoader(() => loadTimbreCatalog());

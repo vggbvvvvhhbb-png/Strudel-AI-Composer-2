@@ -2,9 +2,23 @@
 import { validateTrackSpec } from '../../../src/schemas/track-spec.schema.js';
 import { isSampledRole, listParts, transposeFor } from '../../../src/schemas/parts.js';
 import { checkSpec } from '../spec/check.js';
+import { loadRegisteredTimbreCatalog } from './timbre-catalog.js';
 
 const EFFECTS = new Set(['room', 'delay', 'gain', 'lpf', 'hpf']);
 const NOTES = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+
+/**
+ * Пресет каталога по instrumentId (D-128). Неизвестный id — ошибка,
+ * а не тихая подмена: пользователь просил конкретный инструмент.
+ * Каталог загружается только когда в спеке есть instrumentId: реестр
+ * остаётся единым источником истины, детерминизм кода сохраняется.
+ */
+function resolveInstrument(instrumentId, catalog) {
+  if (!instrumentId) return null;
+  const preset = catalog.presets[instrumentId];
+  if (!preset) throw new Error(`instrumentId «${instrumentId}» не найден в каталоге Timbre Palette`);
+  return preset;
+}
 
 function mini(text, field) {
   // Values are data inside quoted mini strings, never executable Strudel expressions.
@@ -75,11 +89,15 @@ function groupsExpression(part, id) {
   return parts.length === 1 ? parts[0] : `stack(${parts.join(', ')})`;
 }
 
-function sectionBody(part, id, role, section, scale, key) {
+function sectionBody(part, id, role, section, scale, key, timbreCatalog) {
   // Переопределения по секции: у каждой секции свой рисунок (двойник).
   const override = part.sections?.[section.name] ?? {};
   const pattern = override.pattern ?? part.pattern;
-  const sound = override.sound ?? part.sound;
+  // Тембр (D-128): секционный override.sound сильнее instrumentId;
+  // instrumentId наследуется на все секции без override. Музыкальные
+  // события от выбора инструмента не зависят — меняется только .s().
+  const instrument = resolveInstrument(part.instrumentId, timbreCatalog);
+  const sound = override.sound ?? instrument?.strudelAlias ?? part.sound;
   const gainPattern = override.gainPattern ?? part.gainPattern;
   const groups = override.groups ?? part.groups;
   // Музыкальное поведение задаёт РОЛЬ партии, идентичность — её id (D-100).
@@ -134,7 +152,7 @@ function sectionBody(part, id, role, section, scale, key) {
 }
 
 /** Валидирует вход до генерации; возвращает строку Strudel-кода. */
-export function compileTrackSpec(input) {
+export function compileTrackSpec(input, { timbreCatalog } = {}) {
   const spec = validateTrackSpec(input);
   const checked = checkSpec(spec);
   if (!checked.ok) throw new Error(`Invalid TrackSpec: ${checked.errors.join('; ')}`);
@@ -143,6 +161,8 @@ export function compileTrackSpec(input) {
   // чтобы компиляция оставалась детерминированной (D-100).
   const parts = listParts(spec.parts);
   const scale = keyScale(spec.meta.key);
+  const needsTimbre = Object.values(spec.parts.roles).some((part) => part.instrumentId);
+  const catalog = timbreCatalog ?? (needsTimbre ? loadRegisteredTimbreCatalog() : { presets: {} });
   const lines = [
     `// ${spec.meta.style} — ${spec.meta.bpm} BPM, ${scale}`,
     `// Форма: ${sections.map((s) => `${s.name}(${s.cycles})`).join(' → ')}`,
@@ -169,7 +189,7 @@ export function compileTrackSpec(input) {
         return;
       }
       const name = `${label}_${index}`;
-      constants.push(`const ${name} = ${sectionBody(part, id, role, section, scale, spec.meta.key)}`);
+      constants.push(`const ${name} = ${sectionBody(part, id, role, section, scale, spec.meta.key, catalog)}`);
       chunks.push(`[${section.cycles}, ${name}]`);
     });
     if (part.activeIn.length) {
