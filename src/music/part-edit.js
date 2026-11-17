@@ -12,6 +12,8 @@
 // Операции и их контракт. params — ровно то, что нужно операции.
 export const PART_OPS = {
   setSound: 'заменить тембр дорожки',
+  setInstrument: 'заменить инструмент дорожки пресетом каталога (Timbre Palette)',
+  setTimbreProfile: 'задать профиль тембра (warm/bright/dark/soft) для резолвера',
   setPattern: 'заменить рисунок дорожки',
   setGain: 'изменить громкость дорожки (дБ)',
   setRole: 'изменить роль дорожки',
@@ -67,6 +69,33 @@ export function applyPartEdit(spec, edit) {
         return { ok: false, spec: null, changed: [], error: 'setSound: нужен sound' };
       }
       part.sound = params.sound;
+      break;
+    }
+    // Смена инструмента НЕ трогает ноты/ритм/структуру (D-128): меняется
+    // только instrumentId. Существование пресета проверяет компилятор
+    // (fail-closed), здесь — только формат идентификатора.
+    case 'setInstrument': {
+      const instrumentId = params.instrumentId;
+      if (instrumentId === null) {
+        delete part.instrumentId;
+        break;
+      }
+      if (typeof instrumentId !== 'string' || !/^tp-[a-z0-9-]+$/.test(instrumentId)) {
+        return { ok: false, spec: null, changed: [], error: 'setInstrument: instrumentId формата tp-<имя>-v<версия> (или null для сброса)' };
+      }
+      part.instrumentId = instrumentId;
+      break;
+    }
+    case 'setTimbreProfile': {
+      const profile = params.timbreProfile;
+      if (profile === null) {
+        delete part.timbreProfile;
+        break;
+      }
+      if (!['warm', 'bright', 'dark', 'soft'].includes(profile)) {
+        return { ok: false, spec: null, changed: [], error: 'setTimbreProfile: warm/bright/dark/soft (или null)' };
+      }
+      part.timbreProfile = profile;
       break;
     }
     case 'setPattern': {

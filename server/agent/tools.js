@@ -27,6 +27,7 @@ import {
 import { buildPassport } from '../samples/passport.js';
 import { downloadSampleWav } from '../samples/download.js';
 import { addToPool, searchPool, getFromPool, POOL_AUDIO_DIR } from '../samples/pool.js';
+import { resolveTimbre } from '../samples/timbre-resolver.js';
 import { readWav } from '../deepdive/pipeline/helpers.js';
 import { compileTrackSpec } from '../music/compiler/index.js';
 import { buildTrack } from '../music/compose/pipeline.js';
@@ -523,6 +524,33 @@ export const TOOLS = [
           character: item.entry.passport?.character ?? null,
           durationS: item.entry.passport?.durationS ?? null,
         })),
+      };
+    },
+  },
+  {
+    id: 'resolve_timbre',
+    title: 'Подбор тембра под партию',
+    description:
+      'Timbre Resolver v1: подбирает 3–5 инструментальных пресетов каталога под роль, '
+      + 'диапазон нот, профиль тембра (warm/bright/dark/soft) и стиль трека. '
+      + 'Кандидаты несут обоснование (фильтры и измерения паспорта). Смена инструмента '
+      + 'не меняет музыкальные события — только источник звука.',
+    schema: z.object({
+      role: z.string().max(40).optional(),
+      family: z.enum(['keys', 'strings', 'bass']).optional(),
+      range: z.tuple([z.number().int().min(0).max(127), z.number().int().min(0).max(127)]).optional(),
+      profile: z.enum(['warm', 'bright', 'dark', 'soft']).optional(),
+      style: z.string().max(40).optional(),
+      limit: z.number().int().min(1).max(5).default(5),
+    }),
+    async run(args) {
+      const candidates = resolveTimbre(args);
+      return {
+        ok: true,
+        degraded: false,
+        found: candidates.length,
+        candidates,
+        ...(candidates.length ? {} : { reason: 'подходящих пресетов нет: каталог мал или фильтры слишком узкие' }),
       };
     },
   },
