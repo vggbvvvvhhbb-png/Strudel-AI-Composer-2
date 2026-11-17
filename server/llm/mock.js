@@ -59,6 +59,21 @@ export function mockCompletion({ messages = [], responseFormat } = {}) {
     return JSON.stringify(fallbackSpec(style, 1));
   }
 
+  // Образованный ассистент базы знаний (server/rag/prompt.js): отдаём
+  // обоснование + fenced-блок, чтобы мок проходил полный путь парсера
+  // и валидатора, а не только ветку голого кода.
+  if (text.includes('музыкально образованный ассистент')) {
+    return [
+      'Тоника c:minor с минорной терцией и квинтой: устойчивое трезвучие, бас двигается ступенями 0–2–4 внутри лада.',
+      '```strudel',
+      `setCpm(${style === 'techno' ? 128 : 100}/4)`,
+      'const key = "c:minor"',
+      '$KICK: s("bd*4")._scope()',
+      '$BASS: n("0 ~ 2 4").scale(key).s("sawtooth")._pianoroll()',
+      '```',
+    ].join('\n');
+  }
+
   // Свободный режим — простейший валидный Strudel-код.
   return [
     `setCpm(${style === 'techno' ? 128 : 100}/4)`,
