@@ -1,0 +1,83 @@
+{
+  "generatedAt": "2026-11-17T15:09:31.709Z",
+  "wallMs": 33663,
+  "ok": true,
+  "steps": [
+    {
+      "name": "сервер поднялся",
+      "ok": true,
+      "detail": "http://127.0.0.1:3117"
+    },
+    {
+      "name": "демо-опера в таймлайне",
+      "ok": true,
+      "detail": "66 дорожек"
+    },
+    {
+      "name": "карточки каталога с лицензией",
+      "ok": true,
+      "detail": "2 карточек, превью preload=none: 4"
+    },
+    {
+      "name": "резолвер: warm ставит тёплый пресет первым",
+      "ok": true,
+      "detail": "tp-upright-soft-v1"
+    },
+    {
+      "name": "пресет применён к партии",
+      "ok": true,
+      "detail": "чип: piano → tp_upright_soft_v1"
+    },
+    {
+      "name": "live-правка без ошибок",
+      "ok": true,
+      "detail": "прогрев пресета и evaluate прошли"
+    },
+    {
+      "name": "тембровая пара отрендерилась",
+      "ok": true,
+      "detail": "Слушайте. Громкость выровнена (цель -27.4 LUFS). Клавиши: ← лучше A, → лучше B, ↓ ничья, ↑"
+    },
+    {
+      "name": "контекст партии показан",
+      "ok": true,
+      "detail": "Партия pad · струнные · стиль lo-fi. Музыкальная партия одна и та же — меняется только инс"
+    },
+    {
+      "name": "метка записана как тембровая",
+      "ok": true,
+      "detail": "timbreJudged=1, промтов закрыто: 0"
+    },
+    {
+      "name": "прогресс тембров отдельный",
+      "ok": true,
+      "detail": "1 / 20 · тембров 1"
+    },
+    {
+      "name": "ответ «ни один» работает",
+      "ok": true,
+      "detail": "Какой тембр лучше подходит партии pad (cinematic)? → ни один"
+    },
+    {
+      "name": "трековый режим тиндера жив",
+      "ok": true,
+      "detail": "Слушайте. Громкость выровнена (цель -20.3 LUFS). Клавиши: ← лучше A, → лучше B, ↓ ничья, ↑"
+    },
+    {
+      "name": "контекст тембра скрыт в трековом режиме",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "numbers": {
+    "timelineRows": 66,
+    "catalogCards": 2,
+    "previewPlayers": 4,
+    "resolverTopWarm": "tp-upright-soft-v1",
+    "studioConsoleErrors": 0,
+    "timbreJudged": 1,
+    "uniquePromptsAfterTimbre": 0,
+    "tinderConsoleErrors": 0
+  },
+  "note": "Метки зонда — во временном каталоге STRUDEL_DATA_DIR, настоящие метки владельца не тронуты."
+}

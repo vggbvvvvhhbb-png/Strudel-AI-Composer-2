@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-17T13:54:56.007Z",
+  "checkedAt": "2026-11-17T15:12:06.695Z",
   "machinery": {
     "pass": true,
     "checks": 23,
@@ -11,6 +11,7 @@
     "required": 100,
     "uniquePrompts": 5,
     "requiredPrompts": 50,
+    "timbreDecided": 0,
     "note": "Метки ставит человек; тест их не заменяет."
   },
   "tasteAdmission": {
@@ -218,7 +219,8 @@
       "numbers": {
         "judgedPairs": 6,
         "uniquePrompts": 5,
-        "promptsNeeded": 50
+        "promptsNeeded": 50,
+        "timbreJudged": 0
       }
     }
   ]
