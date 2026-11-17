@@ -12,6 +12,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join, dirname, resolve, relative } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
@@ -75,6 +76,27 @@ function ignoredDirs() {
   return dirs;
 }
 
+/**
+ * Файлы, отслеживаемые git, по пути относительно корня репозитория.
+ * Именно этот набор попадает в checkout CI — то есть в контекст сборки
+ * образа. Пустой массив означает, что путь не в git: Dockerfile, который
+ * копирует такой каталог, упадёт в CI с "COPY failed: no such file".
+ */
+function trackedFiles(pathspec) {
+  const out = execFileSync('git', ['ls-files', '--', pathspec], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return out.split(/\r?\n/).filter(Boolean);
+}
+
+/** Реестр ассетов каталога Timbre Palette: id → паспорт с правами. */
+function timbreAssets() {
+  const raw = readFileSync(join(ROOT, 'server', 'music', 'data', 'timbre', 'assets.json'), 'utf8');
+  return JSON.parse(raw).assets ?? {};
+}
+
 describe('образ приложения', () => {
   it('сервер не импортирует ничего за пределами копируемых каталогов', () => {
     const copied = copiedDirs();
@@ -128,5 +150,54 @@ describe('образ приложения', () => {
     const runLine = CI_WORKFLOW.split(/\r?\n/).find((line) => line.includes('docker run'));
     expect(runLine).toBeTruthy();
     expect(runLine).toMatch(/HOST=0\.0\.0\.0/);
+  });
+
+  it('OGG-пресеты каталога отслеживаются git — иначе CI не соберёт образ', () => {
+    // D-130. Дефект, который уронил PR #3: каталог data/timbre/audio был
+    // вне git (.gitignore:55), а Dockerfile копирует его в образ. CI
+    // собирает образ из чистого checkout, где каталога нет, и падает:
+    // "COPY failed: stat .../data/timbre/audio: no such file or directory".
+    // Локально дефект не виден: на машине владельца каталог лежит
+    // неотслеживаемым, а Docker-демон не запущен.
+    const tracked = trackedFiles('data/timbre/audio');
+    expect(tracked.length).toBeGreaterThan(0);
+    const presets = tracked.filter((path) => path.endsWith('.ogg'));
+    expect(presets.length).toBe(41);
+  });
+
+  it('каждый пресет реестра присутствует в git — иначе в образе нет звука', () => {
+    // Реестр (server/music/data/timbre/assets.json) перечисляет файлы
+    // относительно data/timbre/audio. Пресет в реестре, но не в git —
+    // это тот же самый баг D-129 по-другому: /api/timbre/presets отдаст
+    // пресет, а звука в образе не будет.
+    const assets = Object.values(timbreAssets()).filter((asset) => asset && asset.file);
+    expect(assets.length).toBe(41);
+    const tracked = new Set(trackedFiles('data/timbre/audio'));
+    const missing = assets
+      .map((asset) => `data/timbre/audio/${asset.file}`)
+      .filter((path) => !tracked.has(path));
+    expect(missing).toEqual([]);
+  });
+
+  it('банк-исходник каталога не отслеживается git — 74.7 МБ в репозитории лишние', () => {
+    // data/timbre/audio/originals — оригиналы WAV, импортный слой.
+    // В рантайме сервер читает только OGG-пресеты, поэтому исходники
+    // остаются на машине владельца и в образ не едут.
+    const tracked = trackedFiles('data/timbre/audio');
+    expect(tracked.filter((path) => path.includes('originals'))).toEqual([]);
+  });
+
+  it('все пресеты каталога лицензионно чисты — CC0 с правом на распространение', () => {
+    // Файлы пресетов уезжают в публичный репозиторий, поэтому право
+    // на распространение проверяется не «на словах», а по реестру:
+    // commercial_use и redistribution должны быть у каждого ассета.
+    const assets = Object.values(timbreAssets()).filter((asset) => asset && asset.file);
+    const dirty = assets
+      .filter((asset) => asset.license !== 'CC0-1.0'
+        || asset.rights_status !== 'approved'
+        || asset.commercial_use !== true
+        || asset.redistribution !== true)
+      .map((asset) => asset.id);
+    expect(dirty).toEqual([]);
   });
 });

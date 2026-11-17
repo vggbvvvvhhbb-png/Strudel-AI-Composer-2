@@ -23,9 +23,13 @@ import { registerTimbreCatalogLoader } from '../music/compiler/timbre-catalog.js
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
-/** Каталог манифестов Timbre Palette (в git; аудио — вне git). */
+/** Каталог манифестов Timbre Palette (в git). */
 export const TIMBRE_DIR = path.resolve(HERE, '..', 'music', 'data', 'timbre');
-/** Каталог с аудио каталога (вне git, по образцу пула). */
+/**
+ * Каталог с аудио каталога. OGG-пресеты — в git (D-130): Dockerfile копирует
+ * этот каталог в образ, а CI собирает образ из чистого checkout. Банк-исходник
+ * (originals/, WAV) остаётся вне git — он импортный, в рантайме не читается.
+ */
 export const TIMBRE_AUDIO_DIR = path.resolve(HERE, '..', '..', 'data', 'timbre', 'audio');
 
 /** Alias пресета: только неймспейс tp_, строчные буквы/цифры/подчёркивание. */

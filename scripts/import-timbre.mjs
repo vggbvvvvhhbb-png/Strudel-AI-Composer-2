@@ -16,7 +16,8 @@
 //
 // Права: источник CC0-1.0 подтверждён по первоисточнику (sources.json);
 // каждый ассет получает полную запись прав и атрибуцию TASL с кредитом
-// автора поднабора. Реестр — server/music/data/timbre/, аудио — вне git.
+// автора поднабора. Реестр — server/music/data/timbre/, OGG-пресеты —
+// в git (D-130), банк-исходник (originals/) — вне git.
 
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

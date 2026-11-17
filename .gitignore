@@ -50,6 +50,16 @@ local/.state/
 # (data/samples/pool.json) в git идёт, сами звуки — нет.
 data/samples/audio/
 
-# Аудио каталога Timbre Palette (D-126). Манифесты прав и пресетов
-# (server/music/data/timbre/) в git идут, сами звуки — нет, по образцу пула.
-data/timbre/audio/
+# Аудио каталога Timbre Palette (D-126, D-130). Манифесты прав и пресетов
+# (server/music/data/timbre/) и сами пресеты в git идут: 41 OGG-файл,
+# 6.2 МБ, все CC0-1.0 с поштучными паспортами (server/music/data/timbre/
+# assets.json). Причина: Dockerfile копирует каталог в образ, а CI
+# собирает из чистого checkout — при каталоге вне git сборка падала
+# (COPY failed: no such file or directory).
+#
+# Банк-исходник (originals/, WAV 74.7 МБ) — импортный слой, вне git.
+# Порядок правил важен: содержимое каталога исключается, подкаталоги
+# с пресетами возвращаются, originals исключается последним.
+data/timbre/audio/*
+!data/timbre/audio/*/
+data/timbre/audio/originals/
