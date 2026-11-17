@@ -57,6 +57,7 @@ const STRUDEL_METHODS = [
   'registerSynthSounds',
   'superdough',
   'samples',
+  'loadBuffer',
 ];
 
 const strudelApi = {};
@@ -67,6 +68,7 @@ for (const name of STRUDEL_METHODS) {
 let adapter = null;
 let initError = null;
 const loadedPoolSamples = new Set();
+let registeredTimbreMap = null;
 
 /** base64 из байтов — кусками, чтобы не раздувать стек на длинном рендере. */
 function bytesToBase64(bytes) {
@@ -108,6 +110,7 @@ async function render(args) {
     wantWav = true,
     wantEvents = true,
     poolSamples = [],
+    timbre = null,
   } = args || {};
 
   if (!code || typeof code !== 'string') throw new Error('Нет кода для рендера');
@@ -124,6 +127,30 @@ async function render(args) {
       throw new Error('Сэмплы пула не загрузились: ' + (loaded.errors || []).join('; '));
     }
     fresh.forEach((s) => loadedPoolSamples.add(s.sound));
+  }
+
+  // Пресеты Timbre Palette (D-128): регистрация карты + прогрев конкретных
+  // OGG публичным loadBuffer ДО рендера. Манифест ≠ загруженные файлы:
+  // без прогрева первая нота пресета молчит. Отказ — ошибка рендера.
+  if (timbre && timbre.aliases?.length) {
+    const mapKey = JSON.stringify(timbre.map);
+    if (registeredTimbreMap !== mapKey) {
+      const loaded = await adapter.loadSamples({ sources: [timbre.map] });
+      if (!loaded.ok || loaded.failed) {
+        throw new Error('Карта пресетов Timbre не зарегистрировалась: ' + (loaded.errors || []).join('; '));
+      }
+      registeredTimbreMap = mapKey;
+    }
+    const base = timbre.map._base ?? '/timbre-audio/';
+    const urls = timbre.aliases.flatMap((alias) => {
+      const entries = timbre.map[alias];
+      if (!entries || typeof entries !== 'object') return [];
+      return Object.values(entries).map((file) => (String(file).startsWith('/') ? file : base + file));
+    });
+    const warmed = await adapter.warmSamples(urls);
+    if (!warmed.ok) {
+      throw new Error('Пресеты Timbre не прогрелись: ' + (warmed.errors || []).join('; '));
+    }
   }
 
   const startedAt = performance.now();
