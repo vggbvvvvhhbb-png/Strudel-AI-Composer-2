@@ -21,6 +21,7 @@ import deepdiveRoute from './routes/deepdive.js';
 import agentRoute from './routes/agent.js';
 import localRoute from './routes/local.js';
 import samplesRoute from './routes/samples.js';
+import ragRoute from './routes/rag.js';
 import { withUsageContext } from './llm/context.js';
 import { cspHeaderFor } from './security/csp.js';
 
@@ -112,6 +113,8 @@ app.use('/api/agent', agentRoute);
 app.use('/api/local', localRoute);
 // Локальный пул сэмплов «Охотника»: паспорт звука и реестр лицензий (D-115).
 app.use(samplesRoute);
+// Музыкальный интеллект: RAG-ассистент с петлёй self-correction и объяснение кода (D-140).
+app.use(ragRoute);
 
 if (existsSync(distDir)) {
   // index.html — без кэша: сборка кладёт в assets файлы с хэшем в имени, и
