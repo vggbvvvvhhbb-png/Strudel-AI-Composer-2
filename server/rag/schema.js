@@ -28,6 +28,9 @@ export const musicTagsSchema = z.object({
   complexity: z.enum(COMPLEXITY),
   // null = темп не применим (свободный паттерн без setCpm), не 0 (D-102).
   bpm: z.number().int().min(40).max(240).nullable(),
+  // Осознанная хроматика вне лада (тритоновая замена и т.п.): проверка
+  // принадлежности ладу пропускается, но rationale обязан объяснять выход.
+  chromatic: z.boolean().default(false),
 });
 
 export const sourceSchema = z.object({
