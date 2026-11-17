@@ -1,4 +1,4436 @@
 {
   "note": "Ассеты каталога Timbre Palette (sample_assets): один файл = одна запись с правами и измерениями. Аудио лежит вне git (data/timbre/audio/), реестр — в git. Паспорт (descriptor) считается существующим модулем server/samples/passport.js; числовые измерения хранятся отдельно от семантических тегов. Неизмеренное — null, не 0 (D-102). Поля прав обязательны для каждого ассета (D-126).",
-  "assets": {}
+  "assets": {
+    "vsco2-ce/player-dyn1-rr1-008": {
+      "id": "vsco2-ce/player-dyn1-rr1-008",
+      "name": "Upright Piano (dyn1) — C#2",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Piano/Player_dyn1_rr1_008.wav",
+      "creator": "Simon Dalzell (Ivy Audio) / Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Upright Piano (dyn1) — C#2» by Simon Dalzell (Ivy Audio) / Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright Piano/Player_dyn1_rr1_008.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "3b4cdd096b01b23a81b2ad8ad880c409c8a78d69cd0306fe9bf66795cd62acca",
+      "sha256_derived": "989aa0a5e5b5ada2c5c68a3d77adaa5594ebb53bef35c47adb8fbb52f05be903",
+      "duration_s": 20.673,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 37,
+      "tags": [
+        "acoustic",
+        "piano",
+        "bright",
+        "dynamic"
+      ],
+      "descriptor": {
+        "name": "Upright Piano (dyn1) — C#2",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Piano/Player_dyn1_rr1_008.wav",
+        "durationS": 20.673,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -43.17,
+          "peakDbfs": -22.86,
+          "crestDb": 26.13
+        },
+        "spectral": {
+          "centroidHz": 300.1,
+          "rolloffHz": 328.4,
+          "flatness": 0.002951,
+          "bands": {
+            "sub": -66.93,
+            "low": -53.94,
+            "lowMid": -51.09,
+            "mid": -60.63,
+            "highMid": -82.21,
+            "high": -95.74
+          }
+        },
+        "transients": {
+          "count": 208,
+          "densityPerSec": 10.061,
+          "timesS": [
+            0.0348,
+            0.18,
+            0.4528,
+            0.5689,
+            0.656,
+            0.8475,
+            0.9056,
+            0.9752,
+            1.0623,
+            1.1494,
+            1.2074,
+            1.2945,
+            1.4687,
+            1.5557,
+            1.6428,
+            1.7009,
+            1.8866,
+            1.9447,
+            2.0434,
+            2.1711,
+            2.2291,
+            2.2872,
+            2.3452,
+            2.4149,
+            2.4729,
+            2.589,
+            2.6761,
+            2.7922,
+            2.9373,
+            3.1521,
+            3.2682,
+            3.3669
+          ]
+        },
+        "tonal": {
+          "f0Hz": 69.08,
+          "note": "C#",
+          "voicedRatio": 0.599
+        },
+        "tempo": {
+          "bpm": 172.27,
+          "confidence": 0.174
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тихий"
+        ]
+      },
+      "file": "tp_upright_piano_v1/cs2.ogg",
+      "original_file": "originals/vsco2-ce/Player_dyn1_rr1_008.wav"
+    },
+    "vsco2-ce/player-dyn1-rr1-014": {
+      "id": "vsco2-ce/player-dyn1-rr1-014",
+      "name": "Upright Piano (dyn1) — C#3",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Piano/Player_dyn1_rr1_014.wav",
+      "creator": "Simon Dalzell (Ivy Audio) / Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Upright Piano (dyn1) — C#3» by Simon Dalzell (Ivy Audio) / Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright Piano/Player_dyn1_rr1_014.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "f3d00b63bb178680fdd4d9ed7ea43d1df1cf29e00b567ccb022c2bd411a20607",
+      "sha256_derived": "518f0c8f7362db23dae0f6f5f7ab8ca015a7647a539a0daac20d7170a4c1c0a9",
+      "duration_s": 8.58,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 49,
+      "tags": [
+        "acoustic",
+        "piano",
+        "bright",
+        "dynamic"
+      ],
+      "descriptor": {
+        "name": "Upright Piano (dyn1) — C#3",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Piano/Player_dyn1_rr1_014.wav",
+        "durationS": 8.58,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -39.82,
+          "peakDbfs": -25.43,
+          "crestDb": 22.58
+        },
+        "spectral": {
+          "centroidHz": 466.4,
+          "rolloffHz": 503.3,
+          "flatness": 0.008983,
+          "bands": {
+            "sub": -65.72,
+            "low": -53.31,
+            "lowMid": -50.6,
+            "mid": -56.14,
+            "highMid": -75.58,
+            "high": -91.66
+          }
+        },
+        "transients": {
+          "count": 77,
+          "densityPerSec": 8.974,
+          "timesS": [
+            0.0058,
+            0.0697,
+            0.1567,
+            0.2902,
+            0.6385,
+            0.7488,
+            0.8417,
+            1.5499,
+            1.9156,
+            2.0317,
+            2.142,
+            2.2756,
+            2.3626,
+            2.4613,
+            2.5542,
+            2.6239,
+            2.7051,
+            2.7632,
+            2.8328,
+            2.9141,
+            2.9722,
+            3.0418,
+            3.1811,
+            3.2856,
+            3.3669,
+            3.4772,
+            3.6049,
+            3.7674,
+            3.8487,
+            3.9532,
+            4.0577,
+            4.1854
+          ]
+        },
+        "tonal": {
+          "f0Hz": 138.7,
+          "note": "C#",
+          "voicedRatio": 0.395
+        },
+        "tempo": {
+          "bpm": 161.5,
+          "confidence": 0.158
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тихий"
+        ]
+      },
+      "file": "tp_upright_piano_v1/cs3.ogg",
+      "original_file": "originals/vsco2-ce/Player_dyn1_rr1_014.wav"
+    },
+    "vsco2-ce/player-dyn1-rr1-020": {
+      "id": "vsco2-ce/player-dyn1-rr1-020",
+      "name": "Upright Piano (dyn1) — C#4",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Piano/Player_dyn1_rr1_020.wav",
+      "creator": "Simon Dalzell (Ivy Audio) / Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Upright Piano (dyn1) — C#4» by Simon Dalzell (Ivy Audio) / Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright Piano/Player_dyn1_rr1_020.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "08242e8d1c865c8cdc794cc7921d3d9663bedb5a12bfefe0de13aaa86fd23133",
+      "sha256_derived": "f398cdba9cc55c0cf5d0ec142d0964b4eb5cd611f44c1e5de9087a8c1c100b3a",
+      "duration_s": 11.842,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 61,
+      "tags": [
+        "acoustic",
+        "piano",
+        "bright",
+        "dynamic"
+      ],
+      "descriptor": {
+        "name": "Upright Piano (dyn1) — C#4",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Piano/Player_dyn1_rr1_020.wav",
+        "durationS": 11.842,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -49.71,
+          "peakDbfs": -34.7,
+          "crestDb": 23.32
+        },
+        "spectral": {
+          "centroidHz": 481,
+          "rolloffHz": 508.7,
+          "flatness": 0.006966,
+          "bands": {
+            "sub": -83.53,
+            "low": -70.06,
+            "lowMid": -60.14,
+            "mid": -62.86,
+            "highMid": -80.01,
+            "high": -94.5
+          }
+        },
+        "transients": {
+          "count": 108,
+          "densityPerSec": 9.12,
+          "timesS": [
+            0.0058,
+            0.4238,
+            0.5979,
+            0.7314,
+            0.8243,
+            0.9578,
+            1.0913,
+            1.1784,
+            1.2829,
+            1.7705,
+            1.9505,
+            2.0782,
+            2.1362,
+            2.2407,
+            2.3452,
+            2.5194,
+            2.6471,
+            2.7342,
+            2.8793,
+            2.9315,
+            3.0128,
+            3.1753,
+            3.2276,
+            3.3437,
+            3.4656,
+            3.5701,
+            3.6571,
+            3.7384,
+            3.8545,
+            3.959,
+            4.0983,
+            4.1506
+          ]
+        },
+        "tonal": {
+          "f0Hz": 277.63,
+          "note": "C#",
+          "voicedRatio": 0.494
+        },
+        "tempo": {
+          "bpm": 152,
+          "confidence": 0.168
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тихий"
+        ]
+      },
+      "file": "tp_upright_piano_v1/cs4.ogg",
+      "original_file": "originals/vsco2-ce/Player_dyn1_rr1_020.wav"
+    },
+    "vsco2-ce/player-dyn1-rr1-026": {
+      "id": "vsco2-ce/player-dyn1-rr1-026",
+      "name": "Upright Piano (dyn1) — C#5",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Piano/Player_dyn1_rr1_026.wav",
+      "creator": "Simon Dalzell (Ivy Audio) / Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Upright Piano (dyn1) — C#5» by Simon Dalzell (Ivy Audio) / Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright Piano/Player_dyn1_rr1_026.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "254be5d34270e5eb78bbda3f7425c3e82b9596845db2c065b13179f23c23196b",
+      "sha256_derived": "e011736dfa199456d478edffa3afbb6bef05a2fb8b60e81874e992e9409e3c1b",
+      "duration_s": 13.444,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 73,
+      "tags": [
+        "acoustic",
+        "piano",
+        "bright",
+        "dynamic"
+      ],
+      "descriptor": {
+        "name": "Upright Piano (dyn1) — C#5",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Piano/Player_dyn1_rr1_026.wav",
+        "durationS": 13.444,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -44.89,
+          "peakDbfs": -30.53,
+          "crestDb": 25.13
+        },
+        "spectral": {
+          "centroidHz": 541.2,
+          "rolloffHz": 532.9,
+          "flatness": 0.009337,
+          "bands": {
+            "sub": -88.25,
+            "low": -76.09,
+            "lowMid": -62.22,
+            "mid": -56.86,
+            "highMid": -73.09,
+            "high": -89.65
+          }
+        },
+        "transients": {
+          "count": 124,
+          "densityPerSec": 9.223,
+          "timesS": [
+            0.0174,
+            0.2148,
+            0.8359,
+            0.9578,
+            1.0101,
+            1.0739,
+            1.19,
+            1.2655,
+            1.4977,
+            1.6951,
+            1.8808,
+            2.1188,
+            2.4439,
+            2.5252,
+            2.6529,
+            2.7922,
+            2.9025,
+            3.0186,
+            3.1289,
+            3.2276,
+            3.3553,
+            3.4772,
+            3.6049,
+            3.692,
+            3.7732,
+            3.8835,
+            3.988,
+            4.1912,
+            4.2493,
+            4.3247,
+            4.4118,
+            4.4989
+          ]
+        },
+        "tonal": {
+          "f0Hz": 556.22,
+          "note": "C#",
+          "voicedRatio": 0.544
+        },
+        "tempo": {
+          "bpm": 161.5,
+          "confidence": 0.195
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тихий"
+        ]
+      },
+      "file": "tp_upright_piano_v1/cs5.ogg",
+      "original_file": "originals/vsco2-ce/Player_dyn1_rr1_026.wav"
+    },
+    "vsco2-ce/ur1-c2-pp-rr1": {
+      "id": "vsco2-ce/ur1-c2-pp-rr1",
+      "name": "Upright Nr1 (pp, мягкое) — C2",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Nr1/UR1_C2_pp_RR1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Upright Nr1 (pp, мягкое) — C2» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright Nr1/UR1_C2_pp_RR1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "965d05d098e65226bfebbfff2951aa649d527c4a90545e6437e8ced9d703de08",
+      "sha256_derived": "dd96c6d84e581c809fe114bf3110cc977774b862376fc645964d67fad254dabf",
+      "duration_s": 10.553,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 36,
+      "tags": [
+        "acoustic",
+        "piano",
+        "soft",
+        "warm",
+        "intimate"
+      ],
+      "descriptor": {
+        "name": "Upright Nr1 (pp, мягкое) — C2",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Nr1/UR1_C2_pp_RR1.wav",
+        "durationS": 10.553,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -48.89,
+          "peakDbfs": -29.54,
+          "crestDb": 23.47
+        },
+        "spectral": {
+          "centroidHz": 200.7,
+          "rolloffHz": 277.2,
+          "flatness": 0.000834,
+          "bands": {
+            "sub": -70.23,
+            "low": -59.49,
+            "lowMid": -54.79,
+            "mid": -62.9,
+            "highMid": -81.67,
+            "high": -95.16
+          }
+        },
+        "transients": {
+          "count": 97,
+          "densityPerSec": 9.191,
+          "timesS": [
+            0.1335,
+            0.3193,
+            0.3947,
+            0.4586,
+            0.5805,
+            0.6444,
+            0.8301,
+            0.981,
+            1.1494,
+            1.2249,
+            1.3351,
+            1.5325,
+            1.6718,
+            1.7821,
+            1.9156,
+            1.9969,
+            2.1362,
+            2.3336,
+            2.4729,
+            2.6587,
+            2.7806,
+            2.9199,
+            3.0418,
+            3.1521,
+            3.2276,
+            3.4598,
+            3.5991,
+            3.7442,
+            3.7965,
+            3.9358,
+            4.0345,
+            4.197
+          ]
+        },
+        "tonal": {
+          "f0Hz": 65.2,
+          "note": "C",
+          "voicedRatio": 0.301
+        },
+        "tempo": {
+          "bpm": 152,
+          "confidence": 0.125
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тихий"
+        ]
+      },
+      "file": "tp_upright_soft_v1/c2.ogg",
+      "original_file": "originals/vsco2-ce/UR1_C2_pp_RR1.wav"
+    },
+    "vsco2-ce/ur1-c3-pp-rr1": {
+      "id": "vsco2-ce/ur1-c3-pp-rr1",
+      "name": "Upright Nr1 (pp, мягкое) — C3",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Nr1/UR1_C3_pp_RR1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Upright Nr1 (pp, мягкое) — C3» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright Nr1/UR1_C3_pp_RR1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "2fbe80d44b96c24980762eb805594cff6b84a5b4ed06ddfed70a8f8c692b856f",
+      "sha256_derived": "093f31935e685f801ce00f9578c984b282c0313df3cf5453d5e276657922ad91",
+      "duration_s": 7.074,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 48,
+      "tags": [
+        "acoustic",
+        "piano",
+        "soft",
+        "warm",
+        "intimate"
+      ],
+      "descriptor": {
+        "name": "Upright Nr1 (pp, мягкое) — C3",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Nr1/UR1_C3_pp_RR1.wav",
+        "durationS": 7.074,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -49.29,
+          "peakDbfs": -30.34,
+          "crestDb": 19.32
+        },
+        "spectral": {
+          "centroidHz": 153.7,
+          "rolloffHz": 236.9,
+          "flatness": 0.00032,
+          "bands": {
+            "sub": -58.39,
+            "low": -55.82,
+            "lowMid": -52.99,
+            "mid": -58.86,
+            "highMid": -78.45,
+            "high": -91.67
+          }
+        },
+        "transients": {
+          "count": 66,
+          "densityPerSec": 9.33,
+          "timesS": [
+            0.0058,
+            0.0581,
+            0.1393,
+            0.4586,
+            0.6676,
+            0.8417,
+            1.0971,
+            1.3003,
+            1.4396,
+            1.637,
+            1.7299,
+            1.8576,
+            1.9156,
+            2.0898,
+            2.142,
+            2.2175,
+            2.2698,
+            2.3917,
+            2.5426,
+            2.7051,
+            2.8619,
+            2.9373,
+            2.9896,
+            3.0824,
+            3.1695,
+            3.2276,
+            3.2972,
+            3.3553,
+            3.4424,
+            3.6049,
+            3.6804,
+            3.8255
+          ]
+        },
+        "tonal": {
+          "f0Hz": 130.8,
+          "note": "C",
+          "voicedRatio": 0.205
+        },
+        "tempo": {
+          "bpm": 172.27,
+          "confidence": 0.138
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тихий"
+        ]
+      },
+      "file": "tp_upright_soft_v1/c3.ogg",
+      "original_file": "originals/vsco2-ce/UR1_C3_pp_RR1.wav"
+    },
+    "vsco2-ce/ur1-c4-pp-rr1": {
+      "id": "vsco2-ce/ur1-c4-pp-rr1",
+      "name": "Upright Nr1 (pp, мягкое) — C4",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Nr1/UR1_C4_pp_RR1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Upright Nr1 (pp, мягкое) — C4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright Nr1/UR1_C4_pp_RR1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "0354bf405b644eb16b0d1223e304de93b4abef4e2191c552665563784d40f1ea",
+      "sha256_derived": "6ff59e3b5d9a797497ae15c393d8971d3a6ed70a24d07ae62d2de3ef2ac5bad4",
+      "duration_s": 11.015,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 60,
+      "tags": [
+        "acoustic",
+        "piano",
+        "soft",
+        "warm",
+        "intimate"
+      ],
+      "descriptor": {
+        "name": "Upright Nr1 (pp, мягкое) — C4",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Nr1/UR1_C4_pp_RR1.wav",
+        "durationS": 11.015,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -48.77,
+          "peakDbfs": -31.49,
+          "crestDb": 22.05
+        },
+        "spectral": {
+          "centroidHz": 453.9,
+          "rolloffHz": 489.9,
+          "flatness": 0.00122,
+          "bands": {
+            "sub": -78.18,
+            "low": -69.89,
+            "lowMid": -58.58,
+            "mid": -55.45,
+            "highMid": -69.61,
+            "high": -85.11
+          }
+        },
+        "transients": {
+          "count": 47,
+          "densityPerSec": 4.267,
+          "timesS": [
+            3.3205,
+            3.5527,
+            6.0662,
+            6.8209,
+            6.9312,
+            7.0066,
+            7.1459,
+            7.2678,
+            7.442,
+            7.5117,
+            7.6394,
+            7.6974,
+            7.7671,
+            7.9064,
+            7.9877,
+            8.0747,
+            8.1386,
+            8.2024,
+            8.2547,
+            8.365,
+            8.4521,
+            8.5972,
+            8.6494,
+            8.7771,
+            8.841,
+            8.9165,
+            8.9687,
+            9.0558,
+            9.1371,
+            9.2009,
+            9.3228,
+            9.4854
+          ]
+        },
+        "tonal": {
+          "f0Hz": 522.38,
+          "note": "C",
+          "voicedRatio": 0.64
+        },
+        "tempo": {
+          "bpm": 172.27,
+          "confidence": 0.2
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_upright_soft_v1/c4.ogg",
+      "original_file": "originals/vsco2-ce/UR1_C4_pp_RR1.wav"
+    },
+    "vsco2-ce/ur1-c5-pp-rr1": {
+      "id": "vsco2-ce/ur1-c5-pp-rr1",
+      "name": "Upright Nr1 (pp, мягкое) — C5",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Nr1/UR1_C5_pp_RR1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Upright Nr1 (pp, мягкое) — C5» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright Nr1/UR1_C5_pp_RR1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "e0d5353f67afe55e4d6d49253651f2a8aa0c456603f538175e103769e1e1e73c",
+      "sha256_derived": "9868153927237a2610410a2bcac70a2fe45144ae238cb7b2ac18f80d0c39c262",
+      "duration_s": 8.893,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 72,
+      "tags": [
+        "acoustic",
+        "piano",
+        "soft",
+        "warm",
+        "intimate"
+      ],
+      "descriptor": {
+        "name": "Upright Nr1 (pp, мягкое) — C5",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Nr1/UR1_C5_pp_RR1.wav",
+        "durationS": 8.893,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -43.45,
+          "peakDbfs": -29.28,
+          "crestDb": 24.36
+        },
+        "spectral": {
+          "centroidHz": 437.6,
+          "rolloffHz": 586.8,
+          "flatness": 0.003779,
+          "bands": {
+            "sub": -81.28,
+            "low": -74.16,
+            "lowMid": -59.77,
+            "mid": -55,
+            "highMid": -70.05,
+            "high": -86.03
+          }
+        },
+        "transients": {
+          "count": 68,
+          "densityPerSec": 7.646,
+          "timesS": [
+            0.0406,
+            2.0376,
+            2.1246,
+            2.4381,
+            2.5484,
+            2.6877,
+            2.798,
+            2.8735,
+            2.9373,
+            3.1463,
+            3.2334,
+            3.3146,
+            3.4249,
+            3.483,
+            3.541,
+            3.6688,
+            3.7384,
+            3.8487,
+            3.93,
+            3.988,
+            4.0983,
+            4.1738,
+            4.2725,
+            4.3537,
+            4.4176,
+            4.5453,
+            4.5976,
+            4.6498,
+            4.7427,
+            4.911,
+            4.9981,
+            5.1258
+          ]
+        },
+        "tonal": {
+          "f0Hz": 524.15,
+          "note": "C",
+          "voicedRatio": 0.319
+        },
+        "tempo": {
+          "bpm": 161.5,
+          "confidence": 0.194
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тихий"
+        ]
+      },
+      "file": "tp_upright_soft_v1/c5.ogg",
+      "original_file": "originals/vsco2-ce/UR1_C5_pp_RR1.wav"
+    },
+    "vsco2-ce/llvln-arcovib-g3-p": {
+      "id": "vsco2-ce/llvln-arcovib-g3-p",
+      "name": "Solo Violin (arco vib, p) — G3",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Arco%20Vib/LLVln_ArcoVib_G3_p.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Violin (arco vib, p) — G3» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_G3_p.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "c52d8ef3e2882984c09da1b7c7ef40b82e997bc78cfdd380fe167bbcb94b03de",
+      "sha256_derived": "35cea5b9aafe9fcba476d13f6c47406ae0546726be5dc6346336ef4670611f64",
+      "duration_s": 15.809,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 55,
+      "tags": [
+        "solo",
+        "violin",
+        "vibrato",
+        "expressive",
+        "bright"
+      ],
+      "descriptor": {
+        "name": "Solo Violin (arco vib, p) — G3",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Arco%20Vib/LLVln_ArcoVib_G3_p.wav",
+        "durationS": 15.809,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -32.03,
+          "peakDbfs": -22.69,
+          "crestDb": 12.43
+        },
+        "spectral": {
+          "centroidHz": 742.9,
+          "rolloffHz": 1071.3,
+          "flatness": 0.000034,
+          "bands": {
+            "sub": -72.17,
+            "low": -59.1,
+            "lowMid": -43.32,
+            "mid": -36.25,
+            "highMid": -46.33,
+            "high": -57.09
+          }
+        },
+        "transients": {
+          "count": 80,
+          "densityPerSec": 5.06,
+          "timesS": [
+            0.029,
+            0.0871,
+            0.1567,
+            0.3193,
+            0.4122,
+            0.4876,
+            0.5573,
+            0.952,
+            1.1494,
+            1.3119,
+            1.4687,
+            1.7299,
+            1.9563,
+            2.1072,
+            2.2465,
+            2.3394,
+            2.6877,
+            2.9663,
+            3.0999,
+            3.4482,
+            3.5062,
+            3.9938,
+            4.0983,
+            4.2841,
+            4.644,
+            4.8007,
+            5.4567,
+            6.3216,
+            6.6235,
+            6.728,
+            6.8383,
+            6.9544
+          ]
+        },
+        "tonal": {
+          "f0Hz": 583.29,
+          "note": "D",
+          "voicedRatio": 0.947
+        },
+        "tempo": {
+          "bpm": 99.38,
+          "confidence": 0.152
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_solo_violin_v1/g3.ogg",
+      "original_file": "originals/vsco2-ce/LLVln_ArcoVib_G3_p.wav"
+    },
+    "vsco2-ce/llvln-arcovib-c4-p": {
+      "id": "vsco2-ce/llvln-arcovib-c4-p",
+      "name": "Solo Violin (arco vib, p) — C4",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Arco%20Vib/LLVln_ArcoVib_C4_p.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Violin (arco vib, p) — C4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C4_p.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "592ebf4404ccafc7164c13cc543911ba9a2fe5f5e70dbb200807e2ae37b25035",
+      "sha256_derived": "87ef7638dc8f4ee81d2e4b096beb1f09a41dff01af373157bed26c0f9e100004",
+      "duration_s": 17.554,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 60,
+      "tags": [
+        "solo",
+        "violin",
+        "vibrato",
+        "expressive",
+        "bright"
+      ],
+      "descriptor": {
+        "name": "Solo Violin (arco vib, p) — C4",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Arco%20Vib/LLVln_ArcoVib_C4_p.wav",
+        "durationS": 17.554,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -29.38,
+          "peakDbfs": -18.93,
+          "crestDb": 13.37
+        },
+        "spectral": {
+          "centroidHz": 517.7,
+          "rolloffHz": 538.3,
+          "flatness": 0.000051,
+          "bands": {
+            "sub": -64.14,
+            "low": -48.62,
+            "lowMid": -37.18,
+            "mid": -34.45,
+            "highMid": -45.64,
+            "high": -54.39
+          }
+        },
+        "transients": {
+          "count": 116,
+          "densityPerSec": 6.608,
+          "timesS": [
+            0.0348,
+            0.2322,
+            0.4063,
+            0.4818,
+            0.6153,
+            0.7837,
+            0.8417,
+            0.9172,
+            1.2423,
+            1.3932,
+            1.4803,
+            1.875,
+            2.0027,
+            2.1362,
+            2.2059,
+            2.2581,
+            2.3684,
+            2.4845,
+            2.5832,
+            2.6645,
+            2.7806,
+            2.9605,
+            3.1579,
+            3.2276,
+            3.4656,
+            3.5236,
+            3.692,
+            3.7907,
+            4.139,
+            4.3015,
+            4.4176,
+            4.6672
+          ]
+        },
+        "tonal": {
+          "f0Hz": 264.85,
+          "note": "C",
+          "voicedRatio": 0.961
+        },
+        "tempo": {
+          "bpm": 117.45,
+          "confidence": 0.174
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный"
+        ]
+      },
+      "file": "tp_solo_violin_v1/c4.ogg",
+      "original_file": "originals/vsco2-ce/LLVln_ArcoVib_C4_p.wav"
+    },
+    "vsco2-ce/llvln-arcovib-e4-p": {
+      "id": "vsco2-ce/llvln-arcovib-e4-p",
+      "name": "Solo Violin (arco vib, p) — E4",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Arco%20Vib/LLVln_ArcoVib_E4_p.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Violin (arco vib, p) — E4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_E4_p.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "57c5aec0678a5d582d87ab33cd2f8954fea26ffd04c932eb6753d6a78e08736b",
+      "sha256_derived": "b80d3fb3dd6aab9f379583d977a917f4dc5f108c93a24a39322984e52ade9008",
+      "duration_s": 14.74,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 64,
+      "tags": [
+        "solo",
+        "violin",
+        "vibrato",
+        "expressive",
+        "bright"
+      ],
+      "descriptor": {
+        "name": "Solo Violin (arco vib, p) — E4",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Arco%20Vib/LLVln_ArcoVib_E4_p.wav",
+        "durationS": 14.74,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -32.61,
+          "peakDbfs": -21.94,
+          "crestDb": 14.65
+        },
+        "spectral": {
+          "centroidHz": 805.5,
+          "rolloffHz": 1281.2,
+          "flatness": 0.000066,
+          "bands": {
+            "sub": -69.91,
+            "low": -54.45,
+            "lowMid": -42.18,
+            "mid": -40.24,
+            "highMid": -42.59,
+            "high": -50.88
+          }
+        },
+        "transients": {
+          "count": 127,
+          "densityPerSec": 8.616,
+          "timesS": [
+            0.0116,
+            0.1161,
+            0.3483,
+            0.4296,
+            0.505,
+            0.5863,
+            0.8069,
+            0.9694,
+            1.0565,
+            1.2016,
+            1.2887,
+            1.4164,
+            1.4919,
+            1.637,
+            1.7241,
+            1.8576,
+            1.9679,
+            2.0782,
+            2.1537,
+            2.2814,
+            2.3742,
+            2.4323,
+            2.5542,
+            2.6935,
+            2.8793,
+            2.9489,
+            3.0708,
+            3.1463,
+            3.2044,
+            3.274,
+            3.3611,
+            3.512
+          ]
+        },
+        "tonal": {
+          "f0Hz": 330.56,
+          "note": "E",
+          "voicedRatio": 0.987
+        },
+        "tempo": {
+          "bpm": 136,
+          "confidence": 0.167
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_solo_violin_v1/e4.ogg",
+      "original_file": "originals/vsco2-ce/LLVln_ArcoVib_E4_p.wav"
+    },
+    "vsco2-ce/llvln-arcovib-a4-p": {
+      "id": "vsco2-ce/llvln-arcovib-a4-p",
+      "name": "Solo Violin (arco vib, p) — A4",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Arco%20Vib/LLVln_ArcoVib_A4_p.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Violin (arco vib, p) — A4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_A4_p.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "0d05607b46b78690893006d5aa7923ac304c7fb497df1e96536dc88ac5ac487f",
+      "sha256_derived": "825305d4921e587cf0ba38b3ed8c4a675527b83c8da471296cde0f73572cea50",
+      "duration_s": 14.808,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 69,
+      "tags": [
+        "solo",
+        "violin",
+        "vibrato",
+        "expressive",
+        "bright"
+      ],
+      "descriptor": {
+        "name": "Solo Violin (arco vib, p) — A4",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Arco%20Vib/LLVln_ArcoVib_A4_p.wav",
+        "durationS": 14.808,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -31.85,
+          "peakDbfs": -20.49,
+          "crestDb": 15.44
+        },
+        "spectral": {
+          "centroidHz": 1445.3,
+          "rolloffHz": 2317.5,
+          "flatness": 0.00008,
+          "bands": {
+            "sub": -63.42,
+            "low": -61.93,
+            "lowMid": -47.37,
+            "mid": -37.91,
+            "highMid": -41.73,
+            "high": -50.3
+          }
+        },
+        "transients": {
+          "count": 105,
+          "densityPerSec": 7.091,
+          "timesS": [
+            0.0058,
+            0.1045,
+            0.1683,
+            0.2786,
+            0.5457,
+            0.6095,
+            0.7721,
+            0.8533,
+            0.9927,
+            1.0913,
+            1.2829,
+            1.3468,
+            1.5035,
+            1.5732,
+            1.7299,
+            1.8112,
+            1.9621,
+            2.0434,
+            2.1769,
+            2.2639,
+            2.3278,
+            2.3917,
+            2.4729,
+            2.6064,
+            2.6935,
+            2.8386,
+            2.9025,
+            3.0476,
+            3.1289,
+            3.2856,
+            3.5004,
+            3.7036
+          ]
+        },
+        "tonal": {
+          "f0Hz": 440.28,
+          "note": "A",
+          "voicedRatio": 0.977
+        },
+        "tempo": {
+          "bpm": 103.36,
+          "confidence": 0.202
+        },
+        "character": [
+          "средний",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_solo_violin_v1/a4.ogg",
+      "original_file": "originals/vsco2-ce/LLVln_ArcoVib_A4_p.wav"
+    },
+    "vsco2-ce/llvln-arcovib-c5-p": {
+      "id": "vsco2-ce/llvln-arcovib-c5-p",
+      "name": "Solo Violin (arco vib, p) — C5",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Arco%20Vib/LLVln_ArcoVib_C5_p.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Violin (arco vib, p) — C5» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C5_p.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "77a2133b5f97e1ec0edb759c0c552fc3efa7caf4ce1e0a4aa22625cf4c9da130",
+      "sha256_derived": "115efd816228c45da96499b3dce0ab2f69c0018d79021f53e6a01af364c695a7",
+      "duration_s": 14.165,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 72,
+      "tags": [
+        "solo",
+        "violin",
+        "vibrato",
+        "expressive",
+        "bright"
+      ],
+      "descriptor": {
+        "name": "Solo Violin (arco vib, p) — C5",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Arco%20Vib/LLVln_ArcoVib_C5_p.wav",
+        "durationS": 14.165,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -26.35,
+          "peakDbfs": -18.19,
+          "crestDb": 11.18
+        },
+        "spectral": {
+          "centroidHz": 645.4,
+          "rolloffHz": 538.3,
+          "flatness": 0.000019,
+          "bands": {
+            "sub": -66.02,
+            "low": -51.81,
+            "lowMid": -36.04,
+            "mid": -30.96,
+            "highMid": -40.39,
+            "high": -47.46
+          }
+        },
+        "transients": {
+          "count": 105,
+          "densityPerSec": 7.413,
+          "timesS": [
+            0.0639,
+            0.1393,
+            0.3309,
+            0.3831,
+            0.447,
+            0.5399,
+            0.6908,
+            0.7546,
+            0.8533,
+            0.952,
+            1.1726,
+            1.2655,
+            1.3584,
+            1.6022,
+            1.8112,
+            2.0259,
+            2.2523,
+            2.4671,
+            2.6761,
+            2.8851,
+            3.0883,
+            3.2972,
+            3.512,
+            3.6281,
+            3.7036,
+            3.7558,
+            3.8893,
+            3.959,
+            4.0461,
+            4.1448,
+            4.2957,
+            4.3712
+          ]
+        },
+        "tonal": {
+          "f0Hz": 522.83,
+          "note": "C",
+          "voicedRatio": 0.982
+        },
+        "tempo": {
+          "bpm": 112.35,
+          "confidence": 0.125
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный"
+        ]
+      },
+      "file": "tp_solo_violin_v1/c5.ogg",
+      "original_file": "originals/vsco2-ce/LLVln_ArcoVib_C5_p.wav"
+    },
+    "vsco2-ce/vlnens-susvib-g2-v1": {
+      "id": "vsco2-ce/vlnens-susvib-g2-v1",
+      "name": "Violin Section (sus vib) — G2",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin%20Section/susVib/VlnEns_susVib_G2_v1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Violin Section (sus vib) — G2» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin Section/susVib/VlnEns_susVib_G2_v1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "feb96c5064fbef43087c495d61a9cab9f70ff1be5b22905147c1f86d5f89547c",
+      "sha256_derived": "3cf326884b404a47f2de3cecd66fb89dbdff78b9d1fbdaee37aaa9c878ffa5e5",
+      "duration_s": 13.275,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 43,
+      "tags": [
+        "ensemble",
+        "violin",
+        "sustain",
+        "vibrato",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Violin Section (sus vib) — G2",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin%20Section/susVib/VlnEns_susVib_G2_v1.wav",
+        "durationS": 13.275,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -35.54,
+          "peakDbfs": -25.66,
+          "crestDb": 13.5
+        },
+        "spectral": {
+          "centroidHz": 1003.9,
+          "rolloffHz": 1464.3,
+          "flatness": 0.001596,
+          "bands": {
+            "sub": -76.59,
+            "low": -60.75,
+            "lowMid": -46.15,
+            "mid": -40.93,
+            "highMid": -48.3,
+            "high": -57.18
+          }
+        },
+        "transients": {
+          "count": 105,
+          "densityPerSec": 7.91,
+          "timesS": [
+            0.1683,
+            0.2728,
+            0.4005,
+            0.5283,
+            0.6618,
+            0.7605,
+            0.8301,
+            0.923,
+            1.0101,
+            1.0797,
+            1.2539,
+            1.4687,
+            1.5325,
+            1.6428,
+            1.7009,
+            1.9853,
+            2.1827,
+            2.4091,
+            2.5136,
+            2.7574,
+            2.8851,
+            3.0592,
+            3.274,
+            3.4191,
+            3.6049,
+            3.7268,
+            3.7907,
+            4.0461,
+            4.2376,
+            4.4118,
+            4.4815,
+            4.8007
+          ]
+        },
+        "tonal": {
+          "f0Hz": 196.02,
+          "note": "G",
+          "voicedRatio": 0.983
+        },
+        "tempo": {
+          "bpm": 136,
+          "confidence": 0.135
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_violin_section_v1/g2.ogg",
+      "original_file": "originals/vsco2-ce/VlnEns_susVib_G2_v1.wav"
+    },
+    "vsco2-ce/vlnens-susvib-c4-v1": {
+      "id": "vsco2-ce/vlnens-susvib-c4-v1",
+      "name": "Violin Section (sus vib) — C4",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin%20Section/susVib/VlnEns_susVib_C4_v1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Violin Section (sus vib) — C4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin Section/susVib/VlnEns_susVib_C4_v1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "c07edd5b2119fa1da2207aba996961b50dd616f69bbcf2300ab271bc6c16239f",
+      "sha256_derived": "c0e342fab0eab94380e1aeedbacb267ed6bfb92f2f11632eae67a5f8bb541ec9",
+      "duration_s": 11.697,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 60,
+      "tags": [
+        "ensemble",
+        "violin",
+        "sustain",
+        "vibrato",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Violin Section (sus vib) — C4",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin%20Section/susVib/VlnEns_susVib_C4_v1.wav",
+        "durationS": 11.697,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -28.37,
+          "peakDbfs": -18.19,
+          "crestDb": 13.52
+        },
+        "spectral": {
+          "centroidHz": 767.2,
+          "rolloffHz": 802.1,
+          "flatness": 0.001017,
+          "bands": {
+            "sub": -70.24,
+            "low": -54.35,
+            "lowMid": -38.58,
+            "mid": -33.47,
+            "highMid": -41.2,
+            "high": -49.25
+          }
+        },
+        "transients": {
+          "count": 110,
+          "densityPerSec": 9.404,
+          "timesS": [
+            0.029,
+            0.1277,
+            0.2032,
+            0.2728,
+            0.3425,
+            0.4063,
+            0.4644,
+            0.5224,
+            0.6211,
+            0.6908,
+            0.7605,
+            0.8649,
+            0.9636,
+            1.0623,
+            1.1668,
+            1.2713,
+            1.3468,
+            1.4512,
+            1.5906,
+            1.6776,
+            1.7879,
+            1.8634,
+            1.9156,
+            1.9911,
+            2.1362,
+            2.1885,
+            2.2523,
+            2.3394,
+            2.3975,
+            2.5194,
+            2.6122,
+            2.827
+          ]
+        },
+        "tonal": {
+          "f0Hz": 523.36,
+          "note": "C",
+          "voicedRatio": 0.97
+        },
+        "tempo": {
+          "bpm": 152,
+          "confidence": 0.165
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный"
+        ]
+      },
+      "file": "tp_violin_section_v1/c4.ogg",
+      "original_file": "originals/vsco2-ce/VlnEns_susVib_C4_v1.wav"
+    },
+    "vsco2-ce/vlnens-susvib-g4-v1": {
+      "id": "vsco2-ce/vlnens-susvib-g4-v1",
+      "name": "Violin Section (sus vib) — G4",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin%20Section/susVib/VlnEns_susVib_G4_v1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Violin Section (sus vib) — G4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin Section/susVib/VlnEns_susVib_G4_v1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "ed2a89cf254432d2af073699fa43ebfa16cfbc5552c7fc964a184fc434eaaa39",
+      "sha256_derived": "78c7219a4a14e0b48167ea1b7c64b50376edc73d53b03c75ef1a80a4afeb512f",
+      "duration_s": 13.21,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 67,
+      "tags": [
+        "ensemble",
+        "violin",
+        "sustain",
+        "vibrato",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Violin Section (sus vib) — G4",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin%20Section/susVib/VlnEns_susVib_G4_v1.wav",
+        "durationS": 13.21,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -30.4,
+          "peakDbfs": -18.31,
+          "crestDb": 17.18
+        },
+        "spectral": {
+          "centroidHz": 2485.2,
+          "rolloffHz": 3819.5,
+          "flatness": 0.005631,
+          "bands": {
+            "sub": -83.3,
+            "low": -67.38,
+            "lowMid": -50.62,
+            "mid": -38.51,
+            "highMid": -39.87,
+            "high": -44.88
+          }
+        },
+        "transients": {
+          "count": 127,
+          "densityPerSec": 9.614,
+          "timesS": [
+            0.0639,
+            0.1742,
+            0.2902,
+            0.418,
+            0.5515,
+            0.6327,
+            0.6966,
+            0.7895,
+            0.8998,
+            1.0043,
+            1.132,
+            1.2481,
+            1.341,
+            1.4512,
+            1.5035,
+            1.5615,
+            1.6834,
+            1.7589,
+            1.8518,
+            1.9563,
+            2.0376,
+            2.1072,
+            2.2059,
+            2.3046,
+            2.3626,
+            2.4265,
+            2.5484,
+            2.6471,
+            2.7458,
+            2.8502,
+            2.9663,
+            3.1695
+          ]
+        },
+        "tonal": {
+          "f0Hz": 783.95,
+          "note": "G",
+          "voicedRatio": 0.969
+        },
+        "tempo": {
+          "bpm": 143.56,
+          "confidence": 0.206
+        },
+        "character": [
+          "средний",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_violin_section_v1/g4.ogg",
+      "original_file": "originals/vsco2-ce/VlnEns_susVib_G4_v1.wav"
+    },
+    "vsco2-ce/vlnens-susvib-d5-v1": {
+      "id": "vsco2-ce/vlnens-susvib-d5-v1",
+      "name": "Violin Section (sus vib) — D5",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin%20Section/susVib/VlnEns_susVib_D5_v1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Violin Section (sus vib) — D5» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin Section/susVib/VlnEns_susVib_D5_v1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "f8d870457826c94270b9c3ead8e8ec02cb7e6c4a3481cded055641b7fab7df62",
+      "sha256_derived": "f9194cdb0ac4e4e7434bd3e052c7c80c73ae8a3f97bd64924cf8651d3e61cbd6",
+      "duration_s": 11.997,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 74,
+      "tags": [
+        "ensemble",
+        "violin",
+        "sustain",
+        "vibrato",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Violin Section (sus vib) — D5",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin%20Section/susVib/VlnEns_susVib_D5_v1.wav",
+        "durationS": 11.997,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -29.24,
+          "peakDbfs": -19.61,
+          "crestDb": 15.03
+        },
+        "spectral": {
+          "centroidHz": 2264.8,
+          "rolloffHz": 3235.4,
+          "flatness": 0.001409,
+          "bands": {
+            "sub": -89.3,
+            "low": -73.39,
+            "lowMid": -56.41,
+            "mid": -38.64,
+            "highMid": -37.78,
+            "high": -43.86
+          }
+        },
+        "transients": {
+          "count": 112,
+          "densityPerSec": 9.336,
+          "timesS": [
+            0.0058,
+            0.1567,
+            0.238,
+            0.3019,
+            0.5108,
+            0.6734,
+            0.7546,
+            0.8185,
+            0.9172,
+            0.981,
+            1.0565,
+            1.1494,
+            1.3177,
+            1.4048,
+            1.4571,
+            1.5325,
+            1.5906,
+            1.666,
+            1.8576,
+            1.9098,
+            2.0201,
+            2.1711,
+            2.2581,
+            2.3336,
+            2.4323,
+            2.4845,
+            2.5658,
+            2.6413,
+            2.7458,
+            2.8038,
+            2.8851,
+            2.9605
+          ]
+        },
+        "tonal": {
+          "f0Hz": 587.4,
+          "note": "D",
+          "voicedRatio": 0.98
+        },
+        "tempo": {
+          "bpm": 161.5,
+          "confidence": 0.144
+        },
+        "character": [
+          "средний",
+          "плотный",
+          "тональный"
+        ]
+      },
+      "file": "tp_violin_section_v1/d5.ogg",
+      "original_file": "originals/vsco2-ce/VlnEns_susVib_D5_v1.wav"
+    },
+    "vsco2-ce/violaens-susvib-c2-v1-1": {
+      "id": "vsco2-ce/violaens-susvib-c2-v1-1",
+      "name": "Viola Section (sus vib) — C2",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola%20Section/susvib/ViolaEns_susvib_C2_v1_1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Viola Section (sus vib) — C2» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola Section/susvib/ViolaEns_susvib_C2_v1_1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "8b4e0e0985d245ac9ddc39cdd06cec5bd74fa80056c074736d6eb38fdccfe636",
+      "sha256_derived": "2b72577837cabf203cf119fe5ca34511170c6417f3dd6ad1f512380eb7ad7cbf",
+      "duration_s": 9.986,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 36,
+      "tags": [
+        "ensemble",
+        "viola",
+        "sustain",
+        "dark",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Viola Section (sus vib) — C2",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola%20Section/susvib/ViolaEns_susvib_C2_v1_1.wav",
+        "durationS": 9.986,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -37.9,
+          "peakDbfs": -26.87,
+          "crestDb": 13.75
+        },
+        "spectral": {
+          "centroidHz": 669.1,
+          "rolloffHz": 880.2,
+          "flatness": 0.000425,
+          "bands": {
+            "sub": -69.53,
+            "low": -53.99,
+            "lowMid": -43.29,
+            "mid": -44.6,
+            "highMid": -56.93,
+            "high": -68.1
+          }
+        },
+        "transients": {
+          "count": 95,
+          "densityPerSec": 9.513,
+          "timesS": [
+            0.0464,
+            0.1161,
+            0.18,
+            0.2728,
+            0.3715,
+            0.5747,
+            0.6444,
+            0.7314,
+            0.7895,
+            0.8707,
+            0.952,
+            1.1204,
+            1.2132,
+            1.3003,
+            1.3584,
+            1.4164,
+            1.4687,
+            1.5441,
+            1.6022,
+            1.7183,
+            1.8112,
+            1.9621,
+            2.0608,
+            2.113,
+            2.1943,
+            2.3452,
+            2.4497,
+            2.56,
+            2.6297,
+            2.7225,
+            2.827,
+            2.9489
+          ]
+        },
+        "tonal": {
+          "f0Hz": 130.84,
+          "note": "C",
+          "voicedRatio": 0.976
+        },
+        "tempo": {
+          "bpm": 152,
+          "confidence": 0.202
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_viola_section_v1/c2.ogg",
+      "original_file": "originals/vsco2-ce/ViolaEns_susvib_C2_v1_1.wav"
+    },
+    "vsco2-ce/violaens-susvib-g2-v1-1": {
+      "id": "vsco2-ce/violaens-susvib-g2-v1-1",
+      "name": "Viola Section (sus vib) — G2",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola%20Section/susvib/ViolaEns_susvib_G2_v1_1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Viola Section (sus vib) — G2» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola Section/susvib/ViolaEns_susvib_G2_v1_1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "557c2e033951015c30765bf18266bce0dd0412e3ca646dd1a225c32422c60662",
+      "sha256_derived": "f4d4e4cafbb266460f5ceda4764149bf5a689503e243bb0a3a6c1a84439b391c",
+      "duration_s": 7.565,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 43,
+      "tags": [
+        "ensemble",
+        "viola",
+        "sustain",
+        "dark",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Viola Section (sus vib) — G2",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola%20Section/susvib/ViolaEns_susvib_G2_v1_1.wav",
+        "durationS": 7.565,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -34.93,
+          "peakDbfs": -21.73,
+          "crestDb": 16.38
+        },
+        "spectral": {
+          "centroidHz": 689.1,
+          "rolloffHz": 963.6,
+          "flatness": 0.00023,
+          "bands": {
+            "sub": -68.37,
+            "low": -53.33,
+            "lowMid": -42.67,
+            "mid": -40.66,
+            "highMid": -49.74,
+            "high": -60.5
+          }
+        },
+        "transients": {
+          "count": 65,
+          "densityPerSec": 8.593,
+          "timesS": [
+            0.029,
+            0.2322,
+            0.3541,
+            0.4934,
+            0.5573,
+            0.6153,
+            0.6792,
+            0.7837,
+            0.9056,
+            0.9636,
+            1.0449,
+            1.2016,
+            1.3584,
+            1.5499,
+            1.8228,
+            1.904,
+            2.0317,
+            2.2814,
+            2.3568,
+            2.4555,
+            2.5426,
+            2.7109,
+            2.8154,
+            2.9605,
+            3.036,
+            3.0883,
+            3.1695,
+            3.3205,
+            3.4191,
+            3.6339,
+            3.8371,
+            3.8893
+          ]
+        },
+        "tonal": {
+          "f0Hz": 196.03,
+          "note": "G",
+          "voicedRatio": 0.984
+        },
+        "tempo": {
+          "bpm": 143.55,
+          "confidence": 0.141
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_viola_section_v1/g2.ogg",
+      "original_file": "originals/vsco2-ce/ViolaEns_susvib_G2_v1_1.wav"
+    },
+    "vsco2-ce/violaens-susvib-d3-v1-1": {
+      "id": "vsco2-ce/violaens-susvib-d3-v1-1",
+      "name": "Viola Section (sus vib) — D3",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola%20Section/susvib/ViolaEns_susvib_D3_v1_1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Viola Section (sus vib) — D3» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola Section/susvib/ViolaEns_susvib_D3_v1_1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "61ab4cfc0ea90c683433a7c50b3bb4fa86a81c9d4854589562707d54ed028349",
+      "sha256_derived": "d8f6f2715216452405804c459d0c1a4d0a57dd092ecaf684ae5929570fb837fe",
+      "duration_s": 10.543,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 50,
+      "tags": [
+        "ensemble",
+        "viola",
+        "sustain",
+        "dark",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Viola Section (sus vib) — D3",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola%20Section/susvib/ViolaEns_susvib_D3_v1_1.wav",
+        "durationS": 10.543,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -38.55,
+          "peakDbfs": -26.13,
+          "crestDb": 15.81
+        },
+        "spectral": {
+          "centroidHz": 987.1,
+          "rolloffHz": 1563.8,
+          "flatness": 0.000446,
+          "bands": {
+            "sub": -73.94,
+            "low": -58.31,
+            "lowMid": -47.03,
+            "mid": -44.63,
+            "highMid": -50.81,
+            "high": -61.2
+          }
+        },
+        "transients": {
+          "count": 102,
+          "densityPerSec": 9.675,
+          "timesS": [
+            0.029,
+            0.1219,
+            0.1858,
+            0.267,
+            0.3773,
+            0.505,
+            0.6502,
+            0.7663,
+            0.8591,
+            0.9927,
+            1.0565,
+            1.132,
+            1.2016,
+            1.3119,
+            1.3932,
+            1.4629,
+            1.5267,
+            1.637,
+            1.8286,
+            1.9737,
+            2.0259,
+            2.1188,
+            2.2001,
+            2.2988,
+            2.38,
+            2.4323,
+            2.5484,
+            2.6297,
+            2.7283,
+            2.8328,
+            2.9315,
+            3.0012
+          ]
+        },
+        "tonal": {
+          "f0Hz": 293.78,
+          "note": "D",
+          "voicedRatio": 0.959
+        },
+        "tempo": {
+          "bpm": 161.5,
+          "confidence": 0.168
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_viola_section_v1/d3.ogg",
+      "original_file": "originals/vsco2-ce/ViolaEns_susvib_D3_v1_1.wav"
+    },
+    "vsco2-ce/violaens-susvib-c4-v1-1": {
+      "id": "vsco2-ce/violaens-susvib-c4-v1-1",
+      "name": "Viola Section (sus vib) — C4",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola%20Section/susvib/ViolaEns_susvib_C4_v1_1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Viola Section (sus vib) — C4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola Section/susvib/ViolaEns_susvib_C4_v1_1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "144ec7666be1b3b4da50937db4b1fc3675ca34bc2e871264707d83b8a0d526e6",
+      "sha256_derived": "a384a9c7a37d1b4bcd54f14c53765d1e5efb2e29ca117f1c19b12c61bc78c92d",
+      "duration_s": 8.653,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 60,
+      "tags": [
+        "ensemble",
+        "viola",
+        "sustain",
+        "dark",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Viola Section (sus vib) — C4",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola%20Section/susvib/ViolaEns_susvib_C4_v1_1.wav",
+        "durationS": 8.653,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -34.07,
+          "peakDbfs": -23.56,
+          "crestDb": 15.07
+        },
+        "spectral": {
+          "centroidHz": 1495.8,
+          "rolloffHz": 2433.3,
+          "flatness": 0.00037,
+          "bands": {
+            "sub": -80.28,
+            "low": -64.5,
+            "lowMid": -48.73,
+            "mid": -41.8,
+            "highMid": -43.04,
+            "high": -50.46
+          }
+        },
+        "transients": {
+          "count": 70,
+          "densityPerSec": 8.09,
+          "timesS": [
+            0.0464,
+            0.1567,
+            0.3019,
+            0.3541,
+            0.4122,
+            0.5224,
+            0.6037,
+            0.6618,
+            0.7488,
+            0.8243,
+            1.0159,
+            1.2132,
+            1.2713,
+            1.3235,
+            1.4861,
+            1.6776,
+            1.875,
+            2.1188,
+            2.2291,
+            2.2814,
+            2.3626,
+            2.6064,
+            2.7806,
+            2.8967,
+            2.9547,
+            3.1927,
+            3.2972,
+            3.4191,
+            3.5352,
+            3.7152,
+            3.8139,
+            4.0519
+          ]
+        },
+        "tonal": {
+          "f0Hz": 523.16,
+          "note": "C",
+          "voicedRatio": 0.991
+        },
+        "tempo": {
+          "bpm": 136,
+          "confidence": 0.13
+        },
+        "character": [
+          "средний",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_viola_section_v1/c4.ogg",
+      "original_file": "originals/vsco2-ce/ViolaEns_susvib_C4_v1_1.wav"
+    },
+    "vsco2-ce/susvib-c1-v1-1": {
+      "id": "vsco2-ce/susvib-c1-v1-1",
+      "name": "Cello Section (sus vib) — C1",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello%20Section/susvib/susvib_C1_v1_1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Cello Section (sus vib) — C1» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello Section/susvib/susvib_C1_v1_1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "abdcea431f384e135c469b0f3e4ac2a437f282f521dc5bcbe22abc221536e8de",
+      "sha256_derived": "289a28da523756f4b6503ae682dadea7d03b4fd44b613ecc46009d6c48a2b297",
+      "duration_s": 8.871,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 24,
+      "tags": [
+        "ensemble",
+        "cello",
+        "sustain",
+        "dark",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Cello Section (sus vib) — C1",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello%20Section/susvib/susvib_C1_v1_1.wav",
+        "durationS": 8.871,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -27.04,
+          "peakDbfs": -15.41,
+          "crestDb": 14.74
+        },
+        "spectral": {
+          "centroidHz": 278.6,
+          "rolloffHz": 341.8,
+          "flatness": 0.001058,
+          "bands": {
+            "sub": -50.99,
+            "low": -37.79,
+            "lowMid": -32.32,
+            "mid": -36.66,
+            "highMid": -51.49,
+            "high": -65.35
+          }
+        },
+        "transients": {
+          "count": 68,
+          "densityPerSec": 7.665,
+          "timesS": [
+            0.029,
+            0.2148,
+            0.3483,
+            0.505,
+            0.6444,
+            0.7663,
+            0.8882,
+            0.9636,
+            1.1029,
+            1.161,
+            1.4745,
+            1.6428,
+            1.7183,
+            1.8866,
+            1.9505,
+            2.1304,
+            2.2233,
+            2.3917,
+            2.5774,
+            2.6703,
+            2.8212,
+            3.0186,
+            3.0941,
+            3.3379,
+            3.5062,
+            3.6862,
+            3.8545,
+            4.0519,
+            4.168,
+            4.2841,
+            4.4408,
+            4.5685
+          ]
+        },
+        "tonal": {
+          "f0Hz": 65.4,
+          "note": "C",
+          "voicedRatio": 0.94
+        },
+        "tempo": {
+          "bpm": 123.05,
+          "confidence": 0.239
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный"
+        ]
+      },
+      "file": "tp_cello_section_v1/c1.ogg",
+      "original_file": "originals/vsco2-ce/susvib_C1_v1_1.wav"
+    },
+    "vsco2-ce/susvib-g1-v1-1": {
+      "id": "vsco2-ce/susvib-g1-v1-1",
+      "name": "Cello Section (sus vib) — G1",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello%20Section/susvib/susvib_G1_v1_1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Cello Section (sus vib) — G1» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello Section/susvib/susvib_G1_v1_1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "9e5d24e8e28d6c7f650f9bb2b33d43c13e341a8bd33124c64e23881378b181ba",
+      "sha256_derived": "532e708426cb935acf9087a0dd5c8da79e30187b909293026698313a95f23eb6",
+      "duration_s": 8.17,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 31,
+      "tags": [
+        "ensemble",
+        "cello",
+        "sustain",
+        "dark",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Cello Section (sus vib) — G1",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello%20Section/susvib/susvib_G1_v1_1.wav",
+        "durationS": 8.17,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -29.1,
+          "peakDbfs": -18.36,
+          "crestDb": 13.15
+        },
+        "spectral": {
+          "centroidHz": 208.7,
+          "rolloffHz": 333.8,
+          "flatness": 0.000119,
+          "bands": {
+            "sub": -43.3,
+            "low": -34.84,
+            "lowMid": -35.65,
+            "mid": -41.58,
+            "highMid": -54.38,
+            "high": -67.6
+          }
+        },
+        "transients": {
+          "count": 79,
+          "densityPerSec": 9.67,
+          "timesS": [
+            0.0174,
+            0.2264,
+            0.3135,
+            0.447,
+            0.5689,
+            0.6502,
+            0.7314,
+            0.8766,
+            0.9288,
+            1.0101,
+            1.1029,
+            1.2132,
+            1.2655,
+            1.3758,
+            1.5499,
+            1.6428,
+            1.8518,
+            1.9911,
+            2.0724,
+            2.1246,
+            2.1827,
+            2.2349,
+            2.3278,
+            2.3975,
+            2.5194,
+            2.5716,
+            2.6297,
+            2.7458,
+            2.8561,
+            2.9489,
+            3.0302,
+            3.1231
+          ]
+        },
+        "tonal": {
+          "f0Hz": 97.95,
+          "note": "G",
+          "voicedRatio": 0.959
+        },
+        "tempo": {
+          "bpm": 161.5,
+          "confidence": 0.128
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный"
+        ]
+      },
+      "file": "tp_cello_section_v1/g1.ogg",
+      "original_file": "originals/vsco2-ce/susvib_G1_v1_1.wav"
+    },
+    "vsco2-ce/susvib-c3-v1-1": {
+      "id": "vsco2-ce/susvib-c3-v1-1",
+      "name": "Cello Section (sus vib) — C3",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello%20Section/susvib/susvib_C3_v1_1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Cello Section (sus vib) — C3» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello Section/susvib/susvib_C3_v1_1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "a614ee7ca821b44660236e47b89620cf914ec6ad27a99bc0d9764f47dbe512e1",
+      "sha256_derived": "56a3ea7b0a2f026ac7f5ae4d3656272f25b57bf4e69988efeb1aa9a71742bc03",
+      "duration_s": 9.237,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 48,
+      "tags": [
+        "ensemble",
+        "cello",
+        "sustain",
+        "dark",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Cello Section (sus vib) — C3",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello%20Section/susvib/susvib_C3_v1_1.wav",
+        "durationS": 9.237,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -31.2,
+          "peakDbfs": -20.64,
+          "crestDb": 13.53
+        },
+        "spectral": {
+          "centroidHz": 520.1,
+          "rolloffHz": 855.9,
+          "flatness": 0.000167,
+          "bands": {
+            "sub": -60.98,
+            "low": -45.54,
+            "lowMid": -36.49,
+            "mid": -39.68,
+            "highMid": -45.78,
+            "high": -56.39
+          }
+        },
+        "transients": {
+          "count": 70,
+          "densityPerSec": 7.578,
+          "timesS": [
+            0.0406,
+            0.1451,
+            0.209,
+            0.4238,
+            0.476,
+            0.5863,
+            0.6385,
+            0.8301,
+            0.9462,
+            1.0333,
+            1.3061,
+            1.5209,
+            1.6718,
+            1.8054,
+            1.9098,
+            1.9969,
+            2.0724,
+            2.1943,
+            2.4323,
+            2.6239,
+            2.6993,
+            2.769,
+            2.8561,
+            3.0592,
+            3.2914,
+            3.3553,
+            3.512,
+            3.6339,
+            3.7152,
+            3.7907,
+            3.9126,
+            3.9648
+          ]
+        },
+        "tonal": {
+          "f0Hz": 261.61,
+          "note": "C",
+          "voicedRatio": 0.953
+        },
+        "tempo": {
+          "bpm": 123.05,
+          "confidence": 0.174
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_cello_section_v1/c3.ogg",
+      "original_file": "originals/vsco2-ce/susvib_C3_v1_1.wav"
+    },
+    "vsco2-ce/susvib-g3-v1-1": {
+      "id": "vsco2-ce/susvib-g3-v1-1",
+      "name": "Cello Section (sus vib) — G3",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello%20Section/susvib/susvib_G3_v1_1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Cello Section (sus vib) — G3» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello Section/susvib/susvib_G3_v1_1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "8d658346b8d2054fd534b3222b5d7a23196d22a83a68c3a04ffb76b21853a3db",
+      "sha256_derived": "f1b2416303907d913412c2e7d9247089c8343dd0031abd25db85b4a202ee893b",
+      "duration_s": 9.19,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 55,
+      "tags": [
+        "ensemble",
+        "cello",
+        "sustain",
+        "dark",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Cello Section (sus vib) — G3",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello%20Section/susvib/susvib_G3_v1_1.wav",
+        "durationS": 9.19,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -29.75,
+          "peakDbfs": -20.38,
+          "crestDb": 12.62
+        },
+        "spectral": {
+          "centroidHz": 648.7,
+          "rolloffHz": 1071.3,
+          "flatness": 0.000036,
+          "bands": {
+            "sub": -66.77,
+            "low": -50.97,
+            "lowMid": -37.08,
+            "mid": -35.88,
+            "highMid": -43.83,
+            "high": -53.91
+          }
+        },
+        "transients": {
+          "count": 85,
+          "densityPerSec": 9.25,
+          "timesS": [
+            0.0871,
+            0.2322,
+            0.3657,
+            0.505,
+            0.5921,
+            0.656,
+            0.8533,
+            0.9404,
+            0.9927,
+            1.0913,
+            1.19,
+            1.2945,
+            1.3526,
+            1.4861,
+            1.5848,
+            1.6834,
+            1.8924,
+            2.0724,
+            2.1827,
+            2.2523,
+            2.3162,
+            2.3684,
+            2.4671,
+            2.5948,
+            2.6703,
+            2.769,
+            2.8677,
+            3.007,
+            3.0941,
+            3.2102,
+            3.3959,
+            3.5817
+          ]
+        },
+        "tonal": {
+          "f0Hz": 392.31,
+          "note": "G",
+          "voicedRatio": 0.959
+        },
+        "tempo": {
+          "bpm": 152,
+          "confidence": 0.19
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный"
+        ]
+      },
+      "file": "tp_cello_section_v1/g3.ogg",
+      "original_file": "originals/vsco2-ce/susvib_G3_v1_1.wav"
+    },
+    "vsco2-ce/ksharp-c3-mf": {
+      "id": "vsco2-ce/ksharp-c3-mf",
+      "name": "Harp (mf) — C3",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_C3_mf.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Harp (mf) — C3» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_C3_mf.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "e5d232771704e140959819de8cf2a3e0ba49d021ca77354c42664ce4fce6d9f3",
+      "sha256_derived": "c6348e155f56753988bdee7afa5974df79745ba8ea57cf517240f1296170235b",
+      "duration_s": 8.963,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 48,
+      "tags": [
+        "plucked",
+        "harp",
+        "delicate",
+        "bright"
+      ],
+      "descriptor": {
+        "name": "Harp (mf) — C3",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_C3_mf.wav",
+        "durationS": 8.963,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -51.3,
+          "peakDbfs": -36.02,
+          "crestDb": 19.67
+        },
+        "spectral": {
+          "centroidHz": 360.8,
+          "rolloffHz": 309.5,
+          "flatness": 0.005327,
+          "bands": {
+            "sub": -78.81,
+            "low": -66.46,
+            "lowMid": -58.63,
+            "mid": -59.54,
+            "highMid": -78.76,
+            "high": -93.5
+          }
+        },
+        "transients": {
+          "count": 69,
+          "densityPerSec": 7.698,
+          "timesS": [
+            0.0406,
+            0.0987,
+            0.2206,
+            0.505,
+            0.7256,
+            0.9288,
+            0.9927,
+            1.0797,
+            1.1784,
+            1.2771,
+            1.3874,
+            1.4745,
+            1.5673,
+            1.6544,
+            1.7415,
+            1.8576,
+            2.0143,
+            2.2175,
+            2.3336,
+            2.7806,
+            2.9605,
+            3.065,
+            3.6688,
+            3.7849,
+            3.9532,
+            4.1506,
+            4.2609,
+            4.3305,
+            4.5221,
+            4.6904,
+            4.94,
+            5.2825
+          ]
+        },
+        "tonal": {
+          "f0Hz": 130.63,
+          "note": "C",
+          "voicedRatio": 0.918
+        },
+        "tempo": {
+          "bpm": 152,
+          "confidence": 0.162
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_harp_v1/c3.ogg",
+      "original_file": "originals/vsco2-ce/KSHarp_C3_mf.wav"
+    },
+    "vsco2-ce/ksharp-g3-mf": {
+      "id": "vsco2-ce/ksharp-g3-mf",
+      "name": "Harp (mf) — G3",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_G3_mf.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Harp (mf) — G3» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_G3_mf.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "62600eb1b37bc2829ca65351f7ca7e506c9ae472abd5bea0765a8b8fa7df2772",
+      "sha256_derived": "f8a7c5fb6d3a516fb4ca2072c674f3c5229ee997cd202edddfafc8adb99f14bb",
+      "duration_s": 10.243,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 55,
+      "tags": [
+        "plucked",
+        "harp",
+        "delicate",
+        "bright"
+      ],
+      "descriptor": {
+        "name": "Harp (mf) — G3",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_G3_mf.wav",
+        "durationS": 10.243,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -37.42,
+          "peakDbfs": -23.57,
+          "crestDb": 20.7
+        },
+        "spectral": {
+          "centroidHz": 750.7,
+          "rolloffHz": 1773.8,
+          "flatness": 0.030758,
+          "bands": {
+            "sub": -65.31,
+            "low": -50.69,
+            "lowMid": -46.14,
+            "mid": -53.15,
+            "highMid": -67.61,
+            "high": -82.88
+          }
+        },
+        "transients": {
+          "count": 54,
+          "densityPerSec": 5.272,
+          "timesS": [
+            0.0348,
+            0.0929,
+            0.1625,
+            1.6893,
+            1.8576,
+            1.9331,
+            3.3437,
+            3.4424,
+            3.5352,
+            3.6223,
+            3.6746,
+            3.8023,
+            4.853,
+            5.0097,
+            5.1374,
+            5.2013,
+            5.3,
+            5.596,
+            5.776,
+            6.1939,
+            6.3913,
+            6.4726,
+            6.6409,
+            6.699,
+            6.7976,
+            6.8557,
+            6.9486,
+            7.0995,
+            7.1576,
+            7.2562,
+            7.3549,
+            7.4188
+          ]
+        },
+        "tonal": {
+          "f0Hz": 195.16,
+          "note": "G",
+          "voicedRatio": 0.884
+        },
+        "tempo": {
+          "bpm": 152,
+          "confidence": 0.208
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_harp_v1/g3.ogg",
+      "original_file": "originals/vsco2-ce/KSHarp_G3_mf.wav"
+    },
+    "vsco2-ce/ksharp-c5-mf": {
+      "id": "vsco2-ce/ksharp-c5-mf",
+      "name": "Harp (mf) — C5",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_C5_mf.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Harp (mf) — C5» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_C5_mf.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "7c8b862f6fd3f1442ed87537af976d84bda8c05a5b4900e8907d570b5202a517",
+      "sha256_derived": "d16e1a5cb41e5fafa87b3c9476ae471bddb192f40f4196cc730d74c0bf0138c8",
+      "duration_s": 7.013,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 72,
+      "tags": [
+        "plucked",
+        "harp",
+        "delicate",
+        "bright"
+      ],
+      "descriptor": {
+        "name": "Harp (mf) — C5",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_C5_mf.wav",
+        "durationS": 7.013,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -35.26,
+          "peakDbfs": -17.16,
+          "crestDb": 25.22
+        },
+        "spectral": {
+          "centroidHz": 849.4,
+          "rolloffHz": 541,
+          "flatness": 0.018518,
+          "bands": {
+            "sub": -78.11,
+            "low": -63.89,
+            "lowMid": -48.28,
+            "mid": -43.78,
+            "highMid": -59.12,
+            "high": -72.25
+          }
+        },
+        "transients": {
+          "count": 41,
+          "densityPerSec": 5.846,
+          "timesS": [
+            0.0406,
+            1.666,
+            2.1072,
+            2.1943,
+            2.5194,
+            2.6006,
+            2.6703,
+            2.7458,
+            2.8096,
+            2.8909,
+            2.9954,
+            3.1057,
+            3.303,
+            3.3611,
+            3.4714,
+            3.7036,
+            3.7732,
+            3.9416,
+            3.9938,
+            4.0635,
+            4.139,
+            4.2609,
+            4.3363,
+            4.4582,
+            4.5685,
+            4.8298,
+            4.9342,
+            5.0968,
+            5.2013,
+            5.2883,
+            5.4044,
+            5.567
+          ]
+        },
+        "tonal": {
+          "f0Hz": 520.49,
+          "note": "C",
+          "voicedRatio": 0.905
+        },
+        "tempo": {
+          "bpm": 143.55,
+          "confidence": 0.225
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_harp_v1/c5.ogg",
+      "original_file": "originals/vsco2-ce/KSHarp_C5_mf.wav"
+    },
+    "vsco2-ce/ksharp-e5-mf": {
+      "id": "vsco2-ce/ksharp-e5-mf",
+      "name": "Harp (mf) — E5",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_E5_mf.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Harp (mf) — E5» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_E5_mf.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "95dd9ddb0bd15bee7687906e00f25aafcaa43020cc9501f0e8b6cabf0e9a53ec",
+      "sha256_derived": "27142a1f9977b6210a7c0195d6efd0e19d092d7fa2e369d01ba8f5202be61e8c",
+      "duration_s": 6.641,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 76,
+      "tags": [
+        "plucked",
+        "harp",
+        "delicate",
+        "bright"
+      ],
+      "descriptor": {
+        "name": "Harp (mf) — E5",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_E5_mf.wav",
+        "durationS": 6.641,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -34.99,
+          "peakDbfs": -19.81,
+          "crestDb": 22
+        },
+        "spectral": {
+          "centroidHz": 1154.3,
+          "rolloffHz": 1720,
+          "flatness": 0.026488,
+          "bands": {
+            "sub": -83.35,
+            "low": -67.47,
+            "lowMid": -51.12,
+            "mid": -42.72,
+            "highMid": -53.2,
+            "high": -65.78
+          }
+        },
+        "transients": {
+          "count": 49,
+          "densityPerSec": 7.378,
+          "timesS": [
+            0.0348,
+            0.2554,
+            0.4063,
+            0.5689,
+            0.714,
+            0.8243,
+            0.9752,
+            1.1262,
+            1.2655,
+            1.3584,
+            1.6776,
+            1.7589,
+            2.0782,
+            2.2059,
+            2.3104,
+            2.4961,
+            2.6297,
+            2.7516,
+            2.9083,
+            3.0302,
+            3.1579,
+            3.3263,
+            3.454,
+            3.5643,
+            3.7326,
+            3.8603,
+            3.9822,
+            4.0925,
+            4.1564,
+            4.2899,
+            4.4002,
+            4.5801
+          ]
+        },
+        "tonal": {
+          "f0Hz": 656.12,
+          "note": "E",
+          "voicedRatio": 0.92
+        },
+        "tempo": {
+          "bpm": 117.45,
+          "confidence": 0.292
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_harp_v1/e5.ogg",
+      "original_file": "originals/vsco2-ce/KSHarp_E5_mf.wav"
+    },
+    "vsco2-ce/bkctbss-susnv-c1-v1-rr1": {
+      "id": "vsco2-ce/bkctbss-susnv-c1-v1-rr1",
+      "name": "Solo Contrabass (sus, non vib) — C1",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/SusNV/BKCtbss_SusNV_C1_v1_rr1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Contrabass (sus, non vib) — C1» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Contrabass/SusNV/BKCtbss_SusNV_C1_v1_rr1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "c930941735e707b109878f4734110412ebe26b983c2b3e300510175aedf5e61c",
+      "sha256_derived": "e4a6c478b5a457e833699c44ffb50c0037b75138ad9d61fd31b8a752ce86a09c",
+      "duration_s": 8.266,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 24,
+      "tags": [
+        "acoustic",
+        "contrabass",
+        "sustain",
+        "dark",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Solo Contrabass (sus, non vib) — C1",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/SusNV/BKCtbss_SusNV_C1_v1_rr1.wav",
+        "durationS": 8.266,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -41.11,
+          "peakDbfs": -31.56,
+          "crestDb": 11
+        },
+        "spectral": {
+          "centroidHz": 134.2,
+          "rolloffHz": 220.7,
+          "flatness": 0.000009,
+          "bands": {
+            "sub": -49.05,
+            "low": -46.11,
+            "lowMid": -47.94,
+            "mid": -55.17,
+            "highMid": -65.94,
+            "high": -80.69
+          }
+        },
+        "transients": {
+          "count": 64,
+          "densityPerSec": 7.742,
+          "timesS": [
+            0.0697,
+            0.1451,
+            0.2554,
+            0.4528,
+            0.5457,
+            0.6676,
+            0.743,
+            0.8649,
+            0.9578,
+            1.0623,
+            1.2481,
+            1.37,
+            1.5848,
+            1.7531,
+            1.875,
+            1.9679,
+            2.0898,
+            2.2581,
+            2.38,
+            2.4439,
+            2.502,
+            2.5658,
+            2.7167,
+            2.8851,
+            3.007,
+            3.1289,
+            3.2218,
+            3.3611,
+            3.483,
+            3.6513,
+            3.8197,
+            4.0345
+          ]
+        },
+        "tonal": {
+          "f0Hz": 65.39,
+          "note": "C",
+          "voicedRatio": 0.922
+        },
+        "tempo": {
+          "bpm": 123.05,
+          "confidence": 0.254
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_contrabass_sus_v1/c1.ogg",
+      "original_file": "originals/vsco2-ce/BKCtbss_SusNV_C1_v1_rr1.wav"
+    },
+    "vsco2-ce/bkctbss-susnv-e1-v1-rr1": {
+      "id": "vsco2-ce/bkctbss-susnv-e1-v1-rr1",
+      "name": "Solo Contrabass (sus, non vib) — E1",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/SusNV/BKCtbss_SusNV_E1_v1_rr1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Contrabass (sus, non vib) — E1» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Contrabass/SusNV/BKCtbss_SusNV_E1_v1_rr1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "90428ce30d89c2eab94187a2d2c589758bc7027b8f0c8d3e2cce165972f60e21",
+      "sha256_derived": "8b01127630e4f65dd3a21904ca3ab5d357fd2bea4eb26d788a823a1f03b0ee76",
+      "duration_s": 16.012,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 28,
+      "tags": [
+        "acoustic",
+        "contrabass",
+        "sustain",
+        "dark",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Solo Contrabass (sus, non vib) — E1",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/SusNV/BKCtbss_SusNV_E1_v1_rr1.wav",
+        "durationS": 16.012,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -46.52,
+          "peakDbfs": -37.7,
+          "crestDb": 11.33
+        },
+        "spectral": {
+          "centroidHz": 275.5,
+          "rolloffHz": 403.7,
+          "flatness": 0.000161,
+          "bands": {
+            "sub": -67.56,
+            "low": -55.23,
+            "lowMid": -52.01,
+            "mid": -55.16,
+            "highMid": -66.98,
+            "high": -81.68
+          }
+        },
+        "transients": {
+          "count": 143,
+          "densityPerSec": 8.931,
+          "timesS": [
+            0.0697,
+            0.1567,
+            0.2438,
+            0.3541,
+            0.4354,
+            0.5457,
+            0.6676,
+            0.8475,
+            0.9462,
+            1.1029,
+            1.2132,
+            1.3351,
+            1.4571,
+            1.5151,
+            1.6022,
+            1.7473,
+            1.8924,
+            2.0492,
+            2.1943,
+            2.2698,
+            2.4033,
+            2.5484,
+            2.7167,
+            2.827,
+            2.9954,
+            3.1057,
+            3.2392,
+            3.3379,
+            3.4075,
+            3.541,
+            3.6513,
+            3.7732
+          ]
+        },
+        "tonal": {
+          "f0Hz": 82.41,
+          "note": "E",
+          "voicedRatio": 0.944
+        },
+        "tempo": {
+          "bpm": 136,
+          "confidence": 0.134
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_contrabass_sus_v1/e1.ogg",
+      "original_file": "originals/vsco2-ce/BKCtbss_SusNV_E1_v1_rr1.wav"
+    },
+    "vsco2-ce/bkctbss-susnv-a1-v1-rr1": {
+      "id": "vsco2-ce/bkctbss-susnv-a1-v1-rr1",
+      "name": "Solo Contrabass (sus, non vib) — A1",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/SusNV/BKCtbss_SusNV_A1_v1_rr1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Contrabass (sus, non vib) — A1» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Contrabass/SusNV/BKCtbss_SusNV_A1_v1_rr1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "06057880075d08c3f5a9df78bb7ec07f4cd41bd26e09a69f7a2e92cc66f308d9",
+      "sha256_derived": "215b2fd01d1e9e1498b7c2162713a4c38c6dc8901b92dc8f83872aa919e2318e",
+      "duration_s": 7.083,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 33,
+      "tags": [
+        "acoustic",
+        "contrabass",
+        "sustain",
+        "dark",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Solo Contrabass (sus, non vib) — A1",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/SusNV/BKCtbss_SusNV_A1_v1_rr1.wav",
+        "durationS": 7.083,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -25.39,
+          "peakDbfs": -17.25,
+          "crestDb": 10.83
+        },
+        "spectral": {
+          "centroidHz": 143.7,
+          "rolloffHz": 193.8,
+          "flatness": 0.000027,
+          "bands": {
+            "sub": -39.23,
+            "low": -29.77,
+            "lowMid": -34.11,
+            "mid": -45.7,
+            "highMid": -58.01,
+            "high": -72.17
+          }
+        },
+        "transients": {
+          "count": 60,
+          "densityPerSec": 8.471,
+          "timesS": [
+            0.0639,
+            0.1742,
+            0.3077,
+            0.418,
+            0.5283,
+            0.5805,
+            0.6792,
+            0.7895,
+            0.9056,
+            1.0971,
+            1.2249,
+            1.341,
+            1.4338,
+            1.5093,
+            1.579,
+            1.6312,
+            1.7589,
+            1.846,
+            1.9447,
+            2.0259,
+            2.1711,
+            2.38,
+            2.5078,
+            2.7167,
+            2.7806,
+            2.9431,
+            3.0244,
+            3.1173,
+            3.216,
+            3.3553,
+            3.4075,
+            3.5178
+          ]
+        },
+        "tonal": {
+          "f0Hz": 109.99,
+          "note": "A",
+          "voicedRatio": 0.955
+        },
+        "tempo": {
+          "bpm": 136,
+          "confidence": 0.186
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный"
+        ]
+      },
+      "file": "tp_contrabass_sus_v1/a1.ogg",
+      "original_file": "originals/vsco2-ce/BKCtbss_SusNV_A1_v1_rr1.wav"
+    },
+    "vsco2-ce/bkctbss-susnv-c-2-v1-rr1": {
+      "id": "vsco2-ce/bkctbss-susnv-c-2-v1-rr1",
+      "name": "Solo Contrabass (sus, non vib) — C#2",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/SusNV/BKCtbss_SusNV_C%232_v1_rr1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Contrabass (sus, non vib) — C#2» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Contrabass/SusNV/BKCtbss_SusNV_C#2_v1_rr1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "2bbc1f013bf4725dc45dde12d1a83c71bf6681920824932059799c1d4c7e1a4b",
+      "sha256_derived": "efa804845caa14b39a65e5b21580dcf364690cf9216729d6de4a2bfcf518630c",
+      "duration_s": 6.591,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 37,
+      "tags": [
+        "acoustic",
+        "contrabass",
+        "sustain",
+        "dark",
+        "warm"
+      ],
+      "descriptor": {
+        "name": "Solo Contrabass (sus, non vib) — C#2",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/SusNV/BKCtbss_SusNV_C%232_v1_rr1.wav",
+        "durationS": 6.591,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -40.07,
+          "peakDbfs": -30.24,
+          "crestDb": 12.85
+        },
+        "spectral": {
+          "centroidHz": 390.5,
+          "rolloffHz": 554.5,
+          "flatness": 0.000044,
+          "bands": {
+            "sub": -65.35,
+            "low": -53.07,
+            "lowMid": -47.4,
+            "mid": -46.06,
+            "highMid": -58.23,
+            "high": -72.85
+          }
+        },
+        "transients": {
+          "count": 61,
+          "densityPerSec": 9.255,
+          "timesS": [
+            0.0232,
+            0.1103,
+            0.3019,
+            0.4005,
+            0.5166,
+            0.6618,
+            0.7314,
+            0.8417,
+            0.9985,
+            1.0507,
+            1.1029,
+            1.1958,
+            1.2945,
+            1.3584,
+            1.4338,
+            1.5035,
+            1.5557,
+            1.6312,
+            1.7125,
+            1.817,
+            2.0724,
+            2.2698,
+            2.3742,
+            2.4613,
+            2.6006,
+            2.6529,
+            2.7283,
+            2.8502,
+            2.9838,
+            3.0708,
+            3.1927,
+            3.3263
+          ]
+        },
+        "tonal": {
+          "f0Hz": 138.57,
+          "note": "C#",
+          "voicedRatio": 0.911
+        },
+        "tempo": {
+          "bpm": 152,
+          "confidence": 0.183
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_contrabass_sus_v1/cs2.ogg",
+      "original_file": "originals/vsco2-ce/BKCtbss_SusNV_C#2_v1_rr1.wav"
+    },
+    "vsco2-ce/bkctbss-pizz-c1-v1-rr1": {
+      "id": "vsco2-ce/bkctbss-pizz-c1-v1-rr1",
+      "name": "Solo Contrabass (pizz) — C1",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/Pizz/BKCtbss_Pizz_C1_v1_rr1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Contrabass (pizz) — C1» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_C1_v1_rr1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "5591160a867b21ba193d601390c9e1f35ec8d5deb0de686a410d25a98a103b06",
+      "sha256_derived": "636aac433060405e12b847d5767ca14d47bbd34d0b78c15cf30afebbe8e4fb6c",
+      "duration_s": 1.534,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 24,
+      "tags": [
+        "acoustic",
+        "contrabass",
+        "plucked",
+        "short",
+        "jazz"
+      ],
+      "descriptor": {
+        "name": "Solo Contrabass (pizz) — C1",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/Pizz/BKCtbss_Pizz_C1_v1_rr1.wav",
+        "durationS": 1.534,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -45.8,
+          "peakDbfs": -29.54,
+          "crestDb": 16.37
+        },
+        "spectral": {
+          "centroidHz": 99.9,
+          "rolloffHz": 134.6,
+          "flatness": 0.000674,
+          "bands": {
+            "sub": -50.29,
+            "low": -48.4,
+            "lowMid": -56.9,
+            "mid": -68.63,
+            "highMid": -88.62,
+            "high": -98.97
+          }
+        },
+        "transients": {
+          "count": 14,
+          "densityPerSec": 9.126,
+          "timesS": [
+            0.0232,
+            0.1219,
+            0.2032,
+            0.4122,
+            0.4702,
+            0.5747,
+            0.7953,
+            0.8998,
+            0.9927,
+            1.0681,
+            1.1262,
+            1.1842,
+            1.2481,
+            1.3526
+          ]
+        },
+        "tonal": {
+          "f0Hz": 65.72,
+          "note": "C",
+          "voicedRatio": 0.72
+        },
+        "tempo": {
+          "bpm": 161.5,
+          "confidence": 0.154
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_contrabass_pizz_v1/c1.ogg",
+      "original_file": "originals/vsco2-ce/BKCtbss_Pizz_C1_v1_rr1.wav"
+    },
+    "vsco2-ce/bkctbss-pizz-e1-v1-rr1": {
+      "id": "vsco2-ce/bkctbss-pizz-e1-v1-rr1",
+      "name": "Solo Contrabass (pizz) — E1",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/Pizz/BKCtbss_Pizz_E1_v1_rr1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Contrabass (pizz) — E1» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_E1_v1_rr1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "818fd3e7cc5200774333fc5dbb37e021ed0f155918cafe129acc0e90d37f9d49",
+      "sha256_derived": "6fa1d8f1674572be0cdcc7cecfd5cc64e8556ea9eb3ff766f8c0fc3afafcdcfe",
+      "duration_s": 1.668,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 28,
+      "tags": [
+        "acoustic",
+        "contrabass",
+        "plucked",
+        "short",
+        "jazz"
+      ],
+      "descriptor": {
+        "name": "Solo Contrabass (pizz) — E1",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/Pizz/BKCtbss_Pizz_E1_v1_rr1.wav",
+        "durationS": 1.668,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -50.95,
+          "peakDbfs": -34.6,
+          "crestDb": 17.2
+        },
+        "spectral": {
+          "centroidHz": 100.3,
+          "rolloffHz": 123.8,
+          "flatness": 0.000364,
+          "bands": {
+            "sub": -57.49,
+            "low": -53.9,
+            "lowMid": -61.13,
+            "mid": -70.46,
+            "highMid": -88.96,
+            "high": -98.76
+          }
+        },
+        "transients": {
+          "count": 17,
+          "densityPerSec": 10.191,
+          "timesS": [
+            0.0929,
+            0.1567,
+            0.238,
+            0.2902,
+            0.3657,
+            0.4528,
+            0.5631,
+            0.6211,
+            0.743,
+            0.7953,
+            0.8649,
+            0.923,
+            0.9985,
+            1.0681,
+            1.1494,
+            1.2481,
+            1.4803
+          ]
+        },
+        "tonal": {
+          "f0Hz": 71.08,
+          "note": "C#",
+          "voicedRatio": 0.33
+        },
+        "tempo": {
+          "bpm": 99.38,
+          "confidence": 0.375
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тихий"
+        ]
+      },
+      "file": "tp_contrabass_pizz_v1/e1.ogg",
+      "original_file": "originals/vsco2-ce/BKCtbss_Pizz_E1_v1_rr1.wav"
+    },
+    "vsco2-ce/bkctbss-pizz-a1-v1-rr1": {
+      "id": "vsco2-ce/bkctbss-pizz-a1-v1-rr1",
+      "name": "Solo Contrabass (pizz) — A1",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/Pizz/BKCtbss_Pizz_A1_v1_rr1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Contrabass (pizz) — A1» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_A1_v1_rr1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "c88e632ac4f716d4e85112d6ea5bbe2d27d67019296787c25d27178a9e5f18ac",
+      "sha256_derived": "109b10648584f9615767fa084cc4a56ef4945c147a190902697219152f163cc0",
+      "duration_s": 3.533,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 33,
+      "tags": [
+        "acoustic",
+        "contrabass",
+        "plucked",
+        "short",
+        "jazz"
+      ],
+      "descriptor": {
+        "name": "Solo Contrabass (pizz) — A1",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/Pizz/BKCtbss_Pizz_A1_v1_rr1.wav",
+        "durationS": 3.533,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -40.75,
+          "peakDbfs": -22.1,
+          "crestDb": 21.26
+        },
+        "spectral": {
+          "centroidHz": 117.9,
+          "rolloffHz": 129.2,
+          "flatness": 0.000301,
+          "bands": {
+            "sub": -53.83,
+            "low": -44.86,
+            "lowMid": -50.01,
+            "mid": -63.56,
+            "highMid": -82.62,
+            "high": -97.55
+          }
+        },
+        "transients": {
+          "count": 37,
+          "densityPerSec": 10.474,
+          "timesS": [
+            0.0929,
+            0.1974,
+            0.3309,
+            0.4122,
+            0.5979,
+            0.6734,
+            0.8127,
+            0.923,
+            1.0565,
+            1.1088,
+            1.1668,
+            1.2481,
+            1.3293,
+            1.3816,
+            1.4629,
+            1.5964,
+            1.6776,
+            1.7415,
+            1.817,
+            1.8692,
+            1.9273,
+            2.0143,
+            2.0898,
+            2.2233,
+            2.3859,
+            2.4439,
+            2.4961,
+            2.6355,
+            2.6877,
+            2.7632,
+            2.8444,
+            2.9315
+          ]
+        },
+        "tonal": {
+          "f0Hz": 110.31,
+          "note": "A",
+          "voicedRatio": 0.888
+        },
+        "tempo": {
+          "bpm": 92.28,
+          "confidence": 0.389
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_contrabass_pizz_v1/a1.ogg",
+      "original_file": "originals/vsco2-ce/BKCtbss_Pizz_A1_v1_rr1.wav"
+    },
+    "vsco2-ce/bkctbss-pizz-c-2-v1-rr1": {
+      "id": "vsco2-ce/bkctbss-pizz-c-2-v1-rr1",
+      "name": "Solo Contrabass (pizz) — C#2",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/Pizz/BKCtbss_Pizz_C%232_v1_rr1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Contrabass (pizz) — C#2» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_C#2_v1_rr1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "41804fc70cf82bd1c475611e315b14b1adf5effbd3369028302a681b54064b3f",
+      "sha256_derived": "87cdab498faa3e524046167f5c0934101f7ad16754fbc958c57b2b4a857ee186",
+      "duration_s": 2.912,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 37,
+      "tags": [
+        "acoustic",
+        "contrabass",
+        "plucked",
+        "short",
+        "jazz"
+      ],
+      "descriptor": {
+        "name": "Solo Contrabass (pizz) — C#2",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/Pizz/BKCtbss_Pizz_C%232_v1_rr1.wav",
+        "durationS": 2.912,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -46.46,
+          "peakDbfs": -25.68,
+          "crestDb": 22.19
+        },
+        "spectral": {
+          "centroidHz": 239.4,
+          "rolloffHz": 403.7,
+          "flatness": 0.000946,
+          "bands": {
+            "sub": -60.21,
+            "low": -50.4,
+            "lowMid": -52.53,
+            "mid": -60.14,
+            "highMid": -75.47,
+            "high": -91.39
+          }
+        },
+        "transients": {
+          "count": 24,
+          "densityPerSec": 8.241,
+          "timesS": [
+            0.0232,
+            0.1161,
+            0.2554,
+            0.3947,
+            0.5457,
+            0.6444,
+            0.7546,
+            0.8591,
+            1.0043,
+            1.1088,
+            1.2132,
+            1.3526,
+            1.4629,
+            1.5673,
+            1.7009,
+            1.8054,
+            1.9156,
+            2.0608,
+            2.142,
+            2.2523,
+            2.3452,
+            2.5484,
+            2.6413,
+            2.7109
+          ]
+        },
+        "tonal": {
+          "f0Hz": 138.71,
+          "note": "C#",
+          "voicedRatio": 0.734
+        },
+        "tempo": {
+          "bpm": 136,
+          "confidence": 0.391
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_contrabass_pizz_v1/cs2.ogg",
+      "original_file": "originals/vsco2-ce/BKCtbss_Pizz_C#2_v1_rr1.wav"
+    },
+    "vsco2-ce/llvln-pizz-g3-p-rr1": {
+      "id": "vsco2-ce/llvln-pizz-g3-p-rr1",
+      "name": "Solo Violin (pizz, p) — G3",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Pizz/LLVln_Pizz_G3_p_RR1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Violin (pizz, p) — G3» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Violin/Pizz/LLVln_Pizz_G3_p_RR1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "7bc900aa6b34b87d89ff035cd56066a9ecbdd584d12bafadcbd243b9e0a9bba1",
+      "sha256_derived": "02070c08d65e3e82472c3b10cee3aeb683ffbba98e8badf102260e7eca1c2890",
+      "duration_s": 3.802,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 55,
+      "tags": [
+        "solo",
+        "violin",
+        "plucked",
+        "playful",
+        "short"
+      ],
+      "descriptor": {
+        "name": "Solo Violin (pizz, p) — G3",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Pizz/LLVln_Pizz_G3_p_RR1.wav",
+        "durationS": 3.802,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -59.43,
+          "peakDbfs": -41.37,
+          "crestDb": 21.77
+        },
+        "spectral": {
+          "centroidHz": 914.6,
+          "rolloffHz": 1205.9,
+          "flatness": 0.040534,
+          "bands": {
+            "sub": -84.11,
+            "low": -75.36,
+            "lowMid": -66.1,
+            "mid": -66.95,
+            "highMid": -80.87,
+            "high": -87.79
+          }
+        },
+        "transients": {
+          "count": 27,
+          "densityPerSec": 7.101,
+          "timesS": [
+            0.0348,
+            0.3599,
+            1.0449,
+            1.2016,
+            1.399,
+            1.4861,
+            1.7531,
+            1.8228,
+            1.8866,
+            2.0782,
+            2.2465,
+            2.3162,
+            2.4091,
+            2.4613,
+            2.531,
+            2.6064,
+            2.6761,
+            2.8328,
+            2.8851,
+            2.9663,
+            3.0999,
+            3.1579,
+            3.3205,
+            3.4366,
+            3.5875,
+            3.6746,
+            3.7616
+          ]
+        },
+        "tonal": {
+          "f0Hz": 194.94,
+          "note": "G",
+          "voicedRatio": 0.681
+        },
+        "tempo": {
+          "bpm": 161.5,
+          "confidence": 0.154
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_solo_violin_pizz_v1/g3.ogg",
+      "original_file": "originals/vsco2-ce/LLVln_Pizz_G3_p_RR1.wav"
+    },
+    "vsco2-ce/llvln-pizz-c4-p-rr1": {
+      "id": "vsco2-ce/llvln-pizz-c4-p-rr1",
+      "name": "Solo Violin (pizz, p) — C4",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Pizz/LLVln_Pizz_C4_p_RR1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Violin (pizz, p) — C4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Violin/Pizz/LLVln_Pizz_C4_p_RR1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "95b9db0c0dafdabac63e18618b7d98b31ae41cdacf9e9a703850211113b6754a",
+      "sha256_derived": "2acbdd1f030606941650dfdd80c7d6c1691225154fcb9ea05c9399603c101e54",
+      "duration_s": 1.149,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 60,
+      "tags": [
+        "solo",
+        "violin",
+        "plucked",
+        "playful",
+        "short"
+      ],
+      "descriptor": {
+        "name": "Solo Violin (pizz, p) — C4",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Pizz/LLVln_Pizz_C4_p_RR1.wav",
+        "durationS": 1.149,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -46.84,
+          "peakDbfs": -34.75,
+          "crestDb": 15.35
+        },
+        "spectral": {
+          "centroidHz": 319.6,
+          "rolloffHz": 304.2,
+          "flatness": 0.005814,
+          "bands": {
+            "sub": -74.46,
+            "low": -60.3,
+            "lowMid": -51.44,
+            "mid": -57.51,
+            "highMid": -76.42,
+            "high": -86.94
+          }
+        },
+        "transients": {
+          "count": 8,
+          "densityPerSec": 6.964,
+          "timesS": [
+            0.0697,
+            0.3367,
+            0.4005,
+            0.5166,
+            0.7663,
+            0.8533,
+            1.0275,
+            1.0797
+          ]
+        },
+        "tonal": {
+          "f0Hz": 259.87,
+          "note": "C",
+          "voicedRatio": 0.649
+        },
+        "tempo": {
+          "bpm": 129.2,
+          "confidence": 0.143
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_solo_violin_pizz_v1/c4.ogg",
+      "original_file": "originals/vsco2-ce/LLVln_Pizz_C4_p_RR1.wav"
+    },
+    "vsco2-ce/llvln-pizz-e4-p-rr1": {
+      "id": "vsco2-ce/llvln-pizz-e4-p-rr1",
+      "name": "Solo Violin (pizz, p) — E4",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Pizz/LLVln_Pizz_E4_p_RR1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Violin (pizz, p) — E4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Violin/Pizz/LLVln_Pizz_E4_p_RR1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "090cc6a411d0e37c4c524b54cd81f268d96f9ad58cd542f26f06dd824a35b7cd",
+      "sha256_derived": "587931350db13fc474e5b550fd34f4a58ce566865f3bd272b0a06462230e35b1",
+      "duration_s": 1.246,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 64,
+      "tags": [
+        "solo",
+        "violin",
+        "plucked",
+        "playful",
+        "short"
+      ],
+      "descriptor": {
+        "name": "Solo Violin (pizz, p) — E4",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Pizz/LLVln_Pizz_E4_p_RR1.wav",
+        "durationS": 1.246,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -47.75,
+          "peakDbfs": -31.9,
+          "crestDb": 18.71
+        },
+        "spectral": {
+          "centroidHz": 428.6,
+          "rolloffHz": 344.5,
+          "flatness": 0.006404,
+          "bands": {
+            "sub": -79.73,
+            "low": -64.1,
+            "lowMid": -52.63,
+            "mid": -55.39,
+            "highMid": -71.47,
+            "high": -80.04
+          }
+        },
+        "transients": {
+          "count": 14,
+          "densityPerSec": 11.239,
+          "timesS": [
+            0.0116,
+            0.1277,
+            0.2322,
+            0.3425,
+            0.4238,
+            0.4876,
+            0.5863,
+            0.6502,
+            0.7372,
+            0.7953,
+            0.894,
+            0.952,
+            1.0971,
+            1.161
+          ]
+        },
+        "tonal": {
+          "f0Hz": 327.54,
+          "note": "E",
+          "voicedRatio": 0.988
+        },
+        "tempo": {
+          "bpm": 172.27,
+          "confidence": 0.154
+        },
+        "character": [
+          "тёмный",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_solo_violin_pizz_v1/e4.ogg",
+      "original_file": "originals/vsco2-ce/LLVln_Pizz_E4_p_RR1.wav"
+    },
+    "vsco2-ce/llvln-pizz-a4-p-rr1": {
+      "id": "vsco2-ce/llvln-pizz-a4-p-rr1",
+      "name": "Solo Violin (pizz, p) — A4",
+      "source": "vsco2-ce",
+      "source_url": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Pizz/LLVln_Pizz_A4_p_RR1.wav",
+      "creator": "Versilian Studios LLC",
+      "license": "CC0-1.0",
+      "licenseId": "cc0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked_at": "2026-11-16",
+      "commercial_use": true,
+      "redistribution": true,
+      "derivatives": true,
+      "ai_use": "allowed",
+      "attribution": "«Solo Violin (pizz, p) — A4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Violin/Pizz/LLVln_Pizz_A4_p_RR1.wav",
+      "rights_status": "approved",
+      "rights_notes": "Оригинал WAV сохранён без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохранены. Root-нота из метаданных набора.",
+      "sha256": "43bc6f4e22da0bbb56de421f97f2c609df9193036b126c581df8e37303e795e0",
+      "sha256_derived": "3e690526c423d3fe8dab2ec85ace26bb60d6c6564658e778f6f62a9703e1f529",
+      "duration_s": 2.308,
+      "sample_rate": 44100,
+      "channels": 2,
+      "root_midi": 69,
+      "tags": [
+        "solo",
+        "violin",
+        "plucked",
+        "playful",
+        "short"
+      ],
+      "descriptor": {
+        "name": "Solo Violin (pizz, p) — A4",
+        "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Pizz/LLVln_Pizz_A4_p_RR1.wav",
+        "durationS": 2.308,
+        "sampleRate": 44100,
+        "channels": 2,
+        "loudness": {
+          "lufsI": -57.74,
+          "peakDbfs": -35.92,
+          "crestDb": 26.57
+        },
+        "spectral": {
+          "centroidHz": 1377,
+          "rolloffHz": 2527.5,
+          "flatness": 0.050063,
+          "bands": {
+            "sub": -93.39,
+            "low": -78.84,
+            "lowMid": -68.61,
+            "mid": -65.11,
+            "highMid": -70.96,
+            "high": -75.22
+          }
+        },
+        "transients": {
+          "count": 24,
+          "densityPerSec": 10.398,
+          "timesS": [
+            0.0639,
+            0.209,
+            0.2902,
+            0.4063,
+            0.7082,
+            0.7895,
+            0.8417,
+            0.9636,
+            1.0565,
+            1.1552,
+            1.2481,
+            1.3235,
+            1.3758,
+            1.4571,
+            1.5732,
+            1.637,
+            1.7067,
+            1.7647,
+            1.817,
+            1.9505,
+            2.0608,
+            2.142,
+            2.2233,
+            2.2814
+          ]
+        },
+        "tonal": {
+          "f0Hz": 439.4,
+          "note": "A",
+          "voicedRatio": 0.649
+        },
+        "tempo": {
+          "bpm": 92.28,
+          "confidence": 0.261
+        },
+        "character": [
+          "средний",
+          "плотный",
+          "тональный",
+          "тихий"
+        ]
+      },
+      "file": "tp_solo_violin_pizz_v1/a4.ogg",
+      "original_file": "originals/vsco2-ce/LLVln_Pizz_A4_p_RR1.wav"
+    }
+  }
 }

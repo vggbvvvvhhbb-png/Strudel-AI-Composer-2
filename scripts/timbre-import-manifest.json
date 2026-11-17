@@ -1,0 +1,179 @@
+{
+  "note": "Манифест импорта первой выборки Timbre Palette (этап 2, D-126/D-128). Источник VSCO 2 CE — CC0-1.0 подтверждён по первоисточнику 17.11.2026. Root-ноты взяты из имён файлов и MappingChart (не угадываются). Обработка: оригинал WAV сохраняется без изменений; производный OGG (libvorbis q5) без нормализации и обрезки тишины; стерео и частота дискретизации сохраняются.",
+  "source": "vsco2-ce",
+  "baseUrl": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/master/",
+  "blobUrl": "https://github.com/sgossner/VSCO-2-CE/blob/master/",
+  "presets": [
+    {
+      "id": "tp-upright-piano-v1",
+      "name": "Upright Piano (dyn1)",
+      "family": "keys",
+      "roles": ["chords", "lead"],
+      "strudelAlias": "tp_upright_piano_v1",
+      "tags": ["acoustic", "piano", "bright", "dynamic"],
+      "timbreProfile": "bright",
+      "version": "1",
+      "creator": "Simon Dalzell (Ivy Audio) / Versilian Studios LLC",
+      "assets": [
+        { "path": "Keys/Upright Piano/Player_dyn1_rr1_008.wav", "root_midi": 37, "note": "c#2" },
+        { "path": "Keys/Upright Piano/Player_dyn1_rr1_014.wav", "root_midi": 49, "note": "c#3" },
+        { "path": "Keys/Upright Piano/Player_dyn1_rr1_020.wav", "root_midi": 61, "note": "c#4" },
+        { "path": "Keys/Upright Piano/Player_dyn1_rr1_026.wav", "root_midi": 73, "note": "c#5" }
+      ]
+    },
+    {
+      "id": "tp-upright-soft-v1",
+      "name": "Upright Nr1 (pp, мягкое)",
+      "family": "keys",
+      "roles": ["chords", "lead"],
+      "strudelAlias": "tp_upright_soft_v1",
+      "tags": ["acoustic", "piano", "soft", "warm", "intimate"],
+      "timbreProfile": "warm",
+      "version": "1",
+      "creator": "Versilian Studios LLC",
+      "assets": [
+        { "path": "Keys/Upright Nr1/UR1_C2_pp_RR1.wav", "root_midi": 36, "note": "c2" },
+        { "path": "Keys/Upright Nr1/UR1_C3_pp_RR1.wav", "root_midi": 48, "note": "c3" },
+        { "path": "Keys/Upright Nr1/UR1_C4_pp_RR1.wav", "root_midi": 60, "note": "c4" },
+        { "path": "Keys/Upright Nr1/UR1_C5_pp_RR1.wav", "root_midi": 72, "note": "c5" }
+      ]
+    },
+    {
+      "id": "tp-solo-violin-v1",
+      "name": "Solo Violin (arco vib, p)",
+      "family": "strings",
+      "roles": ["lead"],
+      "strudelAlias": "tp_solo_violin_v1",
+      "tags": ["solo", "violin", "vibrato", "expressive", "bright"],
+      "timbreProfile": "bright",
+      "version": "1",
+      "creator": "Versilian Studios LLC",
+      "assets": [
+        { "path": "Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_G3_p.wav", "root_midi": 55, "note": "g3" },
+        { "path": "Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C4_p.wav", "root_midi": 60, "note": "c4" },
+        { "path": "Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_E4_p.wav", "root_midi": 64, "note": "e4" },
+        { "path": "Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_A4_p.wav", "root_midi": 69, "note": "a4" },
+        { "path": "Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C5_p.wav", "root_midi": 72, "note": "c5" }
+      ]
+    },
+    {
+      "id": "tp-violin-section-v1",
+      "name": "Violin Section (sus vib)",
+      "family": "strings",
+      "roles": ["pad", "chords"],
+      "strudelAlias": "tp_violin_section_v1",
+      "tags": ["ensemble", "violin", "sustain", "vibrato", "warm"],
+      "timbreProfile": "warm",
+      "version": "1",
+      "creator": "Versilian Studios LLC",
+      "assets": [
+        { "path": "Strings/Violin Section/susVib/VlnEns_susVib_G2_v1.wav", "root_midi": 43, "note": "g2" },
+        { "path": "Strings/Violin Section/susVib/VlnEns_susVib_C4_v1.wav", "root_midi": 60, "note": "c4" },
+        { "path": "Strings/Violin Section/susVib/VlnEns_susVib_G4_v1.wav", "root_midi": 67, "note": "g4" },
+        { "path": "Strings/Violin Section/susVib/VlnEns_susVib_D5_v1.wav", "root_midi": 74, "note": "d5" }
+      ]
+    },
+    {
+      "id": "tp-viola-section-v1",
+      "name": "Viola Section (sus vib)",
+      "family": "strings",
+      "roles": ["pad", "chords"],
+      "strudelAlias": "tp_viola_section_v1",
+      "tags": ["ensemble", "viola", "sustain", "dark", "warm"],
+      "timbreProfile": "dark",
+      "version": "1",
+      "creator": "Versilian Studios LLC",
+      "assets": [
+        { "path": "Strings/Viola Section/susvib/ViolaEns_susvib_C2_v1_1.wav", "root_midi": 36, "note": "c2" },
+        { "path": "Strings/Viola Section/susvib/ViolaEns_susvib_G2_v1_1.wav", "root_midi": 43, "note": "g2" },
+        { "path": "Strings/Viola Section/susvib/ViolaEns_susvib_D3_v1_1.wav", "root_midi": 50, "note": "d3" },
+        { "path": "Strings/Viola Section/susvib/ViolaEns_susvib_C4_v1_1.wav", "root_midi": 60, "note": "c4" }
+      ]
+    },
+    {
+      "id": "tp-cello-section-v1",
+      "name": "Cello Section (sus vib)",
+      "family": "strings",
+      "roles": ["bass", "pad"],
+      "strudelAlias": "tp_cello_section_v1",
+      "tags": ["ensemble", "cello", "sustain", "dark", "warm"],
+      "timbreProfile": "dark",
+      "version": "1",
+      "creator": "Versilian Studios LLC",
+      "assets": [
+        { "path": "Strings/Cello Section/susvib/susvib_C1_v1_1.wav", "root_midi": 24, "note": "c1" },
+        { "path": "Strings/Cello Section/susvib/susvib_G1_v1_1.wav", "root_midi": 31, "note": "g1" },
+        { "path": "Strings/Cello Section/susvib/susvib_C3_v1_1.wav", "root_midi": 48, "note": "c3" },
+        { "path": "Strings/Cello Section/susvib/susvib_G3_v1_1.wav", "root_midi": 55, "note": "g3" }
+      ]
+    },
+    {
+      "id": "tp-harp-v1",
+      "name": "Harp (mf)",
+      "family": "strings",
+      "roles": ["arp", "texture"],
+      "strudelAlias": "tp_harp_v1",
+      "tags": ["plucked", "harp", "delicate", "bright"],
+      "timbreProfile": "bright",
+      "version": "1",
+      "creator": "Versilian Studios LLC",
+      "assets": [
+        { "path": "Strings/Harp/KSHarp_C3_mf.wav", "root_midi": 48, "note": "c3" },
+        { "path": "Strings/Harp/KSHarp_G3_mf.wav", "root_midi": 55, "note": "g3" },
+        { "path": "Strings/Harp/KSHarp_C5_mf.wav", "root_midi": 72, "note": "c5" },
+        { "path": "Strings/Harp/KSHarp_E5_mf.wav", "root_midi": 76, "note": "e5" }
+      ]
+    },
+    {
+      "id": "tp-contrabass-sus-v1",
+      "name": "Solo Contrabass (sus, non vib)",
+      "family": "bass",
+      "roles": ["bass", "sub"],
+      "strudelAlias": "tp_contrabass_sus_v1",
+      "tags": ["acoustic", "contrabass", "sustain", "dark", "warm"],
+      "timbreProfile": "dark",
+      "version": "1",
+      "creator": "Versilian Studios LLC",
+      "assets": [
+        { "path": "Strings/Solo Contrabass/SusNV/BKCtbss_SusNV_C1_v1_rr1.wav", "root_midi": 24, "note": "c1" },
+        { "path": "Strings/Solo Contrabass/SusNV/BKCtbss_SusNV_E1_v1_rr1.wav", "root_midi": 28, "note": "e1" },
+        { "path": "Strings/Solo Contrabass/SusNV/BKCtbss_SusNV_A1_v1_rr1.wav", "root_midi": 33, "note": "a1" },
+        { "path": "Strings/Solo Contrabass/SusNV/BKCtbss_SusNV_C#2_v1_rr1.wav", "root_midi": 37, "note": "c#2" }
+      ]
+    },
+    {
+      "id": "tp-contrabass-pizz-v1",
+      "name": "Solo Contrabass (pizz)",
+      "family": "bass",
+      "roles": ["bass"],
+      "strudelAlias": "tp_contrabass_pizz_v1",
+      "tags": ["acoustic", "contrabass", "plucked", "short", "jazz"],
+      "timbreProfile": "warm",
+      "version": "1",
+      "creator": "Versilian Studios LLC",
+      "assets": [
+        { "path": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_C1_v1_rr1.wav", "root_midi": 24, "note": "c1" },
+        { "path": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_E1_v1_rr1.wav", "root_midi": 28, "note": "e1" },
+        { "path": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_A1_v1_rr1.wav", "root_midi": 33, "note": "a1" },
+        { "path": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_C#2_v1_rr1.wav", "root_midi": 37, "note": "c#2" }
+      ]
+    },
+    {
+      "id": "tp-solo-violin-pizz-v1",
+      "name": "Solo Violin (pizz, p)",
+      "family": "strings",
+      "roles": ["lead", "arp"],
+      "strudelAlias": "tp_solo_violin_pizz_v1",
+      "tags": ["solo", "violin", "plucked", "playful", "short"],
+      "timbreProfile": "bright",
+      "version": "1",
+      "creator": "Versilian Studios LLC",
+      "assets": [
+        { "path": "Strings/Solo Violin/Pizz/LLVln_Pizz_G3_p_RR1.wav", "root_midi": 55, "note": "g3" },
+        { "path": "Strings/Solo Violin/Pizz/LLVln_Pizz_C4_p_RR1.wav", "root_midi": 60, "note": "c4" },
+        { "path": "Strings/Solo Violin/Pizz/LLVln_Pizz_E4_p_RR1.wav", "root_midi": 64, "note": "e4" },
+        { "path": "Strings/Solo Violin/Pizz/LLVln_Pizz_A4_p_RR1.wav", "root_midi": 69, "note": "a4" }
+      ]
+    }
+  ]
+}
