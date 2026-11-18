@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-15T02:14:45.415Z",
+  "checkedAt": "2026-11-18T19:06:11.231Z",
   "gate": "B — local-first",
   "machine": {
     "platform": "win32",
@@ -14,9 +14,9 @@
     "serverFullTrackSeconds": 3384
   },
   "notMeasured": {
-    "separation": "нет данных: Python-воркер (numpy + torch + demucs) на этой машине не запущен; требуется окружение владельца (D-097)"
+    "separation": null
   },
-  "passed": 10,
+  "passed": 11,
   "total": 12,
   "checks": [
     {
@@ -32,12 +32,12 @@
     {
       "name": "рендер 16 тактов выполнен",
       "ok": true,
-      "detail": "32 с аудио за 1.9 с wall (16.5× realtime)"
+      "detail": "32 с аудио за 2.1 с wall (15.1× realtime)"
     },
     {
       "name": "рендер 16 тактов укладывается в 7 минут (без учёта сепарации)",
       "ok": true,
-      "detail": "1.9 с из 420 с"
+      "detail": "2.1 с из 420 с"
     },
     {
       "name": "в паспорте рендера есть fingerprint",
@@ -47,17 +47,17 @@
     {
       "name": "полный 4-минутный трек укладывается в 15 минут",
       "ok": true,
-      "detail": "77.2 с из 900 с"
+      "detail": "60.9 с из 900 с"
     },
     {
       "name": "локальный рендер быстрее серверного замера",
       "ok": true,
-      "detail": "77.2 с против 56.4 мин на сервере — в 43.8 раза быстрее"
+      "detail": "60.9 с против 56.4 мин на сервере — в 55.6 раза быстрее"
     },
     {
       "name": "звук локального и серверного рендера совпадает в пределах допуска проекта",
       "ok": true,
-      "detail": "maxAbsDiff = 3.05e-5 (допуск 1e-4), отличается сэмплов: 24 из 6144000"
+      "detail": "maxAbsDiff = 3.05e-5 (допуск 1e-4), отличается сэмплов: 22 из 6144000"
     },
     {
       "name": "паспорта рендера совпадают по движку, частоте и коду",
@@ -67,7 +67,7 @@
     {
       "name": "файлы WAV побайтово идентичны",
       "ok": null,
-      "detail": "нет: sha256 разошёлся (fcfb27c35a9f… против d9f77c5adf16…). Причина измерена: смесь осциллятора и сэмпла расходится на 1 LSB (E-019). Допуск проекта соблюдён.",
+      "detail": "нет: sha256 разошёлся (14006342e762… против 7902aab649ca…). Причина измерена: смесь осциллятора и сэмпла расходится на 1 LSB (E-019). Допуск проекта соблюдён.",
       "note": "нет данных"
     },
     {
@@ -76,10 +76,9 @@
       "detail": "восстановлено задач: 1, финальное состояние: done"
     },
     {
-      "name": "разделение на стемы не измерено",
-      "ok": null,
-      "detail": "Python-воркер не отвечает (http://127.0.0.1:8010): fetch failed — нужны numpy, torch и demucs (D-097, машина владельца)",
-      "note": "нет данных"
+      "name": "разделение на стемы доступно на этой машине",
+      "ok": true,
+      "detail": "Python-воркер отвечает"
     }
   ],
   "measured": {
@@ -91,18 +90,21 @@
       "node": "v24.14.1"
     },
     "analysisWorker": {
-      "available": false,
-      "reason": "Python-воркер не отвечает (http://127.0.0.1:8010): fetch failed"
+      "available": true,
+      "reason": null,
+      "demucs_available": true,
+      "separation_model": "htdemucs",
+      "python": null
     },
     "twin": {
-      "wallMs": 1938,
-      "renderMs": 1710,
+      "wallMs": 2126,
+      "renderMs": 1911,
       "durationS": 32,
       "wavBytes": 6144044,
-      "wavSha256": "fcfb27c35a9f04e6edd947af3dad836eef9712285aaa7b59c0e37ab010c37cd1",
+      "wavSha256": "14006342e7622f73ae4da35839031e6da16d483faa5056fffe44b8d20fa1831e",
       "fingerprint": {
         "browser": "chromium",
-        "browser_version": "157.0.8103.51",
+        "browser_version": "158.0.8127.36",
         "os": "win32",
         "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
         "sample_rate": 48000,
@@ -111,26 +113,26 @@
       }
     },
     "fullTrack": {
-      "wallMs": 77229,
+      "wallMs": 60871,
       "durationS": 240,
       "wavBytes": 46080044,
-      "wavSha256": "be544a5c5c7fcdc73c5d44e6f38614ded8938eccdbe6efcdc4374fda54533ba9",
-      "realtimeFactor": 3.1076409120926076
+      "wavSha256": "8562ec29a115ff29ec2f8ac4eec93d0005b715b016028081d1ab4d1d264ecb71",
+      "realtimeFactor": 3.9427642062722805
     },
-    "speedupVsServer": 43.81773686050577,
+    "speedupVsServer": 55.59297530843916,
     "bitExact": {
-      "localSha256": "fcfb27c35a9f04e6edd947af3dad836eef9712285aaa7b59c0e37ab010c37cd1",
-      "serverSha256": "d9f77c5adf16c10c48d6eb9044d80ae55926518b14c11e0ea1cde0b5f7d44e35",
+      "localSha256": "14006342e7622f73ae4da35839031e6da16d483faa5056fffe44b8d20fa1831e",
+      "serverSha256": "7902aab649ca5cde8e25db91413ca581ff0fa182111bcf0018230681bb76919f",
       "audio": {
         "maxAbsDiff": 1,
         "maxAbsDiffNormalized": 0.000030517578125,
-        "diffSamples": 24,
+        "diffSamples": 22,
         "total": 6144000,
-        "relativeDiff": 0.00000390625
+        "relativeDiff": 0.0000035807291666666666
       },
       "localFingerprint": {
         "browser": "chromium",
-        "browser_version": "157.0.8103.51",
+        "browser_version": "158.0.8127.36",
         "os": "win32",
         "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
         "sample_rate": 48000,
@@ -139,7 +141,7 @@
       },
       "serverFingerprint": {
         "browser": "chromium",
-        "browser_version": "157.0.8103.51",
+        "browser_version": "158.0.8127.36",
         "os": "win32",
         "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
         "sample_rate": 48000,
@@ -154,12 +156,12 @@
     "durability": {
       "restored": 1,
       "finalState": "done",
-      "taskId": "89e7e9b7-34f4-4e43-b031-ec6d9a273750",
+      "taskId": "c610ff14-ef30-4d35-adc2-af6ce61320bf",
       "log": [
         "[local] после перезапуска возвращено задач: 1",
-        "[local] задача 89e7e9b7-34f4-4e43-b031-ec6d9a273750 в работе",
+        "[local] задача c610ff14-ef30-4d35-adc2-af6ce61320bf в работе",
         "[local] демон слушает http://127.0.0.1:3226 (очередь: F:\\ГЕНЕРАЦИЯ ФОТОК\\Новая папка\\Strudel AI Composer\\.scratch\\gate-b-state\\durability)",
-        "[local] задача 89e7e9b7-34f4-4e43-b031-ec6d9a273750 готова"
+        "[local] задача c610ff14-ef30-4d35-adc2-af6ce61320bf готова"
       ]
     }
   }

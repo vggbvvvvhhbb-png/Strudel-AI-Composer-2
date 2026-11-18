@@ -1,0 +1,47 @@
+{
+  "measuredAt": "2026-11-18T22:10:00+03:00",
+  "what": "Сепарация Demucs (htdemucs) на GPU владельца — закрытие «нет данных» гейта B (§10.4)",
+  "machine": {
+    "os": "win32/x64",
+    "cpu": "Ryzen 5 5500, 12 CPU",
+    "ramMb": 16231,
+    "gpu": "NVIDIA GeForce RTX 2060 SUPER (8 ГБ)"
+  },
+  "env": {
+    "venv": "F:\\strudel-env",
+    "baseInterpreter": "F:\\uv-python\\cpython-3.12.16-windows-x86_64-none",
+    "python": "3.12.16",
+    "torch": "2.5.1+cu121",
+    "demucs": "4.1.0",
+    "cudaAvailable": true,
+    "note": "Окружение полностью на F: (C: заполнен на 98%). pyvenv.cfg и лаунчеры перепривязаны с C: на F: 18.11.2026."
+  },
+  "input": {
+    "source": "полный 4-минутный рендер gate-b (bd*4 + sawtooth bass, c:minor, 120 bpm), первые 60 с, WAV 48 кГц stereo",
+    "file": ".scratch/sep-bench/input-60s.wav",
+    "durationS": 60
+  },
+  "runs": [
+    { "kind": "cold (первый запуск воркера)", "wallS": 12.31, "workerReportedS": 12.27 },
+    { "kind": "warm (повторный)", "wallS": 7.97, "workerReportedS": 7.94 }
+  ],
+  "gpuEvidence": "nvidia-smi во время warm-прогона: utilization 94%, memory.used 1886 MiB (вне прогона ~1000 MiB, 2-11%)",
+  "stems": ["drums", "bass", "vocals", "other"],
+  "firstTwin": {
+    "separation60sS": 7.94,
+    "render16BarsS": 2.1,
+    "totalS": 10.04,
+    "limitS": 420,
+    "verdict": "PASS — запас ~42×"
+  },
+  "commands": [
+    "TORCH_HOME=F:/torch-home F:/strudel-env/Scripts/python.exe server/deepdive/analysis/worker.py",
+    "npm run gate:b  # 11/12, единственное не-зелёное — известное E-019 (1 LSB, допуск соблюдён)",
+    "curl -H 'Content-Type: application/json' --data-binary @req.json http://127.0.0.1:8010/separate"
+  ],
+  "caveats": [
+    "Веса htdemucs кэшированы HuggingFace-стором на C: (~/.cache/huggingface, xet-блобы). Работает; при очистке C: модель скачается заново. TORCH_HOME=F:/torch-home выставлен, но demucs 4.1 качает через HF, не torch.hub.",
+    "Тестовый сигнал — синтезированный бит (барабаны+бас), не реальная музыка: время сепарации от содержания почти не зависит, но качество стемов на реальном треке не оценивалось.",
+    "ConnectionResetError в логе воркера — безвредный шум health-проб демона (node:http закрывает соединение), на /separate не влияет."
+  ]
+}
