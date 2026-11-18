@@ -8,9 +8,8 @@
 //   * MetricsReport               — тот же отчёт, что считает браузер студии;
 //   * события паттерна            — для сравнения ритма без декодирования звука.
 //
-// Детерминизм: два прогона подряд дают maxAbsDiff = 0 (доказано в
-// tests/spike/browser/out-offline.txt). Поэтому воркер НЕ полагается на seed —
-// он полагается на то, что движок и сэмпл-банк неизменны.
+// Детерминизм E-022: фиксированный PRNG до init/evaluate и ожидание
+// завершения каждой IR. Node создаёт свежую render page на каждый рендер.
 //
 // Движок (@strudel/web) грузится отдельным UMD-скриптом (/bundle.js) и доступен
 // как window.strudel — так же, как в спайке фазы 0 (tests/spike/browser/page.js).
@@ -20,8 +19,10 @@ import { audioBufferToChannels } from '../../../src/audio/render/offline.js';
 import { buildMetricsReport } from '../../../src/audio/metrics-report.js';
 import { encodeWav } from '../../../src/core/wav.js';
 import { SAMPLE_SETS } from '../../../src/sample-banks.js';
+import { installRenderDeterminism } from '../../../src/audio/render/seed.js';
 
 const strudel = window.strudel;
+const determinism = installRenderDeterminism();
 
 /**
  * Алиасы визуализаций живут в приложении (src/pianoroll.js), а не в Strudel.
@@ -160,7 +161,9 @@ async function render(args) {
     throw new Error('Код не дал паттерн — рендер невозможен');
   }
 
-  const buffer = await adapter.renderCodeOffline({ code, fromCycle, toCycle, sampleRate, cps });
+  // Один evaluate, как в realm: повторный запуск кода потреблял бы PRNG
+  // ещё раз и мог дать разные паттерны для WAV и списка событий.
+  const buffer = await adapter.renderOffline({ pattern, fromCycle, toCycle, sampleRate, cps, prepare: determinism.prepare });
   const channels = audioBufferToChannels(buffer);
   const actualRate = buffer.sampleRate || sampleRate;
 

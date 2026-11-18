@@ -9,7 +9,7 @@
 // адаптер, те же банки и пресеты. Паспорт происхождения (engineVersion)
 // совпадает с живым путём — инвариант D-104 проверяется зондом.
 
-import { createSeededRandom, RENDER_SEED } from './audio/render/seed.js';
+import { installRenderDeterminism } from './audio/render/seed.js';
 import { strudelApi } from './audio/engine/strudel-api.js';
 import { createEngineAdapter } from './audio/engine/adapter.js';
 import { audioBufferToChannels } from './audio/render/offline.js';
@@ -26,51 +26,9 @@ installJadeVisuals({ drawTarget: () => null });
 const origin = window.location.origin;
 const reply = (message, transfer = []) => window.parent.postMessage(message, origin, transfer);
 
-// IR реверберации и детюн бочки superdough берут из Math.random (E-022):
-// фиксируем зерно до первого рендера — все realm дают идентичный звук.
-// Живая страница не трогается: подмена действует только в этом window.
-Math.random = createSeededRandom(RENDER_SEED);
-
-// superdough применяет IR к конвольверу АСИНХРОННО (generateReverb →
-// OfflineAudioContext-свип → oncomplete → convolver.buffer). Без ожидания
-// startRendering стартует с пустым конвольвером — звук зависит от тайминга
-// макрозадач (замерено: maxAbsDiff ~0.03 между realm). ВАЖНО: createReverb
-// сам вызывает generate в конце — первый generate нужно отслеживать сразу
-// после создания узла, а не только через обёртку node.generate.
-const reverbNodes = new Set();
-const origCreateReverb = BaseAudioContext.prototype.createReverb;
-BaseAudioContext.prototype.createReverb = function createReverbTracked(...args) {
-  const node = origCreateReverb.apply(this, args);
-  reverbNodes.add(node);
-  const watchIR = () => {
-    node.__irPending = true;
-    const watch = setInterval(() => {
-      if (node.buffer) {
-        node.__irPending = false;
-        clearInterval(watch);
-      }
-    }, 5);
-  };
-  // generate уже отработал внутри createReverb: буфер ещё не пришёл — ждём.
-  if (!node.buffer) watchIR();
-  const origGenerate = node.generate;
-  node.generate = function generateTracked(...gargs) {
-    const result = origGenerate.apply(node, gargs);
-    if (!node.buffer) watchIR();
-    return result;
-  };
-  return node;
-};
-
-async function waitForReverbIR(timeoutMs = 5000) {
-  const deadline = Date.now() + timeoutMs;
-  while ([...reverbNodes].some((node) => node.__irPending)) {
-    if (Date.now() > deadline) {
-      throw new Error(`IR реверберации не сгенерировалась за ${timeoutMs} мс — рендер недостоверен`);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-}
+// Общая политика E-022: PRNG и tracking каждой IR до init/evaluate.
+// Этот window одноразовый; живая студия не устанавливает перехватов.
+const determinism = installRenderDeterminism();
 
 const adapter = createEngineAdapter(strudelApi);
 
@@ -112,7 +70,7 @@ window.addEventListener('message', async (event) => {
       toCycle: message.toCycle,
       sampleRate: message.sampleRate,
       cps: message.cps,
-      prepare: waitForReverbIR,
+      prepare: determinism.prepare,
     });
     const channels = audioBufferToChannels(buffer).map((ch) => ch.buffer);
     reply({ type: 'result', id, sampleRate: buffer.sampleRate, channels }, channels);
