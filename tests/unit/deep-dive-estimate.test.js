@@ -13,6 +13,8 @@ import { describe, it, expect } from 'vitest';
 import {
   estimateDeepDive,
   formatEstimate,
+  formatEstimateScope,
+  formatStageRemaining,
   formatMinutes,
   formatRemaining,
   isKnownModel,
@@ -78,6 +80,28 @@ describe('Оценка времени разбора', () => {
     expect(formatRemaining(1524)).toBe('осталось ~26 мин');
     expect(formatRemaining(20)).toBe('осталось меньше минуты');
     expect(formatRemaining(0)).toBe('');
+  });
+
+  it('не называет время сепарации временем готового двойника', () => {
+    const text = formatEstimateScope(estimateDeepDive({ durationS: 240, separate: true }));
+    expect(text).toContain('Время сепарации: 14–27 мин');
+    expect(text).toContain('без очереди и рендера двойника');
+    expect(text).toContain('Полный результат: нет данных');
+  });
+
+  it('без стемов явно обозначает область экстраполяции', () => {
+    const text = formatEstimateScope(estimateDeepDive({ durationS: 240 }));
+    expect(text).toContain('экстраполяция замера 125 с');
+    expect(text).toContain('время длинного двойника не гарантировано');
+  });
+
+  it.each([0, -1, -120])('при просроченной оценке %i не обещает меньше минуты', seconds => {
+    expect(formatStageRemaining('Разделение', seconds)).toBe('Разделение — оценка превышена, этап продолжается');
+  });
+
+  it('неистёкшая оценка показывает текущий остаток', () => {
+    expect(formatStageRemaining('Разделение', 20)).toBe('Разделение — осталось меньше минуты');
+    expect(formatStageRemaining('Разделение', 120)).toBe('Разделение — осталось ~2 мин');
   });
 
   it('модель разделения ограничена белым списком', () => {
