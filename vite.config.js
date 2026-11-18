@@ -42,6 +42,9 @@ export default defineConfig({
         landing: 'index.html',
         studio: 'studio.html',
         tinder: 'tinder.html',
+        // Скрытая страница изолированного офлайн-рендера (E-020/D-143):
+        // грузится в iframe на один рендер, чанк движка общий со студией.
+        realm: 'render-realm.html',
       },
     },
   },
@@ -52,6 +55,11 @@ export default defineConfig({
     poolOptions: {
       forks: {
         execArgv: ['--expose-gc'],
+        // Машина владельца нагружена (браузер, llama-server): при 12 воркерах
+        // по числу CPU воркеры умирают от OOM на пике (~2–3 ГБ commit).
+        // 4 воркера — замеренный компромисс надёжности и скорости (D-142).
+        maxForks: 4,
+        minForks: 1,
       },
     },
     // Клон донора `.scratch/shveyka-igolka` — чужой монорепо без наших
