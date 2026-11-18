@@ -10,20 +10,7 @@
 // совпадает с живым путём — инвариант D-104 проверяется зондом.
 
 import { createSeededRandom, RENDER_SEED } from './audio/render/seed.js';
-import {
-  initStrudel,
-  evaluate,
-  hush,
-  getAudioContext,
-  setAudioContext,
-  getSuperdoughAudioController,
-  setSuperdoughAudioController,
-  initAudio,
-  registerSynthSounds,
-  superdough,
-  samples,
-  loadBuffer,
-} from '@strudel/web';
+import { strudelApi } from './audio/engine/strudel-api.js';
 import { createEngineAdapter } from './audio/engine/adapter.js';
 import { audioBufferToChannels } from './audio/render/offline.js';
 import { SAMPLE_SETS } from './sample-banks.js';
@@ -35,21 +22,6 @@ import { installJadeVisuals } from './pianoroll.js';
 // фикстуры). В realm рисовать некуда: регистрируем их как no-op, иначе
 // исполнение кода упадёт «_pianoroll is not a function».
 installJadeVisuals({ drawTarget: () => null });
-
-const strudelApi = {
-  initStrudel,
-  evaluate,
-  hush,
-  getAudioContext,
-  setAudioContext,
-  getSuperdoughAudioController,
-  setSuperdoughAudioController,
-  initAudio,
-  registerSynthSounds,
-  superdough,
-  samples,
-  loadBuffer,
-};
 
 const origin = window.location.origin;
 const reply = (message, transfer = []) => window.parent.postMessage(message, origin, transfer);
@@ -106,7 +78,7 @@ const adapter = createEngineAdapter(strudelApi);
 // allSamplesReady: половина набора — неполный трек, рендерить его нельзя).
 const boot = (async () => {
   await adapter.init(new AudioContext({ latencyHint: 'interactive' }));
-  const results = await Promise.allSettled(SAMPLE_SETS.map((src) => samples(src)));
+  const results = await Promise.allSettled(SAMPLE_SETS.map((src) => strudelApi.samples(src)));
   if (!allSamplesReady(results)) {
     const failed = results.filter((r) => r.status === 'rejected');
     throw new Error(`Банки сэмплов недоступны: ${failed.map((f) => String(f.reason?.message || f.reason)).join('; ')}`);

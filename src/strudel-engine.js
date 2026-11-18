@@ -7,21 +7,7 @@
 //   движок (superdough) ─► masterIn ─► [worklet: EQ→glue→лимитер→метры] ─► выход
 //
 // Контекст и мастер принадлежат студии (src/audio/graph.js), движок — гость.
-import {
-  initStrudel,
-  evaluate,
-  hush,
-  getAudioContext,
-  setAudioContext,
-  getSuperdoughAudioController,
-  setSuperdoughAudioController,
-  initAudio,
-  registerSynthSounds,
-  superdough,
-  Pattern,
-  samples,
-  loadBuffer,
-} from '@strudel/web';
+import { strudelApi } from './audio/engine/strudel-api.js';
 import { highlightBlock } from './core/highlight.js';
 import { visualPlan } from './core/visual-plan.js';
 import { installJadeVisuals } from './pianoroll.js';
@@ -57,21 +43,8 @@ let adapter = null;
 // true, если мастер-шина не поднялась и звук идёт напрямую в выход.
 let directOutput = false;
 
-/** Модуль @strudel/web в виде объекта — так его ждёт адаптер движка. */
-const strudelApi = {
-  initStrudel,
-  evaluate,
-  hush,
-  getAudioContext,
-  setAudioContext,
-  getSuperdoughAudioController,
-  setSuperdoughAudioController,
-  initAudio,
-  registerSynthSounds,
-  superdough,
-  samples,
-  loadBuffer,
-};
+/** Именованные функции движка, которые модуль использует напрямую. */
+const { evaluate, hush, samples, getAudioContext } = strudelApi;
 
 function dpr() {
   return Math.min(window.devicePixelRatio || 1, 2);
