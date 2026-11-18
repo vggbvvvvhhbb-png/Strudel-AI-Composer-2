@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-18T19:35:47.166Z",
+  "date": "2026-11-18T20:55:47.530Z",
   "set": "education",
   "datasetCount": 148,
   "ollamaAvailable": false,
@@ -12,9 +12,10 @@
           "lofi"
         ]
       },
-      "semantic": false,
+      "queryEmbeddingAvailable": false,
       "local": {
         "stage": "exact",
+        "semantic": false,
         "degraded": true,
         "reason": "семантический поиск недоступен — лексическое ранжирование",
         "top": [
@@ -43,9 +44,10 @@
           "techno"
         ]
       },
-      "semantic": false,
+      "queryEmbeddingAvailable": false,
       "local": {
         "stage": "exact",
+        "semantic": false,
         "degraded": true,
         "reason": "семантический поиск недоступен — лексическое ранжирование",
         "top": [
@@ -74,9 +76,10 @@
           "dnb"
         ]
       },
-      "semantic": false,
+      "queryEmbeddingAvailable": false,
       "local": {
         "stage": "exact",
+        "semantic": false,
         "degraded": true,
         "reason": "семантический поиск недоступен — лексическое ранжирование",
         "top": [
@@ -105,9 +108,10 @@
           "ambient"
         ]
       },
-      "semantic": false,
+      "queryEmbeddingAvailable": false,
       "local": {
         "stage": "exact",
+        "semantic": false,
         "degraded": true,
         "reason": "семантический поиск недоступен — лексическое ранжирование",
         "top": [
@@ -136,9 +140,10 @@
           "neo-soul"
         ]
       },
-      "semantic": false,
+      "queryEmbeddingAvailable": false,
       "local": {
         "stage": "tonic",
+        "semantic": false,
         "degraded": true,
         "reason": "фильтры ослаблены до стадии «tonic» (мало точных совпадений); семантический поиск недоступен — лексическое ранжирование",
         "top": [

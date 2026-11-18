@@ -283,8 +283,9 @@ resonance, cutoff, filter, sound, noise, sine, saw, square, time, cps, cpm, getC
 |---|---|
 | `local/daemon.mjs` | HTTP-сервер демона: `/health`, `/tasks`, `/tasks/:id`, `/tasks/:id/stream` (SSE). Авторизация по токену, fail-closed |
 | `local/queue.mjs` | DurableQueue: журнал `queue.jsonl` на диске; незавершённые задачи возвращаются в работу после перезапуска |
-| `local/tasks.mjs` | Реестр задач: `render`, `analyze`, `separate`, `analyze_stems`. Рендер — через существующий `render-worker.mjs`, анализ — через Python-воркер |
-| `local/client.mjs` | Клиент демона: `health`, `submit`, `status`, `streamTask`. Без побочных эффектов при импорте |
+| `local/tasks.mjs` | `render`, `analyze`, `separate`, `analyze_stems`, `passport`, `analyze_reference`; общие render/Python/DSP модули |
+| `local/reference.mjs` | P5: зарегистрированный WAV≤240с→htdemucs→агрегаты4слоёв, окно DSP≤12с; ни путей, ни последовательностей нот |
+| `local/client.mjs` | `health`, `submit`, `status`, `wait`, `streamTask`; ожидание терминального состояния с общим таймаутом/отменой |
 | `server/routes/local.js` | `/api/local/status`, `/api/local/tasks`, `/api/local/tasks/:id`, `/api/local/tasks/:id/stream` |
 
 **Свойства, которые нельзя потерять:**
@@ -309,7 +310,7 @@ resonance, cutoff, filter, sound, noise, sine, saw, square, time, cps, cpm, getC
 |---|---|---|
 | `src/audio/render/offline.js` | чистый оркестратор рендера, **не знает про Web Audio** (рендер-функция внедряется снаружи) | `:76`, `:83`, `:112`, `:170` |
 | `src/audio/render/realm.js` | менеджер изолированного рендера: iframe-realm на прогон, очередь, таймауты (D-143) | — |
-| `src/audio/render/seed.js` | mulberry32 с фиксированным зерном для детерминизма IR в realm (E-022) | — |
+| `src/audio/render/seed.js` | Общая политика seeded-ir-v2: mulberry32 + завершение каждой IR в одноразовых realm и серверных страницах (D-150) | — |
 | `src/audio/engine/adapter.js` | реальный `OfflineAudioContext`; `new OfflineAudioContext(2, sr*seconds, sr)`; additive-хук `prepare` перед startRendering | `:173-229` |
 | `src/audio/metrics-report.js` | `buildMetricsReport` (`:41`), `ACCEPTANCE` (`:19-26`), zod-схема (`:176`), `parseMetricsReport` (`:222`) | — |
 | `src/audio/qa.js` | 13 кодов замечаний (`:16-30`), `runAudioQa` (`:53`), `acceptancePassed` (`:262`) | — |
@@ -338,7 +339,9 @@ iframe-realm на каждый прогон (`src/audio/render/realm.js` +
 между контекстами (E-020) — быстрые последовательные рендеры падали.
 Realm уничтожается после рендера, удержания умирают вместе с ним; живой
 контекст студии рендер не трогает. Детерминизм IR реверберации обеспечен
-зерном PRNG и ожиданием `convolver.buffer` (E-022). Вызовы рендера
+зерном PRNG и ожиданием каждой завершённой генерации IR, не наличием
+старого buffer (D-150/E-022). Та же политика действует в одноразовой
+серверной странице; Chromium сохраняется между заданиями. Вызовы рендера
 по-прежнему сериализуются очередью менеджера. Legacy-путь
 `adapter.renderCodeOffline` сохранён для зондов и всё ещё несёт E-020.
 
@@ -529,7 +532,9 @@ DPO-экспорт изолированы (инвариант D-132).
 | `server/rag/schema.js` | Zod-схема записи знания (D-135): tonic+mode раздельно, роли из канона 12, bpm null≠0, chromatic-флаг, сверка пресетов с каталогом через zones |
 | `server/rag/harmony.js` | Правила гармонии: функции T/S/D по ладам, граф переходов, каденции, замены (тритоновая/backdoor/вторичная доминанта), MODE_INTERVALS, самопроверка |
 | `server/rag/music-check.js` | Нормализация тоники, питч-классы, принадлежность нот ладу по событиям queryArc |
-| `server/rag/dataset/entries.json` + `dataset.js` | Золотой датасет 35 записей (D-136), загрузчик с fail-closed валидацией |
+| `server/rag/dataset/entries.json` + `dataset.js` | 148 записей: 35 прежних +113 учебных,15 направлений/12 гайдов; fail-closed и единый текст эмбеддингов (D-146,D-152) |
+| `server/rag/genre-guide.js` | Локальный жанровый гайд перед TrackSpec; простые BPM/role-проверки и ограниченная коррекция (D-147) |
+| `server/music/compose/reference-plan.js` | Измеренный паспорт P5 в prompt; approved-кандидаты тембров по DSP, не перенос исходного аудио (D-149) |
 | `server/rag/search-core.js` | Ядро гибридного поиска: стадии exact→tonic→genre-roles→all, косинус/лексика, детерминированный тай-брейк |
 | `server/rag/store-local.js` / `store-supabase.js` | Интерфейс KnowledgeStore: память (тесты/офлайн) и Supabase/pgvector (RPC match_knowledge, `<=>`, HNSW, RLS без политик) |
 | `server/rag/migrations/001_knowledge.sql` | pgvector 0.8.2, vector(768), GIN по тегам, RPC; журнал `_rag_migrations` |

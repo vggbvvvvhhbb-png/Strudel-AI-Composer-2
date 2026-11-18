@@ -1,0 +1,10 @@
+{
+  "codeChars": 3607,
+  "codeUnchanged": true,
+  "emptyPromptPreservesCode": true,
+  "genreGuide": true,
+  "genreRefusalVisible": true,
+  "goldenTracks": 10,
+  "separationEstimate": "Время сепарации: 1 мин · CPU, верхняя граница по худшему замеру; без очереди и рендера двойника. Полный результат: нет данных по времени.",
+  "tracksAfterRefusal": 10
+}

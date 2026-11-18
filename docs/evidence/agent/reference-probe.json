@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-18T20:55:25.200Z",
+  "node": "v24.14.1",
+  "source": "own synthetic signal, not a music-quality benchmark",
+  "checks": {},
+  "stages": [
+    {
+      "tool": "analyze_reference",
+      "ok": false,
+      "ms": 10226.2,
+      "reason": "инструмент analyze_reference упал: RuntimeError: demucs завершился с кодом 3221225477: Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n\n  0%|                                                                     | 0.0/17.549999999999997 [00:00<?, ?seconds/s]\n 33%|####################                                        | 5.85/17.549999999999997 [00:02<00:04,  2.50seconds/s]\n 67%|########################################                    | 11.7/17.549999999999997 [00:02<00:01,  5.34seconds/s]\n100%|##############################################| 17.549999999999997/17.549999999999997 [00:02<00:00,  8.39seconds/s]\n100%|##############################################| 17.549999999999997/17.549999999999997 [00:02<00:00,  6.30seconds/s]\n"
+    },
+    {
+      "tool": "compose_spec",
+      "ok": true,
+      "ms": 87.4,
+      "reason": null
+    },
+    {
+      "tool": "compile",
+      "ok": true,
+      "ms": 1.9,
+      "reason": null
+    }
+  ],
+  "model": "scripted mock, real tools and Python/Demucs",
+  "analysis": {
+    "available": true,
+    "reason": null,
+    "demucs_available": true,
+    "separation_model": "htdemucs",
+    "python": null
+  },
+  "wallMs": 10317,
+  "error": "[{\"tool\":\"analyze_reference\",\"ok\":false,\"ms\":10226.2,\"reason\":\"инструмент analyze_reference упал: RuntimeError: demucs завершился с кодом 3221225477: Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\\n\\n  0%|                                                                     | 0.0/17.549999999999997 [00:00<?, ?seconds/s]\\n 33%|####################                                        | 5.85/17.549999999999997 [00:02<00:04,  2.50seconds/s]\\n 67%|########################################                    | 11.7/17.549999999999997 [00:02<00:01,  5.34seconds/s]\\n100%|##############################################| 17.549999999999997/17.549999999999997 [00:02<00:00,  8.39seconds/s]\\n100%|##############################################| 17.549999999999997/17.549999999999997 [00:02<00:00,  6.30seconds/s]\\n\"},{\"tool\":\"compose_spec\",\"ok\":true,\"ms\":87.4,\"reason\":null},{\"tool\":\"compile\",\"ok\":true,\"ms\":1.9,\"reason\":null}]"
+}
