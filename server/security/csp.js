@@ -42,7 +42,7 @@ export const CSP_BASE = {
  * Страницы, где исполняется сгенерированный код: движок Strudel собирает
  * паттерны через eval, без него звук не работает.
  */
-export const CSP_EVAL_PATHS = /^\/(studio\.html|tinder\.html|razbor\/)/;
+export const CSP_EVAL_PATHS = /^\/(studio\.html|tinder\.html|render-realm\.html|razbor\/)/;
 
 /**
  * Строка CSP для пути запроса.

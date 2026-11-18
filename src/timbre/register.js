@@ -73,10 +73,13 @@ export function timbreUrlsForAlias(alias, catalog) {
  *
  * @param {string} code
  * @param {object} adapter адаптер движка (loadSamples/warmSamples)
+ * @param {object|null} [catalogOverride] готовый каталог (realm получает его
+ *   от родителя: свежий iframe не должен ходить в /api на каждый рендер —
+ *   глобальный лимитер 20 req/min иначе ловит 429 на тембровых парах)
  * @returns {Promise<{ok:boolean, used:string[], warmed:number, errors:string[]}>}
  */
-export async function ensureTimbreForCode(code, adapter) {
-  const catalog = await fetchTimbreCatalog();
+export async function ensureTimbreForCode(code, adapter, catalogOverride = null) {
+  const catalog = catalogOverride ?? await fetchTimbreCatalog();
   const used = timbreAliasesInCode(code, catalog);
   if (!used.length) return { ok: true, used: [], warmed: 0, errors: [] };
 
