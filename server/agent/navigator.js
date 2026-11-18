@@ -98,6 +98,8 @@ export function heuristicPlan(prompt) {
   }
 
   if (wantsCompose) {
+    const reference = /(?:референс|reference)\s*[:#]?\s*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?![0-9a-f-])/i.exec(request);
+    if (reference) steps.push({ tool: 'analyze_reference', args: { taskId: reference[1] }, why: 'измерить явно указанный локальный аудиореференс' });
     steps.push({
       tool: 'compose_spec',
       args: { prompt: request.slice(0, 400) },

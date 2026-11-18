@@ -12,6 +12,7 @@ import { compileTrackSpec } from '../compiler/index.js';
 import '../../samples/timbre.js';
 import { applySamplePlan, passportHints, sampleDigest } from './sample-plan.js';
 import { retrieveGenreGuide, guideBlock, checkGenreRules } from '../../rag/genre-guide.js';
+import { referenceDigest } from './reference-plan.js';
 
 const SPEC_STYLES = TrackSpecSchema.shape.meta.shape.style.options;
 const SECTION_KINDS = TrackSpecSchema.shape.structure.shape.sections.element.shape.name.options;
@@ -495,6 +496,7 @@ export async function buildTrack({
   onEvent,
   onUsage,
   sampleEntry = null,
+  reference = null,
 }) {
   const trackStyle = SPEC_STYLES.includes(style) ? style : detectSpecStyle(prompt);
   const emit = (event, payload) => {
@@ -512,7 +514,8 @@ export async function buildTrack({
   // Паспорт сэмпла (D-119): измеренные признаки идут и в промпт модели,
   // и в детерминированную правку готовой спеки — модель не может их потерять.
   const sampleHints = sampleEntry ? passportHints(sampleEntry.passport) : null;
-  const sampleBlock = sampleEntry ? sampleDigest(sampleEntry, sampleHints) : '';
+  const sampleBlock = [sampleEntry ? sampleDigest(sampleEntry, sampleHints) : '', referenceDigest(reference)].filter(Boolean).join('\n\n');
+  if (reference) emit('reference', { passport: reference.passport, candidates: reference.candidates });
   if (sampleEntry) emit('sample', { id: sampleEntry.id, name: sampleEntry.name ?? null, hints: sampleHints });
 
   let spec = null;

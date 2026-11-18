@@ -115,6 +115,11 @@ function summarize(tool, result) {
     }
     return hits.slice(0, 6).map((h) => `${h.kind}:${h.id}`).join(', ');
   }
+  if (tool === 'analyze_reference') {
+    if (!result.ok) return result.reason ?? 'данных референса нет';
+    const passport = result.reference?.passport;
+    return `референс: ${passport?.durationS ?? 'нет данных'} с, BPM ${passport?.measurements?.tempo?.bpm ?? 'нет данных'}; Demucs-слои и кандидаты тембров измерены, ориентир не клон`;
+  }
   if (tool === 'compose_spec') {
     return result.usedFallback
       ? `спека собрана из библиотеки (стиль ${result.style}), код ${String(result.code ?? '').length} символов`
@@ -206,6 +211,7 @@ async function ensureComposed({ mode, ctx, bag, observations, degradedTools, pro
   // Спека, собранная в нативном цикле, живёт в bag; ctx — отдельный объект.
   // Без синхронизации compile видел «нет спеки» при уже собранной спеке.
   ctx.currentSpec = bag.spec ?? ctx.currentSpec;
+  ctx.reference = bag.reference ?? ctx.reference;
 
   const run = async (tool, args, why) => {
     events.push({ type: 'tool_start', id: tool, why });
@@ -393,7 +399,7 @@ export async function* runAgent({
       const estimate = measuredTokens > 0 ? null : estimateUsage(answer, prompt);
       const tokens = measuredTokens > 0 ? measuredTokens : estimate.promptTokens + estimate.completionTokens;
 
-      const usesMeasurements = observations.some((obs) => obs.tool === 'compose_spec' || obs.tool === 'edit_ir');
+      const usesMeasurements = observations.some((obs) => ['compose_spec', 'edit_ir', 'analyze_reference'].includes(obs.tool));
       if (cacheable && !usesMeasurements && answer.trim()) {
         answerCache.set(key, {
           answer,
@@ -540,6 +546,10 @@ export async function* runAgent({
 
     const ok = Boolean(result?.ok);
     const degraded = Boolean(result?.degraded);
+    if (ok && step.tool === 'analyze_reference') {
+      bag.reference = result.reference;
+      ctx.reference = result.reference;
+    }
     if (ok && step.tool === 'compose_spec') {
       bag.spec = result.spec ?? null;
       bag.code = result.code ?? bag.code;
@@ -612,7 +622,7 @@ export async function* runAgent({
   });
   for (const event of composed) yield event;
 
-  const usesMeasurements = observations.some((obs) => obs.tool === 'compose_spec' || obs.tool === 'edit_ir');
+  const usesMeasurements = observations.some((obs) => ['compose_spec', 'edit_ir', 'analyze_reference'].includes(obs.tool));
   const cacheable = isCacheable({ hasHistory: history.length > 0, usesMeasurements });
   const key = cacheKey({ question: prompt, mode: mode.id, catalogVersion: catalogVersion() });
 

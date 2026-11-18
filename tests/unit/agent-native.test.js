@@ -104,6 +104,38 @@ describe('нативный путь: спека и компиляция', () => 
   });
 });
 
+describe('нативный P5: измеренный контекст', () => {
+  it('паспорт доступен модели, compose_spec и гарантированной композиции', async () => {
+    const reference = { passport: { durationS: 8, measurements: { tempo: { bpm: 120 } } }, candidates: {} };
+    runTool.mockImplementation(async (id, args, ctx) => id === 'analyze_reference'
+      ? { ok: true, degraded: false, reference }
+      : actualTools.runTool(id, args, ctx));
+    completeChatTools
+      .mockResolvedValueOnce(toolRound([{ tool: 'analyze_reference', args: { taskId: '12345678-1234-4234-8234-123456789abc' } }]))
+      .mockResolvedValueOnce(textRound('Референс измерен.'));
+    completeChat.mockResolvedValue(JSON.stringify(fallbackSpec('techno', 1)));
+    const events = await collect({ prompt: 'натив-p5: сделай techno бит', mode: 'composer', env: {} });
+    expect(completeChat.mock.calls[0][0].messages[0].content).toContain(JSON.stringify(reference.passport));
+    const modelToolMessage = completeChatTools.mock.calls[1][0].messages.find(m => m.role === 'tool');
+    expect(JSON.parse(modelToolMessage.content).reference).toEqual(reference);
+    expect(events.find(e => e.type === 'done').track.spec).toBeTruthy();
+  });
+
+  it('паспорт сохраняется между нативными раундами до явного compose_spec', async () => {
+    const reference = { passport: { durationS: 12 }, candidates: {} };
+    runTool.mockImplementation(async (id, args, ctx) => id === 'analyze_reference'
+      ? { ok: true, degraded: false, reference }
+      : actualTools.runTool(id, args, ctx));
+    completeChatTools
+      .mockResolvedValueOnce(toolRound([{ tool: 'analyze_reference', args: { taskId: '12345678-1234-4234-8234-123456789abc' } }]))
+      .mockResolvedValueOnce(toolRound([{ tool: 'compose_spec', args: { prompt: 'techno' } }]))
+      .mockResolvedValueOnce(textRound('Готово.'));
+    completeChat.mockResolvedValue(JSON.stringify(fallbackSpec('techno', 1)));
+    await collect({ prompt: 'натив-p5-explicit: сделай techno бит', mode: 'composer', env: {} });
+    expect(completeChat.mock.calls[0][0].messages[0].content).toContain(JSON.stringify(reference.passport));
+  });
+});
+
 describe('нативный путь: измеримость шагов', () => {
   it('tool_end чтения страницы несёт chars — длину прочитанного текста', async () => {
     const pageText = 'phonk drift — '.repeat(60);

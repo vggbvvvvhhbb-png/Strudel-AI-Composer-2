@@ -20,6 +20,7 @@ import path from 'node:path';
 
 import { createRenderWorker } from '../server/deepdive/render/render-worker.mjs';
 import { analyzeFile, analyzeStems, separateStems } from '../server/deepdive/analysis/client.js';
+import { analyzeReferenceFile } from './reference.mjs';
 
 /**
  * sha256 файла — для побайтового сравнения рендеров.
@@ -62,9 +63,11 @@ export async function probeAnalysisWorker(options = {}) {
 /**
  * Создаёт реестр задач демона.
  *
- * @param {{stateDir:string, renderFactory?:Function, analysisProbe?:Function}} options
+ * @param {{stateDir:string, renderFactory?:Function, analysisProbe?:Function, referenceAnalyzer?:Function}} options
  */
-export function createTaskRegistry({ stateDir, renderFactory = createRenderWorker, analysisProbe = probeAnalysisWorker }) {
+export function createTaskRegistry({
+  stateDir, renderFactory = createRenderWorker, analysisProbe = probeAnalysisWorker, referenceAnalyzer = analyzeReferenceFile,
+}) {
   /** @type {object|null} */
   let renderWorker = null;
   let renderWorkerPromise = null;
@@ -157,6 +160,26 @@ export function createTaskRegistry({ stateDir, renderFactory = createRenderWorke
         timeoutMs: payload?.timeoutMs,
       });
       return { ok: true, ...result };
+    },
+
+    async analyze_reference(payload, helpers) {
+      // Проверка capability обязана быть ДО чтения WAV и любой тяжёлой работы.
+      const analysis = await analysisProbe();
+      if (!analysis.available) {
+        throw new Error(`analyze_reference: Python-воркер недоступен: ${analysis.reason ?? 'нет данных'}`);
+      }
+      if (!analysis.details?.demucs_available) {
+        throw new Error('analyze_reference: Demucs недоступен (demucs_available=false); файл не прочитан');
+      }
+      const filePath = typeof payload?.path === 'string' ? payload.path : '';
+      const outDir = typeof payload?.outDir === 'string' ? payload.outDir : '';
+      if (!filePath || !outDir) throw new Error('analyze_reference: нужны зарегистрированный path и task-specific outDir');
+      const passport = await referenceAnalyzer(filePath, {
+        outDir,
+        progress: (event) => helpers.progress(event),
+        signal: helpers.signal,
+      });
+      return { ok: true, passport };
     },
 
     /**

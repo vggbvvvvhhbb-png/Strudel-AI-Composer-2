@@ -103,8 +103,10 @@ function authorized(req, token) {
  * Собирает демон.
  * @returns {Promise<{server:http.Server, queue:DurableQueue, registry:object}>}
  */
-export async function createDaemon({ token = TOKEN, stateDir = STATE_DIR, log = console.log, renderFactory } = {}) {
-  const registry = createTaskRegistry({ stateDir, renderFactory });
+export async function createDaemon({
+  token = TOKEN, stateDir = STATE_DIR, log = console.log, renderFactory, analysisProbe, referenceAnalyzer,
+} = {}) {
+  const registry = createTaskRegistry({ stateDir, renderFactory, analysisProbe, referenceAnalyzer });
   const queue = new DurableQueue({
     dir: stateDir,
     concurrency: 1,
@@ -121,6 +123,29 @@ export async function createDaemon({ token = TOKEN, stateDir = STATE_DIR, log = 
       if (event.type === 'task_error') log(`[local] задача ${event.task.id} упала: ${event.task.error}`);
     },
     handler: (task, helpers) => {
+      if (task.type === 'analyze_reference') {
+        const sourceTaskId = task.payload?.sourceTaskId;
+        if (typeof sourceTaskId !== 'string' || !sourceTaskId.trim()) {
+          throw new Error('analyze_reference: нужен sourceTaskId зарегистрированной задачи');
+        }
+        const source = queue.get(sourceTaskId);
+        if (!source) throw new Error('analyze_reference: sourceTaskId не найден в очереди');
+        if (source.state !== 'done') throw new Error('analyze_reference: задача источника должна быть done');
+        if (!['analyze', 'passport', 'render'].includes(source.type)) {
+          throw new Error('analyze_reference: источник должен иметь тип analyze, passport или render');
+        }
+        // Публичный снимок скрывает payload; путь берём из внутренней записи владельца.
+        const registered = queue.tasks.get(sourceTaskId);
+        const filePath = source.type === 'render' ? source.result?.wavPath : registered?.payload?.path;
+        if (typeof filePath !== 'string' || !filePath.trim()) {
+          throw new Error('analyze_reference: у готовой задачи источника нет зарегистрированного WAV');
+        }
+        const payload = {
+          path: filePath,
+          outDir: path.join(stateDir, 'references', task.id, 'stems'),
+        };
+        return registry.tasks.analyze_reference(payload, helpers);
+      }
       const runner = registry.tasks[task.type];
       if (!runner) {
         return Promise.reject(new Error(`неизвестный тип задачи: ${task.type}`));

@@ -59,6 +59,7 @@ function toolResultText(result) {
   }
   if (result.text) payload.text = String(result.text).slice(0, 2000);
   if (result.hits) payload.hits = result.hits.slice(0, 5);
+  if (result.reference) payload.reference = result.reference;
   return JSON.stringify(payload);
 }
 
@@ -220,6 +221,7 @@ export async function* runNativeAgent({
         // Спека сессии: компиляция и правка дорожки берут её отсюда, а не из
         // выдумки модели — выдуманная спека ломала бы компиляцию.
         currentSpec: bag.spec,
+        reference: bag.reference ?? null,
         // Без completeChat инструмент compose_spec всегда уходил в запасной
         // путь: модель не вызывалась вовсе, и «спека модели» не рождалась.
         completeChat,
@@ -229,6 +231,7 @@ export async function* runNativeAgent({
 
       const ok = Boolean(result?.ok);
       const degraded = Boolean(result?.degraded);
+      if (ok && call.name === 'analyze_reference') bag.reference = result.reference;
       if (ok && call.name === 'compose_spec') {
         bag.spec = result.spec ?? null;
         bag.code = result.code ?? bag.code;
@@ -301,6 +304,10 @@ function summarizeNative(tool, result) {
     const hits = result.hits ?? result.banks ?? [];
     if (!hits.length) return 'ничего не найдено';
     return hits.slice(0, 6).map((hit) => (hit.name ? `${hit.name} (${hit.bank ?? ''})` : `${hit.kind}:${hit.id}`)).join('; ');
+  }
+  if (tool === 'analyze_reference') {
+    if (!result.ok) return result.reason ?? 'данных референса нет';
+    return `референс: ${result.reference?.passport?.durationS ?? 'нет данных'} с; Demucs-паспорт и кандидаты тембров готовы, ориентир не клон`;
   }
   if (tool === 'compose_spec') {
     const base = `${result.usedFallback ? 'спека собрана из библиотеки' : 'спека собрана моделью'} (стиль ${result.style}), код ${String(result.code ?? '').length} символов`;

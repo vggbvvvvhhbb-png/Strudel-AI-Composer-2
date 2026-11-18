@@ -124,6 +124,16 @@ export function resolveTimbre(query = {}, catalog = loadTimbreCatalog()) {
       reasons.push('центроид: нет данных (паспорт не измерен)');
     }
 
+    for (const [label, actual, target] of [
+      ['центроид', centroid, query.descriptor?.spectral?.centroidHz],
+      ['плотность атак', descriptor?.transients?.densityPerSec, query.descriptor?.transients?.densityPerSec],
+    ]) {
+      if (!Number.isFinite(target) || target <= 0 || !Number.isFinite(actual) || actual < 0) continue;
+      const proximity = Math.max(0, 1 - Math.abs(actual - target) / target);
+      score += proximity;
+      reasons.push(`${label}: ${actual} против измеренного референса ${target}: +${proximity.toFixed(2)}`);
+    }
+
     candidates.push({
       id,
       name: preset.name,

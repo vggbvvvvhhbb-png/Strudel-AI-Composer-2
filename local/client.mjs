@@ -13,6 +13,7 @@
 
 import http from 'node:http';
 import https from 'node:https';
+import { setTimeout as delay } from 'node:timers/promises';
 
 const DEFAULT_URL = process.env.LOCAL_DAEMON_URL || 'http://127.0.0.1:3213';
 const DEFAULT_TOKEN = process.env.LOCAL_DAEMON_TOKEN || '';
@@ -37,7 +38,7 @@ export class DaemonError extends Error {
  * @param {{baseUrl?:string, token?:string, method?:string, body?:object, timeoutMs?:number}} options
  * @returns {Promise<{status:number, body:object}>}
  */
-function request(pathname, { baseUrl = DEFAULT_URL, token = DEFAULT_TOKEN, method = 'GET', body = null, timeoutMs = 15000 } = {}) {
+function request(pathname, { baseUrl = DEFAULT_URL, token = DEFAULT_TOKEN, method = 'GET', body = null, timeoutMs = 15000, signal } = {}) {
   return new Promise((resolve, reject) => {
     const target = new URL(pathname, baseUrl);
     const payload = body ? Buffer.from(JSON.stringify(body), 'utf8') : null;
@@ -57,6 +58,7 @@ function request(pathname, { baseUrl = DEFAULT_URL, token = DEFAULT_TOKEN, metho
         path: `${target.pathname}${target.search}`,
         method,
         headers,
+        signal,
       },
       (res) => {
         const chunks = [];
@@ -126,9 +128,21 @@ export function createDaemonClient({ baseUrl = DEFAULT_URL, token = DEFAULT_TOKE
      * @param {string} id
      * @returns {Promise<object>}
      */
-    async status(id) {
-      const { body } = await request(`/tasks/${id}`, { baseUrl, token });
+    async status(id, { signal } = {}) {
+      const { body } = await request(`/tasks/${encodeURIComponent(id)}`, { baseUrl, token, signal });
       return body.task;
+    },
+
+    async wait(id, { signal, timeoutMs = 300_000, pollMs = 500 } = {}) {
+      const deadline = AbortSignal.timeout(timeoutMs);
+      const combined = signal ? AbortSignal.any([signal, deadline]) : deadline;
+      while (true) {
+        combined.throwIfAborted();
+        const task = await this.status(id, { signal: combined });
+        if (task.state === 'done') return task;
+        if (task.state === 'error') throw new DaemonError(task.error || 'Локальная задача завершилась ошибкой');
+        await delay(pollMs, undefined, { signal: combined });
+      }
     },
 
     /**
