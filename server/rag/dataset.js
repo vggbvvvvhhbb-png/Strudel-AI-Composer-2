@@ -12,6 +12,10 @@ import { loadTimbreCatalog } from '../samples/timbre.js';
 const here = dirname(fileURLToPath(import.meta.url));
 export const DATASET_PATH = resolve(here, 'dataset', 'entries.json');
 
+export function knowledgeEmbeddingText(entry) {
+  return `${entry.title}. ${entry.description}. ${(entry.education?.rules || []).join(' ')}`;
+}
+
 /**
  * Читает датасет и валидирует каждую запись.
  * @returns {{entries: object[], errors: Array<{id: string, errors: object[]}>}}

@@ -6,7 +6,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadDataset } from '../server/rag/dataset.js';
+import { loadDataset, knowledgeEmbeddingText } from '../server/rag/dataset.js';
 import { embedQuery, embedDocuments, embeddingsAvailable } from '../server/rag/embeddings.js';
 import { LocalKnowledgeStore } from '../server/rag/store-local.js';
 import { SupabaseKnowledgeStore } from '../server/rag/store-supabase.js';
@@ -38,7 +38,7 @@ const available = await embeddingsAvailable();
 console.log(`Ollama: ${available ? 'доступна' : 'НЕДОСТУПНА (лексический режим)'}`);
 let documentEmbeddings = false;
 if (available) {
-  const embedded = await embedDocuments(entries.map(e => `${e.title}. ${e.description}. ${(e.education?.rules || []).join(' ')}`));
+  const embedded = await embedDocuments(entries.map(knowledgeEmbeddingText));
   if (embedded.ok) {
     documentEmbeddings = true;
     for (let i = 0; i < entries.length; i += 1) await local.upsert(entries[i], embedded.embeddings[i]);
@@ -53,11 +53,11 @@ const report = { date: new Date().toISOString(), set: education ? 'education' : 
 for (const { query, filters, expectedId } of QUERIES) {
   const emb = available ? await embedQuery(query) : { ok: false };
   const queryEmbedding = emb.ok ? emb.embedding : null;
-  const item = { query, filters, semantic: Boolean(queryEmbedding), local: null, supabase: null };
+  const item = { query, filters, queryEmbeddingAvailable: Boolean(queryEmbedding), local: null, supabase: null };
 
   const lr = await local.search({ query, queryEmbedding: documentEmbeddings ? queryEmbedding : null, filters, topK: 3 });
   item.local = {
-    stage: lr.stage, degraded: lr.degraded, reason: lr.reason,
+    stage: lr.stage, semantic: lr.semantic, degraded: lr.degraded, reason: lr.reason,
     top: lr.results.map((r) => ({ id: r.entry.id, score: Number(r.score.toFixed(4)) })),
   };
 
@@ -66,7 +66,7 @@ for (const { query, filters, expectedId } of QUERIES) {
       const store = new SupabaseKnowledgeStore(client);
       const sr = await store.search({ query, queryEmbedding, filters, topK: 3 });
       item.supabase = {
-        stage: sr.stage, degraded: sr.degraded, reason: sr.reason,
+        stage: sr.stage, semantic: sr.semantic, degraded: sr.degraded, reason: sr.reason,
         top: sr.results.map((r) => ({ id: r.entry.id, score: Number(r.score.toFixed(4)) })),
       };
     });

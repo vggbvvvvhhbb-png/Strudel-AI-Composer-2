@@ -9,7 +9,6 @@ import './styles/timeline.css';
 import './styles/panels.css';
 import { initEditor } from './editor.js';
 import { initUI } from './ui.js';
-import { initCompose } from './compose.js';
 import { getEngine } from './engine-loader.js';
 import { initHistory } from './history.js';
 import { syncMixer } from './mixer.js';

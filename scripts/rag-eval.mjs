@@ -13,7 +13,7 @@
 // попытки, токены, коррекции. Отрицательные результаты фиксируются как есть.
 
 import 'dotenv/config';
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadDataset } from '../server/rag/dataset.js';
@@ -33,7 +33,9 @@ const ROOT = resolve(here, '..');
 
 const argv = process.argv.slice(2);
 const setName = argv.includes('--set') ? argv[argv.indexOf('--set') + 1] : 'base';
-const EVIDENCE = resolve(ROOT, `docs/evidence/rag/${setName === 'stress' ? 'eval-stress.json' : 'eval.json'}`);
+const output = argv.includes('--out') ? argv[argv.indexOf('--out') + 1] : null;
+const EVIDENCE = resolve(ROOT, output || `docs/evidence/rag/${setName === 'stress' ? 'eval-stress.json' : 'eval.json'}`);
+const localOnly = argv.includes('--local-only');
 
 const REQUESTS = [
   { id: 'r01', request: 'тёплые джазовые аккорды для lofi в ля миноре, 78 BPM', expect: { tonic: 'a', mode: 'minor', bpm: 78 } },
@@ -101,7 +103,7 @@ function supabaseConfigured() {
 }
 
 async function makeStore() {
-  if (supabaseConfigured()) {
+  if (!localOnly && supabaseConfigured()) {
     const pg = (await import('pg')).default;
     const { dbConfigFromEnv } = await import('../server/rag/db.js');
     const client = new pg.Client(dbConfigFromEnv());
@@ -220,6 +222,7 @@ const report = {
 };
 mkdirSync(dirname(EVIDENCE), { recursive: true });
 writeFileSync(EVIDENCE, JSON.stringify(report, null, 2));
+rmSync(`${EVIDENCE}.partial`, { force: true });
 console.log('\n=== СВОДКА ===');
 for (const [mode, s] of Object.entries(summary)) {
   console.log(`${mode.padEnd(8)} валидных ${s.valid}/${s.requests} (${s.validShare}), ожидания ${s.expectationMet}/${s.expectationTotal} (${s.expectationShare}), лад-ошибки ${s.scaleFailRequests}, выдуманные звуки ${s.unknownSoundRequests}, коррекций ${s.correctedRequests}, ср.попыток ${s.avgAttempts}`);

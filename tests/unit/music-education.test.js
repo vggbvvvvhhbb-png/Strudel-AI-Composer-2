@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { validateEntry, EDUCATION_DIRECTIONS } from '../../server/rag/schema.js';
-import { loadDataset, DATASET_PATH } from '../../server/rag/dataset.js';
+import { loadDataset, DATASET_PATH, knowledgeEmbeddingText } from '../../server/rag/dataset.js';
 import { runStrudel } from '../../server/music/strudel-runtime.mjs';
 import { SupabaseKnowledgeStore } from '../../server/rag/store-supabase.js';
 import { examplesBlock } from '../../server/rag/prompt.js';
@@ -142,6 +142,22 @@ describe('мок композитора не выбирает первый ст�
       responseFormat: { type: 'json_object' },
     }));
     expect(result.meta.style).toBe(style);
+  });
+});
+
+describe('единый текст документа для эмбеддингов', () => {
+  it('сохраняет прежнюю строку на всех 148 записях', () => {
+    for (const entry of entries) {
+      expect(knowledgeEmbeddingText(entry)).toBe(`${entry.title}. ${entry.description}. ${(entry.education?.rules || []).join(' ')}`);
+    }
+  });
+
+  it('обычная запись сохраняет разделители и не добавляет префикс модели', () => {
+    expect(knowledgeEmbeddingText({ title: 'Title', description: 'Description' })).toBe('Title. Description. ');
+  });
+
+  it('правила не переставляются и не смешиваются с rationale и тегами', () => {
+    expect(knowledgeEmbeddingText({ title: 'T', description: 'D', rationale: 'unused', music_tags: { genre: ['unused'] }, education: { rules: ['first', 'second'] } })).toBe('T. D. first second');
   });
 });
 
