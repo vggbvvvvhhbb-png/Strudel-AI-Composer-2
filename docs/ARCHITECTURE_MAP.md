@@ -308,7 +308,9 @@ resonance, cutoff, filter, sound, noise, sine, saw, square, time, cps, cpm, getC
 | Модуль | Что делает | Строки |
 |---|---|---|
 | `src/audio/render/offline.js` | чистый оркестратор рендера, **не знает про Web Audio** (рендер-функция внедряется снаружи) | `:76`, `:83`, `:112`, `:170` |
-| `src/audio/engine/adapter.js` | реальный `OfflineAudioContext`; `new OfflineAudioContext(2, sr*seconds, sr)` | `:173-229` |
+| `src/audio/render/realm.js` | менеджер изолированного рендера: iframe-realm на прогон, очередь, таймауты (D-143) | — |
+| `src/audio/render/seed.js` | mulberry32 с фиксированным зерном для детерминизма IR в realm (E-022) | — |
+| `src/audio/engine/adapter.js` | реальный `OfflineAudioContext`; `new OfflineAudioContext(2, sr*seconds, sr)`; additive-хук `prepare` перед startRendering | `:173-229` |
 | `src/audio/metrics-report.js` | `buildMetricsReport` (`:41`), `ACCEPTANCE` (`:19-26`), zod-схема (`:176`), `parseMetricsReport` (`:222`) | — |
 | `src/audio/qa.js` | 13 кодов замечаний (`:16-30`), `runAudioQa` (`:53`), `acceptancePassed` (`:262`) | — |
 | `src/audio/dsp/loudness.js` | **свой** LUFS по BS.1770-4 (не pyloudnorm) | `:11-14,28,93,105` |
@@ -328,9 +330,17 @@ bass LUFS-I −21.91, true peak −12.33 dBTP, `lufsDeltaDb=0.000 passed=true`, 
 
 `docs/SPIKE-AUDIO.md:212-221` — сверка DSP с `ffmpeg ebur128`: |ΔLUFS| ≤ 0.05, |ΔdBTP| ≤ 0.01 на 6 фикстурах.
 
-**Важно (docs/HANDOFF.md:28-43):** офлайн-рендер — **операция с глобальным состоянием**, не чистая функция:
-движок переключает глобальный аудиоконтекст. Два рендера «в одном флаконе» перехватывают контекст друг у друга.
-Рендеры — строго последовательно.
+**Важно (D-143, фикс E-020):** офлайн-рендер студии изолирован в свежем
+iframe-realm на каждый прогон (`src/audio/render/realm.js` +
+`src/render-realm.js`, точка входа `render-realm.html`). Исторически
+рендер был **операцией с глобальным состоянием**: движок переключал
+глобальный аудиоконтекст, а superdough 1.3.0 удерживал узлы эффектов
+между контекстами (E-020) — быстрые последовательные рендеры падали.
+Realm уничтожается после рендера, удержания умирают вместе с ним; живой
+контекст студии рендер не трогает. Детерминизм IR реверберации обеспечен
+зерном PRNG и ожиданием `convolver.buffer` (E-022). Вызовы рендера
+по-прежнему сериализуются очередью менеджера. Legacy-путь
+`adapter.renderCodeOffline` сохранён для зондов и всё ещё несёт E-020.
 
 **Официальный `renderPatternAudio` непригоден** (`tests/spike/browser/out.txt:35,248`): возвращает `undefined`,
 а WAV-блоб отдаёт через `<a download>` и **закрывает живой AudioContext**. Используется собственный рендер.

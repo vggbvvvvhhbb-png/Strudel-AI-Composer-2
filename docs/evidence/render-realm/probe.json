@@ -1,29 +1,29 @@
 {
-  "generatedAt": "2026-11-18T09:52:20.385Z",
+  "generatedAt": "2026-11-18T10:00:58.032Z",
   "probe": "render-realm (E-020/D-143)",
   "result": {
     "adapterBaseline": {
       "ok": true,
-      "ms": 60
+      "ms": 71
     },
     "realmRenders": [
       {
         "i": 0,
         "ok": true,
         "ms": 580,
-        "lufsI": -20.724443998992573
+        "lufsI": -20.724443998853342
       },
       {
         "i": 1,
         "ok": true,
-        "ms": 581,
-        "lufsI": -20.72444399913372
+        "ms": 567,
+        "lufsI": -20.724443999230996
       },
       {
         "i": 2,
         "ok": true,
-        "ms": 595,
-        "lufsI": -20.72444399903224
+        "ms": 604,
+        "lufsI": -20.724443999128614
       }
     ],
     "realmDeterminism": {
@@ -36,8 +36,8 @@
       "renderMode": "offline"
     },
     "liveIntact": {
-      "cyclesBefore": 0.17531666666666681,
-      "cyclesAfter": 0.6753166666666667,
+      "cyclesBefore": 0.17400000000000018,
+      "cyclesAfter": 0.6646666666666668,
       "advancing": true,
       "tailPresent": true
     },
@@ -58,7 +58,7 @@
     "timbre": {
       "ok": true,
       "alias": "tp_upright_piano_v1",
-      "lufsI": -36.912588961589535,
+      "lufsI": -36.91258896199542,
       "audible": true
     }
   },
