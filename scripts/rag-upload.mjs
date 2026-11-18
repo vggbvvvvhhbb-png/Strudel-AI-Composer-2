@@ -24,7 +24,7 @@ console.log(`датасет: ${entries.length} записей, все валид
 
 let embeddings = entries.map(() => null);
 if (!noEmbed) {
-  const r = await embedDocuments(entries.map((e) => `${e.title}. ${e.description}`));
+  const r = await embedDocuments(entries.map((e) => `${e.title}. ${e.description}. ${(e.education?.rules || []).join(' ')}`));
   if (r.ok) {
     embeddings = r.embeddings;
     console.log(`эмбеддинги: ${embeddings.length} × ${embeddings[0].length} (nomic-embed-text)`);

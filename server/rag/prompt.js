@@ -97,6 +97,10 @@ export function examplesBlock(results) {
     parts.push(
       `### ${entry.title} [${t.genre.join('/')} · ${t.tonic} ${t.mode} · ${t.complexity}${t.bpm ? ` · ${t.bpm} BPM` : ''}]`,
       `Обоснование: ${entry.rationale}`,
+      ...(entry.education ? [
+        `Учебное направление: ${entry.education.direction}`,
+        ...entry.education.rules.map((rule) => `- ${rule}`),
+      ] : []),
       '```strudel',
       entry.strudel_code,
       '```',

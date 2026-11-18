@@ -43,9 +43,10 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-async function compose(spec = fallbackSpec('techno', 1), finalSpec = spec) {
+async function compose(spec = fallbackSpec('techno', 1), finalSpec = spec, knowledgeEvents = []) {
   const initial = compile(spec), final = compile(finalSpec);
   api.composeTrack.mockImplementation(async ({ onEvent }) => {
+    for (const event of knowledgeEvents) onEvent(event);
     onEvent({ type: 'spec', spec, attempts: 1 });
     onEvent({ type: 'compiled', ...initial });
     onEvent({ type: 'refined', spec: finalSpec, before: 60, after: 70, improved: true });
@@ -97,6 +98,34 @@ describe('каноническая композиция в интерфейсе'
     await button.click();
     expect(applyCode).toHaveBeenLastCalledWith(compiled.code);
     expect(text(elements.get('compose-sections'))).toContain(spec.structure.sections[0].name);
+  });
+
+  it('показывает гайд, лексическую деградацию и ошибки коррекции', async () => {
+    const spec = fallbackSpec('techno', 1);
+    await compose(spec, spec, [
+      { type: 'knowledge', guide: { genre: 'techno', id: 'edu-guide-techno' }, reason: 'Поиск лексический, семантика недоступна' },
+      { type: 'genre-validation', attempt: 1, ok: false, errors: [{ message: 'meta.bpm вне 120..150' }] },
+      { type: 'genre-validation', attempt: 2, ok: true, errors: [] },
+    ]);
+    const trace = text(elements.get('compose-trace'));
+    expect(trace).toContain('edu-guide-techno');
+    expect(trace).toContain('семантика недоступна');
+    expect(trace).toContain('meta.bpm вне 120..150');
+    expect(trace).toContain('BPM и обязательные роли соблюдены');
+    expect(applyCode).toHaveBeenCalledOnce();
+  });
+
+  it('при жанровом отказе код не применяется и ошибка остаётся видимой', async () => {
+    api.composeTrack.mockImplementation(async ({ onEvent }) => {
+      onEvent({ type: 'genre-validation', attempt: 3, ok: false, errors: [{ message: 'нет bass' }] });
+      onEvent({ type: 'error', message: 'Жанровый гайд не выполнен после 3 попыток' });
+      throw new Error('Жанровый гайд не выполнен после 3 попыток');
+    });
+    await elements.get('btn-compose').click();
+    await vi.waitFor(() => expect(log).toHaveBeenCalledWith(expect.stringContaining('после 3 попыток'), 'error'));
+    expect(applyCode).not.toHaveBeenCalled();
+    expect(text(elements.get('compose-trace'))).toContain('нет bass');
+    expect(text(elements.get('compose-trace'))).toContain('после 3 попыток');
   });
 
   it('канонический lo-fi получает профиль lofi, а не generic', () => {

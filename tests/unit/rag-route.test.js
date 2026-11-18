@@ -36,12 +36,12 @@ const post = (url, body) => fetch(base + url, {
 });
 
 describe('маршруты RAG', () => {
-  it('GET /api/rag/status — локальная база, 35 записей, версия промпта', async () => {
+  it('GET /api/rag/status — локальная база, 148 записей, версия промпта', async () => {
     const res = await fetch(`${base}/api/rag/status`);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.store).toBe('local');
-    expect(body.entries).toBe(35);
+    expect(body.entries).toBe(148);
     expect(body.promptVersion).toMatch(/^mi-/);
   });
 

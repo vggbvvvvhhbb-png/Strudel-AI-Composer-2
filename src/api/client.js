@@ -179,6 +179,7 @@ export async function composeTrack({ prompt, mode = 'structured', style, seed, r
   await consumeSSE(res, (event) => {
     if (event.type === 'error') {
       streamError = new Error(event.message || 'Ошибка композиции');
+      onEvent?.(event);
       return;
     }
     if (event.type === 'done') {

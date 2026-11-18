@@ -29,7 +29,8 @@ function detectStyle(text) {
  */
 export function mockCompletion({ messages = [], responseFormat } = {}) {
   const text = messages.map((message) => (typeof message.content === 'string' ? message.content : '')).join('\n');
-  const style = detectStyle(text);
+  const style = /Стиль запроса:\s*([a-z-]+)\./.exec(text)?.[1]
+    || detectStyle(extractUserText(messages));
 
   // Запрос плана агента (маркер из server/agent/prompts.js): отдаём настоящий
   // валидный план, собранный теми же правилами, что и запасной план. Иначе CI

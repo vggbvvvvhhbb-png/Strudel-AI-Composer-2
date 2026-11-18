@@ -1,0 +1,836 @@
+{
+  "date": "2026-11-18T19:40:51.884Z",
+  "model": "mock; no paid calls",
+  "baselineRecords": 35,
+  "records": 148,
+  "newRecords": 113,
+  "guides": 12,
+  "directions": {
+    "rhythm": 20,
+    "arrangement": 21,
+    "orchestration": 6,
+    "emotion": 8,
+    "reference-analysis": 3,
+    "harmony": 5,
+    "melody": 5,
+    "counterpoint": 5,
+    "sound-design": 5,
+    "mixing": 5,
+    "mastering": 5,
+    "history": 5,
+    "culture": 5,
+    "antipatterns": 5,
+    "form": 10
+  },
+  "validation": {
+    "passed": 148,
+    "total": 148,
+    "cycles": 4,
+    "entries": [
+      {
+        "id": "kb-lofi-am-warm-chords",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "kb-lofi-am-dusty-drums",
+        "events": 44,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "kb-lofi-eb-minor-bass",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "kb-house-c-major-stabs",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "kb-house-c-major-fourfloor",
+        "events": 56,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "kb-techno-fm-acid-bass",
+        "events": 64,
+        "pitchedEvents": 64
+      },
+      {
+        "id": "kb-techno-fm-minimal-drums",
+        "events": 88,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "kb-trap-am-808-sub",
+        "events": 12,
+        "pitchedEvents": 12
+      },
+      {
+        "id": "kb-trap-am-hat-rolls",
+        "events": 64,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "kb-dnb-dm-breakbeat",
+        "events": 56,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "kb-dnb-dm-reese-bass",
+        "events": 8,
+        "pitchedEvents": 8
+      },
+      {
+        "id": "kb-ambient-d-dorian-pad",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "kb-ambient-c-lydian-shimmer",
+        "events": 17,
+        "pitchedEvents": 17
+      },
+      {
+        "id": "kb-cinematic-em-strings-epic",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "kb-cinematic-em-pizz-ostinato",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "kb-jazz-c-major-ii-v-i",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "kb-jazz-f-major-tritone-sub",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "kb-jazz-bb-major-walking-bass",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "kb-rock-em-power-riff",
+        "events": 28,
+        "pitchedEvents": 28
+      },
+      {
+        "id": "kb-rock-a-mixolydian-anthem",
+        "events": 18,
+        "pitchedEvents": 18
+      },
+      {
+        "id": "kb-phonk-cm-cowbell-melody",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "kb-phonk-cm-drift-drums",
+        "events": 44,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "kb-funk-g-dorian-clav-stabs",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "kb-funk-g-dorian-bassline",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "kb-synthwave-am-arp",
+        "events": 48,
+        "pitchedEvents": 48
+      },
+      {
+        "id": "kb-synthwave-am-retro-pad",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "kb-orchestral-c-major-harp-run",
+        "events": 28,
+        "pitchedEvents": 28
+      },
+      {
+        "id": "kb-orchestral-dm-contrabass-foundation",
+        "events": 4,
+        "pitchedEvents": 4
+      },
+      {
+        "id": "kb-world-a-harmonic-minor-violin",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "kb-lofi-eb-dorian-soul-vamp",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "kb-ambient-cm-industrial-texture",
+        "events": 1,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "kb-house-gm-deep-chords",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "kb-world-e-phrygian-flamenco-lead",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "kb-orchestral-dm-viola-inner-voice",
+        "events": 8,
+        "pitchedEvents": 8
+      },
+      {
+        "id": "kb-orchestral-gm-pizz-bass-pulse",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-son-clave-2-3",
+        "events": 10,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-son-clave-3-2",
+        "events": 10,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-rumba-clave-2-3",
+        "events": 10,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-tresillo-332",
+        "events": 28,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-habanera-3122",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-bossa-two-bar",
+        "events": 20,
+        "pitchedEvents": 8
+      },
+      {
+        "id": "edu-samba-low-high",
+        "events": 40,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-funk-ghost-snare",
+        "events": 40,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-hihat-sixteenth-accents",
+        "events": 80,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-house-fourfloor-offbeat",
+        "events": 40,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-amen-inspired-break",
+        "events": 56,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-think-inspired-break",
+        "events": 52,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-apache-inspired-break",
+        "events": 32,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-dnb-two-step",
+        "events": 52,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-lofi-swung-eighths",
+        "events": 48,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-polyrhythm-3-4",
+        "events": 28,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-polyrhythm-4-5",
+        "events": 36,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-metric-modulation-triplet",
+        "events": 40,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-trap-halftime-hat-roll",
+        "events": 56,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-phonk-drift-cowbell-space",
+        "events": 56,
+        "pitchedEvents": 0
+      },
+      {
+        "id": "edu-guide-lofi-hiphop",
+        "events": 75,
+        "pitchedEvents": 27
+      },
+      {
+        "id": "edu-guide-techno",
+        "events": 52,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "edu-guide-house",
+        "events": 68,
+        "pitchedEvents": 28
+      },
+      {
+        "id": "edu-guide-trap",
+        "events": 64,
+        "pitchedEvents": 8
+      },
+      {
+        "id": "edu-guide-phonk",
+        "events": 72,
+        "pitchedEvents": 28
+      },
+      {
+        "id": "edu-guide-dnb",
+        "events": 68,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-guide-ambient",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-guide-jazz",
+        "events": 50,
+        "pitchedEvents": 50
+      },
+      {
+        "id": "edu-guide-funk",
+        "events": 84,
+        "pitchedEvents": 60
+      },
+      {
+        "id": "edu-guide-synthwave",
+        "events": 56,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-guide-classical",
+        "events": 80,
+        "pitchedEvents": 80
+      },
+      {
+        "id": "edu-guide-neo-soul",
+        "events": 48,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-arrangement-register-windows",
+        "events": 44,
+        "pitchedEvents": 44
+      },
+      {
+        "id": "edu-arrangement-subtract-before-drop",
+        "events": 27,
+        "pitchedEvents": 27
+      },
+      {
+        "id": "edu-arrangement-staggered-entry",
+        "events": 28,
+        "pitchedEvents": 28
+      },
+      {
+        "id": "edu-arrangement-complementary-hockets",
+        "events": 40,
+        "pitchedEvents": 40
+      },
+      {
+        "id": "edu-arrangement-foreground-background",
+        "events": 28,
+        "pitchedEvents": 28
+      },
+      {
+        "id": "edu-arrangement-bass-rest-for-motif",
+        "events": 40,
+        "pitchedEvents": 40
+      },
+      {
+        "id": "edu-arrangement-transition-pickup",
+        "events": 26,
+        "pitchedEvents": 26
+      },
+      {
+        "id": "edu-arrangement-density-versus-loudness",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-arrangement-role-handoff",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-arrangement-texture-changing-anchor",
+        "events": 22,
+        "pitchedEvents": 22
+      },
+      {
+        "id": "edu-orchestration-octave-doubling",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-orchestration-open-low-voicing",
+        "events": 12,
+        "pitchedEvents": 12
+      },
+      {
+        "id": "edu-orchestration-sustain-and-attack",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-orchestration-tessitura-climax",
+        "events": 28,
+        "pitchedEvents": 28
+      },
+      {
+        "id": "edu-orchestration-antiphonal-colors",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-emotion-expectation-delay",
+        "events": 28,
+        "pitchedEvents": 28
+      },
+      {
+        "id": "edu-emotion-fragile-thin-texture",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-emotion-buoyancy-upbeats",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-emotion-unease-neighbor",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-emotion-solemn-slow-arrival",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-emotion-ambivalence-major-sixth",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-emotion-urgency-repetition",
+        "events": 12,
+        "pitchedEvents": 12
+      },
+      {
+        "id": "edu-emotion-relief-suspension-release",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "edu-reference-analysis-level-matched-ab",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-reference-analysis-tempo-half-double",
+        "events": 36,
+        "pitchedEvents": 36
+      },
+      {
+        "id": "edu-reference-analysis-stem-leakage-caveat",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-harmony-functional-cadence",
+        "events": 76,
+        "pitchedEvents": 76
+      },
+      {
+        "id": "edu-harmony-common-tone-voicing",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-harmony-modal-tonic-pedal",
+        "events": 28,
+        "pitchedEvents": 28
+      },
+      {
+        "id": "edu-harmony-suspension-voice-leading",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-harmony-seventh-chords-vocabulary",
+        "events": 22,
+        "pitchedEvents": 22
+      },
+      {
+        "id": "edu-melody-motif-sequence",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-melody-antecedent-consequent",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "edu-melody-single-contour-apex",
+        "events": 40,
+        "pitchedEvents": 40
+      },
+      {
+        "id": "edu-melody-rhythmic-augmentation",
+        "events": 13,
+        "pitchedEvents": 13
+      },
+      {
+        "id": "edu-melody-fragment-and-cadence",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "edu-counterpoint-contrary-motion",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-counterpoint-consonant-framework",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-counterpoint-passing-tone-weak-position",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-counterpoint-delayed-canon",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-counterpoint-rhythmic-independence",
+        "events": 36,
+        "pitchedEvents": 36
+      },
+      {
+        "id": "edu-sound-design-subtractive-cutoff",
+        "events": 12,
+        "pitchedEvents": 12
+      },
+      {
+        "id": "edu-sound-design-pluck-envelope",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-sound-design-additive-partials",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-sound-design-fm-brightness",
+        "events": 12,
+        "pitchedEvents": 12
+      },
+      {
+        "id": "edu-sound-design-delay-as-secondary-rhythm",
+        "events": 8,
+        "pitchedEvents": 8
+      },
+      {
+        "id": "edu-mixing-static-balance-first",
+        "events": 52,
+        "pitchedEvents": 52
+      },
+      {
+        "id": "edu-mixing-pad-highpass-space",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-mixing-pan-with-center-anchor",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-mixing-depth-wet-dry",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-mixing-scheduled-duck-not-sidechain",
+        "events": 56,
+        "pitchedEvents": 56
+      },
+      {
+        "id": "edu-mastering-sum-headroom",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-mastering-streaming-reference-not-target",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "edu-mastering-transient-preservation",
+        "events": 12,
+        "pitchedEvents": 12
+      },
+      {
+        "id": "edu-mastering-measurement-window",
+        "events": 34,
+        "pitchedEvents": 34
+      },
+      {
+        "id": "edu-mastering-tail-safe-export",
+        "events": 2,
+        "pitchedEvents": 2
+      },
+      {
+        "id": "edu-history-continuo-model",
+        "events": 64,
+        "pitchedEvents": 64
+      },
+      {
+        "id": "edu-history-renaissance-imitation-model",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-history-classical-period-balance",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-history-borrowed-minor-subdominant",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-history-electronic-loop-process",
+        "events": 16,
+        "pitchedEvents": 16
+      },
+      {
+        "id": "edu-culture-participatory-response",
+        "events": 26,
+        "pitchedEvents": 26
+      },
+      {
+        "id": "edu-culture-son-clave-orientation",
+        "events": 14,
+        "pitchedEvents": 14
+      },
+      {
+        "id": "edu-culture-raga-not-scale",
+        "events": 36,
+        "pitchedEvents": 36
+      },
+      {
+        "id": "edu-culture-maqam-intonation-boundary",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-culture-blues-third-as-inflection",
+        "events": 40,
+        "pitchedEvents": 40
+      },
+      {
+        "id": "edu-antipatterns-continuous-filling",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-antipatterns-redundant-doubling",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-antipatterns-all-attacks-locked",
+        "events": 32,
+        "pitchedEvents": 32
+      },
+      {
+        "id": "edu-antipatterns-unexplained-chromaticism",
+        "events": 28,
+        "pitchedEvents": 28
+      },
+      {
+        "id": "edu-antipatterns-reverb-as-disguise",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-form-binary-contrast",
+        "events": 18,
+        "pitchedEvents": 18
+      },
+      {
+        "id": "edu-form-ternary-return",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "edu-form-aaba-delayed-return",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "edu-form-rondo-refrain",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "edu-form-theme-and-variations",
+        "events": 26,
+        "pitchedEvents": 26
+      },
+      {
+        "id": "edu-form-strophic-accompaniment",
+        "events": 80,
+        "pitchedEvents": 80
+      },
+      {
+        "id": "edu-form-verse-chorus-function",
+        "events": 20,
+        "pitchedEvents": 20
+      },
+      {
+        "id": "edu-form-bridge-return-context",
+        "events": 22,
+        "pitchedEvents": 22
+      },
+      {
+        "id": "edu-form-arch-texture",
+        "events": 24,
+        "pitchedEvents": 24
+      },
+      {
+        "id": "edu-form-sonata-principle-model",
+        "events": 20,
+        "pitchedEvents": 20
+      }
+    ]
+  },
+  "originalRecordsUnchanged": true,
+  "correction": {
+    "request": "techno 132 BPM",
+    "beforeBpm": 110,
+    "afterBpm": 132,
+    "attempts": 2,
+    "usedFallback": false,
+    "guide": {
+      "id": "edu-guide-techno",
+      "genre": "techno"
+    },
+    "prompts": [
+      {
+        "call": 1,
+        "guidePresent": true,
+        "bpmFeedbackPresent": false
+      },
+      {
+        "call": 2,
+        "guidePresent": true,
+        "bpmFeedbackPresent": true
+      }
+    ],
+    "trace": [
+      {
+        "type": "knowledge",
+        "guide": {
+          "id": "edu-guide-techno",
+          "genre": "techno"
+        },
+        "mode": "lexical",
+        "semantic": false,
+        "degraded": true,
+        "reason": "семантический поиск недоступен — лексическое ранжирование",
+        "stage": "exact",
+        "score": 0.85
+      },
+      {
+        "type": "genre-validation",
+        "attempt": 1,
+        "ok": false,
+        "errors": [
+          {
+            "code": "bpm_range",
+            "path": "meta.bpm",
+            "expected": [
+              120,
+              150
+            ],
+            "actual": 110,
+            "message": "meta.bpm: нужен конечный BPM в диапазоне 120..150 для techno, получено 110"
+          }
+        ]
+      },
+      {
+        "type": "genre-validation",
+        "attempt": 2,
+        "ok": true,
+        "errors": []
+      }
+    ]
+  },
+  "auditoryQuality": null,
+  "auditoryReason": "queryArc and mock corrections do not measure human listening preference"
+}

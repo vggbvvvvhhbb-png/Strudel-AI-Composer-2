@@ -47,7 +47,11 @@ describe('канонический TrackSpec через HTTP и SSE', () => {
     const spec = fallbackSpec('techno', 1);
     completeChat.mockResolvedValue(JSON.stringify(spec));
     const events = await stream({ prompt: 'техно', seed: 1, refine: false });
-    expect(events.map((e) => e.type)).toEqual(['style', 'spec', 'compiled', 'scored', 'done']);
+    expect(events.map((e) => e.type)).toEqual(['style', 'knowledge', 'genre-validation', 'spec', 'compiled', 'scored', 'done']);
+    expect(events.find(e => e.type === 'knowledge')).toMatchObject({
+      guide: { id: 'edu-guide-techno', genre: 'techno' }, semantic: false, mode: 'lexical',
+    });
+    expect(events.find(e => e.type === 'genre-validation')).toMatchObject({ ok: true, errors: [] });
     const planned = events.find((e) => e.type === 'spec');
     expect(planned.usedFallback).toBe(false);
     expect(planned.attempts).toBe(1);

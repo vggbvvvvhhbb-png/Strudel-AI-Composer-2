@@ -14,13 +14,15 @@ function parseVector(value) {
 }
 
 function rowToEntry(row) {
+  const { education, ...musicTags } = row.music_tags;
   return {
     id: row.id,
     version: row.version,
     title: row.title,
     description: row.description,
     strudel_code: row.strudel_code,
-    music_tags: row.music_tags,
+    music_tags: musicTags,
+    ...(education ? { education } : {}),
     cc0_preset_ids: row.cc0_preset_ids,
     rationale: row.rationale,
     source: row.source,
@@ -67,7 +69,8 @@ export class SupabaseKnowledgeStore {
          updated_at = now()`,
       [
         entry.id, entry.version, entry.title, entry.description, entry.strudel_code,
-        JSON.stringify(entry.music_tags), JSON.stringify(entry.cc0_preset_ids || []),
+        JSON.stringify(entry.education ? { ...entry.music_tags, education: entry.education } : entry.music_tags),
+        JSON.stringify(entry.cc0_preset_ids || []),
         entry.rationale, JSON.stringify(entry.source),
         embedding ? JSON.stringify(embedding) : null,
       ],

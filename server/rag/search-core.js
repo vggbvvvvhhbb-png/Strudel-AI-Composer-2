@@ -59,7 +59,7 @@ export function cosineSimilarity(a, b) {
 export function lexicalScore(query, entry) {
   const q = tokenize(query);
   if (q.length === 0) return 0;
-  const doc = new Set(tokenize(`${entry.title} ${entry.description} ${entry.rationale} ${entry.music_tags.genre.join(' ')} ${entry.music_tags.roles.join(' ')}`));
+  const doc = new Set(tokenize(`${entry.title} ${entry.description} ${entry.rationale} ${entry.music_tags.genre.join(' ')} ${entry.music_tags.roles.join(' ')} ${(entry.education?.rules || []).join(' ')}`));
   const title = new Set(tokenize(entry.title));
   let hits = 0;
   let titleHits = 0;

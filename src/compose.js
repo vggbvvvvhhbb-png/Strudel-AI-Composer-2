@@ -251,6 +251,14 @@ function handleEvent(event) {
     case 'style':
       traceRow('Стиль', event.style);
       break;
+    case 'knowledge':
+      traceRow('Жанровый гайд', event.guide ? `${event.guide.genre} · ${event.guide.id}` : 'явный жанр не найден');
+      if (event.reason) traceNote(event.reason);
+      break;
+    case 'genre-validation':
+      traceRow(`Проверка жанра ${event.attempt}`, event.ok ? 'BPM и обязательные роли соблюдены' : 'нужна коррекция', event.ok ? 'ok' : 'warn');
+      for (const error of event.errors || []) traceNote(error.message);
+      break;
     case 'warn':
       traceRow('Внимание', event.message, 'warn');
       break;

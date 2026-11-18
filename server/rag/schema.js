@@ -41,6 +41,21 @@ export const sourceSchema = z.object({
   message: 'external-источник обязан иметь reference (происхождение фиксируется)',
 });
 
+export const EDUCATION_DIRECTIONS = [
+  'rhythm', 'arrangement', 'orchestration', 'emotion', 'reference-analysis',
+  'harmony', 'melody', 'counterpoint', 'sound-design', 'mixing', 'mastering',
+  'history', 'culture', 'antipatterns', 'form',
+];
+
+const genreGuideSchema = z.object({
+  genre: z.string().trim().min(1),
+  aliases: z.array(z.string().trim().min(1)).min(1),
+  bpm_range: z.tuple([z.number().int().min(40).max(240), z.number().int().min(40).max(240)])
+    .refine(([min, max]) => min <= max, 'нижняя граница BPM не выше верхней'),
+  required_roles: z.array(z.enum(ROLES)),
+  chord_vocabulary: z.array(z.string().trim().min(1)),
+});
+
 export const knowledgeEntrySchema = z.object({
   id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'id — kebab-case'),
   version: z.number().int().min(1),
@@ -54,6 +69,11 @@ export const knowledgeEntrySchema = z.object({
   cc0_preset_ids: z.array(z.string().regex(/^tp-[a-z0-9-]+-v\d+$/)).default([]),
   rationale: z.string().trim().min(20).max(2000),
   source: sourceSchema,
+  education: z.object({
+    direction: z.enum(EDUCATION_DIRECTIONS),
+    rules: z.array(z.string().trim().min(10).max(500)).min(1).max(15),
+    guide: genreGuideSchema.optional(),
+  }).optional(),
 });
 
 /**

@@ -11,6 +11,7 @@ import { compileTrackSpec } from '../compiler/index.js';
 // Регистрирует серверный загрузчик каталога Timbre в общем компиляторе (D-128).
 import '../../samples/timbre.js';
 import { applySamplePlan, passportHints, sampleDigest } from './sample-plan.js';
+import { retrieveGenreGuide, guideBlock, checkGenreRules } from '../../rag/genre-guide.js';
 
 const SPEC_STYLES = TrackSpecSchema.shape.meta.shape.style.options;
 const SECTION_KINDS = TrackSpecSchema.shape.structure.shape.sections.element.shape.name.options;
@@ -280,7 +281,7 @@ export function repairSpec(raw, style) {
   return next;
 }
 
-function specMessages(prompt, style, sampleBlock = '') {
+function specMessages(prompt, style, sampleBlock = '', guide = null) {
   const system = [
     'Ты — композитор. Спланируй трек, не пиши JavaScript или Strudel-код.',
     'Верни строго один JSON-объект TrackSpec без текста вокруг.',
@@ -304,6 +305,7 @@ function specMessages(prompt, style, sampleBlock = '') {
     'reasoning? — короткое объяснение плана.',
     'План: 2..12 секций, всего 16..96 циклов; энергия и набор активных ролей различаются; гармония развивается.',
     'Никаких верхнеуровневых harmony, form, motif, automation; никаких recipe/variant.',
+    ...(guide ? ['', guideBlock(guide)] : []),
     ...(sampleBlock ? ['', sampleBlock] : []),
     '',
     `Белый список для стиля «${style}» — бери звуки и рисунки отсюда:`,
@@ -402,6 +404,7 @@ export function fallbackSpec(style, seed = 1) {
       if (!roles[role]) {
         const info = roleFor(libraryStyle, role);
         roles[role] = {
+          role,
           activeIn: [],
           pattern: selectPattern(info, 'default', index, seed) || '0 ~ 2 4',
           sound: info?.synth || info?.sounds?.[0] || 'sine',
@@ -441,10 +444,27 @@ export function fallbackSpec(style, seed = 1) {
  * @param {number} [options.seed]
  * @returns {Promise<{raw: object|null, text: string}>}
  */
-async function askModel({ prompt, style, completeChat, seed, signal, onUsage, sampleBlock }) {
+async function askModel({ prompt, style, completeChat, seed, signal, onUsage, sampleBlock, guide, feedback = null }) {
+  const messages = specMessages(prompt, style, sampleBlock, guide);
+  if (feedback) {
+    messages[1] = {
+      role: 'user',
+      content: [
+        `Запрос: ${prompt}`,
+        '',
+        'Твоя предыдущая спека не прошла проверку:',
+        JSON.stringify(feedback.spec),
+        '',
+        'Ошибки (структурированный JSON):',
+        JSON.stringify(feedback.errors),
+        '',
+        'Верни исправленную спеку — строго JSON по той же схеме.',
+      ].join('\n'),
+    };
+  }
   const text = await completeChat({
-    messages: specMessages(prompt, style, sampleBlock),
-    temperature: 0.4,
+    messages,
+    temperature: feedback ? 0.2 : 0.4,
     signal,
     onUsage,
     responseFormat: { type: 'json_object' },
@@ -470,7 +490,7 @@ export async function buildTrack({
   prompt,
   style,
   completeChat,
-  seed = Math.floor(Math.random() * 2 ** 31),
+  seed = 1,
   signal,
   onEvent,
   onUsage,
@@ -483,6 +503,12 @@ export async function buildTrack({
 
   emit('style', { style: trackStyle });
 
+  // Гайд ищется по явному жанру запроса, а не по эвристическому trackStyle.
+  const knowledge = retrieveGenreGuide(prompt, { style });
+  const guide = knowledge.guide;
+  const guideSummary = guide ? { id: guide.id, genre: guide.genre } : null;
+  emit('knowledge', { ...knowledge, guide: guideSummary });
+
   // Паспорт сэмпла (D-119): измеренные признаки идут и в промпт модели,
   // и в детерминированную правку готовой спеки — модель не может их потерять.
   const sampleHints = sampleEntry ? passportHints(sampleEntry.passport) : null;
@@ -494,86 +520,55 @@ export async function buildTrack({
   let modelCalls = 0;
   let lastErrors = [];
 
-  // До двух заходов за спекой: первый — с нуля, второй — чинящая
-  // итерация, где модели показывают её же спеку и конкретные ошибки
-  // (одна чинящая итерация, как в ТЗ).
-  while (modelCalls < 2) {
+  // Без гайда сохраняется предел двух вызовов и библиотечный fallback.
+  // С гайдом — до трёх, каждый повтор получает предыдущую repaired-спеку.
+  const maxCalls = guide ? 3 : 2;
+  let feedback = null;
+  let genreFailed = false;
+  while (modelCalls < maxCalls) {
     modelCalls += 1;
     let answer;
     try {
-      answer = await askModel({ prompt, style: trackStyle, completeChat, seed, signal, onUsage, sampleBlock });
+      answer = await askModel({ prompt, style: trackStyle, completeChat, seed, signal, onUsage, sampleBlock, guide, feedback });
     } catch (err) {
       if (signal?.aborted) throw err;
       emit('warn', { message: `Модель не ответила: ${err.message || err}` });
+      if (guide) throw err;
       break;
     }
     raw = repairSpec(normalizeSpec(answer.raw, trackStyle), trackStyle);
-    if (!raw) {
-      lastErrors = ['ответ модели не разобрался как JSON'];
-      emit('warn', { message: 'Ответ модели не разобрался как JSON' });
-      continue;
-    }
-
-    const check = validatePlan(raw);
-    if (check.ok) {
+    const check = raw ? validatePlan(raw) : {
+      ok: false, errors: ['ответ модели не разобрался как JSON'],
+    };
+    // Проверка жанра не заменяет ни схему, ни компилятор и идёт после них.
+    const validation = check.ok ? checkGenreRules(check.spec, guide) : {
+      ok: false,
+      errors: check.errors.map((message) => ({ code: raw ? 'track_spec' : 'json', path: 'spec', message })),
+    };
+    if (guide && check.ok && !validation.ok) genreFailed = true;
+    if (guide) emit('genre-validation', { attempt: modelCalls, ok: validation.ok, errors: validation.errors });
+    if (validation.ok) {
       spec = check.spec;
       break;
     }
 
-    lastErrors = check.errors;
-    emit('warn', { message: `Спека не прошла проверку: ${check.errors.join('; ')}` });
-
-    // Чинящая итерация: показываем модели её же спеку и конкретные ошибки.
-    if (modelCalls === 1) {
-      try {
-        modelCalls += 1;
-        const fixed = await completeChat({
-          messages: [
-            { role: 'system', content: specMessages(prompt, trackStyle, sampleBlock)[0].content },
-            {
-              role: 'user',
-              content: [
-                `Запрос: ${prompt}`,
-                '',
-                'Твоя предыдущая спека не прошла проверку:',
-                JSON.stringify(raw),
-                '',
-                'Ошибки:',
-                ...check.errors.map((e) => `- ${e}`),
-                '',
-                'Верни исправленную спеку — строго JSON по той же схеме.',
-              ].join('\n'),
-            },
-          ],
-          temperature: 0.2,
-          signal,
-          onUsage,
-          responseFormat: { type: 'json_object' },
-        });
-        const fixedRaw = repairSpec(normalizeSpec(extractJson(fixed), trackStyle), trackStyle);
-        if (fixedRaw) {
-          const fixedCheck = validatePlan(fixedRaw);
-          if (fixedCheck.ok) {
-            spec = fixedCheck.spec;
-            break;
-          }
-          lastErrors = fixedCheck.errors;
-          emit('warn', { message: `Исправленная спека тоже невалидна: ${fixedCheck.errors.join('; ')}` });
-        }
-      } catch (err) {
-        if (signal?.aborted) throw err;
-        emit('warn', { message: `Чинящая итерация не удалась: ${err.message || err}` });
-      }
-    }
+    lastErrors = validation.errors.map((error) => error.message);
+    feedback = { spec: raw, errors: validation.errors };
+    emit('warn', { message: `Спека не прошла проверку: ${lastErrors.join('; ')}` });
+    if (!genreFailed && modelCalls >= 2) break;
   }
 
   let usedFallback = false;
   if (!spec) {
+    if (genreFailed) throw new Error(`Жанровый гайд ${guide.id} (${guide.genre}) не выполнен после ${modelCalls} попыток: ${lastErrors.join('; ')}`);
     usedFallback = true;
     const fallback = fallbackSpec(trackStyle, seed);
     const check = checkSpec(fallback);
     if (!check.ok) throw new Error(`Запасной план не прошёл проверку: ${check.errors.join('; ')}`);
     spec = validateTrackSpec(check.spec);
+    const fallbackGenre = checkGenreRules(spec, guide);
+    if (!fallbackGenre.ok) throw new Error(`Запасной план нарушает гайд ${guide.id}: ${fallbackGenre.errors.map(e => e.message).join('; ')}`);
+    if (guide) emit('genre-validation', { attempt: modelCalls, phase: 'fallback', ok: true, errors: [] });
     emit('fallback', { message: 'Модель не дала валидную спеку — собран запасной план из библиотеки' });
   }
 
@@ -581,6 +576,13 @@ export async function buildTrack({
   if (sampleEntry) {
     const { spec: withSample, applied } = applySamplePlan(spec, { entry: sampleEntry, hints: sampleHints });
     const check = validatePlan(withSample);
+    if (guide) {
+      const validation = check.ok ? checkGenreRules(check.spec, guide) : {
+        ok: false, errors: check.errors.map((message) => ({ code: 'track_spec', path: 'spec', message })),
+      };
+      emit('genre-validation', { attempt: modelCalls, phase: 'sample', ok: validation.ok, errors: validation.errors });
+      if (!validation.ok) throw new Error(`План вокруг сэмпла нарушает гайд ${guide.id}: ${validation.errors.map((error) => error.message).join('; ')}`);
+    }
     if (check.ok) {
       spec = check.spec;
       sampleApplied = applied;
@@ -602,7 +604,7 @@ export async function buildTrack({
     trace: compiled.trace,
   });
 
-  return { spec, compiled, style: trackStyle, attempts: modelCalls, usedFallback, seed, raw, errors: lastErrors, sample: sampleApplied };
+  return { spec, compiled, style: trackStyle, attempts: modelCalls, usedFallback, seed, raw, errors: lastErrors, sample: sampleApplied, guide: guideSummary };
 }
 
 export { SPEC_STYLES, SPEC_ROLES, SECTION_KINDS };
