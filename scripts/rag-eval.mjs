@@ -3,9 +3,14 @@
 // rag (новый промпт + топ-3 примеров, одна попытка), rag-loop (петля до 3).
 // Живая модель через существующий completeChat (relay.fast, D-120).
 // Запуск: node scripts/rag-eval.mjs [--limit N] [--mode plain|rag|rag-loop]
-// Evidence: docs/evidence/rag/eval.json + таблица в stdout.
+//         [--set base|stress]
+// Стресс-набор (D-144): 18 намеренно трудных запросов — экзотические лады
+// (ловушки empty-part/scale), несуществующие тембры (unknown-sound),
+// сложные структуры (syntax/runtime). Цель — поймать ЖИВЫЕ коррекции петли
+// (в E-021 их было 0: все ответы валидны с первой попытки).
+// Evidence: docs/evidence/rag/eval.json (base) / eval-stress.json (stress).
 // Метрики: валидность, соответствие ладу/тоники/темпа, реальные звуки,
-// попытки, токены. Отрицательные результаты фиксируются как есть.
+// попытки, токены, коррекции. Отрицательные результаты фиксируются как есть.
 
 import 'dotenv/config';
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -25,7 +30,10 @@ import { getBpm } from '../src/core/code-model.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(here, '..');
-const EVIDENCE = resolve(ROOT, 'docs/evidence/rag/eval.json');
+
+const argv = process.argv.slice(2);
+const setName = argv.includes('--set') ? argv[argv.indexOf('--set') + 1] : 'base';
+const EVIDENCE = resolve(ROOT, `docs/evidence/rag/${setName === 'stress' ? 'eval-stress.json' : 'eval.json'}`);
 
 const REQUESTS = [
   { id: 'r01', request: 'тёплые джазовые аккорды для lofi в ля миноре, 78 BPM', expect: { tonic: 'a', mode: 'minor', bpm: 78 } },
@@ -50,8 +58,36 @@ const REQUESTS = [
   { id: 'r20', request: 'глубокие house-нонаккорды в соль миноре, 122 BPM', expect: { tonic: 'g', mode: 'minor', bpm: 122 } },
 ];
 
-const argv = process.argv.slice(2);
-const limit = Number(argv[argv.indexOf('--limit') + 1]) || REQUESTS.length;
+// Стресс-набор (D-144): трудные, но выполнимые запросы. Экзотические лады
+// вне MODE_INTERVALS валидатора (мелодический минор, целотонная, венгерский
+// минор, фригийская доминанта) проверяются только на валидность/темп:
+// parseKeyCode их не знает, тоник/лад машинно не проверить — честно.
+const STRESS_REQUESTS = [
+  { id: 's01', request: 'мелодия в ми гармоническом миноре с повышенной седьмой ступенью на скрипке, 92 BPM', expect: { tonic: 'e', mode: 'harmonic-minor', bpm: 92 } },
+  { id: 's02', request: 'джазовая мелодия в ля мелодическом миноре на пианино, 105 BPM', expect: { bpm: 105 } },
+  { id: 's03', request: 'мрачный локрийский рифф в си, 110 BPM', expect: { tonic: 'b', mode: 'locrian', bpm: 110 } },
+  { id: 's04', request: 'целотонная гамма в до для эмбиент-пэда, 66 BPM', expect: { bpm: 66 } },
+  { id: 's05', request: 'мелодия в ре венгерском миноре на струнных, 95 BPM', expect: { bpm: 95 } },
+  { id: 's06', request: 'испанская мелодия во фригийской доминанте в ми, 105 BPM', expect: { bpm: 105 } },
+  { id: 's07', request: 'терменвокс-подобный плывущий лид в ре миноре, 80 BPM', expect: { tonic: 'd', mode: 'minor', bpm: 80 } },
+  { id: 's08', request: 'волыночный дрон с наигрышем в соль мажоре, 90 BPM', expect: { tonic: 'g', mode: 'major', bpm: 90 } },
+  { id: 's09', request: 'стеклянная гармоника в до мажоре, 70 BPM', expect: { tonic: 'c', mode: 'major', bpm: 70 } },
+  { id: 's10', request: 'мрачные струнные из каталога Timbre Palette для кино в ре миноре, 85 BPM', expect: { tonic: 'd', mode: 'minor', bpm: 85 } },
+  { id: 's11', request: 'полиритмия 3 на 4: трэповые хэты против шагающего баса в фа миноре, 120 BPM', expect: { tonic: 'f', mode: 'minor', bpm: 120 } },
+  { id: 's12', request: 'евклидовы ритмы cp(3,8) и bd(5,8) для техно, 128 BPM', expect: { bpm: 128, sound: 'cp' } },
+  { id: 's13', request: 'трёхчастная форма через arrange: интро, куплет, припев в ля миноре, 124 BPM', expect: { tonic: 'a', mode: 'minor', bpm: 124 } },
+  { id: 's14', request: 'джазовые аккорды Fmaj7 и Cmaj7 в до мажоре на пианино, 110 BPM', expect: { tonic: 'c', mode: 'major', bpm: 110 } },
+  { id: 's15', request: 'джазовый ii-V-I с нонаккордами в си бемоль мажоре, 115 BPM', expect: { tonic: 'bb', mode: 'major', bpm: 115 } },
+  { id: 's16', request: 'балканский ритм на 7 долей в ре миноре, 140 BPM', expect: { tonic: 'd', mode: 'minor', bpm: 140 } },
+  { id: 's17', request: 'быстрый свингующий бас в соль миноре, 160 BPM', expect: { tonic: 'g', mode: 'minor', bpm: 160 } },
+  { id: 's18', request: 'плотный многослойный трэп-бит: 808, хэты с роллами, клэп, перкуссия и пэд в до миноре, 132 BPM', expect: { tonic: 'c', mode: 'minor', bpm: 132 } },
+];
+
+const REQUEST_SETS = { base: REQUESTS, stress: STRESS_REQUESTS };
+const CHOSEN = REQUEST_SETS[setName];
+if (!CHOSEN) throw new Error(`неизвестный набор --set ${setName} (base|stress)`);
+
+const limit = Number(argv[argv.indexOf('--limit') + 1]) || CHOSEN.length;
 const offset = Number(argv[argv.indexOf('--offset') + 1]) || 0;
 const onlyMode = argv.includes('--mode') ? argv[argv.indexOf('--mode') + 1] : null;
 const MODES = onlyMode ? [onlyMode] : ['plain', 'rag', 'rag-loop'];
@@ -96,11 +132,11 @@ const onUsage = (u) => {
 };
 
 const { store, kind, close } = await makeStore();
-console.log(`хранилище: ${kind}, запросов: ${Math.min(limit, REQUESTS.length)}, режимы: ${MODES.join(', ')}`);
+console.log(`набор: ${setName}, хранилище: ${kind}, запросов: ${Math.min(limit, CHOSEN.length)}, режимы: ${MODES.join(', ')}`);
 const startedAt = Date.now();
 
 try {
-  for (const spec of REQUESTS.slice(offset, offset + limit)) {
+  for (const spec of CHOSEN.slice(offset, offset + limit)) {
     const emb = await embedQuery(spec.request);
     const queryEmbedding = emb.ok ? emb.embedding : null;
     for (const mode of MODES) {
@@ -157,12 +193,16 @@ for (const mode of MODES) {
   const expTotal = rs.reduce((s, r) => s + r.expectation.total, 0);
   const scaleFails = rs.filter((r) => (r.errors || []).some((e) => e.class === 'scale')).length;
   const soundFails = rs.filter((r) => (r.errors || []).some((e) => e.class === 'unknown-sound')).length;
+  // Живые коррекции петли: первая попытка упала, финальный код валиден.
+  const corrected = rs.filter((r) => r.ok && r.attempts > 1).length;
+  const firstAttemptFails = rs.filter((r) => (r.errorClasses || []).length > 0 || (!r.ok && r.attempts >= 1)).length;
   summary[mode] = {
     requests: rs.length,
     valid, validShare: Number((valid / rs.length).toFixed(3)),
     expectationMet: expMet, expectationTotal: expTotal,
     expectationShare: expTotal ? Number((expMet / expTotal).toFixed(3)) : null,
     scaleFailRequests: scaleFails, unknownSoundRequests: soundFails,
+    correctedRequests: corrected, firstAttemptFailRequests: firstAttemptFails,
     avgAttempts: Number((rs.reduce((s, r) => s + r.attempts, 0) / rs.length).toFixed(2)),
     avgMs: Math.round(rs.reduce((s, r) => s + r.ms, 0) / rs.length),
   };
@@ -170,6 +210,7 @@ for (const mode of MODES) {
 
 const report = {
   date: new Date().toISOString(),
+  set: setName,
   store: kind,
   semantic: Boolean(await embedQuery('проверка').then((r) => r.ok).catch(() => false)),
   durationMs: Date.now() - startedAt,
@@ -181,7 +222,7 @@ mkdirSync(dirname(EVIDENCE), { recursive: true });
 writeFileSync(EVIDENCE, JSON.stringify(report, null, 2));
 console.log('\n=== СВОДКА ===');
 for (const [mode, s] of Object.entries(summary)) {
-  console.log(`${mode.padEnd(8)} валидных ${s.valid}/${s.requests} (${s.validShare}), ожидания ${s.expectationMet}/${s.expectationTotal} (${s.expectationShare}), лад-ошибки ${s.scaleFailRequests}, выдуманные звуки ${s.unknownSoundRequests}, ср.попыток ${s.avgAttempts}`);
+  console.log(`${mode.padEnd(8)} валидных ${s.valid}/${s.requests} (${s.validShare}), ожидания ${s.expectationMet}/${s.expectationTotal} (${s.expectationShare}), лад-ошибки ${s.scaleFailRequests}, выдуманные звуки ${s.unknownSoundRequests}, коррекций ${s.correctedRequests}, ср.попыток ${s.avgAttempts}`);
 }
 console.log(`токены: prompt ${usageTotal.prompt}, completion ${usageTotal.completion}, вызовов ${usageTotal.calls}`);
 console.log(`Evidence: ${EVIDENCE}`);

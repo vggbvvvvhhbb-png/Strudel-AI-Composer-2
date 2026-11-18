@@ -158,4 +158,74 @@ describe('петля self-correction (mock-LLM)', () => {
     expect(r.ok).toBe(false);
     expect(r.attempts).toBe(1);
   });
+
+  it('транзиентный таймаут LLM — повтор в рамках бюджета, без фидбека (E-023/D-145)', async () => {
+    const seen = [];
+    let calls = 0;
+    const callModel = async (messages) => {
+      calls += 1;
+      seen.push(messages.map((m) => m.content).join('\n'));
+      if (calls === 1) throw new Error('The operation was aborted due to timeout');
+      return wrap(VALID);
+    };
+    const r = await runCorrectionLoop({ request: 'мелодия', store, callModel, catalog, maxAttempts: 3 });
+    expect(r.ok).toBe(true);
+    expect(r.attempts).toBe(2);
+    expect(r.history[0].errors[0].class).toBe('llm');
+    // Повтор — тот же запрос: фидбек валидатора не подмешивается.
+    expect(seen[1]).toBe(seen[0]);
+  });
+
+  it('нетранзиентная ошибка (401) — немедленный честный отказ, без повторов', async () => {
+    let calls = 0;
+    const callModel = async () => { calls += 1; throw new Error('401 Unauthorized'); };
+    const r = await runCorrectionLoop({ request: 'мелодия', store, callModel, catalog, maxAttempts: 3 });
+    expect(r.ok).toBe(false);
+    expect(r.attempts).toBe(1);
+    expect(calls).toBe(1);
+    expect(r.reason).toContain('LLM недоступна');
+  });
+
+  it('таймаут на всех попытках — честный отказ после бюджета', async () => {
+    const callModel = async () => { throw new Error('The operation was aborted due to timeout'); };
+    const r = await runCorrectionLoop({ request: 'мелодия', store, callModel, catalog, maxAttempts: 2 });
+    expect(r.ok).toBe(false);
+    expect(r.attempts).toBe(2);
+    expect(r.history).toHaveLength(2);
+    expect(r.history.every((h) => h.errors[0].class === 'llm')).toBe(true);
+  });
+
+  it('llm-error виден через onStep с флагом транзиентности', async () => {
+    const steps = [];
+    let calls = 0;
+    const callModel = async () => {
+      calls += 1;
+      if (calls === 1) throw new Error('429 Too Many Requests');
+      return wrap(VALID);
+    };
+    await runCorrectionLoop({ request: 'мелодия', store, callModel, catalog, onStep: (s) => steps.push(s) });
+    const llmError = steps.find((s) => s.type === 'llm-error');
+    expect(llmError).toMatchObject({ attempt: 1, transient: true });
+  });
+});
+
+describe('isTransientLlmError', () => {
+  it('таймауты, перегрузка и сеть — транзиентные', async () => {
+    const { isTransientLlmError } = await import('../../server/rag/loop.js');
+    expect(isTransientLlmError(new Error('The operation was aborted due to timeout'))).toBe(true);
+    expect(isTransientLlmError(Object.assign(new Error('x'), { name: 'TimeoutError' }))).toBe(true);
+    expect(isTransientLlmError(Object.assign(new Error('x'), { name: 'AbortError' }))).toBe(true);
+    expect(isTransientLlmError(new Error('429 Too Many Requests'))).toBe(true);
+    expect(isTransientLlmError(new Error('503 Service Unavailable'))).toBe(true);
+    expect(isTransientLlmError(new Error('524 origin timeout'))).toBe(true);
+    expect(isTransientLlmError(new Error('ECONNRESET'))).toBe(true);
+    expect(isTransientLlmError(new Error('fetch failed'))).toBe(true);
+  });
+
+  it('ошибки ключа и запроса — нетранзиентные', async () => {
+    const { isTransientLlmError } = await import('../../server/rag/loop.js');
+    expect(isTransientLlmError(new Error('401 Unauthorized'))).toBe(false);
+    expect(isTransientLlmError(new Error('400 Bad Request'))).toBe(false);
+    expect(isTransientLlmError(new Error('invalid api key'))).toBe(false);
+  });
 });

@@ -9,6 +9,18 @@ import { parseAssistantResponse } from './parse-response.js';
 import { validateGeneratedCode, feedbackFromErrors } from './code-validator.js';
 
 /**
+ * Транзиентная ошибка LLM (таймаут, перегрузка, сеть) — её стоит повторить
+ * в рамках бюджета попыток, а не валить всю петлю. Замер E-023: 2/18
+ * стресс-запросов умерли на таймаутах провайдера (роутер уже пробует две
+ * модели по 120 с; дополнительный retry снаружи удвоил бы латентность —
+ * поэтому повтор идёт ВНУТРИ существующего maxAttempts).
+ */
+export function isTransientLlmError(err) {
+  if (err?.name === 'AbortError' || err?.name === 'TimeoutError') return true;
+  return /timeout|aborted|429|50[234]|52[0-4]|ECONNRESET|ECONNREFUSED|ETIMEDOUT|fetch failed|network|перегруз/i.test(String(err?.message || err));
+}
+
+/**
  * @param {{
  *   request: string,
  *   currentCode?: string,
@@ -47,8 +59,14 @@ export async function runCorrectionLoop({
     try {
       text = await callModel(messages);
     } catch (err) {
-      history.push({ attempt, ok: false, errors: [{ class: 'llm', message: String(err?.message || err) }] });
-      return { ok: false, attempts: attempt, history, search, reason: `LLM недоступна: ${err?.message || err}`, errors: history.at(-1).errors };
+      const message = String(err?.message || err);
+      const transient = isTransientLlmError(err);
+      history.push({ attempt, ok: false, errors: [{ class: 'llm', message }] });
+      onStep({ type: 'llm-error', attempt, transient, message });
+      // Транзиентный сбой при живом бюджете — повтор той же попытки;
+      // нетранзиентный (ключ, 400) или бюджет исчерпан — честный отказ.
+      if (transient && attempt < maxAttempts) continue;
+      return { ok: false, attempts: attempt, history, search, reason: `LLM недоступна: ${message}`, errors: history.at(-1).errors };
     }
 
     const parsed = parseAssistantResponse(text);
