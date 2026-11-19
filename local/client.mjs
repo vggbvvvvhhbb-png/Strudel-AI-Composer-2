@@ -116,11 +116,14 @@ export function createDaemonClient({ baseUrl = DEFAULT_URL, token = DEFAULT_TOKE
      * Кладёт задачу в очередь демона.
      * @param {string} type
      * @param {object} payload
+     * @param {{id?:string}} [options] идентификатор задачи для идемпотентности
      * @returns {Promise<{id:string, type:string, state:string}>}
      */
-    async submit(type, payload = {}) {
-      const { body } = await request('/tasks', { baseUrl, token, method: 'POST', body: { type, payload } });
-      return body;
+    async submit(type, payload = {}, { id } = {}) {
+      const body = { type, payload };
+      if (typeof id === 'string' && id.trim()) body.id = id.trim();
+      const { body: answer } = await request('/tasks', { baseUrl, token, method: 'POST', body });
+      return answer;
     },
 
     /**

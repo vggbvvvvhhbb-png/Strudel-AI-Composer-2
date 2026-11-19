@@ -40,10 +40,12 @@ function daemon() {
  * @param {Error} err
  */
 function daemonError(res, err) {
-  // Коды демона сохраняются: «неизвестный тип задачи» (400) и «нет такой
-  // задачи» (404) — это ошибки запроса, а не «демон недоступен». Иначе
-  // клиент получил бы 503 и подумал бы, что демон лежит.
-  const status = err?.status === 400 || err?.status === 404 ? err.status : 503;
+  // Коды демона сохраняются: «неизвестный тип задачи» (400), «нет такой
+  // задачи» (404), «слишком большое тело» (413), «не тот content-type» (415)
+  // и «слишком много задач» (429) — это ошибки запроса, а не «демон
+  // недоступен». Иначе клиент получил бы 503 и подумал бы, что демон лежит.
+  const passthrough = [400, 404, 413, 415, 429];
+  const status = passthrough.includes(err?.status) ? err.status : 503;
   res.status(status).json({
     error: err?.message || 'Демон недоступен',
     daemonConfigured: Boolean(DAEMON_URL),
@@ -100,7 +102,12 @@ router.post('/tasks', async (req, res) => {
       res.status(400).json({ error: 'Нужен тип задачи (type).' });
       return;
     }
-    const task = await client.submit(type, req.body?.payload ?? {});
+    // Идентификатор задачи от клиента: повторный запрос с тем же id не
+    // ставит тяжёлую работу второй раз (идемпотентность на стороне демона).
+    const id = typeof req.body?.id === 'string' && /^[A-Za-z0-9._-]{8,128}$/.test(req.body.id)
+      ? req.body.id
+      : undefined;
+    const task = await client.submit(type, req.body?.payload ?? {}, { id });
     res.status(202).json(task);
   } catch (err) {
     daemonError(res, err);
