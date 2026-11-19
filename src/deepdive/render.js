@@ -421,6 +421,34 @@ export function renderMetrics(payload) {
   }
 }
 
+/* --- Отказы и деградации --- */
+
+/**
+ * Что не получилось измерить. Сервер отдаёт это в payload.errors.
+ *
+ * ЗАЧЕМ ОТДЕЛЬНЫМ БЛОКОМ. «Нет данных» и «ноль» — разные вещи (D-102): если
+ * разделение на стемы не состоялось из-за нехватки памяти, то метрик по слоям
+ * НЕТ, а не «они нулевые». Без этого блока человек видит пустую матрицу и не
+ * понимает, что произошло.
+ */
+export function renderFailures(payload) {
+  const box = $('dive-failures');
+  if (!box) return;
+  clear(box);
+
+  const errors = Array.isArray(payload?.errors) ? payload.errors : [];
+  if (!errors.length) {
+    box.append(el('p', 'hint', 'Отказов и деградаций не зафиксировано.'));
+    return;
+  }
+  const list = el('ul', 'dive-failure-list');
+  for (const item of errors) {
+    const text = item?.message ? String(item.message) : 'причина не указана';
+    list.append(el('li', 'dive-failure-item', `${item?.stage ? `[${item.stage}] ` : ''}${text}`));
+  }
+  box.append(list);
+}
+
 /* --- Честность --- */
 
 export function renderHonesty(payload) {

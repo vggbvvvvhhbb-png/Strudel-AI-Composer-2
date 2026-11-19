@@ -18,6 +18,7 @@ import {
   renderMetrics,
   renderHonesty,
   renderIterations,
+  renderFailures,
 } from './render.js';
 import { estimateDeepDive, formatEstimateScope, formatStageRemaining } from './estimate.js';
 import { syncMixer } from '../mixer.js';
@@ -520,6 +521,7 @@ function applyPayload(payload) {
   renderTwin(payload);
   renderMetrics(payload);
   renderHonesty(payload);
+  renderFailures(payload);
   renderIterations(payload);
 
   loadTwinAudio(payload);
