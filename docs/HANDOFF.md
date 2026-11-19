@@ -45,12 +45,33 @@ true`, воркер жив; нативный краш 0xC0000005 — HTTP 500 `W
   `__init__.py`): namespace-пакет перебивается пакетом из site-packages, и
   подмена молча не срабатывает.
 
+**Chrome LNA в публичном сценарии — закрыт (E-047).** Пробел из E-044 закрыт:
+публичный origin создан, цель на `127.0.0.1:8123` пишет каждый запрос, браузер —
+**настоящий Chrome 158.0.8127.36** (не Electron). Все четыре `fetch` на loopback
+заблокированы, **ни один запрос не покинул браузер** (лог цели пуст), все —
+`net::ERR_FAILED`, причина от Chrome: `Permission was denied for this request to
+access the 'loopback' address space`. `targetAddressSpace: 'local'` не помогает.
+Значит same-origin прокси (D-121) — измеренный факт, а не знание из документации.
+Зонд остался в проекте: `scripts/probe-lna-public.mjs`. Граница: в headless нет
+диалога разрешения — измерен отказ **без grant**; исход в обычном окне зависит
+от ответа пользователя.
+
+**Побочная находка про сеть.** «На машине нет интернета» — неточность: DNS
+фильтруется по доменам. `example.com` не резолвится, а `api.ipify.org` и
+домен опубликованной страницы — резолвятся. Значит сценарии «нужен интернет»
+частично выполнимы.
+
 **Что сделано:** проба `scripts/probe-demucs-ladder.py` (берёт корабльную
 лестницу из `ddworker/memory.py`), регрессии прибора
-`tests/unit/test_ladder_probe.py` (14), EXPERIMENTS E-045/E-046, evidence
-`docs/evidence/deepdive/ladder-quality-2026-11-19.json` и
-`worker-failure-modes-2026-11-19.json`, runbook Demucs (измеренные числа),
-SESSION_REPORT §34. Поведение продукта **не менялось** — новых D-записей нет.
+`tests/unit/test_ladder_probe.py` (14), зонд `scripts/probe-lna-public.mjs`,
+EXPERIMENTS E-045/E-046/E-047, evidence
+`docs/evidence/deepdive/ladder-quality-2026-11-19.json`,
+`docs/evidence/deepdive/worker-failure-modes-2026-11-19.json`,
+`docs/evidence/local/lna-public-2026-11-19.json`, runbook Demucs (измеренные
+числа) и runbook демона §6.2, SESSION_REPORT §34. Поведение продукта **не
+менялось** — новых D-записей нет.
+
+**Ветка запушена в origin** (`origin/feat/deep-research-p0-p3`). `main` не тронут.
 
 **Что осталось за владельцем (без изменений с прошлой сессии):** реальный
 отказ по памяти на живом треке по runbook (шаги 1–4); Chrome LNA в публичном
