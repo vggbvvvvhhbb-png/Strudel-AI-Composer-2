@@ -17,6 +17,7 @@
     "start": "node server/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:python": "node scripts/run-python-tests.mjs",
     "gate": "node scripts/gate.mjs",
     "gate:a": "node scripts/gate-a.mjs",
     "gate:b": "node scripts/gate-b.mjs",
