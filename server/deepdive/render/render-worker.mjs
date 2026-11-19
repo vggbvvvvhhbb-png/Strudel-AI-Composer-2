@@ -28,6 +28,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { RENDER_SEED, RENDER_POLICY_VERSION } from '../../../src/audio/render/seed.js';
+import { pickBrowserPath, sweepStaleBrowserProfilesOnce, formatSweepReport } from '../../../lib/browser.mjs';
 
 import { POOL_AUDIO_DIR } from '../../samples/pool.js';
 import { timbreAudioFile, loadTimbreCatalog, TIMBRE_DIR } from '../../samples/timbre.js';
@@ -42,30 +43,8 @@ const BUNDLE_FILE = path.join(HERE, 'dist', 'render-bundle.js');
 const STRUDEL_BUNDLE = path.join(ROOT, 'node_modules', '@strudel', 'web', 'dist', 'index.js');
 const PAGE_FILE = path.join(HERE, 'render-page.html');
 
-// Браузер ищется в стандартных местах; переменная CHROME_PATH переопределяет.
-const CHROME_PATHS = [
-  process.env.CHROME_PATH,
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-  '/usr/bin/google-chrome',
-  '/usr/bin/google-chrome-stable',
-  '/usr/bin/chromium',
-  '/usr/bin/chromium-browser',
-].filter(Boolean);
-
 const BASE_ARGS = ['--no-sandbox', '--mute-audio'];
 const AUTOPLAY_ARGS = ['--autoplay-policy=no-user-gesture-required'];
-
-function pickBrowserPath() {
-  for (const candidate of CHROME_PATHS) {
-    if (candidate && existsSync(candidate)) return candidate;
-  }
-  throw new Error(
-    'Не найден ни Chrome, ни Edge в стандартных путях. Задайте CHROME_PATH или поставьте браузер в образ.',
-  );
-}
 
 /** sha256 кода — часть паспорта рендера. */
 export function codeFingerprint(code) {
@@ -210,6 +189,11 @@ function timbrePayloadForCode(code, explicitAliases) {
 }
 
 export async function createRenderWorker(options = {}) {
+  // Уборка осиротевших профилей Playwright: один раз на процесс, до запуска
+  // браузера (модуль сам глотает ошибки доступа к tmpdir).
+  const sweep = sweepStaleBrowserProfilesOnce();
+  if (sweep) console.log(formatSweepReport(sweep));
+
   if (!existsSync(BUNDLE_FILE)) {
     await buildRenderBundle(options);
   }

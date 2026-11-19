@@ -56,7 +56,7 @@ function externalDirs() {
 /** Каталоги, которые Dockerfile копирует в рантайм-слой. */
 function copiedDirs() {
   const dirs = new Set();
-  const pattern = /^COPY\s+(?:--from=\S+\s+)?(?:src|scripts|skills|server|local|public|contracts)\s+(\S+)/gm;
+  const pattern = /^COPY\s+(?:--from=\S+\s+)?(?:src|scripts|skills|server|local|public|contracts|lib)\s+(\S+)/gm;
   let match = pattern.exec(DOCKERFILE);
   while (match) {
     dirs.add(match[1].replace(/^\.\//, '').replace(/\/?$/, ''));

@@ -29,36 +29,23 @@
 
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { chromium } from 'playwright-core';
+import { pickBrowserPath, sweepStaleBrowserProfilesOnce, formatSweepReport } from '../lib/browser.mjs';
 
 import { createDaemon } from '../local/daemon.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
 
-const CHROME_PATHS = [
-  process.env.CHROME_PATH,
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-  '/usr/bin/google-chrome',
-  '/usr/bin/google-chrome-stable',
-  '/usr/bin/chromium',
-  '/usr/bin/chromium-browser',
-].filter(Boolean);
-
-function pickBrowserPath() {
-  for (const candidate of CHROME_PATHS) {
-    if (candidate && existsSync(candidate)) return candidate;
-  }
-  throw new Error('Не найден Chrome/Edge: задайте CHROME_PATH');
-}
+// Уборка осиротевших профилей Playwright: один раз на процесс, до запуска
+// браузера (модуль сам глотает ошибки доступа к tmpdir).
+const sweep = sweepStaleBrowserProfilesOnce();
+if (sweep) console.log(formatSweepReport(sweep));
 
 // --- аргументы -------------------------------------------------------------
 

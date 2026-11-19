@@ -19,6 +19,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { pickBrowserPath, sweepStaleBrowserProfilesOnce, formatSweepReport } from '../lib/browser.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
@@ -26,20 +27,10 @@ const PORT = Number(process.env.PROBE_PORT || 3119);
 const BASE = `http://127.0.0.1:${PORT}`;
 const EVIDENCE = path.join(ROOT, 'docs', 'evidence', 'rag');
 
-const BROWSER_PATHS = [
-  process.env.CHROME_PATH,
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-  '/usr/bin/google-chrome',
-  '/usr/bin/chromium',
-].filter(Boolean);
-
-function pickBrowserPath() {
-  for (const candidate of BROWSER_PATHS) if (existsSync(candidate)) return candidate;
-  throw new Error('Не найден Chrome/Edge — задайте CHROME_PATH');
-}
+// Уборка осиротевших профилей Playwright: один раз на процесс, до запуска
+// браузера (модуль сам глотает ошибки доступа к tmpdir).
+const sweep = sweepStaleBrowserProfilesOnce();
+if (sweep) console.log(formatSweepReport(sweep));
 
 const steps = [];
 function ok(name, detail = '') {

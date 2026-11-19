@@ -39,6 +39,10 @@ COPY skills ./skills
 # local/client.mjs на старте. Без этого каталога сервер не поднимается
 # (ERR_MODULE_NOT_FOUND, контейнер уходит в рестарт).
 COPY local ./local
+# lib/ — общий слой доступа к браузеру: server/deepdive/render/render-worker.mjs
+# импортирует lib/browser.mjs (путь к Chrome и уборка профилей Playwright).
+# Без этого каталога сервер не поднимается (ERR_MODULE_NOT_FOUND).
+COPY lib ./lib
 # data/timbre/audio/ — аудио каталога Timbre Palette (D-128, D-130). Без него
 # пресеты в рантайме есть, а звука нет: /api/timbre/presets отдаёт каталог,
 # но same-origin раздача сэмплов (server/routes/samples.js) ищет файлы в

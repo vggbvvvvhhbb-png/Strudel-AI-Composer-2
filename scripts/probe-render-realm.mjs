@@ -20,21 +20,17 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { pickBrowserPath, sweepStaleBrowserProfilesOnce, formatSweepReport } from '../lib/browser.mjs';
 import { ENGINE_VERSION_STRING } from '../src/audio/engine-version.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PROBE_PORT || 3126);
 const BASE = `http://127.0.0.1:${PORT}`;
 
-const BROWSER_PATHS = [
-  process.env.CHROME_PATH,
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-  '/usr/bin/google-chrome',
-  '/usr/bin/chromium',
-].filter(Boolean);
+// Уборка осиротевших профилей Playwright: один раз на процесс, до запуска
+// браузера (модуль сам глотает ошибки доступа к tmpdir).
+const sweep = sweepStaleBrowserProfilesOnce();
+if (sweep) console.log(formatSweepReport(sweep));
 
 const server = spawn(process.execPath, ['server/index.js'], {
   cwd: ROOT,
@@ -55,7 +51,7 @@ try {
   if (!existsSync(path.join(ROOT, 'dist', 'render-realm.html'))) throw new Error('нет сборки: npm run build');
   await waitServer();
   browser = await chromium.launch({
-    executablePath: BROWSER_PATHS.find(existsSync),
+    executablePath: pickBrowserPath(),
     args: ['--no-sandbox', '--mute-audio', '--autoplay-policy=no-user-gesture-required'],
   });
   const page = await browser.newPage();
