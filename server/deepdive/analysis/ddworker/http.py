@@ -13,6 +13,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 import traceback
 from contextlib import contextmanager
@@ -23,6 +24,11 @@ try:  # POSIX-only; на Linux-контейнере всегда есть
     import fcntl
 except ImportError:  # pragma: no cover — dev на Windows
     fcntl = None
+
+try:  # Windows-only; на POSIX его нет, там работает flock
+    import msvcrt
+except ImportError:  # pragma: no cover — POSIX
+    msvcrt = None
 
 from .chords import analyze_chords
 from .common import _num, _require_file, _ver, load_audio, rms_envelope
@@ -39,54 +45,120 @@ HEAVY_LOCK_PATH = os.environ.get("DD_HEAVY_LOCK", "/lock/heavy.lock")
 HEAVY_LOCK_WAIT_S = int(os.environ.get("DD_HEAVY_LOCK_WAIT_S", "3600"))
 
 
+def _heavy_lock_paths() -> list[Path]:
+    """Куда пробовать взять мьютекс — по порядку.
+
+    На POSIX путь по умолчанию общий с контейнером (/lock/heavy.lock).
+    На Windows такого каталога нет, а fcntl отсутствует, поэтому по умолчанию
+    берётся файл во временном каталоге пользователя. Если каталог недоступен,
+    мьютекс честно не берётся (locked=False), а не делается вид, что он есть.
+    """
+    configured = os.environ.get("DD_HEAVY_LOCK")
+    if configured:
+        return [Path(configured)]
+    if os.name == "nt":
+        return [Path(tempfile.gettempdir()) / "strudel-heavy.lock"]
+    return [Path(HEAVY_LOCK_PATH)]
+
+
+def _lock_windows(handle, deadline: float, path: Path) -> None:
+    """Эксклюзивная блокировка диапазона байтов средствами Windows.
+
+    Аналог flock: блокировка держится ядром, снимается при закрытии дескриптора
+    и при падении процесса — «залипший» мьютекс после краша невозможен.
+    """
+    handle.seek(0, os.SEEK_END)
+    if handle.tell() < 1:
+        handle.write(b"0")
+        handle.flush()
+    while True:
+        handle.seek(0)
+        try:
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            return
+        except OSError:
+            if time.time() >= deadline:
+                raise RuntimeError(
+                    f"мьютекс тяжёлых операций занят дольше {HEAVY_LOCK_WAIT_S} с ({path})"
+                )
+            time.sleep(1.0)
+
+
 @contextmanager
 def heavy_lock():
-    """Взять общий мьютекс тяжёлых операций (flock, эксклюзивно).
+    """Взять общий мьютекс тяжёлых операций (эксклюзивно).
 
     Смысл — механический: на сервере 2 ядра и 3.8 ГБ RAM, Demucs занимает
-    ~1.75 ГБ, две копии сразу — это OOM. flock держится на уровне ядра, поэтому
-    работает и между процессами, и между контейнерами (файл в общем томе).
+    ~1.75 ГБ, две копии сразу — это OOM. Блокировка держится на уровне ядра,
+    поэтому работает и между процессами, и между контейнерами (файл в общем
+    томе).
 
     Ждём, а не падаем: если мьютекс занят, ждём до HEAVY_LOCK_WAIT_S и только
     потом отдаём понятную ошибку.
+
+    Значение — признак того, что мьютекс действительно взят. На POSIX это
+    flock, на Windows — msvcrt.locking (D-156): раньше fcntl на Windows не
+    существовал, и мьютекс был no-op, то есть два тяжёлых задания могли
+    пойти одновременно.
     """
-    if fcntl is None:
+    if fcntl is None and msvcrt is None:
         yield False
         return
 
-    path = Path(HEAVY_LOCK_PATH)
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        pass
-
-    handle = open(path, "a+")
     deadline = time.time() + HEAVY_LOCK_WAIT_S
-    try:
-        while True:
+    for path in _heavy_lock_paths():
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
+        try:
+            handle = open(path, "a+b")
+        except OSError:
+            continue
+        try:
+            if fcntl is not None:
+                while True:
+                    try:
+                        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        break
+                    except OSError:
+                        if time.time() >= deadline:
+                            raise RuntimeError(
+                                f"мьютекс тяжёлых операций занят дольше {HEAVY_LOCK_WAIT_S} с ({path})"
+                            )
+                        time.sleep(1.0)
+            else:
+                _lock_windows(handle, deadline, path)
             try:
-                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break
+                # Владельца пишем в отдельный файл: на Windows запертый диапазон
+                # (байт 0) нельзя прочитать, и сам файл мьютекса остался бы
+                # нечитаемым для диагностики.
+                owner = Path(str(path) + ".owner")
+                owner.write_text(
+                    f"pid={os.getpid()} since={int(time.time())} path={path}\n",
+                    encoding="utf-8",
+                )
             except OSError:
-                if time.time() >= deadline:
-                    raise RuntimeError(
-                        f"мьютекс тяжёлых операций занят дольше {HEAVY_LOCK_WAIT_S} с ({path})"
-                    )
-                time.sleep(1.0)
-        try:
-            handle.seek(0)
-            handle.truncate()
-            handle.write(f"pid={os.getpid()} since={int(time.time())}\n")
-            handle.flush()
-        except OSError:
-            pass
-        yield True
-    finally:
-        try:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
-        except OSError:
-            pass
-        handle.close()
+                pass
+            yield True
+            return
+        finally:
+            try:
+                if fcntl is not None:
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+                else:
+                    handle.seek(0)
+                    msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            except OSError:
+                pass
+            handle.close()
+            try:
+                # Помечаем мьютекс свободным: оставшийся pid без этого вводил бы
+                # в заблуждение — выглядел бы как занятый мьютекс.
+                owner = Path(str(path) + ".owner")
+                owner.write_text(f"pid=none released={int(time.time())} path={path}\n", encoding="utf-8")
+            except OSError:
+                pass
 
 
 def health_payload() -> dict:
@@ -362,6 +434,23 @@ class DDHandler(BaseHTTPRequestHandler):
         return 404, {"error": f"неизвестный маршрут: {route}"}
 
 
+class DDServer(ThreadingHTTPServer):
+    """HTTP-сервер воркера без шумных трассировок на обычный разрыв.
+
+    Клиент (демон) закрывает соединение, когда ответ уже получен — это
+    нормальная жизнь, а не авария. Стандартный socketserver печатает на такое
+    полную трассировку, и в логе воркера она выглядит как сбой.
+    """
+
+    daemon_threads = True
+
+    def handle_error(self, request, client_address):  # noqa: D102 — как в socketserver
+        exc = sys.exc_info()[1]
+        if isinstance(exc, (ConnectionResetError, BrokenPipeError, ConnectionAbortedError)):
+            return
+        super().handle_error(request, client_address)
+
+
 def _port() -> int:
     try:
         return int(os.environ.get("DD_PORT") or 8010)
@@ -371,7 +460,7 @@ def _port() -> int:
 
 def main() -> None:
     port = _port()
-    server = ThreadingHTTPServer(("0.0.0.0", port), DDHandler)
+    server = DDServer(("0.0.0.0", port), DDHandler)
     server.daemon_threads = True
     sys.stderr.write(f"DD worker listening on :{port}\n")
     sys.stderr.flush()

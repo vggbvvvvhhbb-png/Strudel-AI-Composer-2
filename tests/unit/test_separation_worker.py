@@ -1,5 +1,6 @@
 import contextlib
 import ctypes
+import os
 import sys
 import tempfile
 import unittest
@@ -10,6 +11,42 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "server" / "deepdive" / "analysis"))
 from ddworker import http as worker
+
+
+class HeavyLockTest(unittest.TestCase):
+    """Мьютекс тяжёлых операций должен реально браться и быть эксклюзивным.
+
+    На Windows fcntl отсутствует, и раньше heavy_lock был no-op: два тяжёлых
+    задания могли выполняться одновременно (D-091 на этой платформе не работал).
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.path = Path(self.tmp.name) / "heavy.lock"
+
+    def test_lock_is_actually_taken_and_records_the_owner(self):
+        with patch.dict(os.environ, {"DD_HEAVY_LOCK": str(self.path)}):
+            with worker.heavy_lock() as locked:
+                self.assertTrue(locked)
+                owner = Path(str(self.path) + ".owner").read_text(encoding="utf-8")
+                self.assertIn(f"pid={os.getpid()}", owner)
+
+    def test_second_holder_waits_and_fails_with_a_clear_error(self):
+        with patch.dict(os.environ, {"DD_HEAVY_LOCK": str(self.path)}), patch.object(worker, "HEAVY_LOCK_WAIT_S", 1):
+            with worker.heavy_lock():
+                with self.assertRaisesRegex(RuntimeError, "занят дольше"):
+                    with worker.heavy_lock():
+                        pass
+
+    def test_lock_is_released_after_the_block(self):
+        with patch.dict(os.environ, {"DD_HEAVY_LOCK": str(self.path)}):
+            with worker.heavy_lock():
+                pass
+            with worker.heavy_lock() as locked:
+                self.assertTrue(locked)
+            owner = Path(str(self.path) + ".owner").read_text(encoding="utf-8")
+            self.assertIn("pid=none", owner)
 
 
 class SeparationResourcesTest(unittest.TestCase):
