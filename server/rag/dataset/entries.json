@@ -5218,5 +5218,169 @@
         "Не выдавай четыре коротких лупа за готовую сонату; используй схему как план дальнейшего развёртывания."
       ]
     }
+  },
+  {
+    "id": "edu-guide-edm",
+    "version": 1,
+    "title": "EDM: жанровый гайд пульса, ролей и энергии",
+    "description": "Жанровый гайд EDM: ровный пульс на четырёх долях, офф-бэт верх, бас на слабой доле и аккорд под ним. Диапазон 120–150 BPM — ориентир лейбла, а не догма.",
+    "strudel_code": "setCpm(128/4)\n$KICK: s(\"bd*4\").gain(0.85)\n$HATS: s(\"~ hh ~ hh ~ hh ~ hh\").gain(0.4)\n$BASS: note(\"f2 ~ f2 ab2 ~ c3 ~ eb3\").s(\"sawtooth\").lpf(700).gain(0.4)\n$CHORDS: chord(\"<Fm7> <Db^7> <Ab^7> <Bbm7>\").voicing().s(\"sawtooth\").gain(0.22).room(0.4)",
+    "music_tags": {
+      "genre": [
+        "edm"
+      ],
+      "tonic": "f",
+      "mode": "minor",
+      "roles": [
+        "kick",
+        "hats",
+        "bass",
+        "chords"
+      ],
+      "complexity": "basic",
+      "bpm": 128
+    },
+    "cc0_preset_ids": [],
+    "rationale": "Четыре удара кика задают пульс, хэты на офф-бэте дают движение, бас держит тонику, а аккорд под ним — гармонию. Все высоты внутри f минора, поэтому лид может свободно двигаться по ладу.",
+    "source": {
+      "origin": "own",
+      "license": "CC0-1.0"
+    },
+    "education": {
+      "direction": "arrangement",
+      "rules": [
+        "Темп учебного EDM 120–150 BPM; держи роли kick, hats, bass и chords.",
+        "Пульс держит кик на каждой доле, а верх двигают хэты на офф-бэте.",
+        "Развивай секции фильтром и активностью партий, а не сменой лада."
+      ],
+      "guide": {
+        "genre": "edm",
+        "aliases": [
+          "edm",
+          "электронная музыка",
+          "ncs",
+          "future bass",
+          "electro house"
+        ],
+        "bpm_range": [
+          120,
+          150
+        ],
+        "required_roles": [
+          "kick",
+          "hats",
+          "bass"
+        ],
+        "chord_vocabulary": [
+          "minor",
+          "power-fifth",
+          "pedal",
+          "sus"
+        ]
+      }
+    }
+  },
+  {
+    "id": "edu-mixing-sidechain-depth",
+    "version": 1,
+    "title": "Сайдчейн кика по басу: измеренная глубина приглушения",
+    "description": "Кик несёт duckorbit, бас стоит на той же орбите и приглушается. Глубина измерена рендером: duckdepth 0.3 даёт около −3.8 дБ в момент срабатывания, 0.5 — около −6.0 дБ, а 1.0 гасит бас почти до нуля (−18.0 дБ).",
+    "strudel_code": "setCpm(128/4)\n$KICK: s(\"bd*4\").duckorbit(2).duckattack(0.2).duckdepth(0.3).gain(0.9)\n$BASS: note(\"f2 ~ f2 ab2 ~\").s(\"sine\").orbit(2).gain(0.7)",
+    "music_tags": {
+      "genre": [
+        "edm",
+        "house"
+      ],
+      "tonic": "f",
+      "mode": "minor",
+      "roles": [
+        "kick",
+        "bass"
+      ],
+      "complexity": "intermediate",
+      "bpm": 128
+    },
+    "cc0_preset_ids": [],
+    "rationale": "Приглушение баса синхронно с киком освобождает место для удара. Измерение (рендер, окна 25 мс): depth 0.3 — среднее среди приглушённых окон −3.8 дБ, depth 0.5 — −6.0 дБ, depth 1.0 — −18.0 дБ; при duckattack 0.001 качки нет вовсе (−1.4 дБ).",
+    "source": {
+      "origin": "own",
+      "license": "CC0-1.0"
+    },
+    "education": {
+      "direction": "mixing",
+      "rules": [
+        "Кик ставит duckorbit(N), а бас встаёт на ту же орбиту .orbit(N) — без жертвы приглушать нечего.",
+        "Для «качки» уровня 3–6 дБ бери duckdepth 0.3–0.5: измерено −3.8 и −6.0 дБ в момент срабатывания.",
+        "duckdepth 1.0 — это не «сильно», это почти полная тишина баса: измерено −18.0 дБ среди приглушённых окон.",
+        "duckattack 0.1–0.2 с даёт слышимую качку, 0.001 с — нет: разница 18 дБ против 1.4 дБ."
+      ]
+    }
+  },
+  {
+    "id": "edu-sound-design-supersaw-lead",
+    "version": 1,
+    "title": "Саунд-дизайн: лид на supersaw с расстройкой голосов",
+    "description": "Лид на расстроенных пилах: синтезатор supersaw, пять голосов с малой расстройкой и разбросом по стерео. Замерено: имя supersaw не экспорт движка, но .s(\"supersaw\") звучит, а unison, detune и spread доступны.",
+    "strudel_code": "setCpm(128/4)\n$LEAD: note(\"f4 ~ ab4 c5 ~\").s(\"supersaw\").unison(5).detune(0.15).spread(0.4).gain(0.3).lpf(3000)",
+    "music_tags": {
+      "genre": [
+        "edm"
+      ],
+      "tonic": "f",
+      "mode": "minor",
+      "roles": [
+        "lead"
+      ],
+      "complexity": "intermediate",
+      "bpm": 128
+    },
+    "cc0_preset_ids": [],
+    "rationale": "Пять голосов пилы с малой расстройкой дают движение без потери основной высоты, а стерео-разброс отделяет лид от микса. Замер: supersaw звучит (LUFS −25.69 при одиночной ноте), unison/detune/spread исполняются без ошибок.",
+    "source": {
+      "origin": "own",
+      "license": "CC0-1.0"
+    },
+    "education": {
+      "direction": "sound-design",
+      "rules": [
+        "Лид-«суперсоус» собирается из .s(\"supersaw\") плюс unison(4…6), detune(0.1…0.2) и spread(0.3…0.6).",
+        "Фильтр на лиде держи открытым (lpf 2500–4000): звук должен читаться, а не прятаться.",
+        "В Strudel 1.3.0 supersaw — имя синтезатора, а не функция движка: .s(\"supersaw\"), не supersaw()."
+      ]
+    }
+  },
+  {
+    "id": "edu-sound-design-sub-bass",
+    "version": 1,
+    "title": "Саунд-дизайн: саб-бас чистой синусоидой",
+    "description": "Саб-бас — чистая синусоида моно, без расстройки: она держит низ и не спорит с киком по ширине. Короткий спад после атаки даёт форму «саб-кика».",
+    "strudel_code": "setCpm(128/4)\n$SUB: note(\"f1 ~ f1 ~\").s(\"sine\").gain(0.8).decay(0.2)",
+    "music_tags": {
+      "genre": [
+        "edm",
+        "house"
+      ],
+      "tonic": "f",
+      "mode": "minor",
+      "roles": [
+        "sub"
+      ],
+      "complexity": "basic",
+      "bpm": 128
+    },
+    "cc0_preset_ids": [],
+    "rationale": "Синусоида без detune не размывает низ и не слышна как «грязь» на маленьких системах. Спад 0.2 с отделяет саб от баса-пилы, который берёт на себя движение.",
+    "source": {
+      "origin": "own",
+      "license": "CC0-1.0"
+    },
+    "education": {
+      "direction": "sound-design",
+      "rules": [
+        "Саб-бас — чистая синусоида моно, без detune и без unison.",
+        "Ставь саб ниже баса-пилы примерно на октаву: синусоида должна быть фундаментом, а не параллельным голосом.",
+        "Убирай саб на брейках и вступлениях — его место возвращается на дропе."
+      ]
+    }
   }
 ]
