@@ -107,6 +107,8 @@ const FUNCTION_PROBE = {
   setCpm: part('note("c4").setCpm(120 / 4)'),
   setCps: part('note("c4").setCps(0.5)'),
   supersaw: part('s("supersaw")'),
+  time: part('note("c4").lpf(time.range(200, 4000))'),
+  saw: part('note("c4").lpf(saw.range(200, 4000))'),
   detunepower: part('note("c4").detunepower(0.3)'),
   duckOrBit: part('s("bd*4").duckOrBit(2)'),
   duckOrbit: part('s("bd*4").duckOrBit(2)'),
@@ -191,6 +193,32 @@ const rootNotesProbe = await measure(part('chord("F^7").rootNotes()'));
 // Сигнал без .seg — отдельная колонка: значение читается один раз на ноту.
 const signalWithoutSeg = await measure(part('note("c4").lpf(sine.range(200, 2000))'));
 const signalWithSeg = await measure(part('note("c4").lpf(sine.range(200, 2000)).seg(16)'));
+
+// Рампы среза: монотонна ли огибающая фильтра. Измерение значений cutoff по
+// событиям (E-042): sine идёт вверх И обратно, time — только вверх.
+async function measureRamp(code) {
+  const run = await runStrudel(part(code), { cycles: 4 });
+  if (!run.ok) return { ok: false, error: String(run.error || '').split('\n')[0], cutoffs: [], turns: 0 };
+  const cutoffs = (run.parts.T || [])
+    .map((hap) => (hap.value && typeof hap.value === 'object' ? hap.value.cutoff : null))
+    .filter((value) => typeof value === 'number')
+    .map((value) => Math.round(value));
+  let turns = 0;
+  for (let i = 2; i < cutoffs.length; i += 1) {
+    const prev = cutoffs[i - 1] - cutoffs[i - 2];
+    const cur = cutoffs[i] - cutoffs[i - 1];
+    if (prev !== 0 && cur !== 0 && Math.sign(prev) !== Math.sign(cur)) turns += 1;
+  }
+  return { ok: true, cutoffs, turns };
+}
+
+const ramps = {
+  sine: await measureRamp('note("c2").lpf(sine.range(200, 4000))'),
+  sineSlow: await measureRamp('note("c2").lpf(sine.slow(8).range(200, 4000))'),
+  time: await measureRamp('note("c2").lpf(time.range(200, 4000))'),
+  timeSlow: await measureRamp('note("c2").lpf(time.slow(8).range(200, 4000))'),
+  sawSlow: await measureRamp('note("c2").lpf(saw.slow(8).range(200, 4000))'),
+};
 
 // Темп: control-функции регистрируются initStrudel в браузере, в Node их нет.
 // Проверяем, что это именно так: initStrudel требует AudioContext.
@@ -287,6 +315,7 @@ const facts = {
   rootNotesProbe,
   signalWithoutSeg,
   signalWithSeg,
+  ramps,
   tempo,
   tempoRender,
   sounds,
@@ -423,7 +452,39 @@ function renderMarkdown(f) {
   lines.push(`- \`note("c4").lpf(sine.range(200,2000))\` — ${f.signalWithoutSeg.events} событие(й): значение сигнала читается один раз на ноту, фильтр не «открывается».`);
   lines.push(`- то же с \`.seg(16)\` — ${f.signalWithSeg.events} событий: непрерывная огибающая.`);
   lines.push('');
-  lines.push('## 7. Как перепроверить');
+  lines.push('## 7. Рампы среза: какой сигнал открывает фильтр, а какой колеблется');
+  lines.push('');
+  lines.push('Значения `cutoff` по событиям, 4 такта. «Смен направления» — сколько раз ряд');
+  lines.push('значений меняет знак приращения: монотонный рамп даёт 0.');
+  lines.push('');
+  lines.push('| Вариант | срез, Гц | смен направления | вывод |');
+  lines.push('|---|---|---|---|');
+  for (const [key, label] of [
+    ['sine', '`sine.range(200,4000)`'],
+    ['sineSlow', '`sine.slow(8).range(200,4000)`'],
+    ['time', '`time.range(200,4000)`'],
+    ['timeSlow', '`time.slow(8).range(200,4000)`'],
+    ['sawSlow', '`saw.slow(8).range(200,4000)`'],
+  ]) {
+    const ramp = f.ramps?.[key];
+    if (!ramp || !ramp.ok) {
+      lines.push(`| ${label} | — | — | ошибка: ${ramp?.error ?? 'не измерено'} |`);
+      continue;
+    }
+    const beyond = ramp.cutoffs.some((value) => value > 4000 || value < 200);
+    let verdict = ramp.turns === 0 ? 'монотонный рамп' : `колебание (${ramp.turns} смены)`;
+    if (beyond) verdict += ', уходит за диапазон';
+    lines.push(`| ${label} | ${ramp.cutoffs.slice(0, 6).join(' → ')} … | ${ramp.turns} | ${verdict} |`);
+  }
+  lines.push('');
+  lines.push('- **Вывод:** быстрый `sine.range` — колебание среза, фильтр не открывается.');
+  lines.push('  `sine.slow(N)` монотонен только внутри окна короче периода: за N тактов');
+  lines.push('  синус проходит полный период и возвращается назад.');
+  lines.push('  `time.range` без `.slow()` монотонен, но уходит за заданный диапазон.');
+  lines.push('  **Рабочая форма секционного свипа — `time.slow(N).range(от, до)`:**');
+  lines.push('  монотонно и в границах диапазона (D-160).');
+  lines.push('');
+  lines.push('## 8. Как перепроверить');
   lines.push('');
   lines.push('```');
   lines.push('npm run probe:facts            # полный прогон (со звучанием)');
