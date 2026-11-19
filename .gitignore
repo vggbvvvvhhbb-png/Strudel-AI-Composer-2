@@ -36,6 +36,9 @@ server/data/taste-model.json
 server/data/taste-report.json
 # Временные рабочие файлы сессий (скрипты, очереди, дампы) — не в git.
 .scratch/
+# Перенос TEMP/TMP сюда — когда системный диск заполнен (E-041), ворота
+# падают на ENOSPC. Здесь только временные файлы запусков — в git не нужны.
+.tmp/
 __pycache__/
 *.pyc
 
