@@ -254,6 +254,16 @@ describe('P5 registry capability gate', () => {
     expect(mocks.readWav).not.toHaveBeenCalled();
   });
 
+  it('probeAnalysisWorker reads Python version from the worker HTTP contract', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ versions: { python: '3.12.16' }, models: { demucs_available: true, separation: 'htdemucs' } }),
+    }));
+    expect(await probeAnalysisWorker()).toMatchObject({
+      available: true, details: { python: '3.12.16', demucs_available: true, separation_model: 'htdemucs' },
+    });
+  });
+
   it('probeAnalysisWorker reports demucs unavailable without a live Python worker', async () => {
     const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ models: { demucs_available: false } }) });
     vi.stubGlobal('fetch', fetch);
