@@ -9,8 +9,11 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import http from 'node:http';
+import { once } from 'node:events';
 
 import { runDeepDive } from '../../server/deepdive/pipeline.js';
+import { InsufficientMemoryError } from '../../server/deepdive/analysis/client.js';
 import { encodeWav } from '../../src/core/wav.js';
 
 const SR = 44100;
@@ -211,6 +214,86 @@ describe('пайплайн разбора', () => {
     expect(result.stems.drums.available).toBe(false);
     // Код-двойник всё равно построен.
     expect(result.code_twin.code.length).toBeGreaterThan(0);
+  });
+
+  it('отказ по памяти — терминальный статус с числами, а не ноль и не ретрай', async () => {
+    const jobDir = path.join(workspace, 'job-3b');
+    let calls = 0;
+    const deps = makeDeps({
+      separate: async () => {
+        calls += 1;
+        throw new InsufficientMemoryError('Не хватило памяти для разделения на стемы', {
+          kind: 'commit_limit',
+          measured: { available_commit_mb: 1180, available_physical_mb: 2032 },
+          attempts: [
+            { step: 'baseline', ok: false, kind: 'commit_limit', error: 'код 1: not enough memory' },
+            { step: 'segment5_overlap', ok: false, kind: 'commit_limit', error: 'код 1: not enough memory' },
+          ],
+        });
+      },
+    });
+    const { result } = await runDeepDive({
+      workspaceDir: jobDir,
+      inputPath,
+      fileName: 'test.wav',
+      separate: true,
+      deps,
+    });
+
+    // Разбор не упал и не превратился в «нулевые» метрики.
+    expect(calls).toBe(1);
+    expect(result.code_twin.code.length).toBeGreaterThan(0);
+    expect(result.stems.drums.available).toBe(false);
+    expect(result.stem_descriptors.drums).toBeUndefined();
+
+    const failure = result.errors.find((error) => error.status === 'insufficient_memory');
+    expect(failure).toBeDefined();
+    expect(failure.kind).toBe('commit_limit');
+    expect(failure.fatal).toBe(false);
+    // Числа — из измерения, а не выдуманные.
+    expect(failure.measured.available_commit_mb).toBe(1180);
+    expect(failure.attempts).toHaveLength(2);
+    // Человеческий текст объясняет, что произошло и что делать.
+    expect(failure.message).toMatch(/не состоялось/i);
+    expect(failure.message).toMatch(/1180 МБ/);
+    expect(failure.message).toMatch(/подкачк/i);
+  });
+
+  it('статус отказа по памяти измеряется клиентом воркера, а не подменяется ошибкой', async () => {
+    const kind = 'cuda_oom';
+    const attempts = [{ step: 'baseline', ok: false, kind, error: 'CUDA out of memory' }];
+    const measured = { available_commit_mb: 640 };
+    const body = JSON.stringify({
+      status: 'insufficient_memory',
+      kind,
+      message: 'Не хватило памяти',
+      attempts,
+      measured,
+    });
+    // Клиент ходит через node:http — значит нужен живой сервер, а не мок fetch.
+    const server = http.createServer((_req, res) => {
+      res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
+      res.end(body);
+    });
+    server.listen(0, '127.0.0.1');
+    await once(server, 'listening');
+    const baseUrl = `http://127.0.0.1:${server.address().port}`;
+    try {
+      const { separateStems } = await import('../../server/deepdive/analysis/client.js');
+      let caught = null;
+      try {
+        await separateStems('a.wav', 'out', { baseUrl });
+      } catch (err) {
+        caught = err;
+      }
+      expect(caught).toBeInstanceOf(InsufficientMemoryError);
+      expect(caught.status).toBe('insufficient_memory');
+      expect(caught.kind).toBe(kind);
+      expect(caught.attempts).toHaveLength(1);
+      expect(caught.measured.available_commit_mb).toBe(640);
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
   });
 
   it('этапы отчёта идут в правильном порядке', async () => {

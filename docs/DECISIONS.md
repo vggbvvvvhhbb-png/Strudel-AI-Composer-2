@@ -4710,3 +4710,72 @@ gate:b сравнивает signed PCM16 отсчёты, а не байты: п�
 «не работает», измерением не подтвердилось — работает; запись оставлена
 как есть до отдельного решения по промптам (смена версии промпта трогает
 `check:prompts`), а расхождение зафиксировано в `docs/EXPERIMENTS.md`.
+
+---
+
+### D-158. Отказ по памяти — терминальный статус с числами, а не ошибка HTTP
+
+**Контекст.** В репозитории был только предохранитель `_check_separation_memory`
+(порог 3072 МБ свободного commit memory, D-153) и мьютекс `heavy_lock` (D-156).
+Классификатора отказов по памяти, лестницы деградации, статуса `insufficient_memory`
+и настройки аллокатора не было: `git grep insufficient_memory` — 0 совпадений.
+При нехватке памяти воркер падал с невнятным `RuntimeError`, клиент получал 500,
+а разбор либо прерывался, либо превращал метрики в нули.
+
+**Решение.**
+1. **Классификатор отказов** (`server/deepdive/analysis/ddworker/memory.py`, чистая функция без
+   импорта torch): `classify_memory_error(exc)` различает `cuda_oom` / `host_alloc` /
+   `commit_limit` по ТЕКСТУ, а не только по типу: CPU-аллокатор PyTorch поднимает
+   обычный `RuntimeError` с текстом «DefaultCPUAllocator: not enough memory», и
+   `except (OutOfMemoryError, RuntimeError)` поймал бы вместе с настоящими сбоями движка.
+   `classify_failure(returncode, text)` ловит нативное падение по коду выхода:
+   137 / -9 (SIGKILL), 3221225477 (0xC0000005), 3221226505 (0xC0000409) → `worker_crashed`.
+2. **Лестница деградации** (`degradation_ladder`): baseline → `--shifts 0` → `--segment 7`
+   → `--segment 5 --overlap 0.1` → `PYTORCH_NO_CUDA_MEMORY_CACHING=1` → CPU (только если
+   свободного commit хватает). `-j > 0` не используется: он умножает RAM и число процессов.
+   `--two-stems` не экономит память.
+3. **Настройка аллокатора — в окружении ПОТОМКА.** torch в процессе воркера не
+   импортируется: Demucs запускается дочерним процессом, а `PYTORCH_CUDA_ALLOC_CONF`
+   читается до инициализации CUDA, то есть только в свежем процессе. Windows и Linux
+   получают разные наборы опций (см. «Измерения»). Значение владельца не перезаписывается.
+4. **Терминальный статус вместо ошибки HTTP.** Ответ воркера получает
+   `status: 'insufficient_memory'`, `kind`, `attempts[]`, `measured`. Клиент
+   (`server/deepdive/analysis/client.js`) бросает `InsufficientMemoryError`, пайплайн
+   (`server/deepdive/pipeline/stems.js`) кладёт в `errors[]` запись с
+   `status/kind/measured/attempts` и продолжает разбор БЕЗ стемов. Разбор не падает,
+   но и не притворяется, что слои измерены.
+5. **Нативный краш лестницу НЕ проходит** (`worker_crashed`): это сбой процесса, а не
+   нехватка памяти. Полный native stderr сохраняется, код выхода виден в сообщении —
+   гарантия D-153 не сломана.
+6. **Контракт расширен** (`contracts/deep-dive.schema.json`): `errors[]` получил
+   `status` (enum `insufficient_memory`), `kind` (`cuda_oom` / `host_alloc` /
+   `commit_limit` / `worker_crashed`), `measured`, `attempts[]`.
+
+**Измерения (19.11.2026, Windows, `F:\strudel-env`, torch 2.5.1+cu121).**
+- `python -m demucs --help`: доступны `--shifts`, `--segment`, `--overlap`,
+  `--no-split`, `-d DEVICE`, `-j JOBS` — лестница опирается на реальные опции CLI.
+- `PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:256,garbage_collection_threshold:0.8` +
+  `torch.zeros(512,512,device='cuda')` → `cuda alloc ok`, предупреждений нет.
+- `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` → `UserWarning: expandable_segments
+  not supported on this platform` (аллокация проходит, опция игнорируется) — поэтому
+  `expandable_segments` в win-ветке НЕ используется.
+- Регрессы Python: `python -m unittest discover -s tests/unit -p 'test_*.py'` →
+  `Ran 33 tests … OK` (было 28: +5 классов регрессий).
+- Регрессы JS: `tests/unit/deep-dive-pipeline.test.js` → 8/8 OK за 2784 мс
+  (терминальный статус без ретраев и без нулей; клиент воркера — через живой
+  `node:http`-сервер, а не мок `fetch`).
+- Пробел зафиксирован измерением: `git grep insufficient_memory` → 0 совпадений до правки.
+
+**Альтернативы.**
+- «Просто добавить try/except и вернуть 500» — отвергнуто: теряется различие между
+  нехваткой памяти, сбоем процесса и прочими ошибками; разбор молча деградирует.
+- «Один повтор с `--segment 7`» — отвергнуто: один размер сегмента не покрывает
+  разные причины (CUDA OOM против commit limit).
+- «Перезапустить Demucs в текущем процессе с `torch.set_per_process_memory_fraction`» —
+  отвергнуто: torch в воркере не импортируется, Demucs запускается как CLI.
+- «Молча подставлять нули за неразделенные слои» — отвергнуто (D-102): «нет данных» ≠ 0.
+
+**Следствия.** Разбор при нехватке памяти теперь завершается отчётом с числами
+(сколько свободно, что кончилось, какие режимы уже пробовали), а не 500-ошибкой.
+UI показывает блок «🧯 Что не получилось измерить». Порог commit memory 3072 МБ
+сохранён как измеренный (D-153, E-031), но переопределяется `DEMUCS_MIN_COMMIT_MB`.

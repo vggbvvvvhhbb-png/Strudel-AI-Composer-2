@@ -31,6 +31,33 @@ export class WorkerError extends Error {
   }
 }
 
+/**
+ * Терминальный отказ по памяти (D-158).
+ *
+ * ЗАЧЕМ ОТДЕЛЬНЫЙ КЛАСС. «Не хватило памяти» — не ошибка сети и не сбой
+ * движка: это измеренный факт о машине. Клиентская цепочка не должна его
+ * ретраить (повтор не сделает памяти больше) и не должна превращать в ноль
+ * («метрик нет» ≠ «метрика 0»). Поэтому у отказа есть собственный класс с
+ * числами: kind (что именно кончилось), measured (сколько было свободно),
+ * attempts (какие экономные режимы уже пробовали).
+ */
+export class InsufficientMemoryError extends WorkerError {
+  constructor(message, { stage = 'separate', kind = null, attempts = [], measured = null } = {}) {
+    super(message, { stage });
+    this.name = 'InsufficientMemoryError';
+    this.status = 'insufficient_memory';
+    this.kind = kind;
+    this.attempts = Array.isArray(attempts) ? attempts : [];
+    this.measured = measured ?? null;
+  }
+}
+
+/** Терминальный отказ по памяти? (безопасная проверка для чужих реализаций ошибки). */
+export function isInsufficientMemory(err) {
+  return Boolean(err && (err.status === 'insufficient_memory' || err.name === 'InsufficientMemoryError'));
+}
+
+
 function workerUrl(pathname, baseUrl = DEFAULT_BASE_URL) {
   return `${baseUrl.replace(/\/+$/, '')}${pathname}`;
 }
@@ -189,9 +216,22 @@ export async function separateStems(path, outDir, options = {}) {
     timeoutMs: options.timeoutMs ?? SEPARATE_TIMEOUT_MS,
     stage: options.stage || 'separate',
   });
+  // Терминальный отказ по памяти: воркер ответил штатно, но разделения не было.
+  // Это НЕ ошибка запроса и НЕ успех: пробрасываем отдельным классом, чтобы
+  // цепочка не ретраила и не писала нули вместо отсутствующих метрик.
+  if (payload?.status === 'insufficient_memory') {
+    throw new InsufficientMemoryError(payload.message || 'Не хватило памяти для разделения на стемы', {
+      stage: options.stage || 'separate',
+      kind: payload.kind ?? null,
+      attempts: payload.attempts ?? [],
+      measured: payload.measured ?? null,
+    });
+  }
   return {
     stems: payload?.stems ?? {},
     seconds: payload?.seconds ?? null,
     model: payload?.model ?? options.model ?? 'htdemucs',
+    attempts: payload?.attempts ?? [],
+    degraded: Boolean(payload?.degraded),
   };
 }

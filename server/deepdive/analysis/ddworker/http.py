@@ -34,6 +34,13 @@ from .chords import analyze_chords
 from .common import _num, _require_file, _ver, load_audio, rms_envelope
 from .key import analyze_key
 from .loudness import analyze_loudness
+from .memory import (
+    allocator_env,
+    available_memory,
+    classify_failure,
+    classify_memory_error,
+    degradation_ladder,
+)
 from .pitch import analyze_bass_pitch
 from .stems import _activity_by_section, _energy_curve
 from .structure import analyze_structure
@@ -272,6 +279,18 @@ def _venv_python() -> str:
 
 
 def _check_separation_memory() -> None:
+    """Предохранитель перед Demucs: нехватка commit memory — явный отказ.
+
+    ИЗМЕРЕНИЕ (D-153, E-031): на машине владельца свободный commit падал до
+    3352 МБ во время сепарации, и нативный краш случался при 12.22 МБ
+    доступного commit при 2032 МБ свободной физической RAM. Поэтому меряется
+    именно commit (ullAvailPageFile), а не «свободная RAM».
+
+    Порог 3072 МБ — измеренный и консервативный (D-153). Его можно переопределить
+    переменной DEMUCS_MIN_COMMIT_MB, но значение по умолчанию не «выдумано»:
+    оно опирается на замеры E-031. Пробел памяти приходит в ответе с числами
+    (available_commit_mb), а не словами.
+    """
     if os.name != "nt":
         return
     import ctypes
@@ -291,11 +310,49 @@ def _check_separation_memory() -> None:
         raise RuntimeError("не удалось проверить запас commit memory Windows перед Demucs")
     available_mb = status.available_commit // (1024 * 1024)
     # Свободная физическая RAM не отражает оставшийся лимит выделения памяти Windows.
-    if available_mb < 3072:
+    threshold_mb = int(os.environ.get("DEMUCS_MIN_COMMIT_MB") or 3072)
+    if available_mb < threshold_mb:
         raise RuntimeError(
-            f"Demucs не запущен: запас commit memory Windows {available_mb} МБ, нужно не менее 3072 МБ. "
+            f"Demucs не запущен: запас commit memory Windows {available_mb} МБ, нужно не менее {threshold_mb} МБ. "
             "Закройте ненужные приложения и повторите задачу; наличие CUDA не гарантирует запас памяти."
         )
+
+
+def _memory_status_payload(kind: str, message: str, attempts: list[dict], measured: dict | None) -> dict:
+    """Терминальный ответ «не хватило памяти».
+
+    Формат зафиксирован D-158: status, kind, message, attempts[], measured,
+    degraded. Это НЕ ошибка HTTP и НЕ успех: разделения не состоялось, но
+    разбор продолжается без стемов, а причина и числа видны клиенту.
+    """
+    return {
+        "status": "insufficient_memory",
+        "kind": kind,
+        "message": message,
+        "attempts": attempts,
+        "measured": measured or {"available_commit_mb": None, "reason": "нет данных"},
+        "degraded": True,
+    }
+
+
+class WorkerCrashError(RuntimeError):
+    """Нативное падение дочернего процесса (D-153, D-158).
+
+    Остаётся RuntimeError: полный native stderr сохраняется, а код выхода
+    виден в сообщении — эта гарантия проверяется регрессией с 19.11.2026.
+    Дополнительно несёт kind='worker_crashed', чтобы клиентская цепочка
+    отличала нативный краш от прочих ошибок.
+
+    Лестницу деградации краш НЕ проходит: он не «не хватило памяти» в смысле
+    OOM, это сбой процесса. Повторять его пять раз с разными segment — трата
+    минут без диагностической ценности.
+    """
+
+    def __init__(self, message: str, *, kind: str = "worker_crashed") -> None:
+        super().__init__(message)
+        self.kind = kind
+
+
 
 
 def handle_separate(body: dict) -> dict:
@@ -308,36 +365,98 @@ def handle_separate(body: dict) -> dict:
     out_path.mkdir(parents=True, exist_ok=True)
 
     python = _venv_python()
-    command = [python, "-X", "faulthandler", "-m", "demucs", "-n", model, "-o", str(out_path), path]
     started = time.time()
-    try:
-        # Мьютекс держим ВОКРУГ запуска Demucs: ровно то время, когда память
-        # занята по-настоящему.
-        with heavy_lock() as locked:
-            _check_separation_memory()
-            if locked:
-                sys.stderr.write(
-                    json.dumps(
-                        {"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "event": "heavy-lock-acquired",
-                         "model": model, "path": str(path)},
-                        ensure_ascii=False,
-                    ) + "\n"
-                )
-                sys.stderr.flush()
-            completed = subprocess.run(
-                command, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                env={**os.environ, "PYTHONIOENCODING": "utf-8"}, timeout=7200, check=False
+    attempts: list[dict] = []
+    measured = available_memory()
+
+    # CPU-режим разрешён, только если свободного commit хватает: иначе мы бы
+    # просто перенесли тот же отказ по памяти в другой оболочку.
+    allow_cpu = bool(
+        measured.get("available_commit_mb") is not None
+        and measured["available_commit_mb"] >= (int(os.environ.get("DEMUCS_MIN_COMMIT_MB") or 3072))
+    )
+    ladder = degradation_ladder(model=model, allow_cpu=allow_cpu)
+
+    with heavy_lock() as locked:
+        _check_separation_memory()
+        if locked:
+            sys.stderr.write(
+                json.dumps(
+                    {"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "event": "heavy-lock-acquired",
+                     "model": model, "path": str(path)},
+                    ensure_ascii=False,
+                ) + "\n"
             )
-    except FileNotFoundError as exc:
-        raise RuntimeError(f"не найден интерпретатор для demucs: {python}") from exc
-    except subprocess.TimeoutExpired as exc:
-        raise RuntimeError("demucs не уложился в таймаут 7200 с") from exc
+            sys.stderr.flush()
 
-    (out_path / "demucs.stderr.log").write_text(completed.stderr or "", encoding="utf-8")
-    if completed.returncode != 0:
-        tail = (completed.stderr or completed.stdout or "")[-800:]
-        raise RuntimeError(f"demucs завершился с кодом {completed.returncode}: {tail}; полный stderr: demucs.stderr.log в out_dir")
+        for attempt in ladder:
+            env = allocator_env({**os.environ, **attempt["env"], "PYTHONIOENCODING": "utf-8"})
+            command = [python, "-X", "faulthandler", "-m", "demucs", *attempt["args"], "-o", str(out_path), path]
+            try:
+                completed = subprocess.run(
+                    command, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                    env=env, timeout=7200, check=False
+                )
+            except FileNotFoundError as exc:
+                raise RuntimeError(f"не найден интерпретатор для demucs: {python}") from exc
+            except subprocess.TimeoutExpired as exc:
+                raise RuntimeError("demucs не уложился в таймаут 7200 с") from exc
 
+            if completed.returncode == 0:
+                (out_path / "demucs.stderr.log").write_text(completed.stderr or "", encoding="utf-8")
+                attempts.append({"step": attempt["step"], "params": attempt["args"], "ok": True, "error": None})
+                found = _collect_stems(out_path)
+                if not found:
+                    raise RuntimeError("demucs отработал, но файлы стемов не найдены в out_dir")
+                return {
+                    "stems": found,
+                    "seconds": _num(time.time() - started, 2),
+                    "model": model,
+                    "attempts": attempts,
+                    "degraded": attempt["degraded"],
+                    "measured": measured,
+                }
+
+            # Отказ: пишем полный stderr (как и раньше) и разбираем причину.
+            (out_path / "demucs.stderr.log").write_text(completed.stderr or "", encoding="utf-8")
+            tail = (completed.stderr or completed.stdout or "")[-800:]
+            kind = classify_failure(completed.returncode, completed.stderr or completed.stdout or "")
+            attempts.append({
+                "step": attempt["step"],
+                "params": attempt["args"],
+                "ok": False,
+                "error": f"код {completed.returncode}: {tail}",
+                "kind": kind,
+            })
+            if kind == "worker_crashed":
+                # Нативный краш: полный stderr уже сохранён, код выхода виден.
+                # Это сбой процесса, а не нехватка памяти — лестница тут не поможет.
+                raise WorkerCrashError(
+                    f"demucs завершился с кодом {completed.returncode}: {tail}; полный stderr: demucs.stderr.log в out_dir",
+                    kind=kind,
+                )
+            if kind is None:
+                # Это не отказ по памяти — дальше идти незачем: причина другая.
+                raise RuntimeError(
+                    f"demucs завершился с кодом {completed.returncode}: {tail}; полный stderr: demucs.stderr.log в out_dir"
+                )
+            # Отказ по памяти: пробуем следующую ступень лестницы.
+
+    # Лестница исчерпана — честный терминальный отказ с числами и попытками.
+    last = attempts[-1] if attempts else {}
+    return _memory_status_payload(
+        kind=last.get("kind") or "host_alloc",
+        message=(
+            "Не хватило памяти для разделения: все экономные режимы Demucs исчерпаны "
+            f"(последняя попытка — {last.get('step', '—')})."
+        ),
+        attempts=attempts,
+        measured=measured,
+    )
+
+
+def _collect_stems(out_path: Path) -> dict:
+    """Найти файлы стемов в каталоге результата (последняя версия каждого слоя)."""
     found: dict = {}
     for stem in ("drums", "bass", "vocals", "other"):
         matches = sorted(
@@ -347,15 +466,8 @@ def handle_separate(body: dict) -> dict:
         )
         if matches:
             found[stem] = str(matches[0].resolve())
+    return found
 
-    if not found:
-        raise RuntimeError("demucs отработал, но файлы стемов не найдены в out_dir")
-
-    return {
-        "stems": found,
-        "seconds": _num(time.time() - started, 2),
-        "model": model,
-    }
 
 
 # --------------------------------------------------------------------------- #

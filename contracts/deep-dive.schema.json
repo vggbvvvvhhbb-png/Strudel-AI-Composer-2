@@ -592,7 +592,36 @@
         "properties": {
           "stage": { "type": "string" },
           "message": { "type": "string" },
-          "fatal": { "type": "boolean" }
+          "fatal": { "type": "boolean" },
+          "status": {
+            "type": "string",
+            "enum": ["insufficient_memory"],
+            "description": "Терминальный отказ по памяти (D-158). Не ошибка запроса: разбор продолжается без этих данных, но причина и числа известны."
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["cuda_oom", "host_alloc", "commit_limit", "worker_crashed"],
+            "description": "Что именно кончилось: видеопамять GPU, оперативная память, лимит commit Windows или нативный краш процесса."
+          },
+          "measured": {
+            "type": "object",
+            "description": "Числа на момент отказа. Нет данных — null с причиной, а не 0 (D-102).",
+            "additionalProperties": { "type": ["number", "string", "null"] }
+          },
+          "attempts": {
+            "type": "array",
+            "description": "Попытки деградации: какие экономные режимы Demucs уже пробовали и с каким исходом.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "step": { "type": "string" },
+                "ok": { "type": "boolean" },
+                "kind": { "type": ["string", "null"] },
+                "error": { "type": ["string", "null"] }
+              }
+            }
+          }
         }
       }
     }
