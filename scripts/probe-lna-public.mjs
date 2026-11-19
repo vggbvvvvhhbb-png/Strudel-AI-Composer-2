@@ -89,6 +89,8 @@ let browser = null;
 let pageResult = null;
 let navigationError = null;
 
+// Цель-сервер закрывается в любом случае: иначе зонд оставит висящий порт
+// и следующий запуск упадёт с EADDRINUSE.
 try {
   const executablePath = pickBrowserPath();
   browser = await chromium.launch({
@@ -124,11 +126,8 @@ try {
       pageResult = `результат не получен: ${String(err?.message || err)}`;
     }
   }
-} finally {
-  if (browser) await browser.close().catch(() => {});
-}
 
-// --- разбор ----------------------------------------------------------------
+  // --- разбор ----------------------------------------------------------------
 const cases = hits.map((hit) => ({ case: hit.case, reached: true, at: hit.ts }));
 const seen = new Set(hits.map((hit) => hit.case));
 const expected = ['plain', 'local', 'localhost', 'nocors'];
@@ -169,5 +168,7 @@ console.log(`неудачных запросов (requestfailed): ${failedReques
 for (const failed of failedRequests.slice(0, 8)) console.log(`  ${failed.url} -> ${failed.failure}`);
 console.log('');
 console.log(`отчёт: ${path.relative(ROOT, outPath)}`);
-
-await new Promise((resolve) => target.close(resolve));
+} finally {
+  if (browser) await browser.close().catch(() => {});
+  await new Promise((resolve) => target.close(resolve));
+}
