@@ -258,7 +258,7 @@ function renderAudio(audio, rejected) {
   const lines = [
     `Громкость: ${fmt(report.lufsI)} LUFS-I (коридор −16…−12)`,
     `True peak: ${fmt(report.truePeakDbtp)} dBTP (потолок −1.0)`,
-    `Пик: ${fmt(report.peakDbfs)} dBFS · клиппинг: ${report.clipCount ?? 0}`,
+    `Пик: ${fmt(report.peakDbfs)} dBFS · клиппинг: ${report.clipCount ?? '—'}`,
     `Сжатость: ${fmt(report.crestDb)} дБ`,
     report.repeatability
       ? `Повторяемость: Δ ${fmt(report.repeatability.lufsDeltaDb)} LU · ${
@@ -341,7 +341,7 @@ function renderCriteria(criteria) {
 function renderIssues(issues) {
   els.issues.replaceChildren();
   if (!issues.length) {
-    els.issues.appendChild(note('Серьёзных замечаний нет ✓'));
+    els.issues.appendChild(note('По коду серьёзных замечаний нет; замечания к звуку — выше.'));
     return;
   }
   for (const issue of issues) {
