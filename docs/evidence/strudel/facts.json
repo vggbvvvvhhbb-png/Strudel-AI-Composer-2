@@ -1,0 +1,1097 @@
+{
+  "measuredAt": "2026-11-19T01:48:12.012Z",
+  "package": "@strudel/web",
+  "version": "1.3.0",
+  "api": {
+    "exports": 1017,
+    "patternMethods": 1173
+  },
+  "functions": [
+    {
+      "name": "duckorbit",
+      "export": false,
+      "method": true,
+      "runs": true,
+      "events": 4,
+      "error": null
+    },
+    {
+      "name": "duck",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 4,
+      "error": null
+    },
+    {
+      "name": "duckattack",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 4,
+      "error": null
+    },
+    {
+      "name": "duckdepth",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 4,
+      "error": null
+    },
+    {
+      "name": "duckonset",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 4,
+      "error": null
+    },
+    {
+      "name": "duckons",
+      "export": false,
+      "method": true,
+      "runs": true,
+      "events": 4,
+      "error": null
+    },
+    {
+      "name": "lfo",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "seg",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 10,
+      "error": null
+    },
+    {
+      "name": "lpenv",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "tremolo",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "tremolosync",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "tremolodepth",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "postgain",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "compressor",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "unison",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "detune",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "spread",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "voicing",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 5,
+      "error": null
+    },
+    {
+      "name": "dict",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 5,
+      "error": null
+    },
+    {
+      "name": "rootNotes",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 0,
+      "error": null
+    },
+    {
+      "name": "chord",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "note",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "n",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 3,
+      "error": null
+    },
+    {
+      "name": "s",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 4,
+      "error": null
+    },
+    {
+      "name": "stack",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 12,
+      "error": null
+    },
+    {
+      "name": "orbit",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "scale",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 3,
+      "error": null
+    },
+    {
+      "name": "cps",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "cpm",
+      "export": true,
+      "method": true,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "setcps",
+      "export": false,
+      "method": false,
+      "runs": false,
+      "events": 0,
+      "error": "note(...).setcps is not a function"
+    },
+    {
+      "name": "setcpm",
+      "export": false,
+      "method": false,
+      "runs": false,
+      "events": 0,
+      "error": "note(...).setcpm is not a function"
+    },
+    {
+      "name": "setbpm",
+      "export": false,
+      "method": false,
+      "runs": false,
+      "events": 0,
+      "error": "note(...).setbpm is not a function"
+    },
+    {
+      "name": "setCpm",
+      "export": false,
+      "method": false,
+      "runs": false,
+      "events": 0,
+      "error": "note(...).setCpm is not a function"
+    },
+    {
+      "name": "setCps",
+      "export": false,
+      "method": false,
+      "runs": false,
+      "events": 0,
+      "error": "note(...).setCps is not a function"
+    },
+    {
+      "name": "supersaw",
+      "export": false,
+      "method": false,
+      "runs": true,
+      "events": 1,
+      "error": null
+    },
+    {
+      "name": "detunepower",
+      "export": false,
+      "method": false,
+      "runs": false,
+      "events": 0,
+      "error": "note(...).detunepower is not a function"
+    },
+    {
+      "name": "duckOrBit",
+      "export": false,
+      "method": false,
+      "runs": false,
+      "events": 0,
+      "error": "s(...).duckOrBit is not a function"
+    },
+    {
+      "name": "duckOrbit",
+      "export": false,
+      "method": false,
+      "runs": false,
+      "events": 0,
+      "error": "s(...).duckOrBit is not a function"
+    },
+    {
+      "name": "duckAttack",
+      "export": false,
+      "method": false,
+      "runs": false,
+      "events": 0,
+      "error": "s(...).duckorbit(...).duckAttack is not a function"
+    }
+  ],
+  "scales": [
+    {
+      "spelling": "A:harmonic:minor",
+      "ok": true,
+      "events": 5,
+      "notes": [
+        "A3",
+        "C4",
+        "E4",
+        "F4",
+        "A4"
+      ],
+      "error": null
+    },
+    {
+      "spelling": "A:harmonic_minor",
+      "ok": true,
+      "events": 0,
+      "notes": [],
+      "error": null
+    },
+    {
+      "spelling": "A:harmonicminor",
+      "ok": true,
+      "events": 0,
+      "notes": [],
+      "error": null
+    },
+    {
+      "spelling": "A harmonic minor",
+      "ok": true,
+      "events": 2,
+      "notes": [
+        "Ab3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "spelling": "A:minor",
+      "ok": true,
+      "events": 5,
+      "notes": [
+        "A3",
+        "C4",
+        "E4",
+        "F4",
+        "A4"
+      ],
+      "error": null
+    },
+    {
+      "spelling": "A:minor:pentatonic",
+      "ok": true,
+      "events": 5,
+      "notes": [
+        "A3",
+        "D4",
+        "G4",
+        "A4",
+        "D5"
+      ],
+      "error": null
+    },
+    {
+      "spelling": "c:minor:pentatonic",
+      "ok": true,
+      "events": 5,
+      "notes": [
+        "C3",
+        "F3",
+        "Bb3",
+        "C4",
+        "F4"
+      ],
+      "error": null
+    },
+    {
+      "spelling": "a:mixolydian",
+      "ok": true,
+      "events": 5,
+      "notes": [
+        "A3",
+        "C#4",
+        "E4",
+        "F#4",
+        "A4"
+      ],
+      "error": null
+    },
+    {
+      "spelling": "BOGUS:xxx",
+      "ok": true,
+      "events": 0,
+      "notes": [],
+      "error": null
+    },
+    {
+      "spelling": "A:harmonic",
+      "ok": true,
+      "events": 0,
+      "notes": [],
+      "error": null
+    }
+  ],
+  "modes": [
+    {
+      "mode": "major",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "E3",
+        "F3",
+        "G3",
+        "A3",
+        "B3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "minor",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "Eb3",
+        "F3",
+        "G3",
+        "Ab3",
+        "Bb3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "dorian",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "Eb3",
+        "F3",
+        "G3",
+        "A3",
+        "Bb3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "phrygian",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "Db3",
+        "Eb3",
+        "F3",
+        "G3",
+        "Ab3",
+        "Bb3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "lydian",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "E3",
+        "F#3",
+        "G3",
+        "A3",
+        "B3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "mixolydian",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "E3",
+        "F3",
+        "G3",
+        "A3",
+        "Bb3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "aeolian",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "Eb3",
+        "F3",
+        "G3",
+        "Ab3",
+        "Bb3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "locrian",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "Db3",
+        "Eb3",
+        "F3",
+        "Gb3",
+        "Ab3",
+        "Bb3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "ionian",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "E3",
+        "F3",
+        "G3",
+        "A3",
+        "B3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "pentatonic",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "E3",
+        "G3",
+        "A3",
+        "C4",
+        "D4",
+        "E4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "blues",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "Eb3",
+        "F3",
+        "Gb3",
+        "G3",
+        "Bb3",
+        "C4",
+        "Eb4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "chromatic",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "Db3",
+        "D3",
+        "Eb3",
+        "E3",
+        "F3",
+        "Gb3",
+        "G3"
+      ],
+      "error": null
+    },
+    {
+      "mode": "harmonic:minor",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "Eb3",
+        "F3",
+        "G3",
+        "Ab3",
+        "B3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "harmonic:minor:pentatonic",
+      "ok": true,
+      "events": 0,
+      "notes": [],
+      "error": null
+    },
+    {
+      "mode": "major:pentatonic",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "E3",
+        "G3",
+        "A3",
+        "C4",
+        "D4",
+        "E4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "minor:pentatonic",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "Eb3",
+        "F3",
+        "G3",
+        "Bb3",
+        "C4",
+        "Eb4",
+        "F4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "dorian:pentatonic",
+      "ok": true,
+      "events": 0,
+      "notes": [],
+      "error": null
+    },
+    {
+      "mode": "phrygian:pentatonic",
+      "ok": true,
+      "events": 0,
+      "notes": [],
+      "error": null
+    },
+    {
+      "mode": "mixolydian:pentatonic",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "E3",
+        "F3",
+        "G3",
+        "Bb3",
+        "C4",
+        "E4",
+        "F4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "lydian:pentatonic",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "E3",
+        "F#3",
+        "G3",
+        "B3",
+        "C4",
+        "E4",
+        "F#4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "locrian:pentatonic",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "Eb3",
+        "F3",
+        "Gb3",
+        "Bb3",
+        "C4",
+        "Eb4",
+        "F4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "major:blues",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "Eb3",
+        "E3",
+        "G3",
+        "A3",
+        "C4",
+        "D4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "minor:blues",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "Eb3",
+        "F3",
+        "Gb3",
+        "G3",
+        "Bb3",
+        "C4",
+        "Eb4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "phrygian:dominant",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "Db3",
+        "E3",
+        "F3",
+        "G3",
+        "Ab3",
+        "Bb3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "melodic:minor",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "Eb3",
+        "F3",
+        "G3",
+        "A3",
+        "B3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "altered",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "Db3",
+        "D#3",
+        "E3",
+        "F#3",
+        "Ab3",
+        "Bb3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "lydian:dominant",
+      "ok": true,
+      "events": 8,
+      "notes": [
+        "C3",
+        "D3",
+        "E3",
+        "F#3",
+        "G3",
+        "A3",
+        "Bb3",
+        "C4"
+      ],
+      "error": null
+    },
+    {
+      "mode": "harmonicminor",
+      "ok": true,
+      "events": 0,
+      "notes": [],
+      "error": null
+    },
+    {
+      "mode": "double:harmonic",
+      "ok": true,
+      "events": 0,
+      "notes": [],
+      "error": null
+    },
+    {
+      "mode": "whole:half",
+      "ok": true,
+      "events": 0,
+      "notes": [],
+      "error": null
+    },
+    {
+      "mode": "minor:harmonic",
+      "ok": true,
+      "events": 0,
+      "notes": [],
+      "error": null
+    },
+    {
+      "mode": "major:diatonic",
+      "ok": true,
+      "events": 0,
+      "notes": [],
+      "error": null
+    }
+  ],
+  "chords": [
+    {
+      "spelling": "Fmaj7",
+      "plainEvents": 1,
+      "plainNotes": 0,
+      "plainError": null,
+      "voicedEvents": 0,
+      "voicedNotes": 0,
+      "voicedError": null
+    },
+    {
+      "spelling": "F^7",
+      "plainEvents": 1,
+      "plainNotes": 0,
+      "plainError": null,
+      "voicedEvents": 5,
+      "voicedNotes": 5,
+      "voicedError": null
+    },
+    {
+      "spelling": "FM7",
+      "plainEvents": 1,
+      "plainNotes": 0,
+      "plainError": null,
+      "voicedEvents": 5,
+      "voicedNotes": 5,
+      "voicedError": null
+    },
+    {
+      "spelling": "Fm7",
+      "plainEvents": 1,
+      "plainNotes": 0,
+      "plainError": null,
+      "voicedEvents": 5,
+      "voicedNotes": 5,
+      "voicedError": null
+    },
+    {
+      "spelling": "G7",
+      "plainEvents": 1,
+      "plainNotes": 0,
+      "plainError": null,
+      "voicedEvents": 5,
+      "voicedNotes": 5,
+      "voicedError": null
+    },
+    {
+      "spelling": "A:min",
+      "plainEvents": 1,
+      "plainNotes": 0,
+      "plainError": null,
+      "voicedEvents": 0,
+      "voicedNotes": 0,
+      "voicedError": null
+    },
+    {
+      "spelling": "Am",
+      "plainEvents": 1,
+      "plainNotes": 0,
+      "plainError": null,
+      "voicedEvents": 5,
+      "voicedNotes": 5,
+      "voicedError": null
+    }
+  ],
+  "rootNotesProbe": {
+    "ok": true,
+    "events": 0,
+    "notes": [],
+    "error": null
+  },
+  "signalWithoutSeg": {
+    "ok": true,
+    "events": 1,
+    "notes": [
+      "c4"
+    ],
+    "error": null
+  },
+  "signalWithSeg": {
+    "ok": true,
+    "events": 16,
+    "notes": [
+      "c4",
+      "c4",
+      "c4",
+      "c4",
+      "c4",
+      "c4",
+      "c4",
+      "c4",
+      "c4",
+      "c4",
+      "c4",
+      "c4",
+      "c4",
+      "c4",
+      "c4",
+      "c4"
+    ],
+    "error": null
+  },
+  "tempo": {
+    "nodeHasSetCpm": false,
+    "nodeHasSetcps": false,
+    "nodeHasSetbpm": false,
+    "initStrudelError": "AudioContext is not defined",
+    "note": "initStrudel недоступен в Node (нужен AudioContext), поэтому control-функции темпа в Node-харнессе не проверяются. В браузере setCpm(bpm/4) работает — это замер рендером, см. раздел «Темп»."
+  },
+  "tempoRender": {
+    "60": {
+      "durationS": 8,
+      "events": 4
+    },
+    "240": {
+      "durationS": 8,
+      "events": 4
+    }
+  },
+  "sounds": [
+    {
+      "name": "sawtooth",
+      "lufsI": -24.23723802947184,
+      "truePeakDbtp": -15.11286226393781,
+      "events": 2,
+      "error": null
+    },
+    {
+      "name": "square",
+      "lufsI": -19.67953785916276,
+      "truePeakDbtp": -13.583929806907108,
+      "events": 2,
+      "error": null
+    },
+    {
+      "name": "triangle",
+      "lufsI": -23.424573438722046,
+      "truePeakDbtp": -16.651216654984424,
+      "events": 2,
+      "error": null
+    },
+    {
+      "name": "sine",
+      "lufsI": -21.678065808903686,
+      "truePeakDbtp": -15.8068065817676,
+      "events": 2,
+      "error": null
+    },
+    {
+      "name": "piano",
+      "lufsI": -23.176943395045082,
+      "truePeakDbtp": -6.550185166141025,
+      "events": 2,
+      "error": null
+    },
+    {
+      "name": "supersaw",
+      "lufsI": -26.11807550147583,
+      "truePeakDbtp": -15.196970679479072,
+      "events": 2,
+      "error": null
+    },
+    {
+      "name": "pulse",
+      "lufsI": -27.002823844319426,
+      "truePeakDbtp": -17.304231978438974,
+      "events": 2,
+      "error": null
+    },
+    {
+      "name": "fm",
+      "lufsI": -14.878609836270641,
+      "truePeakDbtp": -6.225657648294961,
+      "events": 2,
+      "error": null
+    },
+    {
+      "name": "am",
+      "lufsI": null,
+      "truePeakDbtp": null,
+      "events": null,
+      "error": "page.evaluate: Error: sound am not found! Is it loaded?"
+    },
+    {
+      "name": "organ",
+      "lufsI": null,
+      "truePeakDbtp": null,
+      "events": null,
+      "error": "page.evaluate: Error: sound organ not found! Is it loaded?"
+    },
+    {
+      "name": "lead",
+      "lufsI": null,
+      "truePeakDbtp": null,
+      "events": null,
+      "error": "page.evaluate: Error: sound lead not found! Is it loaded?"
+    },
+    {
+      "name": "bd",
+      "lufsI": -23.921491587111483,
+      "truePeakDbtp": -6.055582994447198,
+      "events": 2,
+      "error": null
+    },
+    {
+      "name": "hh",
+      "lufsI": -46.3330059058998,
+      "truePeakDbtp": -21.94627350974101,
+      "events": 2,
+      "error": null
+    },
+    {
+      "name": "cp",
+      "lufsI": -26.870869389481054,
+      "truePeakDbtp": -6.149037109146947,
+      "events": 2,
+      "error": null
+    },
+    {
+      "name": "sd",
+      "lufsI": -23.91883274004464,
+      "truePeakDbtp": -6.058900204312981,
+      "events": 2,
+      "error": null
+    }
+  ],
+  "audioMeasured": true
+}

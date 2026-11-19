@@ -35,6 +35,7 @@
     "queue:prompts": "node scripts/build-queue-prompts.mjs --update",
     "baseline:build": "node scripts/build-baseline.mjs --update",
     "spike": "node tests/spike/probe.mjs",
+    "probe:facts": "node scripts/probe-strudel-facts.mjs",
     "spike:parts": "node tests/spike/parts-100.probe.mjs",
     "spike:parts:after": "node tests/spike/parts-100-new.probe.mjs",
     "spike:compose": "node tests/spike/compose-pipeline.probe.mjs",
