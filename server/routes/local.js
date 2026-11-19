@@ -144,23 +144,31 @@ router.get('/tasks/:id/stream', async (req, res) => {
     res.status(503).json({ error: 'Локальный демон не настроен (LOCAL_DAEMON_URL).' });
     return;
   }
+  let task;
+  try {
+    task = await client.status(req.params.id);
+  } catch (err) {
+    daemonError(res, err);
+    return;
+  }
+  if (res.destroyed) return;
   res.writeHead(200, {
     'content-type': 'text/event-stream; charset=utf-8',
     'cache-control': 'no-store',
     connection: 'keep-alive',
   });
-  try {
-    const { status } = await client.status(req.params.id);
-    res.write(`event: snapshot\ndata: ${JSON.stringify({ type: 'snapshot', task: status })}\n\n`);
-  } catch {
-    // Демон мог не ответить на статус — стрим всё равно попробует отдать события.
+  res.write(`event: snapshot\ndata: ${JSON.stringify({ type: 'snapshot', task })}\n\n`);
+  if (task.state === 'done' || task.state === 'error') {
+    res.end(`event: ${task.state}\ndata: ${JSON.stringify({ type: task.state, task })}\n\n`);
+    return;
   }
   const { streamTask } = await import('../../local/client.mjs');
+  if (res.destroyed) return;
   const stop = streamTask(req.params.id, (event) => {
     res.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
     if (event.type === 'done' || event.type === 'error') res.end();
   }, { baseUrl: DAEMON_URL, token: DAEMON_TOKEN });
-  req.on('close', () => stop());
+  res.on('close', stop);
 });
 
 // WAV готового рендера: прокси от демона. Токен демона остаётся на сервере —

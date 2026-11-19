@@ -121,6 +121,35 @@ describe('маршруты локального демона', () => {
     expect(body.tasks.some((task) => task.type === 'render')).toBe(true);
   });
 
+  it('SSE неизвестной задачи сохраняет HTTP 404 вместо открытого пустого потока', async () => {
+    const res = await fetch(`${base}/api/local/tasks/00000000-0000-0000-0000-000000000000/stream`);
+    expect(res.status).toBe(404);
+    expect((await res.json()).error).toMatch(/задача не найдена/);
+  });
+
+  it('SSE начинается со снимка настоящей задачи, включая завершённую ошибкой', async () => {
+    const submitted = await fetch(`${base}/api/local/tasks`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'passport', payload: {} }),
+    });
+    const { id } = await submitted.json();
+    const res = await fetch(`${base}/api/local/tasks/${id}/stream`, { signal: AbortSignal.timeout(5000) });
+    expect(res.headers.get('content-type')).toContain('text/event-stream');
+    const reader = res.body.getReader();
+    let text = '';
+    while (!text.includes('\n\n')) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      text += new TextDecoder().decode(value);
+    }
+    await reader.cancel();
+    const frame = text.split('\n\n')[0];
+    const data = JSON.parse(frame.split('\n').find(line => line.startsWith('data:')).slice(5));
+    expect(data.type).toBe('snapshot');
+    expect(data.task).toMatchObject({ id, type: 'passport' });
+    expect(['queued', 'running', 'error']).toContain(data.task.state);
+  });
+
   it('аудио несуществующей задачи — 404 от демона через прокси', async () => {
     const res = await fetch(`${base}/api/local/tasks/00000000-0000-0000-0000-000000000000/audio`);
     expect(res.status).toBe(404);
