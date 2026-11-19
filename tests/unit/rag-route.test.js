@@ -4,6 +4,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import express from 'express';
 import { once } from 'node:events';
+import { loadDataset } from '../../server/rag/dataset.js';
 
 let server;
 let base;
@@ -36,12 +37,18 @@ const post = (url, body) => fetch(base + url, {
 });
 
 describe('маршруты RAG', () => {
-  it('GET /api/rag/status — локальная база, 148 записей, версия промпта', async () => {
+  it('GET /api/rag/status — локальная база, число записей совпадает с датасетом, версия промпта', async () => {
     const res = await fetch(`${base}/api/rag/status`);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.store).toBe('local');
-    expect(body.entries).toBe(148);
+    // Источник истины — сам датасет: жёстко зашитое число ломало тест на
+    // каждой новой записи знаний (P1 добавил 4 записи: 148 → 152).
+    // Нижняя граница остаётся: случайная усадка корпуса — это дефект.
+    const { entries, errors } = loadDataset();
+    expect(errors).toEqual([]);
+    expect(body.entries).toBe(entries.length);
+    expect(body.entries).toBeGreaterThanOrEqual(148);
     expect(body.promptVersion).toMatch(/^mi-/);
   });
 
