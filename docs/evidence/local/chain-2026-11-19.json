@@ -1,0 +1,194 @@
+{
+  "probe": "local-chain",
+  "date": "2026-11-19T08:46:57.472Z",
+  "node": "v24.14.1",
+  "platform": "win32",
+  "daemonPort": 60217,
+  "serverPort": 3705,
+  "browser": "131.0.6778.33",
+  "checks": [
+    {
+      "name": "демон без токена → 401",
+      "ok": true,
+      "detail": "HTTP 401"
+    },
+    {
+      "name": "демон с токеном → 200",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "демон отвечает ok=true",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "чужой Host → 403",
+      "ok": true,
+      "detail": "HTTP 403"
+    },
+    {
+      "name": "чужой Origin → 403",
+      "ok": true,
+      "detail": "HTTP 403"
+    },
+    {
+      "name": "сервер поднялся",
+      "ok": true,
+      "detail": "Strudel AI Composer: http://127.0.0.1:3705\nПровайдеры LLM: openai\n"
+    },
+    {
+      "name": "браузер видит демон через прокси (same-origin)",
+      "ok": true,
+      "detail": {
+        "configured": true,
+        "available": true,
+        "url": "http://127.0.0.1:60217",
+        "machine": {
+          "platform": "win32",
+          "arch": "x64",
+          "cpus": 12,
+          "totalMemMb": 16231,
+          "node": "v24.14.1"
+        },
+        "tasks": [
+          "render",
+          "analyze",
+          "analyze_reference",
+          "separate",
+          "analyze_stems",
+          "passport"
+        ],
+        "analysis": {
+          "available": false,
+          "reason": "зонд транспорта: Python-воркер не нужен"
+        },
+        "render": {
+          "available": true,
+          "engine": "strudel-engine в headless Chromium",
+          "note": "тот же движок и тот же renderFingerprint, что и на сервере"
+        },
+        "queue": {
+          "total": 0,
+          "queued": 0,
+          "running": 0,
+          "done": 0,
+          "error": 0
+        }
+      }
+    },
+    {
+      "name": "прямой доступ браузера к демону недоступен (CORS)",
+      "ok": true,
+      "detail": {
+        "threw": true,
+        "error": "Failed to fetch"
+      }
+    },
+    {
+      "name": "задача поставлена через прокси → 202",
+      "ok": true,
+      "detail": {
+        "id": "probe-chain-1795078017039",
+        "type": "render",
+        "state": "running"
+      }
+    },
+    {
+      "name": "SSE через прокси дошёл до терминального события",
+      "ok": true,
+      "detail": "snapshot → done"
+    },
+    {
+      "name": "задача в состоянии done через прокси",
+      "ok": true,
+      "detail": "done"
+    },
+    {
+      "name": "повтор с тем же id → та же задача, вторая работа не заведена",
+      "ok": true,
+      "detail": {
+        "id": "probe-chain-1795078017039",
+        "duplicate": true,
+        "queueLength": 1
+      }
+    },
+    {
+      "name": "токена нет в DOM страницы",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "браузер не отправлял Authorization и не ходил к демону (кроме намеренной попытки)",
+      "ok": true,
+      "detail": {
+        "daemonRequests": 0,
+        "requestsWithAuthorization": 0
+      }
+    },
+    {
+      "name": "студия открывается и видит демон через прокси",
+      "ok": true,
+      "detail": {
+        "studioLoaded": true,
+        "studioStatus": {
+          "httpStatus": 200,
+          "configured": true,
+          "available": true
+        },
+        "consoleErrors": []
+      }
+    }
+  ],
+  "summary": {
+    "total": 15,
+    "passed": 15,
+    "failed": 0
+  },
+  "notMeasured": [
+    "живой рендер Chromium в демоне (рендер подменён: зонд проверяет транспорт)",
+    "работа Python-воркера и Demucs (не требуется для проверки транспорта)",
+    "звуковое качество (не измеряется зондом)"
+  ],
+  "browserRequests": [
+    {
+      "url": "http://127.0.0.1:3705/api/health",
+      "method": "GET",
+      "hasAuthorization": false
+    },
+    {
+      "url": "http://127.0.0.1:3705/api/local/status",
+      "method": "GET",
+      "hasAuthorization": false
+    },
+    {
+      "url": "http://127.0.0.1:3705/api/local/tasks",
+      "method": "POST",
+      "hasAuthorization": false
+    },
+    {
+      "url": "http://127.0.0.1:3705/api/local/tasks/probe-chain-1795078017039/stream",
+      "method": "GET",
+      "hasAuthorization": false
+    },
+    {
+      "url": "http://127.0.0.1:3705/api/local/tasks/probe-chain-1795078017039",
+      "method": "GET",
+      "hasAuthorization": false
+    },
+    {
+      "url": "http://127.0.0.1:3705/api/local/tasks",
+      "method": "POST",
+      "hasAuthorization": false
+    },
+    {
+      "url": "http://127.0.0.1:3705/api/local/tasks",
+      "method": "GET",
+      "hasAuthorization": false
+    }
+  ],
+  "consoleErrors": [
+    "Refused to connect to 'http://127.0.0.1:60217/health' because it violates the following Content Security Policy directive: \"connect-src 'self' blob: https://raw.githubusercontent.com https://shabda.ndre.gr https://*.githubusercontent.com\".\n",
+    "Refused to connect to 'http://127.0.0.1:60217/health' because it violates the document's Content Security Policy."
+  ]
+}
