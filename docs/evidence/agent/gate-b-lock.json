@@ -1,0 +1,200 @@
+{
+  "checkedAt": "2026-11-19T01:08:15.505Z",
+  "gate": "B — local-first",
+  "machine": {
+    "platform": "win32",
+    "arch": "x64",
+    "cpus": 12,
+    "totalMemMb": 16231,
+    "node": "v24.14.1"
+  },
+  "limits": {
+    "firstTwinSeconds": 420,
+    "fullTrackSeconds": 900,
+    "serverFullTrackSeconds": 3384
+  },
+  "notMeasured": {
+    "separation": null,
+    "firstTwin": null
+  },
+  "passed": 12,
+  "total": 13,
+  "checks": [
+    {
+      "name": "демон поднялся и отвечает",
+      "ok": true,
+      "detail": "win32/x64, 12 CPU, 16231 МБ RAM"
+    },
+    {
+      "name": "демон без токена не отвечает",
+      "ok": true,
+      "detail": "HTTP 401 без Authorization"
+    },
+    {
+      "name": "рендер 16 тактов выполнен",
+      "ok": true,
+      "detail": "32 с аудио за 1.9 с wall (16.7× realtime)"
+    },
+    {
+      "name": "рендер 16 тактов укладывается в 7 минут (без учёта сепарации)",
+      "ok": true,
+      "detail": "1.9 с из 420 с"
+    },
+    {
+      "name": "в паспорте рендера есть fingerprint",
+      "ok": true,
+      "detail": "code_sha256 7d0cb5897b3a…, движок strudel-web@1.3.0/superdough@1.3.0"
+    },
+    {
+      "name": "полный 4-минутный трек укладывается в 15 минут",
+      "ok": true,
+      "detail": "55.3 с из 900 с"
+    },
+    {
+      "name": "локальный рендер быстрее серверного замера",
+      "ok": true,
+      "detail": "55.3 с против 56.4 мин на сервере — в 61.1 раза быстрее"
+    },
+    {
+      "name": "звук локального и серверного рендера совпадает в пределах допуска проекта",
+      "ok": true,
+      "detail": "maxAbsDiff = 3.05e-5 (допуск 1e-4), отличается сэмплов: 994 из 3072000"
+    },
+    {
+      "name": "паспорта рендера совпадают по движку, частоте и коду",
+      "ok": true,
+      "detail": "движок strudel-web@1.3.0/superdough@1.3.0, частота 48000 Гц, код 7d0cb5897b3a…"
+    },
+    {
+      "name": "файлы WAV побайтово идентичны",
+      "ok": null,
+      "detail": "нет: sha256 разошёлся (c66f1c667c84… против aedbc419b626…). Измеренный maxAbsDiff = 3.05e-5 (допуск 1e-4).",
+      "note": "нет данных"
+    },
+    {
+      "name": "задача переживает перезапуск демона",
+      "ok": true,
+      "detail": "восстановлено задач: 1, финальное состояние: done"
+    },
+    {
+      "name": "сепарация 60 с завершилась с 4 стемами",
+      "ok": true,
+      "detail": "htdemucs, 4 стема за 7.7 с wall; сепарация 7.62 с"
+    },
+    {
+      "name": "first-twin (сепарация 60 с + рендер 16 тактов) укладывается в 7 минут",
+      "ok": true,
+      "detail": "9.6 с из 420 с"
+    }
+  ],
+  "measured": {
+    "separation": {
+      "ok": true,
+      "reason": null,
+      "taskId": "abce6c36-77fe-49cc-a26a-07393cf0c8a8",
+      "state": "done",
+      "wallMs": 7669,
+      "separationMs": 7620,
+      "model": "htdemucs",
+      "requestedModel": "htdemucs",
+      "stemCount": 4,
+      "input": {
+        "path": "F:\\ГЕНЕРАЦИЯ ФОТОК\\Новая папка\\Strudel AI Composer\\.scratch\\gate-b-state-TWqWN1\\separation-J85k3S\\synthetic-60s.wav",
+        "kind": "synthetic",
+        "durationS": 60,
+        "channels": 2,
+        "sampleRate": 44100
+      }
+    },
+    "firstTwin": {
+      "ok": true,
+      "wallMs": 9588,
+      "reason": null
+    },
+    "machine": {
+      "platform": "win32",
+      "arch": "x64",
+      "cpus": 12,
+      "totalMemMb": 16231,
+      "node": "v24.14.1"
+    },
+    "analysisWorker": {
+      "available": true,
+      "reason": null,
+      "demucs_available": true,
+      "separation_model": "htdemucs",
+      "python": "3.12.16"
+    },
+    "twin": {
+      "wallMs": 1919,
+      "renderMs": 1709,
+      "durationS": 32,
+      "wavBytes": 6144044,
+      "wavSha256": "c66f1c667c8498b4702473200fb648d67b7d3f7fdcc05544da6c9285c448772d",
+      "fingerprint": {
+        "browser": "chromium",
+        "browser_version": "131.0.6778.33",
+        "os": "win32",
+        "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+        "sample_rate": 48000,
+        "code_sha256": "7d0cb5897b3a971c5eb01a7ddffdd094a194270c7ab94709d2c9ea5dcf050923",
+        "seed": 1592598566,
+        "render_policy": "seeded-ir-v2"
+      }
+    },
+    "fullTrack": {
+      "wallMs": 55340,
+      "durationS": 240,
+      "wavBytes": 46080044,
+      "wavSha256": "e0091cdc31900bb16a02ed9dcb7ab917f4d0643a4ad30a1d4b99550bf9b03308",
+      "realtimeFactor": 4.336826888326708
+    },
+    "speedupVsServer": 61.14925912540657,
+    "bitExact": {
+      "localSha256": "c66f1c667c8498b4702473200fb648d67b7d3f7fdcc05544da6c9285c448772d",
+      "serverSha256": "aedbc419b626da21f04a0444058a5aea44d8ea93bf4e84ad51bcbabcf4b3cfee",
+      "audio": {
+        "maxAbsDiff": 1,
+        "maxAbsDiffNormalized": 0.000030517578125,
+        "diffSamples": 994,
+        "total": 3072000,
+        "relativeDiff": 0.0003235677083333333
+      },
+      "localFingerprint": {
+        "browser": "chromium",
+        "browser_version": "131.0.6778.33",
+        "os": "win32",
+        "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+        "sample_rate": 48000,
+        "code_sha256": "7d0cb5897b3a971c5eb01a7ddffdd094a194270c7ab94709d2c9ea5dcf050923",
+        "seed": 1592598566,
+        "render_policy": "seeded-ir-v2"
+      },
+      "serverFingerprint": {
+        "browser": "chromium",
+        "browser_version": "158.0.8127.36",
+        "os": "win32",
+        "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+        "sample_rate": 48000,
+        "code_sha256": "7d0cb5897b3a971c5eb01a7ddffdd094a194270c7ab94709d2c9ea5dcf050923",
+        "seed": 1592598566,
+        "render_policy": "seeded-ir-v2"
+      },
+      "tolerance": {
+        "maxAbsDiff": 0.0001,
+        "project": "docs/BRIEF.md:73"
+      }
+    },
+    "durability": {
+      "restored": 1,
+      "finalState": "done",
+      "taskId": "4c0c6137-3974-41a3-8016-e91a3a544a79",
+      "log": [
+        "[local] после перезапуска возвращено задач: 1",
+        "[local] задача 4c0c6137-3974-41a3-8016-e91a3a544a79 в работе",
+        "[local] демон слушает http://127.0.0.1:3226 (очередь: F:\\ГЕНЕРАЦИЯ ФОТОК\\Новая папка\\Strudel AI Composer\\.scratch\\gate-b-state-TWqWN1\\durability)",
+        "[local] задача 4c0c6137-3974-41a3-8016-e91a3a544a79 готова"
+      ]
+    }
+  }
+}

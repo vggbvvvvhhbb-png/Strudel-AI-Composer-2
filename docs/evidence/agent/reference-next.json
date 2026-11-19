@@ -1,0 +1,396 @@
+{
+  "date": "2026-11-19T00:59:37.877Z",
+  "node": "v24.14.1",
+  "source": "own synthetic signal, not a music-quality benchmark",
+  "checks": {
+    "realDemucsPassport": true,
+    "registeredSourceOnly": true,
+    "referenceInComposePrompt": true,
+    "genreGuidePreserved": true,
+    "compiledEvents": true,
+    "noReferenceAudioInComposition": true
+  },
+  "stages": [
+    {
+      "tool": "analyze_reference",
+      "ok": true,
+      "ms": 12934.1,
+      "reason": null
+    },
+    {
+      "tool": "compose_spec",
+      "ok": true,
+      "ms": 85.8,
+      "reason": null
+    },
+    {
+      "tool": "compile",
+      "ok": true,
+      "ms": 1.6,
+      "reason": null
+    }
+  ],
+  "model": "scripted mock, real tools and Python/Demucs",
+  "analysis": {
+    "available": true,
+    "reason": null,
+    "demucs_available": true,
+    "separation_model": "htdemucs",
+    "python": "3.12.16"
+  },
+  "wallMs": 13023,
+  "fallbackComposed": true,
+  "passport": {
+    "durationS": 12,
+    "measurements": {
+      "tempo": {
+        "bpm": 117.454,
+        "confidence": 0.446
+      },
+      "key": {
+        "tonic": "C",
+        "mode": "mixolydian",
+        "confidence": 0.416
+      },
+      "loudness": {
+        "lufs_integrated": null,
+        "lufs_max": null,
+        "lufs_range": null,
+        "true_peak_dbtp": null,
+        "peak_dbfs": -6.15,
+        "crest_db": 14.46
+      }
+    },
+    "structure": [
+      {
+        "index": 0,
+        "start_s": 0,
+        "end_s": 12,
+        "energy": 0.694
+      }
+    ],
+    "stems": {
+      "drums": {
+        "available": true,
+        "descriptor": {
+          "loudness": {
+            "lufsI": -26.85,
+            "peakDbfs": -7.77,
+            "crestDb": 19.58
+          },
+          "spectral": {
+            "centroidHz": 69.9,
+            "rolloffHz": 86.1,
+            "flatness": 0,
+            "bands": {
+              "sub": -31.44,
+              "low": -30.29,
+              "lowMid": -40.16,
+              "mid": -54.79,
+              "highMid": -73.56,
+              "high": -84.82
+            }
+          },
+          "transients": {
+            "count": 41,
+            "densityPerSec": 3.417
+          },
+          "tonal": {
+            "voicedRatio": 0.471
+          },
+          "tempo": {
+            "bpm": 166.71,
+            "confidence": 0.3
+          },
+          "character": [
+            "тёмный",
+            "ударный"
+          ]
+        },
+        "analyzedSeconds": 12,
+        "activityMean": 1,
+        "energyMean": 0.248,
+        "reason": null
+      },
+      "bass": {
+        "available": true,
+        "descriptor": {
+          "loudness": {
+            "lufsI": -19.8,
+            "peakDbfs": -18.11,
+            "crestDb": 3.35
+          },
+          "spectral": {
+            "centroidHz": 130.9,
+            "rolloffHz": 150.7,
+            "flatness": 0,
+            "bands": {
+              "sub": -35.19,
+              "low": -23.63,
+              "lowMid": -25.87,
+              "mid": -40.92,
+              "highMid": -63.7,
+              "high": -77.99
+            }
+          },
+          "transients": {
+            "count": 33,
+            "densityPerSec": 2.75
+          },
+          "tonal": {
+            "voicedRatio": 1
+          },
+          "tempo": {
+            "bpm": 143.55,
+            "confidence": 0.125
+          },
+          "character": [
+            "тёмный",
+            "ударный",
+            "тональный"
+          ]
+        },
+        "analyzedSeconds": 12,
+        "activityMean": 1,
+        "energyMean": 0.989,
+        "reason": null
+      },
+      "other": {
+        "available": true,
+        "descriptor": {
+          "loudness": {
+            "lufsI": -69.51,
+            "peakDbfs": -35.73,
+            "crestDb": 20.91
+          },
+          "spectral": {
+            "centroidHz": 134.4,
+            "rolloffHz": 48.4,
+            "flatness": 0.004,
+            "bands": {
+              "sub": -82.98,
+              "low": -79.31,
+              "lowMid": -76.69,
+              "mid": -78.12,
+              "highMid": -87.59,
+              "high": -85.75
+            }
+          },
+          "transients": {
+            "count": 79,
+            "densityPerSec": 6.583
+          },
+          "tonal": {
+            "voicedRatio": 0.598
+          },
+          "tempo": {
+            "bpm": 112.35,
+            "confidence": 0.154
+          },
+          "character": [
+            "тёмный",
+            "плотный",
+            "тихий"
+          ]
+        },
+        "analyzedSeconds": 12,
+        "activityMean": 1,
+        "energyMean": 0.948,
+        "reason": null
+      },
+      "vocals": {
+        "available": true,
+        "descriptor": {
+          "loudness": {
+            "lufsI": 0,
+            "peakDbfs": -52.47,
+            "crestDb": 1.78
+          },
+          "spectral": {
+            "centroidHz": 23.1,
+            "rolloffHz": 21.5,
+            "flatness": 0,
+            "bands": {
+              "sub": -94.73,
+              "low": -98.36,
+              "lowMid": -97.1,
+              "mid": -98.19,
+              "highMid": -102.07,
+              "high": -100.24
+            }
+          },
+          "transients": {
+            "count": 78,
+            "densityPerSec": 6.5
+          },
+          "tonal": {
+            "voicedRatio": 0.443
+          },
+          "tempo": {
+            "bpm": 107.67,
+            "confidence": 0.104
+          },
+          "character": [
+            "тёмный",
+            "плотный"
+          ]
+        },
+        "analyzedSeconds": 12,
+        "activityMean": 1,
+        "energyMean": 0.99,
+        "reason": null
+      }
+    },
+    "model": "htdemucs",
+    "separationSeconds": 6.91,
+    "methods": {
+      "analysis": "analyzeFile (общий Python-воркер)",
+      "separation": "separateStems (запрошен htdemucs)",
+      "stems": "analyzeStems (общий Python-воркер); средние активности и нормализованной энергии",
+      "descriptor": "buildPassport (общий DSP); первые ≤12 с; без высот и времён атак"
+    },
+    "caveats": [
+      "Ориентир не клон: только измеренные агрегаты, без переноса мелодии или исходного аудио.",
+      "Вокал не воспроизводится: vocals описан только агрегатами.",
+      "Дескрипторы тембра относятся к первым min(12 с, длительность) секундам каждого стема, не ко всему треку.",
+      "measurements.loudness.lufs_integrated: нет данных — признак не измерен или нечисловой.",
+      "measurements.loudness.lufs_max: нет данных — признак не измерен или нечисловой.",
+      "measurements.loudness.lufs_range: нет данных — признак не измерен или нечисловой.",
+      "measurements.loudness.true_peak_dbtp: нет данных — признак не измерен или нечисловой."
+    ]
+  },
+  "candidates": {
+    "bass": [
+      {
+        "id": "tp-contrabass-sus-v1",
+        "score": 1.902,
+        "reasons": [
+          "роль «bass» есть у пресета",
+          "центроид 144 Гц (измерение паспорта)",
+          "центроид: 143.7 против измеренного референса 130.9: +0.90",
+          "плотность атак: 8.471 против измеренного референса 2.75: +0.00"
+        ]
+      },
+      {
+        "id": "tp-contrabass-pizz-v1",
+        "score": 1.901,
+        "reasons": [
+          "роль «bass» есть у пресета",
+          "центроид 118 Гц (измерение паспорта)",
+          "центроид: 117.9 против измеренного референса 130.9: +0.90",
+          "плотность атак: 10.474 против измеренного референса 2.75: +0.00"
+        ]
+      },
+      {
+        "id": "tp-cello-section-v1",
+        "score": 1,
+        "reasons": [
+          "роль «bass» есть у пресета",
+          "центроид 520 Гц (измерение паспорта)",
+          "центроид: 520.1 против измеренного референса 130.9: +0.00",
+          "плотность атак: 7.578 против измеренного референса 2.75: +0.00"
+        ]
+      }
+    ],
+    "chords": [
+      {
+        "id": "tp-upright-soft-v1",
+        "score": 1.648,
+        "reasons": [
+          "роль «chords» есть у пресета",
+          "центроид 454 Гц (измерение паспорта)",
+          "центроид: 453.9 против измеренного референса 134.4: +0.00",
+          "плотность атак: 4.267 против измеренного референса 6.583: +0.65"
+        ]
+      },
+      {
+        "id": "tp-upright-piano-v1",
+        "score": 1.615,
+        "reasons": [
+          "роль «chords» есть у пресета",
+          "центроид 481 Гц (измерение паспорта)",
+          "центроид: 481 против измеренного референса 134.4: +0.00",
+          "плотность атак: 9.12 против измеренного референса 6.583: +0.61"
+        ]
+      },
+      {
+        "id": "tp-violin-section-v1",
+        "score": 1.54,
+        "reasons": [
+          "роль «chords» есть у пресета",
+          "центроид 2485 Гц (измерение паспорта)",
+          "центроид: 2485.2 против измеренного референса 134.4: +0.00",
+          "плотность атак: 9.614 против измеренного референса 6.583: +0.54"
+        ]
+      }
+    ],
+    "pad": [
+      {
+        "id": "tp-cello-section-v1",
+        "score": 1.849,
+        "reasons": [
+          "роль «pad» есть у пресета",
+          "центроид 520 Гц (измерение паспорта)",
+          "центроид: 520.1 против измеренного референса 134.4: +0.00",
+          "плотность атак: 7.578 против измеренного референса 6.583: +0.85"
+        ]
+      },
+      {
+        "id": "tp-violin-section-v1",
+        "score": 1.54,
+        "reasons": [
+          "роль «pad» есть у пресета",
+          "центроид 2485 Гц (измерение паспорта)",
+          "центроид: 2485.2 против измеренного референса 134.4: +0.00",
+          "плотность атак: 9.614 против измеренного референса 6.583: +0.54"
+        ]
+      },
+      {
+        "id": "tp-viola-section-v1",
+        "score": 1.53,
+        "reasons": [
+          "роль «pad» есть у пресета",
+          "центроид 987 Гц (измерение паспорта)",
+          "центроид: 987.1 против измеренного референса 134.4: +0.00",
+          "плотность атак: 9.675 против измеренного референса 6.583: +0.53"
+        ]
+      }
+    ],
+    "lead": [
+      {
+        "id": "tp-solo-violin-v1",
+        "score": 1.691,
+        "reasons": [
+          "роль «lead» есть у пресета",
+          "центроид 806 Гц (измерение паспорта)",
+          "центроид: 805.5 против измеренного референса 134.4: +0.00",
+          "плотность атак: 8.616 против измеренного референса 6.583: +0.69"
+        ]
+      },
+      {
+        "id": "tp-upright-soft-v1",
+        "score": 1.648,
+        "reasons": [
+          "роль «lead» есть у пресета",
+          "центроид 454 Гц (измерение паспорта)",
+          "центроид: 453.9 против измеренного референса 134.4: +0.00",
+          "плотность атак: 4.267 против измеренного референса 6.583: +0.65"
+        ]
+      },
+      {
+        "id": "tp-upright-piano-v1",
+        "score": 1.615,
+        "reasons": [
+          "роль «lead» есть у пресета",
+          "центроид 481 Гц (измерение паспорта)",
+          "центроид: 481 против измеренного референса 134.4: +0.00",
+          "плотность атак: 9.12 против измеренного референса 6.583: +0.61"
+        ]
+      }
+    ]
+  },
+  "bpm": 132,
+  "instrumentId": "tp-contrabass-pizz-v1",
+  "code": "// techno — 132 BPM, c:minor\n// Форма: intro(8) → build(16) → drop(16) → breakdown(8) → build(16) → drop(16) → outro(8)\nsetCpm(132/4)\nconst key = \"c:minor\"\n\nconst ARP_2 = n(\"0 4 2 7\").add(n(\"<0 3 4 0>\").slow(4)).scale(\"c:minor\").transpose(12).s(\"square\")\nconst ARP_5 = n(\"0 4 2 7\").add(n(\"<0 3 4 0>\").slow(4)).scale(\"c:minor\").transpose(12).s(\"square\")\nconst BASS_0 = n(\"0 0 3 5 7 5\").add(n(\"<5 6 0 4>\").slow(2)).scale(\"c:minor\").transpose(-24).s(\"tp_contrabass_pizz_v1\")\nconst BASS_1 = n(\"0 0 3 5 7 5\").add(n(\"<3 0 5 4>\").slow(4)).scale(\"c:minor\").transpose(-24).s(\"tp_contrabass_pizz_v1\")\nconst BASS_2 = n(\"0 0 3 5 7 5\").add(n(\"<0 3 4 0>\").slow(4)).scale(\"c:minor\").transpose(-24).s(\"tp_contrabass_pizz_v1\")\nconst BASS_4 = n(\"0 0 3 5 7 5\").add(n(\"<3 0 5 4>\").slow(4)).scale(\"c:minor\").transpose(-24).s(\"tp_contrabass_pizz_v1\")\nconst BASS_5 = n(\"0 0 3 5 7 5\").add(n(\"<0 3 4 0>\").slow(4)).scale(\"c:minor\").transpose(-24).s(\"tp_contrabass_pizz_v1\")\nconst FX_1 = s(\"industrial ~ ~ ~\").s(\"perc\")\nconst FX_2 = s(\"industrial ~ ~ ~\").s(\"perc\")\nconst FX_4 = s(\"industrial ~ ~ ~\").s(\"perc\")\nconst FX_5 = s(\"industrial ~ ~ ~\").s(\"perc\")\nconst HATS_0 = s(\"hh*16\").s(\"hh\")\nconst HATS_1 = s(\"hh*16\").s(\"hh\")\nconst HATS_2 = s(\"hh*16\").s(\"hh\")\nconst HATS_3 = s(\"hh*16\").s(\"hh\")\nconst HATS_4 = s(\"hh*16\").s(\"hh\")\nconst HATS_5 = s(\"hh*16\").s(\"hh\")\nconst HATS_6 = s(\"hh*16\").s(\"hh\")\nconst KICK_1 = s(\"bd ~ bd ~\").s(\"bd\")\nconst KICK_2 = s(\"bd ~ bd ~\").s(\"bd\")\nconst KICK_4 = s(\"bd ~ bd ~\").s(\"bd\")\nconst KICK_5 = s(\"bd ~ bd ~\").s(\"bd\")\nconst PAD_3 = n(\"<0 2 4>\").add(n(\"<5 6 0 4>\").slow(2)).scale(\"c:minor\").s(\"sawtooth\")\nconst PERC_1 = s(\"~ perc ~ perc\").s(\"perc\")\nconst PERC_2 = s(\"~ perc ~ perc\").s(\"perc\")\nconst PERC_4 = s(\"~ perc ~ perc\").s(\"perc\")\nconst PERC_5 = s(\"~ perc ~ perc\").s(\"perc\")\nconst SNARE_2 = s(\"~ sd ~ ~\").s(\"sd\")\nconst SNARE_5 = s(\"~ sd ~ ~\").s(\"sd\")\nconst SUB_2 = n(\"0*4\").add(n(\"<0 3 4 0>\").slow(4)).scale(\"c:minor\").transpose(-24).s(\"sine\")\nconst SUB_5 = n(\"0*4\").add(n(\"<0 3 4 0>\").slow(4)).scale(\"c:minor\").transpose(-24).s(\"sine\")\nconst TEXTURE_0 = n(\"0 ~ ~ ~\").add(n(\"<5 6 0 4>\").slow(2)).scale(\"c:minor\").s(\"sine\")\nconst TEXTURE_3 = n(\"0 ~ ~ ~\").add(n(\"<5 6 0 4>\").slow(2)).scale(\"c:minor\").s(\"sine\")\nconst TEXTURE_6 = n(\"0 ~ ~ ~\").add(n(\"<5 6 0 4>\").slow(2)).scale(\"c:minor\").s(\"sine\")\n\n$ARP: arrange([8, silence], [16, silence], [16, ARP_2], [8, silence], [16, silence], [16, ARP_5], [8, silence])._pianoroll() // role=arp\n$BASS: arrange([8, BASS_0], [16, BASS_1], [16, BASS_2], [8, silence], [16, BASS_4], [16, BASS_5], [8, silence])._pianoroll() // role=bass\n$FX: arrange([8, silence], [16, FX_1], [16, FX_2], [8, silence], [16, FX_4], [16, FX_5], [8, silence])._scope() // role=fx\n$HATS: arrange([8, HATS_0], [16, HATS_1], [16, HATS_2], [8, HATS_3], [16, HATS_4], [16, HATS_5], [8, HATS_6])._scope() // role=hats\n$KICK: arrange([8, silence], [16, KICK_1], [16, KICK_2], [8, silence], [16, KICK_4], [16, KICK_5], [8, silence])._scope() // role=kick\n$PAD: arrange([8, silence], [16, silence], [16, silence], [8, PAD_3], [16, silence], [16, silence], [8, silence])._pianoroll() // role=pad\n$PERC: arrange([8, silence], [16, PERC_1], [16, PERC_2], [8, silence], [16, PERC_4], [16, PERC_5], [8, silence])._scope() // role=perc\n$SNARE: arrange([8, silence], [16, silence], [16, SNARE_2], [8, silence], [16, silence], [16, SNARE_5], [8, silence])._scope() // role=snare\n$SUB: arrange([8, silence], [16, silence], [16, SUB_2], [8, silence], [16, silence], [16, SUB_5], [8, silence])._pianoroll() // role=sub\n$TEXTURE: arrange([8, TEXTURE_0], [16, silence], [16, silence], [8, TEXTURE_3], [16, silence], [16, silence], [8, TEXTURE_6])._pianoroll() // role=texture",
+  "events": 92
+}
