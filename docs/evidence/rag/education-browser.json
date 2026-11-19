@@ -1,0 +1,12 @@
+{
+  "date":"2026-11-18",
+  "url":"http://localhost:5173/studio.html",
+  "server":"npm run dev; MOCK_LLM=1; no paid LLM calls",
+  "golden":{"prompt":"techno 132 BPM","guide":"edu-guide-techno","guideVisible":true,"validationVisible":true,"trackCount":10,"errorRows":0,"sseTypes":["style","knowledge","genre-validation","spec","compiled","scored","done"]},
+  "failure":{"prompt":"drum and bass 174 BPM","mockBpm":132,"guideRange":[160,180],"attempts":3,"errorRows":1,"errorVisible":true,"trackCountBefore":10,"trackCountAfter":10},
+  "empty":{"compositionRequests":0,"tracePreserved":true,"trackCount":10},
+  "console":{"errors":0,"warnings":0},
+  "screenshot":"docs/evidence/rag/education-studio.png",
+  "humanListening":null,
+  "caveats":["Trace is in the advanced step3 details, not the initial screen.","MOCK_LLM is a mechanical test, not a live model quality comparison.","An initial HMR reload reset the timeline; before/after preservation was retested without HMR.","The mock preview displayed -19.20 LUFS-I, +2.41 dBTP and160 clipped samples; genre checks do not certify L0."]
+}

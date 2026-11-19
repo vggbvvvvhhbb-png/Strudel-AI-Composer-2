@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   parseParts, setPartMuted, setPartSolo, unsoloAll, setPartGain, getPartGain,
+  getPartSound, setPartSound,
   getBpm, setCpm, getKey, setKey, changedRegions, diffLines,
 } from '../../src/core/code-model.js';
 
@@ -120,5 +121,79 @@ describe('diffLines', () => {
     expect(d.filter((x) => x.type === 'del').map((x) => x.text)).toEqual(['b']);
     expect(d.filter((x) => x.type === 'add').map((x) => x.text)).toEqual(['X']);
     expect(d.filter((x) => x.type === 'same').length).toBe(2);
+  });
+});
+
+describe('getPartSound / setPartSound (этап 4, D-131)', () => {
+  // Код из спеки: тело партии вынесено компилятором в секционные константы.
+  const SPEC_CODE = [
+    '// lo-fi — 84 BPM, c:minor',
+    'setCpm(84/4)',
+    'const PIANO_1_0 = n("0 2 4 6").scale("c:minor").s("piano").room(0.2)',
+    'const PIANO_1_1 = n("0 4 2 6").scale("c:minor").s("piano")',
+    'const BASS_1_0 = n("0 ~").scale("c:minor").s("sine").gain(0.4)',
+    '',
+    '$PIANO_1: arrange([4, PIANO_1_0], [12, PIANO_1_1])._pianoroll() // role=chords',
+    '$BASS_1: arrange([16, BASS_1_0])._pianoroll() // role=bass',
+  ].join('\n');
+
+  it('читает звук партии в свободном коде', () => {
+    expect(getPartSound(CODE, 'MEL')).toBe('piano');
+    expect(getPartSound(CODE, 'BASS')).toBe('sawtooth');
+  });
+
+  it('партии с groups/без .s() звука не имеют — чипа в таймлайне нет', () => {
+    expect(getPartSound(CODE, 'DRUMS')).toBeNull();
+    expect(getPartSound(CODE, 'NOPE')).toBeNull();
+  });
+
+  it('читает звук из секционных констант кода спеки', () => {
+    expect(getPartSound(SPEC_CODE, 'PIANO_1')).toBe('piano');
+    expect(getPartSound(SPEC_CODE, 'BASS_1')).toBe('sine');
+  });
+
+  it('заменяет только .s() своей партии: ноты, ритм и чужие партии целы', () => {
+    const next = setPartSound(CODE, 'MEL', 'tp_upright_soft_v1');
+    expect(next).toContain('.s("tp_upright_soft_v1")');
+    expect(next).toContain('note("c4 e4 g4")');
+    expect(next).toContain('.gain(0.5)');
+    expect(getPartSound(next, 'BASS')).toBe('sawtooth');
+    expect(getPartSound(next, 'MEL')).toBe('tp_upright_soft_v1');
+  });
+
+  it('в коде спеки заменяет звук во всех секционных константах партии', () => {
+    const next = setPartSound(SPEC_CODE, 'PIANO_1', 'tp_upright_soft_v1');
+    expect(getPartSound(next, 'PIANO_1')).toBe('tp_upright_soft_v1');
+    expect(next).toContain('const PIANO_1_1 = n("0 4 2 6").scale("c:minor").s("tp_upright_soft_v1")');
+    // Чужая партия и музыкальные события не тронуты.
+    expect(getPartSound(next, 'BASS_1')).toBe('sine');
+    expect(next).toContain('n("0 2 4 6")');
+    expect(next).toContain('.room(0.2)');
+    expect(next).toContain('$PIANO_1: arrange([4, PIANO_1_0], [12, PIANO_1_1])');
+  });
+
+  it('секционный override звука при коде-правке заменяется тоже (ограничение MVP, D-131)', () => {
+    const withOverride = SPEC_CODE.replace(
+      'const PIANO_1_1 = n("0 4 2 6").scale("c:minor").s("piano")',
+      'const PIANO_1_1 = n("0 4 2 6").scale("c:minor").s("triangle")',
+    );
+    const next = setPartSound(withOverride, 'PIANO_1', 'tp_harp_v1');
+    expect(next).not.toContain('.s("triangle")');
+    expect(next).not.toContain('.s("piano")');
+  });
+
+  it('невалидное имя звука и неизвестная партия — код не меняется', () => {
+    expect(setPartSound(CODE, 'MEL', 'bad name')).toBe(CODE);
+    expect(setPartSound(CODE, 'MEL', '../escape')).toBe(CODE);
+    expect(setPartSound(CODE, 'NOPE', 'piano')).toBe(CODE);
+    expect(setPartSound(SPEC_CODE, 'PIANO_1', '')).toBe(SPEC_CODE);
+  });
+
+  it('mute и gain партии переживают смену звука', () => {
+    const muted = setPartMuted(SPEC_CODE, 'PIANO_1', true);
+    const next = setPartSound(muted, 'PIANO_1', 'tp_harp_v1');
+    expect(parseParts(next).find((p) => p.label === 'PIANO_1').muted).toBe(true);
+    expect(getPartGain(next, 'BASS_1')).toBeNull(); // gain в константе, не в регионе партии
+    expect(next).toContain('.gain(0.4)');
   });
 });

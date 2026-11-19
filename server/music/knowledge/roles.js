@@ -18,7 +18,11 @@ import { ROLES as STUDIO_ROLES } from '../../../src/schemas/parts.js';
 export const ROLES = STUDIO_ROLES;
 
 /** Синтезаторы, которые гарантированно зарегистрированы в Strudel. */
-export const SYNTHS = ['sawtooth', 'square', 'triangle', 'sine', 'piano', 'supersaw', 'pulse', 'fm', 'organ', 'am'];
+// Синтезаторы, измеренные как звучащие в @strudel/web 1.3.0 (рендер,
+// 19.11.2026): см. docs/STRUDEL-FACTS.md §5 и docs/evidence/strudel/facts.json.
+// Раньше здесь стояли ещё 'organ' и 'am' — они НЕ звучат: движок отвечает
+// «sound organ not found! Is it loaded?», то есть партия молчала.
+export const SYNTHS = ['sawtooth', 'square', 'triangle', 'sine', 'piano', 'supersaw', 'pulse', 'fm'];
 
 /**
  * Матрица. Ключ — стиль, значение — объект по ролям.
@@ -132,7 +136,7 @@ export const ROLE_MATRIX = {
     bass: { octave: 0, density: 4, patterns: ['0 ~ 2 ~ 4 ~', '0 2 4 ~ 7 ~', '0 ~ 4 ~ 2'], sounds: [], synth: 'triangle' },
     pad: { octave: 1, density: 1, patterns: ['0 2 4', '<0 2 4>'], sounds: [], synth: 'sine' },
     chords: { octave: 1, density: 4, patterns: ['0 2 4 6', '0 2 4', '0 ~ 2 4 6'], sounds: [], synth: 'piano' },
-    lead: { octave: 2, density: 4, patterns: ['4 ~ 5 ~ 7 ~', '2 ~ 4 ~ 5 ~'], sounds: [], synth: 'organ' },
+    lead: { octave: 2, density: 4, patterns: ['4 ~ 5 ~ 7 ~', '2 ~ 4 ~ 5 ~'], sounds: [], synth: 'piano' },
     arp: { octave: 2, density: 8, patterns: ['0 2 4 6', '6 4 2 0'], sounds: [], synth: 'square' },
     fx: { octave: 2, density: 1, patterns: ['stab ~ ~ ~', '~ ~ stab ~'], sounds: ['stab'], synth: null },
     texture: { octave: 1, density: 1, patterns: ['0 ~ ~ ~', '7 ~ ~ ~'], sounds: [], synth: 'sine' },

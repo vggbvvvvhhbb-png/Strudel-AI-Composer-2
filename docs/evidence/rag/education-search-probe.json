@@ -1,0 +1,174 @@
+{
+  "date": "2026-11-18T20:55:47.530Z",
+  "set": "education",
+  "datasetCount": 148,
+  "ollamaAvailable": false,
+  "documentEmbeddings": false,
+  "queries": [
+    {
+      "query": "lofi hip-hop жанровый гайд тёплого грува",
+      "filters": {
+        "genre": [
+          "lofi"
+        ]
+      },
+      "queryEmbeddingAvailable": false,
+      "local": {
+        "stage": "exact",
+        "semantic": false,
+        "degraded": true,
+        "reason": "семантический поиск недоступен — лексическое ранжирование",
+        "top": [
+          {
+            "id": "edu-guide-lofi-hiphop",
+            "score": 1.2
+          },
+          {
+            "id": "kb-lofi-am-dusty-drums",
+            "score": 0.4571
+          },
+          {
+            "id": "kb-lofi-eb-minor-bass",
+            "score": 0.2857
+          }
+        ],
+        "relevantFirst": true
+      },
+      "supabase": null,
+      "expectedId": "edu-guide-lofi-hiphop"
+    },
+    {
+      "query": "techno жанровый гайд пульса и развития",
+      "filters": {
+        "genre": [
+          "techno"
+        ]
+      },
+      "queryEmbeddingAvailable": false,
+      "local": {
+        "stage": "exact",
+        "semantic": false,
+        "degraded": true,
+        "reason": "семантический поиск недоступен — лексическое ранжирование",
+        "top": [
+          {
+            "id": "edu-guide-techno",
+            "score": 1.2
+          },
+          {
+            "id": "edu-house-fourfloor-offbeat",
+            "score": 0.2
+          },
+          {
+            "id": "kb-house-c-major-fourfloor",
+            "score": 0.2
+          }
+        ],
+        "relevantFirst": true
+      },
+      "supabase": null,
+      "expectedId": "edu-guide-techno"
+    },
+    {
+      "query": "drum and bass жанровый гайд two-step",
+      "filters": {
+        "genre": [
+          "dnb"
+        ]
+      },
+      "queryEmbeddingAvailable": false,
+      "local": {
+        "stage": "exact",
+        "semantic": false,
+        "degraded": true,
+        "reason": "семантический поиск недоступен — лексическое ранжирование",
+        "top": [
+          {
+            "id": "edu-guide-dnb",
+            "score": 1.2
+          },
+          {
+            "id": "edu-dnb-two-step",
+            "score": 0.7714
+          },
+          {
+            "id": "kb-dnb-dm-reese-bass",
+            "score": 0.1429
+          }
+        ],
+        "relevantFirst": true
+      },
+      "supabase": null,
+      "expectedId": "edu-guide-dnb"
+    },
+    {
+      "query": "ambient жанровый гайд пространства",
+      "filters": {
+        "genre": [
+          "ambient"
+        ]
+      },
+      "queryEmbeddingAvailable": false,
+      "local": {
+        "stage": "exact",
+        "semantic": false,
+        "degraded": true,
+        "reason": "семантический поиск недоступен — лексическое ранжирование",
+        "top": [
+          {
+            "id": "edu-guide-ambient",
+            "score": 1.2
+          },
+          {
+            "id": "edu-emotion-ambivalence-major-sixth",
+            "score": 0.25
+          },
+          {
+            "id": "edu-emotion-fragile-thin-texture",
+            "score": 0.25
+          }
+        ],
+        "relevantFirst": true
+      },
+      "supabase": null,
+      "expectedId": "edu-guide-ambient"
+    },
+    {
+      "query": "neo-soul жанровый гайд мягкого comping",
+      "filters": {
+        "genre": [
+          "neo-soul"
+        ]
+      },
+      "queryEmbeddingAvailable": false,
+      "local": {
+        "stage": "tonic",
+        "semantic": false,
+        "degraded": true,
+        "reason": "фильтры ослаблены до стадии «tonic» (мало точных совпадений); семантический поиск недоступен — лексическое ранжирование",
+        "top": [
+          {
+            "id": "edu-guide-neo-soul",
+            "score": 1.2
+          },
+          {
+            "id": "edu-guide-funk",
+            "score": 0.5667
+          },
+          {
+            "id": "edu-guide-jazz",
+            "score": 0.5667
+          }
+        ],
+        "relevantFirst": true
+      },
+      "supabase": null,
+      "expectedId": "edu-guide-neo-soul"
+    }
+  ],
+  "relevantFirst": {
+    "local": 5,
+    "supabase": null,
+    "total": 5
+  }
+}

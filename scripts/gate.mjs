@@ -19,6 +19,7 @@
 //   check:licenses   реестр лицензий полон (механика)
 //   licenses:pool    раздел лицензий пула «Охотника» актуален (D-115)
 //   test             все тесты
+//   test:python      регрессии Python-воркера сепарации (D-155)
 //   build            продакшен-сборка
 //   bundle:budget    бюджет бандла
 //   gate:a           гейт фазы A: агент проходит запрос гайда (нужен браузер)
@@ -50,6 +51,7 @@ const STEPS = [
   { name: 'check:licenses', cmd: 'check:licenses', why: 'реестр лицензий полон' },
   { name: 'licenses:pool', cmd: 'licenses:pool -- --check', why: 'раздел лицензий пула актуален' },
   { name: 'test', cmd: 'test', why: 'все тесты' },
+  { name: 'test:python', cmd: 'test:python', why: 'регрессии Python-воркера сепарации' },
   { name: 'build', cmd: 'build', why: 'продакшен-сборка' },
   { name: 'bundle:budget', cmd: 'bundle:budget', why: 'бюджет бандла' },
   { name: 'gate:a', cmd: 'gate:a', why: 'гейт A: помощник-агент проходит запрос гайда' },

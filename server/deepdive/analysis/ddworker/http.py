@@ -13,6 +13,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 import traceback
 from contextlib import contextmanager
@@ -24,10 +25,22 @@ try:  # POSIX-only; на Linux-контейнере всегда есть
 except ImportError:  # pragma: no cover — dev на Windows
     fcntl = None
 
+try:  # Windows-only; на POSIX его нет, там работает flock
+    import msvcrt
+except ImportError:  # pragma: no cover — POSIX
+    msvcrt = None
+
 from .chords import analyze_chords
 from .common import _num, _require_file, _ver, load_audio, rms_envelope
 from .key import analyze_key
 from .loudness import analyze_loudness
+from .memory import (
+    allocator_env,
+    available_memory,
+    classify_failure,
+    classify_memory_error,
+    degradation_ladder,
+)
 from .pitch import analyze_bass_pitch
 from .stems import _activity_by_section, _energy_curve
 from .structure import analyze_structure
@@ -39,54 +52,120 @@ HEAVY_LOCK_PATH = os.environ.get("DD_HEAVY_LOCK", "/lock/heavy.lock")
 HEAVY_LOCK_WAIT_S = int(os.environ.get("DD_HEAVY_LOCK_WAIT_S", "3600"))
 
 
+def _heavy_lock_paths() -> list[Path]:
+    """Куда пробовать взять мьютекс — по порядку.
+
+    На POSIX путь по умолчанию общий с контейнером (/lock/heavy.lock).
+    На Windows такого каталога нет, а fcntl отсутствует, поэтому по умолчанию
+    берётся файл во временном каталоге пользователя. Если каталог недоступен,
+    мьютекс честно не берётся (locked=False), а не делается вид, что он есть.
+    """
+    configured = os.environ.get("DD_HEAVY_LOCK")
+    if configured:
+        return [Path(configured)]
+    if os.name == "nt":
+        return [Path(tempfile.gettempdir()) / "strudel-heavy.lock"]
+    return [Path(HEAVY_LOCK_PATH)]
+
+
+def _lock_windows(handle, deadline: float, path: Path) -> None:
+    """Эксклюзивная блокировка диапазона байтов средствами Windows.
+
+    Аналог flock: блокировка держится ядром, снимается при закрытии дескриптора
+    и при падении процесса — «залипший» мьютекс после краша невозможен.
+    """
+    handle.seek(0, os.SEEK_END)
+    if handle.tell() < 1:
+        handle.write(b"0")
+        handle.flush()
+    while True:
+        handle.seek(0)
+        try:
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            return
+        except OSError:
+            if time.time() >= deadline:
+                raise RuntimeError(
+                    f"мьютекс тяжёлых операций занят дольше {HEAVY_LOCK_WAIT_S} с ({path})"
+                )
+            time.sleep(1.0)
+
+
 @contextmanager
 def heavy_lock():
-    """Взять общий мьютекс тяжёлых операций (flock, эксклюзивно).
+    """Взять общий мьютекс тяжёлых операций (эксклюзивно).
 
     Смысл — механический: на сервере 2 ядра и 3.8 ГБ RAM, Demucs занимает
-    ~1.75 ГБ, две копии сразу — это OOM. flock держится на уровне ядра, поэтому
-    работает и между процессами, и между контейнерами (файл в общем томе).
+    ~1.75 ГБ, две копии сразу — это OOM. Блокировка держится на уровне ядра,
+    поэтому работает и между процессами, и между контейнерами (файл в общем
+    томе).
 
     Ждём, а не падаем: если мьютекс занят, ждём до HEAVY_LOCK_WAIT_S и только
     потом отдаём понятную ошибку.
+
+    Значение — признак того, что мьютекс действительно взят. На POSIX это
+    flock, на Windows — msvcrt.locking (D-156): раньше fcntl на Windows не
+    существовал, и мьютекс был no-op, то есть два тяжёлых задания могли
+    пойти одновременно.
     """
-    if fcntl is None:
+    if fcntl is None and msvcrt is None:
         yield False
         return
 
-    path = Path(HEAVY_LOCK_PATH)
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        pass
-
-    handle = open(path, "a+")
     deadline = time.time() + HEAVY_LOCK_WAIT_S
-    try:
-        while True:
+    for path in _heavy_lock_paths():
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
+        try:
+            handle = open(path, "a+b")
+        except OSError:
+            continue
+        try:
+            if fcntl is not None:
+                while True:
+                    try:
+                        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        break
+                    except OSError:
+                        if time.time() >= deadline:
+                            raise RuntimeError(
+                                f"мьютекс тяжёлых операций занят дольше {HEAVY_LOCK_WAIT_S} с ({path})"
+                            )
+                        time.sleep(1.0)
+            else:
+                _lock_windows(handle, deadline, path)
             try:
-                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break
+                # Владельца пишем в отдельный файл: на Windows запертый диапазон
+                # (байт 0) нельзя прочитать, и сам файл мьютекса остался бы
+                # нечитаемым для диагностики.
+                owner = Path(str(path) + ".owner")
+                owner.write_text(
+                    f"pid={os.getpid()} since={int(time.time())} path={path}\n",
+                    encoding="utf-8",
+                )
             except OSError:
-                if time.time() >= deadline:
-                    raise RuntimeError(
-                        f"мьютекс тяжёлых операций занят дольше {HEAVY_LOCK_WAIT_S} с ({path})"
-                    )
-                time.sleep(1.0)
-        try:
-            handle.seek(0)
-            handle.truncate()
-            handle.write(f"pid={os.getpid()} since={int(time.time())}\n")
-            handle.flush()
-        except OSError:
-            pass
-        yield True
-    finally:
-        try:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
-        except OSError:
-            pass
-        handle.close()
+                pass
+            yield True
+            return
+        finally:
+            try:
+                if fcntl is not None:
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+                else:
+                    handle.seek(0)
+                    msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            except OSError:
+                pass
+            handle.close()
+            try:
+                # Помечаем мьютекс свободным: оставшийся pid без этого вводил бы
+                # в заблуждение — выглядел бы как занятый мьютекс.
+                owner = Path(str(path) + ".owner")
+                owner.write_text(f"pid=none released={int(time.time())} path={path}\n", encoding="utf-8")
+            except OSError:
+                pass
 
 
 def health_payload() -> dict:
@@ -199,6 +278,83 @@ def _venv_python() -> str:
     return sys.executable
 
 
+def _check_separation_memory() -> None:
+    """Предохранитель перед Demucs: нехватка commit memory — явный отказ.
+
+    ИЗМЕРЕНИЕ (D-153, E-031): на машине владельца свободный commit падал до
+    3352 МБ во время сепарации, и нативный краш случался при 12.22 МБ
+    доступного commit при 2032 МБ свободной физической RAM. Поэтому меряется
+    именно commit (ullAvailPageFile), а не «свободная RAM».
+
+    Порог 3072 МБ — измеренный и консервативный (D-153). Его можно переопределить
+    переменной DEMUCS_MIN_COMMIT_MB, но значение по умолчанию не «выдумано»:
+    оно опирается на замеры E-031. Пробел памяти приходит в ответе с числами
+    (available_commit_mb), а не словами.
+    """
+    if os.name != "nt":
+        return
+    import ctypes
+    from ctypes import wintypes
+
+    class MemoryStatus(ctypes.Structure):
+        _fields_ = [("length", wintypes.DWORD), ("load", wintypes.DWORD)] + [
+            (name, ctypes.c_ulonglong) for name in (
+                "total_physical", "available_physical", "total_commit", "available_commit",
+                "total_virtual", "available_virtual", "available_extended_virtual",
+            )
+        ]
+
+    status = MemoryStatus()
+    status.length = ctypes.sizeof(status)
+    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+        raise RuntimeError("не удалось проверить запас commit memory Windows перед Demucs")
+    available_mb = status.available_commit // (1024 * 1024)
+    # Свободная физическая RAM не отражает оставшийся лимит выделения памяти Windows.
+    threshold_mb = int(os.environ.get("DEMUCS_MIN_COMMIT_MB") or 3072)
+    if available_mb < threshold_mb:
+        raise RuntimeError(
+            f"Demucs не запущен: запас commit memory Windows {available_mb} МБ, нужно не менее {threshold_mb} МБ. "
+            "Закройте ненужные приложения и повторите задачу; наличие CUDA не гарантирует запас памяти."
+        )
+
+
+def _memory_status_payload(kind: str, message: str, attempts: list[dict], measured: dict | None) -> dict:
+    """Терминальный ответ «не хватило памяти».
+
+    Формат зафиксирован D-158: status, kind, message, attempts[], measured,
+    degraded. Это НЕ ошибка HTTP и НЕ успех: разделения не состоялось, но
+    разбор продолжается без стемов, а причина и числа видны клиенту.
+    """
+    return {
+        "status": "insufficient_memory",
+        "kind": kind,
+        "message": message,
+        "attempts": attempts,
+        "measured": measured or {"available_commit_mb": None, "reason": "нет данных"},
+        "degraded": True,
+    }
+
+
+class WorkerCrashError(RuntimeError):
+    """Нативное падение дочернего процесса (D-153, D-158).
+
+    Остаётся RuntimeError: полный native stderr сохраняется, а код выхода
+    виден в сообщении — эта гарантия проверяется регрессией с 19.11.2026.
+    Дополнительно несёт kind='worker_crashed', чтобы клиентская цепочка
+    отличала нативный краш от прочих ошибок.
+
+    Лестницу деградации краш НЕ проходит: он не «не хватило памяти» в смысле
+    OOM, это сбой процесса. Повторять его пять раз с разными segment — трата
+    минут без диагностической ценности.
+    """
+
+    def __init__(self, message: str, *, kind: str = "worker_crashed") -> None:
+        super().__init__(message)
+        self.kind = kind
+
+
+
+
 def handle_separate(body: dict) -> dict:
     path = _require_file(body.get("path"))
     model = str(body.get("model") or "htdemucs")
@@ -209,33 +365,98 @@ def handle_separate(body: dict) -> dict:
     out_path.mkdir(parents=True, exist_ok=True)
 
     python = _venv_python()
-    command = [python, "-m", "demucs", "-n", model, "-o", str(out_path), path]
     started = time.time()
-    try:
-        # Мьютекс держим ВОКРУГ запуска Demucs: ровно то время, когда память
-        # занята по-настоящему.
-        with heavy_lock() as locked:
-            if locked:
-                sys.stderr.write(
-                    json.dumps(
-                        {"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "event": "heavy-lock-acquired",
-                         "model": model, "path": str(path)},
-                        ensure_ascii=False,
-                    ) + "\n"
-                )
-                sys.stderr.flush()
-            completed = subprocess.run(
-                command, capture_output=True, text=True, timeout=7200, check=False
+    attempts: list[dict] = []
+    measured = available_memory()
+
+    # CPU-режим разрешён, только если свободного commit хватает: иначе мы бы
+    # просто перенесли тот же отказ по памяти в другой оболочку.
+    allow_cpu = bool(
+        measured.get("available_commit_mb") is not None
+        and measured["available_commit_mb"] >= (int(os.environ.get("DEMUCS_MIN_COMMIT_MB") or 3072))
+    )
+    ladder = degradation_ladder(model=model, allow_cpu=allow_cpu)
+
+    with heavy_lock() as locked:
+        _check_separation_memory()
+        if locked:
+            sys.stderr.write(
+                json.dumps(
+                    {"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "event": "heavy-lock-acquired",
+                     "model": model, "path": str(path)},
+                    ensure_ascii=False,
+                ) + "\n"
             )
-    except FileNotFoundError as exc:
-        raise RuntimeError(f"не найден интерпретатор для demucs: {python}") from exc
-    except subprocess.TimeoutExpired as exc:
-        raise RuntimeError("demucs не уложился в таймаут 7200 с") from exc
+            sys.stderr.flush()
 
-    if completed.returncode != 0:
-        tail = (completed.stderr or completed.stdout or "")[-800:]
-        raise RuntimeError(f"demucs завершился с кодом {completed.returncode}: {tail}")
+        for attempt in ladder:
+            env = allocator_env({**os.environ, **attempt["env"], "PYTHONIOENCODING": "utf-8"})
+            command = [python, "-X", "faulthandler", "-m", "demucs", *attempt["args"], "-o", str(out_path), path]
+            try:
+                completed = subprocess.run(
+                    command, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                    env=env, timeout=7200, check=False
+                )
+            except FileNotFoundError as exc:
+                raise RuntimeError(f"не найден интерпретатор для demucs: {python}") from exc
+            except subprocess.TimeoutExpired as exc:
+                raise RuntimeError("demucs не уложился в таймаут 7200 с") from exc
 
+            if completed.returncode == 0:
+                (out_path / "demucs.stderr.log").write_text(completed.stderr or "", encoding="utf-8")
+                attempts.append({"step": attempt["step"], "params": attempt["args"], "ok": True, "error": None})
+                found = _collect_stems(out_path)
+                if not found:
+                    raise RuntimeError("demucs отработал, но файлы стемов не найдены в out_dir")
+                return {
+                    "stems": found,
+                    "seconds": _num(time.time() - started, 2),
+                    "model": model,
+                    "attempts": attempts,
+                    "degraded": attempt["degraded"],
+                    "measured": measured,
+                }
+
+            # Отказ: пишем полный stderr (как и раньше) и разбираем причину.
+            (out_path / "demucs.stderr.log").write_text(completed.stderr or "", encoding="utf-8")
+            tail = (completed.stderr or completed.stdout or "")[-800:]
+            kind = classify_failure(completed.returncode, completed.stderr or completed.stdout or "")
+            attempts.append({
+                "step": attempt["step"],
+                "params": attempt["args"],
+                "ok": False,
+                "error": f"код {completed.returncode}: {tail}",
+                "kind": kind,
+            })
+            if kind == "worker_crashed":
+                # Нативный краш: полный stderr уже сохранён, код выхода виден.
+                # Это сбой процесса, а не нехватка памяти — лестница тут не поможет.
+                raise WorkerCrashError(
+                    f"demucs завершился с кодом {completed.returncode}: {tail}; полный stderr: demucs.stderr.log в out_dir",
+                    kind=kind,
+                )
+            if kind is None:
+                # Это не отказ по памяти — дальше идти незачем: причина другая.
+                raise RuntimeError(
+                    f"demucs завершился с кодом {completed.returncode}: {tail}; полный stderr: demucs.stderr.log в out_dir"
+                )
+            # Отказ по памяти: пробуем следующую ступень лестницы.
+
+    # Лестница исчерпана — честный терминальный отказ с числами и попытками.
+    last = attempts[-1] if attempts else {}
+    return _memory_status_payload(
+        kind=last.get("kind") or "host_alloc",
+        message=(
+            "Не хватило памяти для разделения: все экономные режимы Demucs исчерпаны "
+            f"(последняя попытка — {last.get('step', '—')})."
+        ),
+        attempts=attempts,
+        measured=measured,
+    )
+
+
+def _collect_stems(out_path: Path) -> dict:
+    """Найти файлы стемов в каталоге результата (последняя версия каждого слоя)."""
     found: dict = {}
     for stem in ("drums", "bass", "vocals", "other"):
         matches = sorted(
@@ -245,15 +466,8 @@ def handle_separate(body: dict) -> dict:
         )
         if matches:
             found[stem] = str(matches[0].resolve())
+    return found
 
-    if not found:
-        raise RuntimeError("demucs отработал, но файлы стемов не найдены в out_dir")
-
-    return {
-        "stems": found,
-        "seconds": _num(time.time() - started, 2),
-        "model": model,
-    }
 
 
 # --------------------------------------------------------------------------- #
@@ -332,6 +546,23 @@ class DDHandler(BaseHTTPRequestHandler):
         return 404, {"error": f"неизвестный маршрут: {route}"}
 
 
+class DDServer(ThreadingHTTPServer):
+    """HTTP-сервер воркера без шумных трассировок на обычный разрыв.
+
+    Клиент (демон) закрывает соединение, когда ответ уже получен — это
+    нормальная жизнь, а не авария. Стандартный socketserver печатает на такое
+    полную трассировку, и в логе воркера она выглядит как сбой.
+    """
+
+    daemon_threads = True
+
+    def handle_error(self, request, client_address):  # noqa: D102 — как в socketserver
+        exc = sys.exc_info()[1]
+        if isinstance(exc, (ConnectionResetError, BrokenPipeError, ConnectionAbortedError)):
+            return
+        super().handle_error(request, client_address)
+
+
 def _port() -> int:
     try:
         return int(os.environ.get("DD_PORT") or 8010)
@@ -341,7 +572,7 @@ def _port() -> int:
 
 def main() -> None:
     port = _port()
-    server = ThreadingHTTPServer(("0.0.0.0", port), DDHandler)
+    server = DDServer(("0.0.0.0", port), DDHandler)
     server.daemon_threads = True
     sys.stderr.write(f"DD worker listening on :{port}\n")
     sys.stderr.flush()

@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-19",
+  "environment": {
+    "platform": "Windows x64",
+    "python": "3.12.16",
+    "torch": "2.5.1+cu121",
+    "torchaudio": "2.5.1+cu121",
+    "demucs": "4.1.0",
+    "numpy": "2.5.4",
+    "librosa": "1.0.1",
+    "soundfile": "0.14.0",
+    "gpu": "NVIDIA GeForce RTX 2060 SUPER",
+    "gpuMemoryMb": 8192,
+    "driver": "572.60"
+  },
+  "source": "Own synthetic WAVs; cached htdemucs weights; no third-party reference download",
+  "verifiedObservations": {
+    "synthetic12s": {
+      "sampleRate": 22050,
+      "channels": 2,
+      "frames": 264600,
+      "cpuExitCode": 3221225477,
+      "cpuException": "0xC0000005",
+      "cpuWallSeconds": 2.865,
+      "nativeStackLocation": "torch/nn/modules/conv.py:370",
+      "phase": "inference, before WAV save",
+      "minAvailableCommitMb": 12.22,
+      "availablePhysicalMbAtMinCommit": 2032.72,
+      "totalCommitMb": 25398.86
+    },
+    "synthetic2s": {
+      "sampleRate": 44100,
+      "channels": 2,
+      "frames": 88200,
+      "cpuExitCode": 0,
+      "cpuWallSeconds": 6.936,
+      "validatedStemCount": 4
+    },
+    "wavWriters": {
+      "demucs": "passed",
+      "soundfile": "passed",
+      "torchaudio": "passed"
+    },
+    "productionMemoryGuard": {
+      "minimumCommitMb": 3072,
+      "directCheckAvailableCommitMb": 1977,
+      "result": "explicit refusal before Demucs launch"
+    },
+    "pythonRegressionTests": 7
+  },
+  "caveats": [
+    "Commit exhaustion is measured; the original E-026 run had no native stack, so its exact fault is not proven.",
+    "The 3072 MiB headroom threshold is a conservative admission guard, not a calibrated success guarantee.",
+    "Two-second CPU success does not close the 12-second P5 or 60-second GPU first-twin gate.",
+    "No dependencies, drivers, page-file settings or owner processes were changed."
+  ],
+  "rawEvidenceDirectory": ".scratch/demucs-diag-20261119-01"
+}

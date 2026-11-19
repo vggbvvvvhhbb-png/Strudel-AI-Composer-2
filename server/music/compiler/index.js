@@ -142,11 +142,16 @@ function sectionBody(part, id, role, section, scale, key, timbreCatalog) {
   if (!hasGroups && typeof part.swing === 'number' && Number.isFinite(part.swing) && part.swing > 0.001) {
     body += `.swingBy(${part.swing}, 8)`;
   }
+  // Автоматизация секции — МОНОТОННЫЙ рамп. Раньше здесь был `sine.slow(N)`, и это
+  // была ошибка: синус за секцию проходит полный период, поэтому «свип» фильтра
+  // открывался И СНОВА ЗАКРЫВАЛСЯ (измерено: срез 3650 → 7000 → 300 → 3322 Гц за
+  // 16 тактов, две смены направления — E-042). `time.slow(N)` идёт в одну сторону:
+  // измерено 300 → 6581 Гц, ноль смен направления (D-160).
   if (section.parameters?.cutoff) {
-    body += `.lpf(sine.slow(${section.cycles}).range(${section.parameters.cutoff.join(', ')}))`;
+    body += `.lpf(time.slow(${section.cycles}).range(${section.parameters.cutoff.join(', ')}))`;
   }
   if (section.parameters?.gain) {
-    body += `.gain(sine.slow(${section.cycles}).range(${section.parameters.gain.join(', ')}))`;
+    body += `.gain(time.slow(${section.cycles}).range(${section.parameters.gain.join(', ')}))`;
   }
   return body;
 }

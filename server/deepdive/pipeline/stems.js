@@ -16,6 +16,7 @@ import path from 'node:path';
 import { measureActivity, measureDrums } from '../audio/measure.js';
 import { readWav } from './helpers.js';
 import { STEM_LAYERS } from './constants.js';
+import { isInsufficientMemory } from '../analysis/client.js';
 
 /**
  * Этап 2: разделение трека на стемы.
@@ -43,11 +44,71 @@ export async function separateStage({
       if (file) stemPaths[layer] = file;
     }
   } catch (err) {
-    // Честная деградация: разбор продолжается без стемов.
-    errors.push({ stage: 'separate', message: `Разделение на стемы не удалось: ${err.message}` });
+    // Отказ по памяти — измеренный факт о машине, а не сбой. Разбор продолжается
+    // без стемов, но человек должен увидеть ЧТО кончилось, СКОЛЬКО было
+    // свободно и что можно сделать (D-158).
+    if (isInsufficientMemory(err)) {
+      errors.push({
+        stage: 'separate',
+        message: memoryAdvice(err),
+        fatal: false,
+        status: 'insufficient_memory',
+        kind: err.kind ?? null,
+        measured: err.measured ?? null,
+        attempts: (err.attempts ?? []).map((item) => ({
+          step: item?.step ?? null,
+          ok: Boolean(item?.ok),
+          kind: item?.kind ?? null,
+          error: item?.error ?? null,
+        })),
+      });
+    } else {
+      // Честная деградация: разбор продолжается без стемов.
+      errors.push({ stage: 'separate', message: `Разделение на стемы не удалось: ${err.message}` });
+    }
   }
   return { stemPaths, separation };
 }
+
+/**
+ * Человеческий текст отказа по памяти: что случилось, что измерено, что делать.
+ *
+ * Числа подставляются из измерения, а не выдумываются. Если числа нет —
+ * пишется «нет данных», а не ноль (D-102).
+ *
+ * @param {import('../analysis/client.js').InsufficientMemoryError} err
+ * @returns {string}
+ */
+export function memoryAdvice(err) {
+  const kind = err?.kind ?? null;
+  const measured = err?.measured ?? null;
+  const available = measured?.available_commit_mb ?? null;
+  const attempts = Array.isArray(err?.attempts) ? err.attempts : [];
+  const tried = attempts.length
+    ? attempts.map((item) => item?.step).filter(Boolean).join(' → ')
+    : null;
+
+  const what = {
+    cuda_oom: 'видеопамять GPU исчерпана',
+    host_alloc: 'оперативная память исчерпана',
+    commit_limit: 'лимит выделения памяти Windows (commit) исчерпан',
+    worker_crashed: 'процесс Demucs был убит системой',
+  }[kind] ?? 'памяти не хватило';
+
+  const parts = [`Разделение на стемы не состоялось: ${what}.`];
+  if (available !== null && available !== undefined) {
+    parts.push(`Свободный commit memory на момент отказа: ${available} МБ.`);
+  } else {
+    parts.push('Запас памяти на момент отказа: нет данных.');
+  }
+  if (tried) parts.push(`Пробованные экономные режимы: ${tried}.`);
+  parts.push(
+    'Что можно сделать: закройте тяжёлые программы (браузер, редакторы, Ollama), '
+    + 'увеличьте файл подкачки на диске со свободным местом или возьмите короткий фрагмент трека.',
+  );
+  return parts.join(' ');
+}
+
 
 /**
  * Этап 3: дескрипторы слоёв.

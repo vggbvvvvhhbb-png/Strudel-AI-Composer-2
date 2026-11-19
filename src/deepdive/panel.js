@@ -18,8 +18,9 @@ import {
   renderMetrics,
   renderHonesty,
   renderIterations,
+  renderFailures,
 } from './render.js';
-import { estimateDeepDive, formatEstimate, formatRemaining } from './estimate.js';
+import { estimateDeepDive, formatEstimateScope, formatStageRemaining } from './estimate.js';
 import { syncMixer } from '../mixer.js';
 import { syncTransport } from '../transport.js';
 import { log } from '../ui.js';
@@ -290,14 +291,11 @@ function updateEstimate(serverEstimate = null) {
     : estimateDeepDive({ durationS, separate, model });
 
   box.hidden = false;
-  const headline = `Оценка: ${formatEstimate(estimate)}`;
-  const detail = estimate.separate
-    ? 'разделение на стемы на CPU — верхняя граница по худшему замеру'
-    : 'без разделения на стемы';
+  const headline = formatEstimateScope(estimate);
   const modelNote = estimate.separate && model === 'htdemucs_ft'
     ? '· режим «высокое качество» (экспериментальный, ночной)'
     : '';
-  box.textContent = `${headline} · ${detail}${modelNote}`;
+  box.textContent = `${headline}${modelNote}`;
 }
 
 function copyPermalink() {
@@ -466,18 +464,14 @@ function updateProgress(stage, label, progress, eta = null) {
  */
 function startEta(label, seconds) {
   state.eta = { label, deadline: Date.now() + Number(seconds) * 1000 };
-  if (state.etaTimer) return;
-  state.etaTimer = setInterval(() => {
-    if (!state.eta) {
-      stopEta();
-      return;
-    }
+  const update = () => {
+    if (!state.eta) return;
     const left = Math.round((state.eta.deadline - Date.now()) / 1000);
     const stageEl = $('dive-stage');
-    if (stageEl && left > 0) {
-      stageEl.textContent = `${state.eta.label} — ${formatRemaining(left)}`;
-    }
-  }, 30000);
+    if (stageEl) stageEl.textContent = formatStageRemaining(state.eta.label, left);
+  };
+  update();
+  if (!state.etaTimer) state.etaTimer = setInterval(update, 30000);
 }
 
 function stopEta() {
@@ -527,6 +521,7 @@ function applyPayload(payload) {
   renderTwin(payload);
   renderMetrics(payload);
   renderHonesty(payload);
+  renderFailures(payload);
   renderIterations(payload);
 
   loadTwinAudio(payload);

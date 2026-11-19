@@ -279,6 +279,10 @@ router.post('/api/deepdive/analyze', (req, res) => {
         const lock = await lockPromise;
         if (lock?.error) throw lock.error;
         try {
+          sse(res, {
+            type: 'stage', stage: 'separate', label: 'Разделение на стемы', progress: 0.3,
+            ...(estimate ? { eta: { seconds: estimate.secondsMax, label: formatEstimate(estimate) } } : {}),
+          });
           const separation = await separateStems(originalWav, stemsDir, {
             model: options?.model || model,
             stage: 'separate',
@@ -312,10 +316,6 @@ router.post('/api/deepdive/analyze', (req, res) => {
         onStage: (event) => {
           job.progress = event.progress ?? job.progress;
           const payload = { type: 'stage', ...event };
-          // Пока идёт разделение — показываем, сколько ждать осталось.
-          if (event.stage === 'separate' && estimate) {
-            payload.eta = { seconds: estimate.secondsMax, label: formatEstimate(estimate) };
-          }
           sse(res, payload);
         },
         onPassport: (passport) => {

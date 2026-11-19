@@ -40,10 +40,12 @@ function daemon() {
  * @param {Error} err
  */
 function daemonError(res, err) {
-  // Коды демона сохраняются: «неизвестный тип задачи» (400) и «нет такой
-  // задачи» (404) — это ошибки запроса, а не «демон недоступен». Иначе
-  // клиент получил бы 503 и подумал бы, что демон лежит.
-  const status = err?.status === 400 || err?.status === 404 ? err.status : 503;
+  // Коды демона сохраняются: «неизвестный тип задачи» (400), «нет такой
+  // задачи» (404), «слишком большое тело» (413), «не тот content-type» (415)
+  // и «слишком много задач» (429) — это ошибки запроса, а не «демон
+  // недоступен». Иначе клиент получил бы 503 и подумал бы, что демон лежит.
+  const passthrough = [400, 404, 413, 415, 429];
+  const status = passthrough.includes(err?.status) ? err.status : 503;
   res.status(status).json({
     error: err?.message || 'Демон недоступен',
     daemonConfigured: Boolean(DAEMON_URL),
@@ -100,7 +102,12 @@ router.post('/tasks', async (req, res) => {
       res.status(400).json({ error: 'Нужен тип задачи (type).' });
       return;
     }
-    const task = await client.submit(type, req.body?.payload ?? {});
+    // Идентификатор задачи от клиента: повторный запрос с тем же id не
+    // ставит тяжёлую работу второй раз (идемпотентность на стороне демона).
+    const id = typeof req.body?.id === 'string' && /^[A-Za-z0-9._-]{8,128}$/.test(req.body.id)
+      ? req.body.id
+      : undefined;
+    const task = await client.submit(type, req.body?.payload ?? {}, { id });
     res.status(202).json(task);
   } catch (err) {
     daemonError(res, err);
@@ -144,23 +151,31 @@ router.get('/tasks/:id/stream', async (req, res) => {
     res.status(503).json({ error: 'Локальный демон не настроен (LOCAL_DAEMON_URL).' });
     return;
   }
+  let task;
+  try {
+    task = await client.status(req.params.id);
+  } catch (err) {
+    daemonError(res, err);
+    return;
+  }
+  if (res.destroyed) return;
   res.writeHead(200, {
     'content-type': 'text/event-stream; charset=utf-8',
     'cache-control': 'no-store',
     connection: 'keep-alive',
   });
-  try {
-    const { status } = await client.status(req.params.id);
-    res.write(`event: snapshot\ndata: ${JSON.stringify({ type: 'snapshot', task: status })}\n\n`);
-  } catch {
-    // Демон мог не ответить на статус — стрим всё равно попробует отдать события.
+  res.write(`event: snapshot\ndata: ${JSON.stringify({ type: 'snapshot', task })}\n\n`);
+  if (task.state === 'done' || task.state === 'error') {
+    res.end(`event: ${task.state}\ndata: ${JSON.stringify({ type: task.state, task })}\n\n`);
+    return;
   }
   const { streamTask } = await import('../../local/client.mjs');
+  if (res.destroyed) return;
   const stop = streamTask(req.params.id, (event) => {
     res.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
     if (event.type === 'done' || event.type === 'error') res.end();
   }, { baseUrl: DAEMON_URL, token: DAEMON_TOKEN });
-  req.on('close', () => stop());
+  res.on('close', stop);
 });
 
 // WAV готового рендера: прокси от демона. Токен демона остаётся на сервере —

@@ -27,6 +27,21 @@ const SPEC = {
 };
 const copy = () => structuredClone(SPEC);
 
+/**
+ * Сколько раз ряд значений меняет направление. Монотонный рамп — ноль.
+ * Именно эта величина отличала рабочий `time.slow(N)` от сломанного
+ * `sine.slow(N)`, который за секцию проходил полный период синуса (D-160).
+ */
+function directionChanges(values) {
+  let turns = 0;
+  for (let i = 2; i < values.length; i += 1) {
+    const prev = values[i - 1] - values[i - 2];
+    const cur = values[i] - values[i - 1];
+    if (prev !== 0 && cur !== 0 && Math.sign(prev) !== Math.sign(cur)) turns += 1;
+  }
+  return turns;
+}
+
 describe('каноническая схема и смысловые границы', () => {
   it('валидный план проходит единую Zod-схему без изменения полей', () => {
     expect(TrackSpecSchema.parse(SPEC)).toEqual(SPEC);
@@ -138,6 +153,23 @@ describe('детерминированная компиляция и интег�
     expect(new Set(build.map((h) => h.value.cutoff)).size).toBeGreaterThan(1);
     const drop = run.parts.KICK.filter((h) => h.whole.begin >= 24 && h.whole.begin < 40);
     expect(new Set(drop.map((h) => h.value.gain)).size).toBeGreaterThan(1);
+  });
+  it('срез фильтра секции идёт в одну сторону, а не колеблется (D-160)', async () => {
+    const run = await runStrudel(compileTrackSpec(SPEC), { cycles: 48 });
+    expect(run.ok, run.error).toBe(true);
+    const build = run.parts.BASS.filter((h) => h.whole.begin >= 8 && h.whole.begin < 24);
+    const cutoffs = build.map((h) => h.value.cutoff).filter((v) => typeof v === 'number');
+    expect(cutoffs.length).toBeGreaterThan(8);
+    expect(directionChanges(cutoffs), 'срез фильтра должен расти монотонно').toBe(0);
+    expect(cutoffs[0]).toBeLessThan(cutoffs[cutoffs.length - 1]);
+  });
+  it('громкость секции нарастает монотонно, а не пульсирует (D-160)', async () => {
+    const run = await runStrudel(compileTrackSpec(SPEC), { cycles: 48 });
+    expect(run.ok, run.error).toBe(true);
+    const drop = run.parts.KICK.filter((h) => h.whole.begin >= 24 && h.whole.begin < 40);
+    const gains = drop.map((h) => h.value.gain).filter((v) => typeof v === 'number');
+    expect(gains.length).toBeGreaterThan(8);
+    expect(directionChanges(gains), 'громкость секции должна расти монотонно').toBe(0);
   });
 });
 

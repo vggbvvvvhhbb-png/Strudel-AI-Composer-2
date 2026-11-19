@@ -247,4 +247,31 @@ describe('каталог Timbre: атрибуция TASL', () => {
     expect(report.presets[0].strudelAlias).toBe('tp_test_piano_v1');
     expect(report.presets[0].roles).toEqual(['chords', 'lead']);
   });
+
+  it('карточка пресета: лицензия, превью ближайшей к C4 зоны, атрибуция (D-131)', () => {
+    const low = makeAsset({ id: 'asset-low', root_midi: 36, file: 'tp_test_piano_v1/c2.ogg' });
+    const mid = makeAsset({ id: 'asset-mid', root_midi: 60, file: 'tp_test_piano_v1/c4.ogg' });
+    const catalog = makeCatalog({
+      asset: mid,
+      zones: [
+        { instrument_id: 'tp-test-piano-v1', asset_id: 'asset-low', root_key: 36, key_low: 0, key_high: 47 },
+        { instrument_id: 'tp-test-piano-v1', asset_id: 'asset-mid', root_key: 60, key_low: 48, key_high: 127 },
+      ],
+    });
+    catalog.assets['asset-low'] = low;
+    const [preset] = timbreReport(catalog).presets;
+    expect(preset.license).toBe('CC0-1.0');
+    expect(preset.preview).toBe('/timbre-audio/tp_test_piano_v1/c4.ogg');
+    expect(preset.attribution).toContain('CC0-1.0');
+  });
+
+  it('смешанные лицензии ассетов видны в карточке, а не усредняются', () => {
+    const byAsset = makeAsset({ id: 'asset-by', licenseId: 'cc-by', license: 'CC BY 4.0' });
+    const catalog = makeCatalog();
+    catalog.assets['asset-by'] = byAsset;
+    catalog.zones.push({ instrument_id: 'tp-test-piano-v1', asset_id: 'asset-by', root_key: 72, key_low: 61, key_high: 127 });
+    const [preset] = timbreReport(catalog).presets;
+    expect(preset.licenses).toEqual(['CC BY 4.0', 'CC0-1.0']);
+    expect(preset.license).toBe('CC BY 4.0 + CC0-1.0');
+  });
 });

@@ -27,6 +27,8 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { RENDER_SEED, RENDER_POLICY_VERSION } from '../../../src/audio/render/seed.js';
+import { pickBrowserPath, sweepStaleBrowserProfilesOnce, formatSweepReport } from '../../../lib/browser.mjs';
 
 import { POOL_AUDIO_DIR } from '../../samples/pool.js';
 import { timbreAudioFile, loadTimbreCatalog, TIMBRE_DIR } from '../../samples/timbre.js';
@@ -41,30 +43,8 @@ const BUNDLE_FILE = path.join(HERE, 'dist', 'render-bundle.js');
 const STRUDEL_BUNDLE = path.join(ROOT, 'node_modules', '@strudel', 'web', 'dist', 'index.js');
 const PAGE_FILE = path.join(HERE, 'render-page.html');
 
-// Браузер ищется в стандартных местах; переменная CHROME_PATH переопределяет.
-const CHROME_PATHS = [
-  process.env.CHROME_PATH,
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-  '/usr/bin/google-chrome',
-  '/usr/bin/google-chrome-stable',
-  '/usr/bin/chromium',
-  '/usr/bin/chromium-browser',
-].filter(Boolean);
-
 const BASE_ARGS = ['--no-sandbox', '--mute-audio'];
 const AUTOPLAY_ARGS = ['--autoplay-policy=no-user-gesture-required'];
-
-function pickBrowserPath() {
-  for (const candidate of CHROME_PATHS) {
-    if (candidate && existsSync(candidate)) return candidate;
-  }
-  throw new Error(
-    'Не найден ни Chrome, ни Edge в стандартных путях. Задайте CHROME_PATH или поставьте браузер в образ.',
-  );
-}
 
 /** sha256 кода — часть паспорта рендера. */
 export function codeFingerprint(code) {
@@ -209,6 +189,11 @@ function timbrePayloadForCode(code, explicitAliases) {
 }
 
 export async function createRenderWorker(options = {}) {
+  // Уборка осиротевших профилей Playwright: один раз на процесс, до запуска
+  // браузера (модуль сам глотает ошибки доступа к tmpdir).
+  const sweep = sweepStaleBrowserProfilesOnce();
+  if (sweep) console.log(formatSweepReport(sweep));
+
   if (!existsSync(BUNDLE_FILE)) {
     await buildRenderBundle(options);
   }
@@ -217,96 +202,158 @@ export async function createRenderWorker(options = {}) {
   }
 
   const { chromium } = options.browser || (await import('playwright-core'));
-  const { server, port } = await startServer();
+  let { server, port } = await startServer();
 
-  const browser = await chromium.launch({
+  let browser;
+  let firstPage;
+  let closed = false;
+  let closing = false;
+  let shutdownPromise;
+  let closePromise;
+  let queue = Promise.resolve();
+  const consoleErrors = [];
+
+  function shutdown() {
+    closed = true;
+    shutdownPromise ??= (async () => {
+      try {
+        await browser?.close();
+      } finally {
+        await new Promise((resolve) => server.close(resolve));
+      }
+    })();
+    return shutdownPromise;
+  }
+
+  async function freshPage() {
+    // Browser.newPage создаёт собственный BrowserContext; page.close закрывает
+    // и его. Chromium общий, но JS/DSP-пулы не переходят в следующий рендер.
+    const page = await browser.newPage();
+    try {
+      page.on('pageerror', (err) => consoleErrors.push(String(err && err.message)));
+      page.on('console', (msg) => {
+        if (msg.type() === 'error') consoleErrors.push(msg.text());
+      });
+      page.setDefaultTimeout(options.timeoutMs ?? 60000);
+      await page.goto(`http://127.0.0.1:${port}/render-page.html`, { waitUntil: 'load' });
+      await page.waitForFunction(() => window.__renderTwin && window.__renderTwin.ready, null, { timeout: options.timeoutMs ?? 60000 });
+      const init = await page.evaluate(() => window.__renderTwin.init());
+      if (!init || init.ok !== true) {
+        throw new Error('Движок в браузере не инициализировался: ' + JSON.stringify(init));
+      }
+      return page;
+    } catch (error) {
+      await page.close().catch(() => {});
+      throw error;
+    }
+  }
+
+  const launchBrowser = () => chromium.launch({
     executablePath: pickBrowserPath(),
     headless: options.headless !== false,
     args: [...BASE_ARGS, ...AUTOPLAY_ARGS],
   });
 
-  const page = await browser.newPage();
-  const consoleErrors = [];
-  page.on('pageerror', (err) => consoleErrors.push(String(err && err.message)));
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') consoleErrors.push(msg.text());
-  });
+  try {
+    browser = await launchBrowser();
+    // Сохраняем API worker.page: готовая страница доступна probes до первого
+    // render, используется ровно один раз и затем закрывается в finally.
+    firstPage = await freshPage();
+  } catch (error) {
+    await shutdown().catch(() => {});
+    throw error;
+  }
 
-  await page.goto(`http://127.0.0.1:${port}/render-page.html`, { waitUntil: 'load' });
-  await page.waitForFunction(() => window.__renderTwin && window.__renderTwin.ready, null, { timeout: options.timeoutMs ?? 60000 });
-  const init = await page.evaluate(() => window.__renderTwin.init());
-  if (!init || init.ok !== true) {
-    await browser.close();
-    server.close();
-    throw new Error('Движок в браузере не инициализировался: ' + JSON.stringify(init));
+  async function render(args) {
+    const startedAt = Date.now();
+    let page = firstPage;
+    firstPage = null;
+    try {
+      try {
+        if (closed) {
+          // Пул кэширует объект worker: после ошибки сохраняем возможность
+          // следующего render, но НЕ оживляем ресурсы после явного close().
+          ({ server, port } = await startServer());
+          shutdownPromise = undefined;
+          closed = false;
+          browser = null;
+          browser = await launchBrowser();
+          worker.browser = browser;
+        }
+        page ??= await freshPage();
+        worker.page = page;
+        // Пул и Timbre прогреваются заново внутри каждой свежей страницы.
+        const poolSamples = (Array.isArray(args.poolSamples) ? args.poolSamples : [])
+          .filter((s) => s && /^[\w-]+$/.test(String(s.id)) && /^[\w:-]+$/.test(String(s.sound)))
+          .map((s) => ({ id: String(s.id), sound: String(s.sound) }));
+        const timbre = timbrePayloadForCode(args.code, args.timbreAliases);
+        const payload = await page.evaluate((a) => window.__renderTwin.render(a), {
+          code: args.code,
+          fromCycle: args.fromCycle ?? 0,
+          toCycle: args.toCycle ?? 16,
+          sampleRate: args.sampleRate ?? DEFAULT_SAMPLE_RATE,
+          cps: args.cps ?? DEFAULT_CPS,
+          wantWav: args.wantWav !== false,
+          wantEvents: args.wantEvents !== false,
+          poolSamples,
+          timbre,
+        });
+        const wav = payload.wavBase64 ? Buffer.from(payload.wavBase64, 'base64') : null;
+        const fingerprint = {
+          browser: 'chromium',
+          browser_version: await browser.version(),
+          os: process.platform,
+          engine_version: payload.report?.engineVersion ?? null,
+          sample_rate: payload.sampleRate,
+          code_sha256: codeFingerprint(args.code),
+          seed: RENDER_SEED,
+          render_policy: RENDER_POLICY_VERSION,
+          ...(poolSamples.length ? { pool_samples: poolSamples.map((s) => s.sound).sort() } : {}),
+          ...(timbre ? { timbre_presets: timbre.aliases } : {}),
+        };
+        return {
+          ok: true,
+          report: payload.report,
+          wav,
+          events: payload.events,
+          sampleRate: payload.sampleRate,
+          durationS: payload.durationS,
+          renderMs: payload.renderMs,
+          wallMs: Date.now() - startedAt,
+          fingerprint,
+        };
+      } finally {
+        if (page) await page.close();
+      }
+    } catch (error) {
+      // Ошибка init/render не оставляет браузер или HTTP-сервер сиротой.
+      await shutdown().catch(() => {});
+      throw error;
+    }
   }
 
   const worker = {
     browser,
-    page,
+    page: firstPage,
     consoleErrors,
-
-    /**
-     * Рендерит код в аудио.
-     *
-     * @param {{code:string, fromCycle?:number, toCycle?:number, sampleRate?:number,
-     *          cps?:number, wantWav?:boolean, wantEvents?:boolean}} args
-     * @returns {Promise<{ok:boolean, report:object, wav:Buffer|null, events:Array|null,
-     *                    sampleRate:number, durationS:number, renderMs:number, fingerprint:object}>}
-     */
-    async render(args) {
-      const startedAt = Date.now();
-      // Сэмплы пула «Охотника» (D-119): браузер грузит их с этого же сервера.
-      const poolSamples = (Array.isArray(args.poolSamples) ? args.poolSamples : [])
-        .filter((s) => s && /^[\w-]+$/.test(String(s.id)) && /^[\w:-]+$/.test(String(s.sound)))
-        .map((s) => ({ id: String(s.id), sound: String(s.sound) }));
-      // Пресеты Timbre (D-128): alias из кода или явный список; карта — из
-      // реестра каталога. Неизвестный tp_ alias в коде — ошибка рендера.
-      const timbre = timbrePayloadForCode(args.code, args.timbreAliases);
-      const payload = await page.evaluate((a) => window.__renderTwin.render(a), {
-        code: args.code,
-        fromCycle: args.fromCycle ?? 0,
-        toCycle: args.toCycle ?? 16,
-        sampleRate: args.sampleRate ?? DEFAULT_SAMPLE_RATE,
-        cps: args.cps ?? DEFAULT_CPS,
-        wantWav: args.wantWav !== false,
-        wantEvents: args.wantEvents !== false,
-        poolSamples,
-        timbre,
-      });
-      const wav = payload.wavBase64 ? Buffer.from(payload.wavBase64, 'base64') : null;
-      const fingerprint = {
-        browser: 'chromium',
-        browser_version: await browser.version(),
-        os: process.platform,
-        engine_version: payload.report?.engineVersion ?? null,
-        sample_rate: payload.sampleRate,
-        code_sha256: codeFingerprint(args.code),
-        seed: 'deterministic-engine',
-        // Сэмплы пула — внешнее состояние рендера: без них паспорт неполон.
-        ...(poolSamples.length ? { pool_samples: poolSamples.map((s) => s.sound).sort() } : {}),
-        // Пресеты Timbre — тоже внешнее состояние (D-128).
-        ...(timbre ? { timbre_presets: timbre.aliases } : {}),
-      };
-      return {
-        ok: true,
-        report: payload.report,
-        wav,
-        events: payload.events,
-        sampleRate: payload.sampleRate,
-        durationS: payload.durationS,
-        renderMs: payload.renderMs,
-        wallMs: Date.now() - startedAt,
-        fingerprint,
-      };
+    render(args) {
+      if (closing) return Promise.reject(new Error('Рендер-воркер закрыт'));
+      const result = queue.then(() => render(args));
+      queue = result.catch(() => {});
+      return result;
     },
-
-    async close() {
-      try {
-        await browser.close();
-      } finally {
-        server.close();
-      }
+    close() {
+      closing = true;
+      closePromise ??= (async () => {
+        await queue;
+        try {
+          if (firstPage) await firstPage.close();
+        } finally {
+          firstPage = null;
+          await shutdown();
+        }
+      })();
+      return closePromise;
     },
   };
   return worker;

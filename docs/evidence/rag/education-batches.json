@@ -1,0 +1,816 @@
+{
+  "baseline": 35,
+  "batches": [
+    {
+      "checkedAt": "2026-11-18T19:19:17.544Z",
+      "source": ".scratch/rhythm-batch.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-son-clave-2-3",
+          "parts": 1,
+          "events": 10,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-son-clave-3-2",
+          "parts": 1,
+          "events": 10,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-rumba-clave-2-3",
+          "parts": 1,
+          "events": 10,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-tresillo-332",
+          "parts": 2,
+          "events": 28,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-habanera-3122",
+          "parts": 1,
+          "events": 16,
+          "pitchedEvents": 16
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:20:00.239Z",
+      "source": ".scratch/rhythm-batch.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-bossa-two-bar",
+          "parts": 2,
+          "events": 20,
+          "pitchedEvents": 8
+        },
+        {
+          "id": "edu-samba-low-high",
+          "parts": 2,
+          "events": 40,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-funk-ghost-snare",
+          "parts": 3,
+          "events": 40,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-hihat-sixteenth-accents",
+          "parts": 2,
+          "events": 80,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-house-fourfloor-offbeat",
+          "parts": 3,
+          "events": 40,
+          "pitchedEvents": 0
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:20:51.932Z",
+      "source": ".scratch/rhythm-batch.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-amen-inspired-break",
+          "parts": 4,
+          "events": 56,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-think-inspired-break",
+          "parts": 3,
+          "events": 52,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-apache-inspired-break",
+          "parts": 3,
+          "events": 32,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-dnb-two-step",
+          "parts": 3,
+          "events": 52,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-lofi-swung-eighths",
+          "parts": 3,
+          "events": 48,
+          "pitchedEvents": 0
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:21:32.575Z",
+      "source": ".scratch/rhythm-batch.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-polyrhythm-3-4",
+          "parts": 2,
+          "events": 28,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-polyrhythm-4-5",
+          "parts": 2,
+          "events": 36,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-metric-modulation-triplet",
+          "parts": 2,
+          "events": 40,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-trap-halftime-hat-roll",
+          "parts": 3,
+          "events": 56,
+          "pitchedEvents": 0
+        },
+        {
+          "id": "edu-phonk-drift-cowbell-space",
+          "parts": 4,
+          "events": 56,
+          "pitchedEvents": 0
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:23:01.345Z",
+      "source": ".scratch/guide-batch.json",
+      "count": 6,
+      "entries": [
+        {
+          "id": "edu-guide-lofi-hiphop",
+          "parts": 4,
+          "events": 75,
+          "pitchedEvents": 27
+        },
+        {
+          "id": "edu-guide-techno",
+          "parts": 3,
+          "events": 52,
+          "pitchedEvents": 20
+        },
+        {
+          "id": "edu-guide-house",
+          "parts": 5,
+          "events": 68,
+          "pitchedEvents": 28
+        },
+        {
+          "id": "edu-guide-trap",
+          "parts": 4,
+          "events": 64,
+          "pitchedEvents": 8
+        },
+        {
+          "id": "edu-guide-phonk",
+          "parts": 5,
+          "events": 72,
+          "pitchedEvents": 28
+        },
+        {
+          "id": "edu-guide-dnb",
+          "parts": 4,
+          "events": 68,
+          "pitchedEvents": 16
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:24:01.321Z",
+      "source": ".scratch/guide-batch.json",
+      "count": 6,
+      "entries": [
+        {
+          "id": "edu-guide-ambient",
+          "parts": 2,
+          "events": 16,
+          "pitchedEvents": 16
+        },
+        {
+          "id": "edu-guide-jazz",
+          "parts": 3,
+          "events": 50,
+          "pitchedEvents": 50
+        },
+        {
+          "id": "edu-guide-funk",
+          "parts": 4,
+          "events": 84,
+          "pitchedEvents": 60
+        },
+        {
+          "id": "edu-guide-synthwave",
+          "parts": 5,
+          "events": 56,
+          "pitchedEvents": 32
+        },
+        {
+          "id": "edu-guide-classical",
+          "parts": 3,
+          "events": 80,
+          "pitchedEvents": 80
+        },
+        {
+          "id": "edu-guide-neo-soul",
+          "parts": 4,
+          "events": 48,
+          "pitchedEvents": 32
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:15.789Z",
+      "source": ".scratch/verified-education-batch-1.json",
+      "count": 10,
+      "entries": [
+        {
+          "id": "edu-arrangement-register-windows",
+          "parts": 3,
+          "events": 44,
+          "pitchedEvents": 44
+        },
+        {
+          "id": "edu-arrangement-subtract-before-drop",
+          "parts": 3,
+          "events": 27,
+          "pitchedEvents": 27
+        },
+        {
+          "id": "edu-arrangement-staggered-entry",
+          "parts": 4,
+          "events": 28,
+          "pitchedEvents": 28
+        },
+        {
+          "id": "edu-arrangement-complementary-hockets",
+          "parts": 3,
+          "events": 40,
+          "pitchedEvents": 40
+        },
+        {
+          "id": "edu-arrangement-foreground-background",
+          "parts": 2,
+          "events": 28,
+          "pitchedEvents": 28
+        },
+        {
+          "id": "edu-arrangement-bass-rest-for-motif",
+          "parts": 3,
+          "events": 40,
+          "pitchedEvents": 40
+        },
+        {
+          "id": "edu-arrangement-transition-pickup",
+          "parts": 3,
+          "events": 26,
+          "pitchedEvents": 26
+        },
+        {
+          "id": "edu-arrangement-density-versus-loudness",
+          "parts": 2,
+          "events": 16,
+          "pitchedEvents": 16
+        },
+        {
+          "id": "edu-arrangement-role-handoff",
+          "parts": 3,
+          "events": 24,
+          "pitchedEvents": 24
+        },
+        {
+          "id": "edu-arrangement-texture-changing-anchor",
+          "parts": 3,
+          "events": 22,
+          "pitchedEvents": 22
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:15.981Z",
+      "source": ".scratch/verified-education-batch-2.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-orchestration-octave-doubling",
+          "parts": 2,
+          "events": 32,
+          "pitchedEvents": 32
+        },
+        {
+          "id": "edu-orchestration-open-low-voicing",
+          "parts": 3,
+          "events": 12,
+          "pitchedEvents": 12
+        },
+        {
+          "id": "edu-orchestration-sustain-and-attack",
+          "parts": 2,
+          "events": 16,
+          "pitchedEvents": 16
+        },
+        {
+          "id": "edu-orchestration-tessitura-climax",
+          "parts": 2,
+          "events": 28,
+          "pitchedEvents": 28
+        },
+        {
+          "id": "edu-orchestration-antiphonal-colors",
+          "parts": 3,
+          "events": 24,
+          "pitchedEvents": 24
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:16.190Z",
+      "source": ".scratch/verified-education-batch-3.json",
+      "count": 8,
+      "entries": [
+        {
+          "id": "edu-emotion-expectation-delay",
+          "parts": 2,
+          "events": 28,
+          "pitchedEvents": 28
+        },
+        {
+          "id": "edu-emotion-fragile-thin-texture",
+          "parts": 2,
+          "events": 16,
+          "pitchedEvents": 16
+        },
+        {
+          "id": "edu-emotion-buoyancy-upbeats",
+          "parts": 2,
+          "events": 24,
+          "pitchedEvents": 24
+        },
+        {
+          "id": "edu-emotion-unease-neighbor",
+          "parts": 2,
+          "events": 24,
+          "pitchedEvents": 24
+        },
+        {
+          "id": "edu-emotion-solemn-slow-arrival",
+          "parts": 2,
+          "events": 16,
+          "pitchedEvents": 16
+        },
+        {
+          "id": "edu-emotion-ambivalence-major-sixth",
+          "parts": 2,
+          "events": 32,
+          "pitchedEvents": 32
+        },
+        {
+          "id": "edu-emotion-urgency-repetition",
+          "parts": 2,
+          "events": 12,
+          "pitchedEvents": 12
+        },
+        {
+          "id": "edu-emotion-relief-suspension-release",
+          "parts": 3,
+          "events": 20,
+          "pitchedEvents": 20
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:16.401Z",
+      "source": ".scratch/verified-education-batch-4.json",
+      "count": 8,
+      "entries": [
+        {
+          "id": "edu-reference-analysis-level-matched-ab",
+          "parts": 1,
+          "events": 16,
+          "pitchedEvents": 16
+        },
+        {
+          "id": "edu-reference-analysis-tempo-half-double",
+          "parts": 2,
+          "events": 36,
+          "pitchedEvents": 36
+        },
+        {
+          "id": "edu-reference-analysis-stem-leakage-caveat",
+          "parts": 2,
+          "events": 24,
+          "pitchedEvents": 24
+        },
+        {
+          "id": "edu-harmony-functional-cadence",
+          "parts": 3,
+          "events": 76,
+          "pitchedEvents": 76
+        },
+        {
+          "id": "edu-harmony-common-tone-voicing",
+          "parts": 3,
+          "events": 16,
+          "pitchedEvents": 16
+        },
+        {
+          "id": "edu-harmony-modal-tonic-pedal",
+          "parts": 3,
+          "events": 28,
+          "pitchedEvents": 28
+        },
+        {
+          "id": "edu-harmony-suspension-voice-leading",
+          "parts": 3,
+          "events": 16,
+          "pitchedEvents": 16
+        },
+        {
+          "id": "edu-harmony-seventh-chords-vocabulary",
+          "parts": 2,
+          "events": 22,
+          "pitchedEvents": 22
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:16.600Z",
+      "source": ".scratch/verified-education-batch-5.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-melody-motif-sequence",
+          "parts": 2,
+          "events": 32,
+          "pitchedEvents": 32
+        },
+        {
+          "id": "edu-melody-antecedent-consequent",
+          "parts": 2,
+          "events": 20,
+          "pitchedEvents": 20
+        },
+        {
+          "id": "edu-melody-single-contour-apex",
+          "parts": 2,
+          "events": 40,
+          "pitchedEvents": 40
+        },
+        {
+          "id": "edu-melody-rhythmic-augmentation",
+          "parts": 2,
+          "events": 13,
+          "pitchedEvents": 13
+        },
+        {
+          "id": "edu-melody-fragment-and-cadence",
+          "parts": 2,
+          "events": 20,
+          "pitchedEvents": 20
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:16.795Z",
+      "source": ".scratch/verified-education-batch-6.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-counterpoint-contrary-motion",
+          "parts": 2,
+          "events": 32,
+          "pitchedEvents": 32
+        },
+        {
+          "id": "edu-counterpoint-consonant-framework",
+          "parts": 2,
+          "events": 32,
+          "pitchedEvents": 32
+        },
+        {
+          "id": "edu-counterpoint-passing-tone-weak-position",
+          "parts": 2,
+          "events": 24,
+          "pitchedEvents": 24
+        },
+        {
+          "id": "edu-counterpoint-delayed-canon",
+          "parts": 2,
+          "events": 32,
+          "pitchedEvents": 32
+        },
+        {
+          "id": "edu-counterpoint-rhythmic-independence",
+          "parts": 2,
+          "events": 36,
+          "pitchedEvents": 36
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:16.992Z",
+      "source": ".scratch/verified-education-batch-7.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-sound-design-subtractive-cutoff",
+          "parts": 1,
+          "events": 12,
+          "pitchedEvents": 12
+        },
+        {
+          "id": "edu-sound-design-pluck-envelope",
+          "parts": 1,
+          "events": 16,
+          "pitchedEvents": 16
+        },
+        {
+          "id": "edu-sound-design-additive-partials",
+          "parts": 3,
+          "events": 24,
+          "pitchedEvents": 24
+        },
+        {
+          "id": "edu-sound-design-fm-brightness",
+          "parts": 1,
+          "events": 12,
+          "pitchedEvents": 12
+        },
+        {
+          "id": "edu-sound-design-delay-as-secondary-rhythm",
+          "parts": 1,
+          "events": 8,
+          "pitchedEvents": 8
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:17.195Z",
+      "source": ".scratch/verified-education-batch-8.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-mixing-static-balance-first",
+          "parts": 3,
+          "events": 52,
+          "pitchedEvents": 52
+        },
+        {
+          "id": "edu-mixing-pad-highpass-space",
+          "parts": 2,
+          "events": 24,
+          "pitchedEvents": 24
+        },
+        {
+          "id": "edu-mixing-pan-with-center-anchor",
+          "parts": 3,
+          "events": 24,
+          "pitchedEvents": 24
+        },
+        {
+          "id": "edu-mixing-depth-wet-dry",
+          "parts": 2,
+          "events": 24,
+          "pitchedEvents": 24
+        },
+        {
+          "id": "edu-mixing-scheduled-duck-not-sidechain",
+          "parts": 2,
+          "events": 56,
+          "pitchedEvents": 56
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:17.397Z",
+      "source": ".scratch/verified-education-batch-9.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-mastering-sum-headroom",
+          "parts": 3,
+          "events": 24,
+          "pitchedEvents": 24
+        },
+        {
+          "id": "edu-mastering-streaming-reference-not-target",
+          "parts": 2,
+          "events": 20,
+          "pitchedEvents": 20
+        },
+        {
+          "id": "edu-mastering-transient-preservation",
+          "parts": 1,
+          "events": 12,
+          "pitchedEvents": 12
+        },
+        {
+          "id": "edu-mastering-measurement-window",
+          "parts": 2,
+          "events": 34,
+          "pitchedEvents": 34
+        },
+        {
+          "id": "edu-mastering-tail-safe-export",
+          "parts": 1,
+          "events": 2,
+          "pitchedEvents": 2
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:36.199Z",
+      "source": ".scratch/verified-education-batch-10.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-history-continuo-model",
+          "parts": 2,
+          "events": 64,
+          "pitchedEvents": 64
+        },
+        {
+          "id": "edu-history-renaissance-imitation-model",
+          "parts": 2,
+          "events": 32,
+          "pitchedEvents": 32
+        },
+        {
+          "id": "edu-history-classical-period-balance",
+          "parts": 2,
+          "events": 24,
+          "pitchedEvents": 24
+        },
+        {
+          "id": "edu-history-borrowed-minor-subdominant",
+          "parts": 2,
+          "events": 16,
+          "pitchedEvents": 16
+        },
+        {
+          "id": "edu-history-electronic-loop-process",
+          "parts": 1,
+          "events": 16,
+          "pitchedEvents": 16
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:36.420Z",
+      "source": ".scratch/verified-education-batch-11.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-culture-participatory-response",
+          "parts": 3,
+          "events": 26,
+          "pitchedEvents": 26
+        },
+        {
+          "id": "edu-culture-son-clave-orientation",
+          "parts": 2,
+          "events": 14,
+          "pitchedEvents": 14
+        },
+        {
+          "id": "edu-culture-raga-not-scale",
+          "parts": 2,
+          "events": 36,
+          "pitchedEvents": 36
+        },
+        {
+          "id": "edu-culture-maqam-intonation-boundary",
+          "parts": 2,
+          "events": 32,
+          "pitchedEvents": 32
+        },
+        {
+          "id": "edu-culture-blues-third-as-inflection",
+          "parts": 2,
+          "events": 40,
+          "pitchedEvents": 40
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:36.653Z",
+      "source": ".scratch/verified-education-batch-12.json",
+      "count": 5,
+      "entries": [
+        {
+          "id": "edu-antipatterns-continuous-filling",
+          "parts": 2,
+          "events": 32,
+          "pitchedEvents": 32
+        },
+        {
+          "id": "edu-antipatterns-redundant-doubling",
+          "parts": 3,
+          "events": 32,
+          "pitchedEvents": 32
+        },
+        {
+          "id": "edu-antipatterns-all-attacks-locked",
+          "parts": 2,
+          "events": 32,
+          "pitchedEvents": 32
+        },
+        {
+          "id": "edu-antipatterns-unexplained-chromaticism",
+          "parts": 2,
+          "events": 28,
+          "pitchedEvents": 28
+        },
+        {
+          "id": "edu-antipatterns-reverb-as-disguise",
+          "parts": 2,
+          "events": 24,
+          "pitchedEvents": 24
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-11-18T19:34:36.911Z",
+      "source": ".scratch/verified-education-batch-13.json",
+      "count": 10,
+      "entries": [
+        {
+          "id": "edu-form-binary-contrast",
+          "parts": 2,
+          "events": 18,
+          "pitchedEvents": 18
+        },
+        {
+          "id": "edu-form-ternary-return",
+          "parts": 2,
+          "events": 20,
+          "pitchedEvents": 20
+        },
+        {
+          "id": "edu-form-aaba-delayed-return",
+          "parts": 2,
+          "events": 20,
+          "pitchedEvents": 20
+        },
+        {
+          "id": "edu-form-rondo-refrain",
+          "parts": 2,
+          "events": 20,
+          "pitchedEvents": 20
+        },
+        {
+          "id": "edu-form-theme-and-variations",
+          "parts": 2,
+          "events": 26,
+          "pitchedEvents": 26
+        },
+        {
+          "id": "edu-form-strophic-accompaniment",
+          "parts": 3,
+          "events": 80,
+          "pitchedEvents": 80
+        },
+        {
+          "id": "edu-form-verse-chorus-function",
+          "parts": 3,
+          "events": 20,
+          "pitchedEvents": 20
+        },
+        {
+          "id": "edu-form-bridge-return-context",
+          "parts": 3,
+          "events": 22,
+          "pitchedEvents": 22
+        },
+        {
+          "id": "edu-form-arch-texture",
+          "parts": 3,
+          "events": 24,
+          "pitchedEvents": 24
+        },
+        {
+          "id": "edu-form-sonata-principle-model",
+          "parts": 2,
+          "events": 20,
+          "pitchedEvents": 20
+        }
+      ]
+    }
+  ]
+}

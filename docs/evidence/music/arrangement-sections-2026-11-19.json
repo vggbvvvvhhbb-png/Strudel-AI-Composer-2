@@ -1,0 +1,793 @@
+{
+  "probe": "arrangement-sections",
+  "date": "2026-11-19",
+  "command": "node scripts/probe-arrangement-sections.mjs",
+  "method": "Рендер 16 тактов при 128 BPM (setCpm(128/4)), окно анализа — восьмая доля. RMS по WAV проекта, спектральный центроид — FFT проекта (src/audio/dsp/fft.js), активность по секциям — measureActivity проекта. Плотность ролла — по событиям паттерна.",
+  "bpm": 128,
+  "cps": 0.5333333333333333,
+  "bars": [
+    {
+      "bar": 1,
+      "section": "интро",
+      "db": -23.12,
+      "centroid_hz": 471,
+      "eighths": [
+        {
+          "db": -22.64,
+          "centroid_hz": 471
+        },
+        {
+          "db": -23.16,
+          "centroid_hz": 595
+        },
+        {
+          "db": -23.14,
+          "centroid_hz": 583
+        },
+        {
+          "db": -23.2,
+          "centroid_hz": 546
+        },
+        {
+          "db": -23.26,
+          "centroid_hz": 505
+        },
+        {
+          "db": -23.15,
+          "centroid_hz": 547
+        },
+        {
+          "db": -23.22,
+          "centroid_hz": 537
+        },
+        {
+          "db": -23.21,
+          "centroid_hz": 491
+        }
+      ]
+    },
+    {
+      "bar": 2,
+      "section": "интро",
+      "db": -23.13,
+      "centroid_hz": 477,
+      "eighths": [
+        {
+          "db": -22.73,
+          "centroid_hz": 477
+        },
+        {
+          "db": -23.25,
+          "centroid_hz": 579
+        },
+        {
+          "db": -23.05,
+          "centroid_hz": 604
+        },
+        {
+          "db": -22.96,
+          "centroid_hz": 601
+        },
+        {
+          "db": -23.11,
+          "centroid_hz": 589
+        },
+        {
+          "db": -23.21,
+          "centroid_hz": 598
+        },
+        {
+          "db": -23.44,
+          "centroid_hz": 591
+        },
+        {
+          "db": -23.34,
+          "centroid_hz": 577
+        }
+      ]
+    },
+    {
+      "bar": 3,
+      "section": "интро",
+      "db": -23.1,
+      "centroid_hz": 471,
+      "eighths": [
+        {
+          "db": -22.58,
+          "centroid_hz": 471
+        },
+        {
+          "db": -23.16,
+          "centroid_hz": 613
+        },
+        {
+          "db": -23.13,
+          "centroid_hz": 618
+        },
+        {
+          "db": -23.18,
+          "centroid_hz": 592
+        },
+        {
+          "db": -23.25,
+          "centroid_hz": 554
+        },
+        {
+          "db": -23.13,
+          "centroid_hz": 623
+        },
+        {
+          "db": -23.21,
+          "centroid_hz": 617
+        },
+        {
+          "db": -23.18,
+          "centroid_hz": 568
+        }
+      ]
+    },
+    {
+      "bar": 4,
+      "section": "интро",
+      "db": -23.13,
+      "centroid_hz": 477,
+      "eighths": [
+        {
+          "db": -22.73,
+          "centroid_hz": 477
+        },
+        {
+          "db": -23.25,
+          "centroid_hz": 579
+        },
+        {
+          "db": -23.04,
+          "centroid_hz": 604
+        },
+        {
+          "db": -22.96,
+          "centroid_hz": 601
+        },
+        {
+          "db": -23.11,
+          "centroid_hz": 589
+        },
+        {
+          "db": -23.21,
+          "centroid_hz": 598
+        },
+        {
+          "db": -23.44,
+          "centroid_hz": 591
+        },
+        {
+          "db": -23.34,
+          "centroid_hz": 577
+        }
+      ]
+    },
+    {
+      "bar": 5,
+      "section": "билд",
+      "db": -21.36,
+      "centroid_hz": 726,
+      "eighths": [
+        {
+          "db": -20.36,
+          "centroid_hz": 726
+        },
+        {
+          "db": -22.67,
+          "centroid_hz": 2411
+        },
+        {
+          "db": -20.36,
+          "centroid_hz": 775
+        },
+        {
+          "db": -22.54,
+          "centroid_hz": 2267
+        },
+        {
+          "db": -20.39,
+          "centroid_hz": 899
+        },
+        {
+          "db": -22.55,
+          "centroid_hz": 2553
+        },
+        {
+          "db": -20.53,
+          "centroid_hz": 878
+        },
+        {
+          "db": -22.59,
+          "centroid_hz": 2486
+        }
+      ]
+    },
+    {
+      "bar": 6,
+      "section": "билд",
+      "db": -20.68,
+      "centroid_hz": 958,
+      "eighths": [
+        {
+          "db": -20.6,
+          "centroid_hz": 958
+        },
+        {
+          "db": -20.88,
+          "centroid_hz": 1049
+        },
+        {
+          "db": -20.59,
+          "centroid_hz": 922
+        },
+        {
+          "db": -20.36,
+          "centroid_hz": 865
+        },
+        {
+          "db": -20.52,
+          "centroid_hz": 892
+        },
+        {
+          "db": -20.62,
+          "centroid_hz": 871
+        },
+        {
+          "db": -20.92,
+          "centroid_hz": 922
+        },
+        {
+          "db": -20.99,
+          "centroid_hz": 1116
+        }
+      ]
+    },
+    {
+      "bar": 7,
+      "section": "билд",
+      "db": -19.89,
+      "centroid_hz": 1044,
+      "eighths": [
+        {
+          "db": -19.65,
+          "centroid_hz": 1044
+        },
+        {
+          "db": -19.7,
+          "centroid_hz": 1197
+        },
+        {
+          "db": -19.97,
+          "centroid_hz": 1160
+        },
+        {
+          "db": -19.77,
+          "centroid_hz": 1081
+        },
+        {
+          "db": -19.95,
+          "centroid_hz": 1339
+        },
+        {
+          "db": -20.03,
+          "centroid_hz": 1164
+        },
+        {
+          "db": -19.96,
+          "centroid_hz": 1169
+        },
+        {
+          "db": -20.13,
+          "centroid_hz": 1258
+        }
+      ]
+    },
+    {
+      "bar": 8,
+      "section": "билд",
+      "db": -49.5,
+      "centroid_hz": 1473,
+      "eighths": [
+        {
+          "db": -40.47,
+          "centroid_hz": 1473
+        },
+        {
+          "db": -240,
+          "centroid_hz": 0
+        },
+        {
+          "db": -240,
+          "centroid_hz": 0
+        },
+        {
+          "db": -240,
+          "centroid_hz": 0
+        },
+        {
+          "db": -240,
+          "centroid_hz": 0
+        },
+        {
+          "db": -240,
+          "centroid_hz": 0
+        },
+        {
+          "db": -240,
+          "centroid_hz": 0
+        },
+        {
+          "db": -240,
+          "centroid_hz": 0
+        }
+      ]
+    },
+    {
+      "bar": 9,
+      "section": "дроп",
+      "db": -19.02,
+      "centroid_hz": 69,
+      "eighths": [
+        {
+          "db": -17.39,
+          "centroid_hz": 69
+        },
+        {
+          "db": -19.9,
+          "centroid_hz": 74
+        },
+        {
+          "db": -18.58,
+          "centroid_hz": 79
+        },
+        {
+          "db": -19.82,
+          "centroid_hz": 73
+        },
+        {
+          "db": -19.16,
+          "centroid_hz": 80
+        },
+        {
+          "db": -19.8,
+          "centroid_hz": 72
+        },
+        {
+          "db": -18.33,
+          "centroid_hz": 70
+        },
+        {
+          "db": -19.9,
+          "centroid_hz": 73
+        }
+      ]
+    },
+    {
+      "bar": 10,
+      "section": "дроп",
+      "db": -19.18,
+      "centroid_hz": 69,
+      "eighths": [
+        {
+          "db": -17.83,
+          "centroid_hz": 69
+        },
+        {
+          "db": -19.9,
+          "centroid_hz": 73
+        },
+        {
+          "db": -18.75,
+          "centroid_hz": 78
+        },
+        {
+          "db": -19.82,
+          "centroid_hz": 71
+        },
+        {
+          "db": -19.35,
+          "centroid_hz": 78
+        },
+        {
+          "db": -19.8,
+          "centroid_hz": 70
+        },
+        {
+          "db": -18.57,
+          "centroid_hz": 70
+        },
+        {
+          "db": -19.9,
+          "centroid_hz": 71
+        }
+      ]
+    },
+    {
+      "bar": 11,
+      "section": "дроп",
+      "db": -19.25,
+      "centroid_hz": 69,
+      "eighths": [
+        {
+          "db": -17.98,
+          "centroid_hz": 69
+        },
+        {
+          "db": -19.9,
+          "centroid_hz": 72
+        },
+        {
+          "db": -18.89,
+          "centroid_hz": 77
+        },
+        {
+          "db": -19.82,
+          "centroid_hz": 70
+        },
+        {
+          "db": -19.45,
+          "centroid_hz": 77
+        },
+        {
+          "db": -19.81,
+          "centroid_hz": 70
+        },
+        {
+          "db": -18.7,
+          "centroid_hz": 69
+        },
+        {
+          "db": -19.89,
+          "centroid_hz": 71
+        }
+      ]
+    },
+    {
+      "bar": 12,
+      "section": "дроп",
+      "db": -17.79,
+      "centroid_hz": 116,
+      "eighths": [
+        {
+          "db": -16.85,
+          "centroid_hz": 116
+        },
+        {
+          "db": -18.26,
+          "centroid_hz": 162
+        },
+        {
+          "db": -17.47,
+          "centroid_hz": 169
+        },
+        {
+          "db": -18.1,
+          "centroid_hz": 169
+        },
+        {
+          "db": -17.92,
+          "centroid_hz": 183
+        },
+        {
+          "db": -18.17,
+          "centroid_hz": 161
+        },
+        {
+          "db": -17.45,
+          "centroid_hz": 107
+        },
+        {
+          "db": -18.3,
+          "centroid_hz": 161
+        }
+      ]
+    },
+    {
+      "bar": 13,
+      "section": "брейкдаун",
+      "db": -23.14,
+      "centroid_hz": 369,
+      "eighths": [
+        {
+          "db": -22.51,
+          "centroid_hz": 369
+        },
+        {
+          "db": -23.22,
+          "centroid_hz": 389
+        },
+        {
+          "db": -23.2,
+          "centroid_hz": 389
+        },
+        {
+          "db": -23.25,
+          "centroid_hz": 375
+        },
+        {
+          "db": -23.29,
+          "centroid_hz": 369
+        },
+        {
+          "db": -23.19,
+          "centroid_hz": 386
+        },
+        {
+          "db": -23.25,
+          "centroid_hz": 391
+        },
+        {
+          "db": -23.24,
+          "centroid_hz": 373
+        }
+      ]
+    },
+    {
+      "bar": 14,
+      "section": "брейкдаун",
+      "db": -23.13,
+      "centroid_hz": 477,
+      "eighths": [
+        {
+          "db": -22.73,
+          "centroid_hz": 477
+        },
+        {
+          "db": -23.26,
+          "centroid_hz": 579
+        },
+        {
+          "db": -23.05,
+          "centroid_hz": 604
+        },
+        {
+          "db": -22.96,
+          "centroid_hz": 601
+        },
+        {
+          "db": -23.11,
+          "centroid_hz": 589
+        },
+        {
+          "db": -23.21,
+          "centroid_hz": 598
+        },
+        {
+          "db": -23.44,
+          "centroid_hz": 591
+        },
+        {
+          "db": -23.34,
+          "centroid_hz": 577
+        }
+      ]
+    },
+    {
+      "bar": 15,
+      "section": "брейкдаун",
+      "db": -23.1,
+      "centroid_hz": 471,
+      "eighths": [
+        {
+          "db": -22.58,
+          "centroid_hz": 471
+        },
+        {
+          "db": -23.16,
+          "centroid_hz": 613
+        },
+        {
+          "db": -23.13,
+          "centroid_hz": 618
+        },
+        {
+          "db": -23.18,
+          "centroid_hz": 592
+        },
+        {
+          "db": -23.25,
+          "centroid_hz": 554
+        },
+        {
+          "db": -23.13,
+          "centroid_hz": 623
+        },
+        {
+          "db": -23.21,
+          "centroid_hz": 617
+        },
+        {
+          "db": -23.18,
+          "centroid_hz": 568
+        }
+      ]
+    },
+    {
+      "bar": 16,
+      "section": "брейкдаун",
+      "db": -23.13,
+      "centroid_hz": 477,
+      "eighths": [
+        {
+          "db": -22.73,
+          "centroid_hz": 477
+        },
+        {
+          "db": -23.25,
+          "centroid_hz": 579
+        },
+        {
+          "db": -23.04,
+          "centroid_hz": 604
+        },
+        {
+          "db": -22.96,
+          "centroid_hz": 601
+        },
+        {
+          "db": -23.11,
+          "centroid_hz": 589
+        },
+        {
+          "db": -23.21,
+          "centroid_hz": 598
+        },
+        {
+          "db": -23.44,
+          "centroid_hz": 591
+        },
+        {
+          "db": -23.34,
+          "centroid_hz": 577
+        }
+      ]
+    }
+  ],
+  "eventsPerBar": {
+    "0": 21,
+    "1": 21,
+    "2": 21,
+    "3": 21,
+    "4": 17,
+    "5": 21,
+    "6": 29,
+    "7": 8,
+    "8": 21,
+    "9": 21,
+    "10": 21,
+    "11": 26,
+    "12": 21,
+    "13": 21,
+    "14": 21,
+    "15": 21
+  },
+  "eventsPerBarSound": {
+    "0": {
+      "hh": 8,
+      "white": 8,
+      "?": 5
+    },
+    "1": {
+      "hh": 8,
+      "white": 8,
+      "?": 5
+    },
+    "2": {
+      "hh": 8,
+      "white": 8,
+      "?": 5
+    },
+    "3": {
+      "hh": 8,
+      "white": 8,
+      "?": 5
+    },
+    "4": {
+      "sd": 4,
+      "white": 8,
+      "?": 5
+    },
+    "5": {
+      "sd": 8,
+      "white": 8,
+      "?": 5
+    },
+    "6": {
+      "sd": 16,
+      "white": 8,
+      "?": 5
+    },
+    "7": {
+      "white": 8
+    },
+    "8": {
+      "bd": 4,
+      "hh": 8,
+      "sine": 1,
+      "white": 8
+    },
+    "9": {
+      "bd": 4,
+      "hh": 8,
+      "sine": 1,
+      "white": 8
+    },
+    "10": {
+      "bd": 4,
+      "hh": 8,
+      "sine": 1,
+      "white": 8
+    },
+    "11": {
+      "bd": 4,
+      "hh": 8,
+      "sine": 1,
+      "white": 8,
+      "?": 5
+    },
+    "12": {
+      "hh": 8,
+      "white": 8,
+      "?": 5
+    },
+    "13": {
+      "hh": 8,
+      "white": 8,
+      "?": 5
+    },
+    "14": {
+      "hh": 8,
+      "white": 8,
+      "?": 5
+    },
+    "15": {
+      "hh": 8,
+      "white": 8,
+      "?": 5
+    }
+  },
+  "sectionActivity": {
+    "0": 0.2441,
+    "1": 0.2847,
+    "2": 0.4037,
+    "3": 0.244
+  },
+  "facts": {
+    "дроп громче интро, дБ": 4.31,
+    "дроп громче брейкдауна, дБ": 4.31,
+    "билд (без такта паузы) громче интро, дБ": 2.48,
+    "нарастание в билде (такт 7 минус такт 5), дБ": 1.47,
+    "открытие фильтра в билде (центроид такт 7 минус такт 5), Гц": 318,
+    "пауза перед дропом (такт 8), дБ": -49.5,
+    "пауза тише дропа на, дБ": -30.69,
+    "плотность снейр-ролла по тактам билда": "4 → 8 → 16 → 0"
+  },
+  "rollDensity": [
+    {
+      "bar": 5,
+      "snare": 4,
+      "all": 17
+    },
+    {
+      "bar": 6,
+      "snare": 8,
+      "all": 21
+    },
+    {
+      "bar": 7,
+      "snare": 16,
+      "all": 29
+    },
+    {
+      "bar": 8,
+      "snare": 0,
+      "all": 8
+    }
+  ],
+  "eventsTotal": 332,
+  "durationS": 30
+}

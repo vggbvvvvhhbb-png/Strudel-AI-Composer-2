@@ -12,9 +12,14 @@
 
 setCpm(120);
 
-// Громкость подобрана по измерению: LUFS-I ≈ −18 LU, true peak ≈ −7 dBTP.
+// Громкость подобрана по измерению (см. public/demo/preview.json):
+// LUFS-I ≈ −17.8 LU, true peak ≈ −3.7 dBTP.
 // Это уровень тизера: громко, но без риска клиппинга в наушниках.
-$PAD: chord("<c4 eb4 g4 bb4>").s("sawtooth").lpf(900).gain(.22).slow(2);
+// (До 19.11.2026 пад был написан как chord("<c4 eb4 g4 bb4>") — движок читал
+// это как символы аккордов, а не как ноты, и пад молчал. Замер: chord("Am"),
+// chord("a3") и chord("<a3 c4 e4>") дают одинаковый звук; высоты появляются
+// только у note(). Поэтому здесь note() с одновременными нотами в скобках.)
+$PAD: note("<[c4,eb4,g4,bb4]>").s("sawtooth").lpf(900).gain(.22).slow(2);
 $BASS: note("<c2 eb2 g2 eb2>").s("sine").gain(1.25).decay(.25);
 $PLUCK: note("<g4 bb4 c5 eb5>").s("square").gain(.2).decay(.12).lpf(2200);
 $LEAD: note("<c5 eb5 g5 ~>").s("triangle").gain(.72).attack(.01).release(.18);

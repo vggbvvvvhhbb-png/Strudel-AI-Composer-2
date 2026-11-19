@@ -9,7 +9,6 @@ import './styles/timeline.css';
 import './styles/panels.css';
 import { initEditor } from './editor.js';
 import { initUI } from './ui.js';
-import { initCompose } from './compose.js';
 import { getEngine } from './engine-loader.js';
 import { initHistory } from './history.js';
 import { syncMixer } from './mixer.js';
@@ -21,6 +20,7 @@ import { codeFromHash } from './core/share.js';
 import { initDeepDive } from './deepdive/panel.js';
 import { initStudioSteps } from './studio-steps.js';
 import { initAgentPanel } from './agent-panel.js';
+import { initRagAssist } from './rag-assist.js';
 import { initTimeline, syncTimeline } from './timeline.js';
 import { initLocalPanel } from './local-panel.js';
 import { initPoolPanel } from './pool-panel.js';
@@ -59,6 +59,19 @@ initStudioSteps();
 // Помощник-агент: план, вызовы инструментов и ответ — раздельно.
 // Код, который агент собрал, попадает в редактор только по кнопке.
 initAgentPanel({
+  getCode: () => document.getElementById('code-input')?.value ?? '',
+  setCode: (code) => {
+    const el = document.getElementById('code-input');
+    if (!el) return;
+    el.value = code;
+    syncMixer(code);
+    syncTransport(code);
+    syncTimeline(code);
+  },
+});
+
+// Музыкальный интеллект: RAG-ассистент и объяснение кода (D-140).
+initRagAssist({
   getCode: () => document.getElementById('code-input')?.value ?? '',
   setCode: (code) => {
     const el = document.getElementById('code-input');

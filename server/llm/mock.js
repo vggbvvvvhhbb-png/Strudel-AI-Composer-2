@@ -29,7 +29,8 @@ function detectStyle(text) {
  */
 export function mockCompletion({ messages = [], responseFormat } = {}) {
   const text = messages.map((message) => (typeof message.content === 'string' ? message.content : '')).join('\n');
-  const style = detectStyle(text);
+  const style = /Стиль запроса:\s*([a-z-]+)\./.exec(text)?.[1]
+    || detectStyle(extractUserText(messages));
 
   // Запрос плана агента (маркер из server/agent/prompts.js): отдаём настоящий
   // валидный план, собранный теми же правилами, что и запасной план. Иначе CI
@@ -57,6 +58,21 @@ export function mockCompletion({ messages = [], responseFormat } = {}) {
   // конвейер композиции: fallbackSpec проходит те же проверки, что и ответ модели).
   if (responseFormat?.type === 'json_object' || /json/i.test(text.slice(0, 2000))) {
     return JSON.stringify(fallbackSpec(style, 1));
+  }
+
+  // Образованный ассистент базы знаний (server/rag/prompt.js): отдаём
+  // обоснование + fenced-блок, чтобы мок проходил полный путь парсера
+  // и валидатора, а не только ветку голого кода.
+  if (text.includes('музыкально образованный ассистент')) {
+    return [
+      'Тоника c:minor с минорной терцией и квинтой: устойчивое трезвучие, бас двигается ступенями 0–2–4 внутри лада.',
+      '```strudel',
+      `setCpm(${style === 'techno' ? 128 : 100}/4)`,
+      'const key = "c:minor"',
+      '$KICK: s("bd*4")._scope()',
+      '$BASS: n("0 ~ 2 4").scale(key).s("sawtooth")._pianoroll()',
+      '```',
+    ].join('\n');
   }
 
   // Свободный режим — простейший валидный Strudel-код.

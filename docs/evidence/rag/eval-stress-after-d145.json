@@ -1,0 +1,594 @@
+{
+  "date": "2026-11-18T21:10:17.579Z",
+  "set": "stress",
+  "store": "local",
+  "semantic": false,
+  "durationMs": 665061,
+  "usage": {
+    "prompt": 180428,
+    "completion": 30513,
+    "calls": 28
+  },
+  "summary": {
+    "rag-loop": {
+      "requests": 18,
+      "valid": 18,
+      "validShare": 1,
+      "expectationMet": 43,
+      "expectationTotal": 45,
+      "expectationShare": 0.956,
+      "scaleFailRequests": 0,
+      "unknownSoundRequests": 0,
+      "correctedRequests": 9,
+      "firstAttemptFailRequests": 9,
+      "avgAttempts": 1.56,
+      "avgMs": 36942
+    }
+  },
+  "results": [
+    {
+      "id": "s01",
+      "mode": "rag-loop",
+      "request": "мелодия в ми гармоническом миноре с повышенной седьмой ступенью на скрипке, 92 BPM",
+      "ok": true,
+      "attempts": 2,
+      "code": "setCpm(23)\nconst key = \"e harmonic minor\"\n$LEAD: note(\"e5 g5 b5 a5 f#5 g5 d#5 e5\").s(\"tp_solo_violin_v1\").gain(0.35)",
+      "errors": [],
+      "errorClasses": [
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound"
+      ],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 1,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": false
+          },
+          {
+            "name": "mode",
+            "ok": false
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 37342
+    },
+    {
+      "id": "s02",
+      "mode": "rag-loop",
+      "request": "джазовая мелодия в ля мелодическом миноре на пианино, 105 BPM",
+      "ok": true,
+      "attempts": 2,
+      "code": "setCpm(26.25)\nconst key = \"a:melodicMinor\"\n\n$CHORDS: chord(\"<AmM7 D7 E7 AmM7 AmM7 D7 E7 AmM7 C7 F#m7 D7 E7 AmM7 D7 E7 AmM7>\").voicing().s(\"piano\").room(0.3).gain(0.32)\n\n$MELODY: note(\"<a4 c5 e5 g#5 f#5 e5 d5 b4 c5 d5 e5 g#5 b5 g#5 e5 c5 e5 f#5 g#5 b5 a5 g#5 f#5 e5 c5 e5 d5 b4 g#4 b4 a4 ~>\").s(\"piano\").release(0.2).room(0.25).gain(0.42)\n\n$BASS: note(\"<a2 ~ e2 ~ d2 ~ a2 ~ e2 ~ b2 ~ a2 ~ e2 ~ c3 ~ g2 ~ f#2 ~ e2 ~ a2 ~ d2 ~ e2 ~ a2 ~>\").s(\"piano\").release(0.35).gain(0.38)\n\n$COMP: chord(\"<AmM7 ~ ~ ~ D7 ~ E7 ~ AmM7 ~ ~ ~ D7 ~ E7 ~ C7 ~ F#m7 ~ D7 ~ E7 ~ AmM7 ~ D7 ~ E7 ~ AmM7 ~>\").voicing().s(\"piano\").late(0.08).room(0.4).gain(0.22)\n\n$COUNTER: note(\"<~ e4 ~ c4 ~ f#4 ~ d4 ~ g#4 ~ e4 ~ b4 ~ g#4 ~ g4 ~ e4 ~ a4 ~ f#4 ~ d4 ~ f#4 ~ d4 ~ b4 ~ a4>\").s(\"piano\").release(0.3).room(0.35).gain(0.18)",
+      "errors": [],
+      "errorClasses": [
+        "runtime"
+      ],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 1,
+        "total": 1,
+        "checks": [
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 46488
+    },
+    {
+      "id": "s03",
+      "mode": "rag-loop",
+      "request": "мрачный локрийский рифф в си, 110 BPM",
+      "ok": true,
+      "attempts": 1,
+      "code": "setCpm(110/4)\nconst key = \"b:locrian\"\n\n$KICK: s(\"bd ~ ~ bd ~ ~ bd ~\").gain(0.65)\n\n$SNARE: s(\"~ ~ sd ~ ~ ~ sd ~\").gain(0.55)\n\n$HATS: s(\"hh*8\").gain(\"0.22 0.14 0.2 0.12 0.24 0.14 0.2 0.12\")\n\n$RIFF: n(\"0 0 1 0 3 4 3 ~ 0 0 1 3 4 3 1 ~\").scale(key).s(\"sawtooth\").lpf(1800).gain(0.62)\n\n$BASS: n(\"0 ~ 0 6 ~ 4 3 ~ 0 ~ 1 0 ~ 4 3 ~\").scale(key).s(\"sine\").lpf(700).gain(0.72)\n\n$DRONE: n(\"0 ~ ~ ~ 0 ~ ~ ~\").scale(key).s(\"triangle\").lpf(500).gain(0.18)",
+      "errors": [],
+      "errorClasses": [],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 3,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": true
+          },
+          {
+            "name": "mode",
+            "ok": true
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 17305
+    },
+    {
+      "id": "s04",
+      "mode": "rag-loop",
+      "request": "целотонная гамма в до для эмбиент-пэда, 66 BPM",
+      "ok": true,
+      "attempts": 2,
+      "code": "setCpm(16.5)\nconst key = \"C:whole\"\n\n$PEDAL: note(\"<c2 ~ c2 ~> <c2 ~ c2 ~> <c2 ~ c2 ~> <c2 ~ c2 ~>\").s(\"tp_cello_section_v1\").slow(4).attack(0.8).release(1.5).gain(0.16)\n\n$PAD_LOW: note(\"<c3 d3 e3 d3> <c3 e3 f#3 e3> <d3 e3 f#3 d3> <c3 d3 e3 c3>\").s(\"tp_viola_section_v1\").slow(4).attack(1.2).release(1.8).lpf(1800).gain(0.12)\n\n$PAD_HIGH: note(\"<e4 f#4 e4 d4> <f#4 e4 d4 c4> <e4 d4 c4 d4> <f#4 e4 d4 c4>\").s(\"tp_violin_section_v1\").slow(4).attack(1.5).release(2).hpf(700).lpf(4200).gain(0.09)\n\n$SHIMMER: note(\"<e5 f#5 e5 d5 e5 f#5 e5 ~> <d5 e5 f#5 e5 d5 c5 d5 ~> <e5 f#5 e5 d5 c5 d5 e5 ~> <f#5 e5 d5 c5 d5 e5 f#5 ~>\").s(\"tp_harp_v1\").slow(4).attack(0.4).release(1.2).hpf(900).gain(0.08)",
+      "errors": [],
+      "errorClasses": [
+        "empty-part",
+        "empty-part",
+        "empty-part",
+        "empty-part"
+      ],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 1,
+        "total": 1,
+        "checks": [
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 47874
+    },
+    {
+      "id": "s05",
+      "mode": "rag-loop",
+      "request": "мелодия в ре венгерском миноре на струнных, 95 BPM",
+      "ok": true,
+      "attempts": 2,
+      "code": "setCpm(95/4)\nconst key = \"d:hungarian minor\"\n\n$LEAD: note(\"d5 e5 f5 g#5 a5 g#5 f5 e5 d5 c#5 d5 f5 g#5 a5 c#5 d5\").s(\"triangle\").slow(4).attack(0.03).release(0.2).gain(0.34)\n\n$VIOLIN: note(\"<[a4 d5 f5] [a4 d5 f5] [bb4 d5 g5] [bb4 d5 g5] [bb4 d5 g5] [bb4 d5 g5] [c#5 e5 a5] [c#5 e5 a5] [c#5 e5 a5] [c#5 e5 a5] [a4 d5 f5] [a4 d5 f5] [a4 d5 f5] [a4 d5 f5] [a4 d5 f5] [a4 d5 f5]>\").s(\"triangle\").slow(4).attack(0.4).release(1.2).gain(0.24)\n\n$VIOLA: note(\"<[f3 a3 d4] [f3 a3 d4] [g3 bb3 d4] [g3 bb3 d4] [g3 bb3 d4] [g3 bb3 d4] [a3 c#4 e4] [a3 c#4 e4] [a3 c#4 e4] [a3 c#4 e4] [f3 a3 d4] [f3 a3 d4] [f3 a3 d4] [f3 a3 d4] [f3 a3 d4] [f3 a3 d4]>\").s(\"triangle\").slow(4).attack(0.5).release(1.3).gain(0.22)\n\n$CELLO: note(\"d2 ~ d2 ~ g2 ~ g2 ~ a2 ~ a2 ~ d2 ~ d2 ~\").s(\"triangle\").slow(4).attack(0.2).release(0.7).gain(0.32)\n\n$CONTRABASS: note(\"d1 ~ ~ ~ d1 ~ ~ ~ g1 ~ ~ ~ a1 ~ ~ ~ d1 ~ ~ ~\").s(\"triangle\").slow(4).attack(0.08).release(0.5).gain(0.28)",
+      "errors": [],
+      "errorClasses": [
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound"
+      ],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 1,
+        "total": 1,
+        "checks": [
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 46768
+    },
+    {
+      "id": "s06",
+      "mode": "rag-loop",
+      "request": "испанская мелодия во фригийской доминанте в ми, 105 BPM",
+      "ok": true,
+      "attempts": 2,
+      "code": "setCpm(105/4)\nconst key = \"e:phrygian dominant\"\n$HARMONY: note(\"<[e3 g#3 b3] [f3 a3 c4] [d3 f3 a3] [e3 g#3 b3] [e3 g#3 b3] [f3 a3 c4] [d3 f3 a3] [e3 g#3 b3] [a2 c3 e3] [f3 a3 c4] [d3 f3 a3] [e3 g#3 b3] [f3 a3 c4] [d3 f3 a3] [d3 f3 a3] [e3 g#3 b3]>\").s(\"tp_upright_piano_v1\").gain(0.3)\n$BASS: note(\"<e2 e2 f2 f2 d2 d2 e2 e2 a2 a2 f2 f2 d2 d2 d2 e2>\").s(\"tp_contrabass_pizz_v1\").gain(0.42)\n$LEAD: note(\"<e5 f5 g#5 f5 e5 d5 c5 b4 a4 c5 d5 f5 g#5 f5 d5 e5>\").s(\"tp_solo_violin_v1\").gain(0.28)\n$COUNTER: note(\"<~ b4 ~ a4 ~ g#4 ~ f4 ~ e4 ~ f4 ~ a4 ~ g#4>\").s(\"tp_harp_v1\").gain(0.18)\n$PERC: s(\"<bd ~ bd ~, ~ sd ~ sd, hh hh hh hh>\").gain(0.22)",
+      "errors": [],
+      "errorClasses": [
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound"
+      ],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 1,
+        "total": 1,
+        "checks": [
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 30708
+    },
+    {
+      "id": "s07",
+      "mode": "rag-loop",
+      "request": "терменвокс-подобный плывущий лид в ре миноре, 80 BPM",
+      "ok": true,
+      "attempts": 2,
+      "code": "setCpm(80/4)\nconst key = \"d:minor\"\n\n$KICK: s(\"bd ~ ~ ~ bd ~ ~ ~\").gain(0.55)\n$SNARE: s(\"~ ~ sd ~ ~ ~ sd ~\").gain(0.4).room(0.2)\n$HATS: s(\"hh*8\").gain(\"0.18 0.11 0.16 0.1 0.18 0.11 0.16 0.1\")\n\n$BASS: note(\"d2 g2 c3 f2 bb1 g2 a2 d2\").s(\"sine\").slow(2).lpf(380).gain(0.34)\n$PAD: chord(\"Dm Gm C F Bb Gm Am Dm\").voicing().s(\"triangle\").slow(2).release(1.6).lpf(1200).gain(0.22)\n$LEAD: note(\"d5 ~ f5 g5 a5 ~ g5 f5 d5 ~ a4 c5 d5 f5 ~ d5\").s(\"sine\").slow(4).legato(1.5).vib(5).vibmod(0.22).room(0.65).delay(0.18).gain(0.38)",
+      "errors": [],
+      "errorClasses": [
+        "runtime"
+      ],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 3,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": true
+          },
+          {
+            "name": "mode",
+            "ok": true
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 67503
+    },
+    {
+      "id": "s08",
+      "mode": "rag-loop",
+      "request": "волыночный дрон с наигрышем в соль мажоре, 90 BPM",
+      "ok": true,
+      "attempts": 1,
+      "code": "setCpm(90/4)\nconst key = \"g:major\"\n\n$DRONE_TONIC: note(\"g2\").s(\"sawtooth\").attack(0.08).release(0.3).lpf(1200).gain(0.28).slow(16)\n$DRONE_FIFTH: note(\"d3\").s(\"sawtooth\").attack(0.08).release(0.3).lpf(1600).gain(0.2).slow(16)\n$BAGPIPE_HARMONIC: note(\"<g3 d4>\").s(\"square\").attack(0.03).release(0.15).lpf(2200).gain(0.1).slow(8)\n$MELODY: n(\"0 2 4 5 4 2 1 0 2 4 5 4 2 1 0 0 0 1 2 4 5 4 2 1 0 2 4 5 6 5 4 2 4 5 6 5 4 2 1 0 2 4 5 4 2 1 0 0 0 2 4 5 4 2 1 0 2 4 5 4 2 1 0 0\").scale(key).s(\"sawtooth\").attack(0.02).release(0.12).lpf(2600).gain(0.24).slow(16)\n$GRACE_NOTES: n(\"~ 0 1 2 ~ 2 1 0 ~ 4 5 4 ~ 2 1 0 ~ ~ 2 4 2 ~ 1 0 ~ ~ 4 5 6 ~ 5 4 2 ~ 0 1 2 ~ 4 2 1 ~ ~ 2 4 5 ~ 4 2 0 ~ ~ 0 2 1 ~ 0 0 ~\").scale(key).s(\"square\").attack(0.01).release(0.06).lpf(3000).gain(0.13).slow(16)\n$MARCH: s(\"bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~ bd ~ sd ~\").gain(0.34).slow(4)",
+      "errors": [],
+      "errorClasses": [],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 3,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": true
+          },
+          {
+            "name": "mode",
+            "ok": true
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 47551
+    },
+    {
+      "id": "s09",
+      "mode": "rag-loop",
+      "request": "стеклянная гармоника в до мажоре, 70 BPM",
+      "ok": true,
+      "attempts": 1,
+      "code": "setCpm(70/4)\nconst key = \"C:major\"\n$CHORDS: chord(\"<CM7 Dm7 G7 CM7>\").voicing().s(\"sine\").gain(0.28).slow(4)\n$GLASS_HARMONICA: note(\"<e5 g5 b5 e6 ~ a5 c6 e6 ~ d6 b5 g5 ~ e5 g5 c6>\").s(\"sine\").gain(0.34).slow(4)\n$BASS: note(\"<c2 ~ c2 ~ d2 ~ d2 ~ g2 ~ g2 ~ c2 ~ c2 ~>\").s(\"sine\").gain(0.3).slow(4)\n$ARP: note(\"<e4 g4 b4 e5 d4 f4 a4 d5 d4 f4 g4 b4 e4 g4 b4 e5>\").s(\"triangle\").gain(0.16).slow(4)",
+      "errors": [],
+      "errorClasses": [],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 3,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": true
+          },
+          {
+            "name": "mode",
+            "ok": true
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 17238
+    },
+    {
+      "id": "s10",
+      "mode": "rag-loop",
+      "request": "мрачные струнные из каталога Timbre Palette для кино в ре миноре, 85 BPM",
+      "ok": true,
+      "attempts": 2,
+      "code": "setCpm(85/4)\nconst key = \"d:minor\"\n\n$CHORDS: chord(\"<Dm Gm Am Dm>\").voicing().s(\"tp_viola_section_v1\").slow(4).attack(0.2).release(1.8).room(0.45).gain(0.34)\n\n$PAD: chord(\"<Dm Gm Am Dm>\").voicing().s(\"tp_violin_section_v1\").slow(4).attack(0.8).release(2.4).room(0.6).gain(0.28)\n\n$CELLO: note(\"<d2 g2 a2 d2>\").s(\"tp_cello_section_v1\").slow(4).attack(0.25).release(1.4).room(0.4).gain(0.44)\n\n$CONTRABASS: note(\"<d1 ~ g1 ~ a1 ~ d1 ~>\").s(\"tp_contrabass_sus_v1\").slow(4).attack(0.3).release(1.2).room(0.35).gain(0.5)\n\n$VIOLIN: note(\"<a4 f4 e4 d4 ~ a4 c5 d5>\").s(\"tp_solo_violin_v1\").slow(4).attack(0.12).release(0.9).room(0.55).gain(0.32)\n\n$PIZZICATO: note(\"<d4 ~ a3 ~ g3 ~ a3 ~>\").s(\"tp_solo_violin_pizz_v1\").slow(4).attack(0.02).release(0.35).room(0.3).gain(0.2)",
+      "errors": [],
+      "errorClasses": [
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound"
+      ],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 3,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": true
+          },
+          {
+            "name": "mode",
+            "ok": true
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 43555
+    },
+    {
+      "id": "s11",
+      "mode": "rag-loop",
+      "request": "полиритмия 3 на 4: трэповые хэты против шагающего баса в фа миноре, 120 BPM",
+      "ok": true,
+      "attempts": 1,
+      "code": "setCpm(30)\nconst key = \"f:minor\"\n\n$KICK: s(\"bd ~ ~ bd ~ ~ bd ~\").gain(0.68)\n$SNARE: s(\"~ sd ~ sd\").gain(0.62)\n$HATS: s(\"hh*3\").gain(\"0.34 0.2 0.28\")\n$BASS: slowcat(\n  note(\"f2 c3 eb2 c2\"),\n  note(\"db2 ab2 c3 ab2\"),\n  note(\"eb2 bb2 db3 bb2\"),\n  note(\"f2 c3 eb2 f2\")\n).s(\"triangle\").gain(0.5)\n$CHORDS: slowcat(\"Fm\", \"Db\", \"Eb\", \"Fm\").chord().voicing().s(\"piano\").gain(0.22)\n$PERC: s(\"perc ~ ~ perc ~ ~ ~ perc\").gain(0.24)",
+      "errors": [],
+      "errorClasses": [],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 3,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": true
+          },
+          {
+            "name": "mode",
+            "ok": true
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 47606
+    },
+    {
+      "id": "s12",
+      "mode": "rag-loop",
+      "request": "евклидовы ритмы cp(3,8) и bd(5,8) для техно, 128 BPM",
+      "ok": true,
+      "attempts": 1,
+      "code": "setCpm(128/4)\nconst key = \"f:minor\"\n\n$KICK: s(\"<bd(5,8) bd(5,8) bd(5,8) bd(5,8)>\").gain(0.85)\n$CLAP: s(\"<cp(3,8) cp(3,8) cp(3,8) cp(3,8)>\").gain(0.65)\n$HATS: s(\"<hh*16 hh*16 hh*16 hh*16>\").gain(\"0.28 0.18 0.24 0.16\")\n$PERC: s(\"<~ perc ~ perc ~ ~ perc ~ ~ perc ~ ~ perc ~ ~ ~>\").gain(0.35)\n$SUB: note(\"<f1 ~ f1 ~ f1 ~ ~ f1>\").s(\"sine\").decay(0.2).sustain(0.5).gain(0.42)\n$TEXTURE: s(\"<industrial ~ ~ ~ industrial ~ ~ ~ ~ industrial ~ ~ industrial ~ ~ ~>\").gain(0.16).room(0.25)",
+      "errors": [],
+      "errorClasses": [],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 2,
+        "total": 2,
+        "checks": [
+          {
+            "name": "bpm",
+            "ok": true
+          },
+          {
+            "name": "sound",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 17133
+    },
+    {
+      "id": "s13",
+      "mode": "rag-loop",
+      "request": "трёхчастная форма через arrange: интро, куплет, припев в ля миноре, 124 BPM",
+      "ok": true,
+      "attempts": 1,
+      "code": "setCpm(124/4)\nconst key = \"a:minor\"\n\n$CHORDS: arrange(\n  [4, chord(\"<Am F>\").voicing().s(\"tp_upright_soft_v1\").gain(0.16)],\n  [8, chord(\"<Am Dm G Am>\").voicing().s(\"tp_upright_piano_v1\").gain(0.2)],\n  [8, chord(\"<Am F Dm Am>\").voicing().s(\"tp_upright_piano_v1\").gain(0.24)]\n)\n\n$BASS: arrange(\n  [4, n(\"0 ~ 5 ~\").scale(key).s(\"tp_contrabass_sus_v1\").gain(0.2)],\n  [8, n(\"<0 0 3 0 4 4 0 0>\").scale(key).s(\"tp_contrabass_pizz_v1\").gain(0.22)],\n  [8, n(\"<0 0 5 5 3 3 0 0>\").scale(key).s(\"tp_contrabass_pizz_v1\").gain(0.24)]\n)\n\n$MELODY: arrange(\n  [4, n(\"0 ~ 2 4 ~ 2 0 ~\").scale(key).s(\"tp_solo_violin_v1\").gain(0.16)],\n  [8, n(\"<0 2 4 2 0 2 3 2> <1 3 5 3 1 0 2 1>\").scale(key).s(\"tp_solo_violin_v1\").gain(0.18)],\n  [8, n(\"<0 2 4 5 4 2 1 0> <0 2 3 5 3 2 0 0>\").scale(key).s(\"tp_solo_violin_v1\").gain(0.22)]\n)\n\n$PAD: arrange(\n  [4, chord(\"<Am F>\").voicing().s(\"tp_viola_section_v1\").gain(0.08)],\n  [8, chord(\"<Am Dm G Am>\").voicing().s(\"tp_violin_section_v1\").gain(0.1)],\n  [8, chord(\"<Am F Dm Am>\").voicing().s(\"tp_violin_section_v1\").gain(0.14)]\n)\n\n$DRUMS: arrange(\n  [4, s(\"bd ~ ~ ~, hh ~ hh ~\").gain(0.16)],\n  [8, s(\"bd ~ ~ ~, ~ sd ~ ~, hh hh hh hh\").gain(0.2)],\n  [8, s(\"bd ~ bd ~, ~ sd ~ sd, hh hh hh hh hh hh hh hh\").gain(0.24)]\n)\n\n$TEXTURE: arrange(\n  [4, s(\"~ ~ ~ ~\").s(\"tp_harp_v1\").gain(0.06)],\n  [8, s(\"~ pluck ~ ~\").gain(0.08)],\n  [8, s(\"pluck ~ pluck ~\").gain(0.1)]\n)",
+      "errors": [],
+      "errorClasses": [],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 3,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": true
+          },
+          {
+            "name": "mode",
+            "ok": true
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 42846
+    },
+    {
+      "id": "s14",
+      "mode": "rag-loop",
+      "request": "джазовые аккорды Fmaj7 и Cmaj7 в до мажоре на пианино, 110 BPM",
+      "ok": true,
+      "attempts": 1,
+      "code": "setCpm(110/4)\nconst key = \"C:major\"\n\n$CHORDS: chord(\"<FM7 CM7 FM7 CM7 FM7 CM7 FM7 CM7>\").voicing().slow(2).s(\"piano\").room(0.35).gain(0.65)\n$BASS: note(\"<f2 ~ c3 ~ c2 ~ g2 ~ f2 ~ c3 ~ c2 ~ g2 ~>\").slow(2).s(\"sine\").gain(0.45)\n$DRUMS: s(\"bd ~ ~ bd, ~ sd ~ sd\").slow(2).gain(0.42)\n$HATS: s(\"[hh@3 hh@2]*4\").slow(2).gain(0.22)",
+      "errors": [],
+      "errorClasses": [],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 3,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": true
+          },
+          {
+            "name": "mode",
+            "ok": true
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 15547
+    },
+    {
+      "id": "s15",
+      "mode": "rag-loop",
+      "request": "джазовый ii-V-I с нонаккордами в си бемоль мажоре, 115 BPM",
+      "ok": true,
+      "attempts": 1,
+      "code": "setCpm(115/4)\nconst key = \"bb:major\"\n\n$CHORDS: chord(\"<Cm9 F9 BbM9 BbM9 Cm9 F9 BbM9 BbM9>\").voicing().slow(2).s(\"tp_upright_piano_v1\").room(0.35).gain(0.7)\n$BASS: note(\"<c2 f2 bb1 bb1 c2 f2 bb1 bb1>\").slow(2).s(\"tp_contrabass_sus_v1\").gain(0.65)\n$LEAD: note(\"<d4 f4 a4 c5 eb5 d5 c5 bb4 d4 f4 a4 c5 eb5 d5 c5 bb4>\").slow(2).s(\"tp_solo_violin_v1\").room(0.25).gain(0.42)\n$KICK: s(\"bd ~ bd ~ bd ~ bd ~\").gain(0.72)\n$RIDE: s(\"~ hh ~ hh ~ hh ~ hh\").gain(0.28)\n$SNARE: s(\"~ ~ cp ~ ~ ~ cp ~\").gain(0.45)",
+      "errors": [],
+      "errorClasses": [],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 3,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": true
+          },
+          {
+            "name": "mode",
+            "ok": true
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 18143
+    },
+    {
+      "id": "s16",
+      "mode": "rag-loop",
+      "request": "балканский ритм на 7 долей в ре миноре, 140 BPM",
+      "ok": true,
+      "attempts": 2,
+      "code": "setCpm(35)\nconst key = \"d:minor\"\n\n$KICK: s(\"bd ~ ~ bd ~ bd ~\").gain(0.78)\n$SNARE: s(\"~ ~ ~ sd ~ sd ~\").gain(0.68)\n$HATS: s(\"hh hh hh hh hh hh hh\").gain(0.3)\n$PERC: s(\"perc ~ perc ~ ~ perc ~\").gain(0.42)\n$BASS: n(\"<0 ~ ~ 4 ~ 4 ~ 0 ~ ~ 3 ~ 3 ~ 0 ~>\").scale(key).s(\"tp_contrabass_pizz_v1\").gain(0.62)\n$CHORDS: chord(\"<Dm Gm Am Dm Dm Gm Am Dm Bb Gm C Dm Dm Gm Am Dm>\").voicing().s(\"tp_upright_piano_v1\").gain(0.42)\n$PAD: n(\"<0 ~ ~ ~ 3 ~ ~ ~ 4 ~ ~ ~ 0 ~ ~ ~>\").scale(key).s(\"tp_viola_section_v1\").sustain(0.7).release(0.5).gain(0.2)\n$LEAD: note(\"d5 f5 g5 a5 g5 f5 d5 d5 f5 g5 a5 c6 a5 g5 f5 d5\").s(\"tp_solo_violin_v1\").gain(0.38)",
+      "errors": [],
+      "errorClasses": [
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound",
+        "unknown-sound"
+      ],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 3,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": true
+          },
+          {
+            "name": "mode",
+            "ok": true
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 50522
+    },
+    {
+      "id": "s17",
+      "mode": "rag-loop",
+      "request": "быстрый свингующий бас в соль миноре, 160 BPM",
+      "ok": true,
+      "attempts": 3,
+      "code": "setCpm(160/4)\nconst key = \"g:minor\"\n\n$KICK: s(\"<bd ~ bd ~ bd ~ ~ bd bd ~ bd ~ bd bd ~ ~ bd>\").gain(0.72)\n\n$SNARE: s(\"<~ sd ~ sd ~ sd ~ sd ~ sd ~ sd ~ sd ~ sd>\").gain(0.58)\n\n$HATS: s(\"hh*8\").gain(\"0.32 0.18 0.26 0.18 0.32 0.18 0.26 0.18\")\n\n$BASS: n(\"<0 ~ 0 2 4 ~ 2 4 3 ~ 3 5 3 ~ 2 1 4 ~ 4 6 4 ~ 2 4 0 ~ 2 4 2 ~ 0 ~>\").scale(key).s(\"bass\").lpf(900).gain(0.6)\n\n$CHORDS: chord(\"<Gm7 Gm7 Cm7 Cm7 Cm7 Cm7 Dm7 Dm7 Gm7 Gm7 EbM7 EbM7 Cm7 Dm7 Gm7 Gm7>\").voicing().s(\"piano\").gain(0.32)",
+      "errors": [],
+      "errorClasses": [
+        "runtime",
+        "scale",
+        "scale",
+        "scale",
+        "scale"
+      ],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 3,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": true
+          },
+          {
+            "name": "mode",
+            "ok": true
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 42052
+    },
+    {
+      "id": "s18",
+      "mode": "rag-loop",
+      "request": "плотный многослойный трэп-бит: 808, хэты с роллами, клэп, перкуссия и пэд в до миноре, 132 BPM",
+      "ok": true,
+      "attempts": 1,
+      "code": "setCpm(132/4)\nconst key = \"c:minor\"\n\n$PAD: chord(\"<Cm Fm Gm Cm>\").voicing().slow(4).s(\"sawtooth\").lpf(1100).room(0.65).gain(0.32)\n$808: note(\"<c1 ~ c1 ~ ab0 ~ bb0 ~ f0 ~ f0 ~ g0 ~ g0 ~ c1 ~ ~ c1 ~ ab0 ~ bb0 ~ g0 ~>\").s(\"808\").lpf(180).gain(0.8)\n$KICK: s(\"<bd ~ bd ~ bd ~ ~ bd bd ~ ~ bd ~ bd ~ ~>\").gain(\"<0.9 0.65 0.85 0.7>\").lpf(100)\n$HATS: s(\"hh*8\").fast(\"<1 2 1 4>\").gain(\"0.48 0.16 0.32 0.18 0.42 0.14 0.3 0.2\")\n$CLAP: s(\"~ cp ~ ~ ~ cp ~ ~\").gain(0.72).room(0.25)\n$PERC: s(\"<perc ~ ~ perc ~ perc ~ ~ perc ~ ~ perc ~ ~ perc ~>\").gain(\"0.32 0.18 0.25 0.2\").room(0.3)\n$TEXTURE: s(\"808oh ~ ~ ~ 808oh ~ ~ ~\").gain(0.16).hpf(1800).room(0.45)",
+      "errors": [],
+      "errorClasses": [],
+      "searchStage": "exact",
+      "expectation": {
+        "met": 3,
+        "total": 3,
+        "checks": [
+          {
+            "name": "tonic",
+            "ok": true
+          },
+          {
+            "name": "mode",
+            "ok": true
+          },
+          {
+            "name": "bpm",
+            "ok": true
+          }
+        ]
+      },
+      "ms": 28781
+    }
+  ]
+}

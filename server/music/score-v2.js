@@ -360,7 +360,7 @@ function v2Hint(id, metrics, analysis) {
       return (
         `Автоматизировано ${metrics.automation.automated} из ${metrics.automation.total} параметров ` +
         `(${(metrics.automation.ratio * 100).toFixed(0)}%). ` +
-        'Добавь движение через сигнал: .lpf(sine.slow(8).range(400, 3000)).'
+        'Добавь движение через сигнал: .lpf(time.slow(8).range(400, 3000)) — рамп идёт в одну сторону (измерено, D-160).'
       );
     default:
       return 'Приведи метрику к целевому диапазону.';

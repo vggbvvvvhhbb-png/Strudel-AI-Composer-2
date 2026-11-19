@@ -38,7 +38,7 @@ describe('CSP', () => {
   });
 
   it('unsafe-inline не появляется ни на одной странице', () => {
-    for (const path of ['/', '/studio.html', '/tinder.html', '/razbor/abc-123', '/api/health']) {
+    for (const path of ['/', '/studio.html', '/tinder.html', '/render-realm.html', '/razbor/abc-123', '/api/health']) {
       const scriptSrc = parse(cspHeaderFor(path))['script-src'];
       expect(scriptSrc, `путь ${path}`).not.toContain("'unsafe-inline'");
     }
@@ -47,6 +47,13 @@ describe('CSP', () => {
   it('страница разбора получает послабление, как студия', () => {
     expect(CSP_EVAL_PATHS.test('/razbor/abc-123')).toBe(true);
     expect(parse(cspHeaderFor('/razbor/abc-123'))['script-src']).toContain("'unsafe-eval'");
+  });
+
+  it('рендер-realm получает послабление, как студия (там исполняется код)', () => {
+    expect(CSP_EVAL_PATHS.test('/render-realm.html')).toBe(true);
+    const scriptSrc = parse(cspHeaderFor('/render-realm.html'))['script-src'];
+    expect(scriptSrc).toContain("'unsafe-eval'");
+    expect(scriptSrc).not.toContain("'unsafe-inline'");
   });
 
   it('во всех политиках остаётся то, без чего не работает звук', () => {
@@ -61,7 +68,7 @@ describe('CSP', () => {
   });
 
   it('страницы приложения не содержат инлайновых скриптов — иначе CSP их заблокирует', () => {
-    for (const file of ['index.html', 'studio.html', 'tinder.html']) {
+    for (const file of ['index.html', 'studio.html', 'tinder.html', 'render-realm.html']) {
       const html = readFileSync(join(root, file), 'utf8');
       const inline = [...html.matchAll(/<script\b([^>]*)>/g)]
         .filter((match) => !/\bsrc=/.test(match[1]))

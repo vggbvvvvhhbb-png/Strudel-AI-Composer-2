@@ -194,10 +194,10 @@ export function createEngineAdapter(strudel, { maxPolyphony = DEFAULT_MAX_POLYPH
      * После рендера живой путь восстанавливается: контроллер superdough
      * пересоздаётся, хвост переподключается в мастер-шину.
      *
-     * @param {{pattern:object, fromCycle:number, toCycle:number, sampleRate:number, cps:number}} options
+     * @param {{pattern:object, fromCycle:number, toCycle:number, sampleRate:number, cps:number, prepare?:Function}} options
    * @returns {Promise<AudioBuffer>}
      */
-    async renderOffline({ pattern, fromCycle = 0, toCycle = 4, sampleRate = 44100, cps = 0.5 } = {}) {
+    async renderOffline({ pattern, fromCycle = 0, toCycle = 4, sampleRate = 44100, cps = 0.5, prepare } = {}) {
       const seconds = (toCycle - fromCycle) / cps;
       const offline = new OfflineAudioContext(2, Math.round(sampleRate * seconds), sampleRate);
 
@@ -220,6 +220,9 @@ export function createEngineAdapter(strudel, { maxPolyphony = DEFAULT_MAX_POLYPH
         await strudel.superdough(hap.value, begin, dur, cps, begin);
       }
 
+      // Хук подготовки перед стартом рендера (D-143): realm ждёт готовности
+      // IR реверберации — superdough применяет её асинхронно (E-022).
+      if (prepare) await prepare();
       const buffer = await offline.startRendering();
       // Возвращаем живой контекст на место.
       strudel.setAudioContext?.(context);
@@ -244,15 +247,15 @@ export function createEngineAdapter(strudel, { maxPolyphony = DEFAULT_MAX_POLYPH
     /**
      * Офлайн-рендер прямо из кода: код → паттерн → AudioBuffer.
      *
-     * @param {{code:string, fromCycle?:number, toCycle?:number, sampleRate?:number, cps?:number}} options
+     * @param {{code:string, fromCycle?:number, toCycle?:number, sampleRate?:number, cps?:number, prepare?:Function}} options
      * @returns {Promise<AudioBuffer>}
      */
-    async renderCodeOffline({ code, fromCycle = 0, toCycle = 16, sampleRate = 44100, cps = 0.5 } = {}) {
+    async renderCodeOffline({ code, fromCycle = 0, toCycle = 16, sampleRate = 44100, cps = 0.5, prepare } = {}) {
       const pattern = await adapter.patternFromCode(code);
       if (!pattern || typeof pattern.queryArc !== 'function') {
         throw new Error('Код не дал паттерн — рендер невозможен');
       }
-      return adapter.renderOffline({ pattern, fromCycle, toCycle, sampleRate, cps });
+      return adapter.renderOffline({ pattern, fromCycle, toCycle, sampleRate, cps, prepare });
     },
 
     dispose() {

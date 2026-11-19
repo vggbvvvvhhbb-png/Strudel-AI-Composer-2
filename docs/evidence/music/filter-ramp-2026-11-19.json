@@ -1,0 +1,1234 @@
+{
+  "probe": "filter-ramp",
+  "date": "2026-11-19",
+  "command": "node scripts/probe-filter-ramp.mjs",
+  "method": "Рендер 4 тактов при 128 BPM. Окно анализа — 1/8 такта. Спектральный центроид и энергия полосы 4–16 кГц считаются FFT проекта (src/audio/dsp/fft.js) по WAV проекта.",
+  "bpm": 128,
+  "highBandFromHz": 4000,
+  "runs": [
+    {
+      "label": "A. статичный фильтр .lpf(800)",
+      "expectation": "центроид ровный, верхняя полоса не растёт",
+      "events": 4,
+      "cutoffs": [
+        800
+      ],
+      "cutoffTurns": 0,
+      "bars": [
+        {
+          "bar": 1,
+          "eighths": [
+            {
+              "centroid_hz": 154,
+              "high_db": -80.92
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.74
+            },
+            {
+              "centroid_hz": 152,
+              "high_db": -83.92
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.71
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.82
+            },
+            {
+              "centroid_hz": 152,
+              "high_db": -83.91
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.72
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.81
+            }
+          ]
+        },
+        {
+          "bar": 2,
+          "eighths": [
+            {
+              "centroid_hz": 154,
+              "high_db": -80.93
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.74
+            },
+            {
+              "centroid_hz": 152,
+              "high_db": -83.92
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.69
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.82
+            },
+            {
+              "centroid_hz": 152,
+              "high_db": -83.92
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.72
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.85
+            }
+          ]
+        },
+        {
+          "bar": 3,
+          "eighths": [
+            {
+              "centroid_hz": 154,
+              "high_db": -80.92
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.74
+            },
+            {
+              "centroid_hz": 152,
+              "high_db": -83.9
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.69
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.82
+            },
+            {
+              "centroid_hz": 152,
+              "high_db": -83.91
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.72
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.81
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "eighths": [
+            {
+              "centroid_hz": 154,
+              "high_db": -80.92
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.78
+            },
+            {
+              "centroid_hz": 152,
+              "high_db": -83.9
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.69
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.82
+            },
+            {
+              "centroid_hz": 152,
+              "high_db": -83.91
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.72
+            },
+            {
+              "centroid_hz": 154,
+              "high_db": -83.81
+            }
+          ]
+        }
+      ],
+      "facts": {
+        "центроид, начало → конец первого такта, Гц": "154 → 154",
+        "рост центроида за такт, Гц": 0,
+        "рост центроида за трек, Гц": 0,
+        "верхняя полоса 4–16 кГц, начало → конец, дБ": "-80.92 → -83.81",
+        "рост верхней полосы за трек, дБ": -2.89,
+        "изменений центроида внутри первого такта (>20 Гц)": 0
+      }
+    },
+    {
+      "label": "B. быстрый сигнал без .seg() — sine.range(200,4000)",
+      "expectation": "значение один раз на ноту; при быстром сигнале — колебание среза",
+      "events": 16,
+      "cutoffs": [
+        2100,
+        4000,
+        2100,
+        200
+      ],
+      "cutoffTurns": 1,
+      "bars": [
+        {
+          "bar": 1,
+          "eighths": [
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -51.12
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.02
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -100.62
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.57
+            }
+          ]
+        },
+        {
+          "bar": 2,
+          "eighths": [
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -51.12
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.02
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -100.61
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.65
+            }
+          ]
+        },
+        {
+          "bar": 3,
+          "eighths": [
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -51.12
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.02
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -100.6
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.63
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "eighths": [
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -51.12
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.02
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -100.61
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.58
+            }
+          ]
+        }
+      ],
+      "facts": {
+        "центроид, начало → конец первого такта, Гц": "193 → 97",
+        "рост центроида за такт, Гц": -96,
+        "рост центроида за трек, Гц": -96,
+        "верхняя полоса 4–16 кГц, начало → конец, дБ": "-63.28 → -101.58",
+        "рост верхней полосы за трек, дБ": -38.3,
+        "изменений центроида внутри первого такта (>20 Гц)": 3
+      }
+    },
+    {
+      "label": "C. быстрый сигнал с .seg(16) — sine.range(200,4000).seg(16)",
+      "expectation": "16 сегментов, но синус идёт вверх И обратно — не монотонный рамп",
+      "events": 64,
+      "cutoffs": [
+        2100,
+        2827,
+        3444,
+        3855,
+        4000,
+        3855,
+        3444,
+        2827,
+        2100,
+        1373,
+        756,
+        345,
+        200,
+        345,
+        756,
+        1373
+      ],
+      "cutoffTurns": 2,
+      "bars": [
+        {
+          "bar": 1,
+          "eighths": [
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 191,
+              "high_db": -66.31
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.15
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.18
+            },
+            {
+              "centroid_hz": 191,
+              "high_db": -66.32
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.15
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.17
+            }
+          ]
+        },
+        {
+          "bar": 2,
+          "eighths": [
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 191,
+              "high_db": -66.31
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.15
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.18
+            },
+            {
+              "centroid_hz": 191,
+              "high_db": -66.32
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.15
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.17
+            }
+          ]
+        },
+        {
+          "bar": 3,
+          "eighths": [
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 191,
+              "high_db": -66.31
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.15
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.18
+            },
+            {
+              "centroid_hz": 191,
+              "high_db": -66.32
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.15
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.17
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "eighths": [
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 191,
+              "high_db": -66.31
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.15
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.18
+            },
+            {
+              "centroid_hz": 191,
+              "high_db": -66.32
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.15
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.18
+            }
+          ]
+        }
+      ],
+      "facts": {
+        "центроид, начало → конец первого такта, Гц": "193 → 193",
+        "рост центроида за такт, Гц": 0,
+        "рост центроида за трек, Гц": 0,
+        "верхняя полоса 4–16 кГц, начало → конец, дБ": "-63.28 → -66.18",
+        "рост верхней полосы за трек, дБ": -2.9,
+        "изменений центроида внутри первого такта (>20 Гц)": 0
+      }
+    },
+    {
+      "label": "D. медленный сигнал — sine.slow(8).range(200,4000).seg(16)",
+      "expectation": "медленное колебание: внутри окна выглядит как рамп",
+      "events": 64,
+      "cutoffs": [
+        2100,
+        2193,
+        2286,
+        2379,
+        2471,
+        2562,
+        2652,
+        2740,
+        2827,
+        2912,
+        2996,
+        3077,
+        3156,
+        3232,
+        3305,
+        3376
+      ],
+      "cutoffTurns": 0,
+      "bars": [
+        {
+          "bar": 1,
+          "eighths": [
+            {
+              "centroid_hz": 193,
+              "high_db": -63.28
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.19
+            },
+            {
+              "centroid_hz": 191,
+              "high_db": -66.31
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.15
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.18
+            },
+            {
+              "centroid_hz": 191,
+              "high_db": -66.32
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.15
+            },
+            {
+              "centroid_hz": 193,
+              "high_db": -66.17
+            }
+          ]
+        },
+        {
+          "bar": 2,
+          "eighths": [
+            {
+              "centroid_hz": 213,
+              "high_db": -53.65
+            },
+            {
+              "centroid_hz": 212,
+              "high_db": -56.56
+            },
+            {
+              "centroid_hz": 211,
+              "high_db": -56.68
+            },
+            {
+              "centroid_hz": 213,
+              "high_db": -56.52
+            },
+            {
+              "centroid_hz": 212,
+              "high_db": -56.55
+            },
+            {
+              "centroid_hz": 211,
+              "high_db": -56.69
+            },
+            {
+              "centroid_hz": 213,
+              "high_db": -56.52
+            },
+            {
+              "centroid_hz": 213,
+              "high_db": -56.54
+            }
+          ]
+        },
+        {
+          "bar": 3,
+          "eighths": [
+            {
+              "centroid_hz": 218,
+              "high_db": -51.12
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.02
+            },
+            {
+              "centroid_hz": 216,
+              "high_db": -54.15
+            },
+            {
+              "centroid_hz": 219,
+              "high_db": -53.98
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.01
+            },
+            {
+              "centroid_hz": 216,
+              "high_db": -54.15
+            },
+            {
+              "centroid_hz": 219,
+              "high_db": -53.99
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.01
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "eighths": [
+            {
+              "centroid_hz": 213,
+              "high_db": -53.65
+            },
+            {
+              "centroid_hz": 212,
+              "high_db": -56.56
+            },
+            {
+              "centroid_hz": 211,
+              "high_db": -56.68
+            },
+            {
+              "centroid_hz": 213,
+              "high_db": -56.52
+            },
+            {
+              "centroid_hz": 212,
+              "high_db": -56.55
+            },
+            {
+              "centroid_hz": 211,
+              "high_db": -56.69
+            },
+            {
+              "centroid_hz": 213,
+              "high_db": -56.52
+            },
+            {
+              "centroid_hz": 213,
+              "high_db": -56.54
+            }
+          ]
+        }
+      ],
+      "facts": {
+        "центроид, начало → конец первого такта, Гц": "193 → 213",
+        "рост центроида за такт, Гц": 20,
+        "рост центроида за трек, Гц": 20,
+        "верхняя полоса 4–16 кГц, начало → конец, дБ": "-63.28 → -56.54",
+        "рост верхней полосы за трек, дБ": 6.74,
+        "изменений центроида внутри первого такта (>20 Гц)": 0
+      }
+    },
+    {
+      "label": "E. настоящий рамп — time.range(200,4000)",
+      "expectation": "монотонный подъём среза внутри ноты",
+      "events": 4,
+      "cutoffs": [
+        200
+      ],
+      "cutoffTurns": 0,
+      "bars": [
+        {
+          "bar": 1,
+          "eighths": [
+            {
+              "centroid_hz": 97,
+              "high_db": -100.62
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.61
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.6
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.61
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.62
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.5
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.67
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.94
+            }
+          ]
+        },
+        {
+          "bar": 2,
+          "eighths": [
+            {
+              "centroid_hz": 219,
+              "high_db": -51.12
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.02
+            },
+            {
+              "centroid_hz": 216,
+              "high_db": -54.15
+            },
+            {
+              "centroid_hz": 219,
+              "high_db": -53.98
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.01
+            },
+            {
+              "centroid_hz": 216,
+              "high_db": -54.15
+            },
+            {
+              "centroid_hz": 219,
+              "high_db": -53.99
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.01
+            }
+          ]
+        },
+        {
+          "bar": 3,
+          "eighths": [
+            {
+              "centroid_hz": 242,
+              "high_db": -46.33
+            },
+            {
+              "centroid_hz": 242,
+              "high_db": -49.23
+            },
+            {
+              "centroid_hz": 239,
+              "high_db": -49.35
+            },
+            {
+              "centroid_hz": 242,
+              "high_db": -49.19
+            },
+            {
+              "centroid_hz": 242,
+              "high_db": -49.22
+            },
+            {
+              "centroid_hz": 239,
+              "high_db": -49.36
+            },
+            {
+              "centroid_hz": 242,
+              "high_db": -49.2
+            },
+            {
+              "centroid_hz": 242,
+              "high_db": -49.22
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "eighths": [
+            {
+              "centroid_hz": 253,
+              "high_db": -45.95
+            },
+            {
+              "centroid_hz": 253,
+              "high_db": -48.84
+            },
+            {
+              "centroid_hz": 250,
+              "high_db": -48.97
+            },
+            {
+              "centroid_hz": 253,
+              "high_db": -48.81
+            },
+            {
+              "centroid_hz": 253,
+              "high_db": -48.83
+            },
+            {
+              "centroid_hz": 250,
+              "high_db": -48.97
+            },
+            {
+              "centroid_hz": 253,
+              "high_db": -48.81
+            },
+            {
+              "centroid_hz": 253,
+              "high_db": -48.83
+            }
+          ]
+        }
+      ],
+      "facts": {
+        "центроид, начало → конец первого такта, Гц": "97 → 253",
+        "рост центроида за такт, Гц": 156,
+        "рост центроида за трек, Гц": 156,
+        "верхняя полоса 4–16 кГц, начало → конец, дБ": "-100.62 → -48.83",
+        "рост верхней полосы за трек, дБ": 51.79,
+        "изменений центроида внутри первого такта (>20 Гц)": 0
+      }
+    },
+    {
+      "label": "F. настоящий рамп по сегментам — time.range(200,4000).seg(16)",
+      "expectation": "монотонный подъём среза внутри ноты",
+      "events": 64,
+      "cutoffs": [
+        200,
+        438,
+        675,
+        913,
+        1150,
+        1388,
+        1625,
+        1863,
+        2100,
+        2338,
+        2575,
+        2813,
+        3050,
+        3288,
+        3525,
+        3763
+      ],
+      "cutoffTurns": 0,
+      "bars": [
+        {
+          "bar": 1,
+          "eighths": [
+            {
+              "centroid_hz": 97,
+              "high_db": -100.62
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.61
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.6
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.61
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.62
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.5
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.67
+            },
+            {
+              "centroid_hz": 97,
+              "high_db": -101.94
+            }
+          ]
+        },
+        {
+          "bar": 2,
+          "eighths": [
+            {
+              "centroid_hz": 219,
+              "high_db": -51.12
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.02
+            },
+            {
+              "centroid_hz": 216,
+              "high_db": -54.15
+            },
+            {
+              "centroid_hz": 219,
+              "high_db": -53.98
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.01
+            },
+            {
+              "centroid_hz": 216,
+              "high_db": -54.15
+            },
+            {
+              "centroid_hz": 219,
+              "high_db": -53.99
+            },
+            {
+              "centroid_hz": 218,
+              "high_db": -54.01
+            }
+          ]
+        },
+        {
+          "bar": 3,
+          "eighths": [
+            {
+              "centroid_hz": 242,
+              "high_db": -46.33
+            },
+            {
+              "centroid_hz": 242,
+              "high_db": -49.23
+            },
+            {
+              "centroid_hz": 239,
+              "high_db": -49.35
+            },
+            {
+              "centroid_hz": 242,
+              "high_db": -49.19
+            },
+            {
+              "centroid_hz": 242,
+              "high_db": -49.22
+            },
+            {
+              "centroid_hz": 239,
+              "high_db": -49.36
+            },
+            {
+              "centroid_hz": 242,
+              "high_db": -49.2
+            },
+            {
+              "centroid_hz": 242,
+              "high_db": -49.22
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "eighths": [
+            {
+              "centroid_hz": 253,
+              "high_db": -45.95
+            },
+            {
+              "centroid_hz": 253,
+              "high_db": -48.84
+            },
+            {
+              "centroid_hz": 250,
+              "high_db": -48.97
+            },
+            {
+              "centroid_hz": 253,
+              "high_db": -48.81
+            },
+            {
+              "centroid_hz": 253,
+              "high_db": -48.83
+            },
+            {
+              "centroid_hz": 250,
+              "high_db": -48.97
+            },
+            {
+              "centroid_hz": 253,
+              "high_db": -48.81
+            },
+            {
+              "centroid_hz": 253,
+              "high_db": -48.83
+            }
+          ]
+        }
+      ],
+      "facts": {
+        "центроид, начало → конец первого такта, Гц": "97 → 253",
+        "рост центроида за такт, Гц": 156,
+        "рост центроида за трек, Гц": 156,
+        "верхняя полоса 4–16 кГц, начало → конец, дБ": "-100.62 → -48.83",
+        "рост верхней полосы за трек, дБ": 51.79,
+        "изменений центроида внутри первого такта (>20 Гц)": 0
+      }
+    },
+    {
+      "label": "G. ризер билда: белый шум + time.range(200,4000)",
+      "expectation": "рост верхней полосы от такта к такту",
+      "events": 32,
+      "cutoffs": [
+        200,
+        675,
+        1150,
+        1625,
+        2100,
+        2575,
+        3050,
+        3525
+      ],
+      "cutoffTurns": 0,
+      "bars": [
+        {
+          "bar": 1,
+          "eighths": [
+            {
+              "centroid_hz": 171,
+              "high_db": -91.12
+            },
+            {
+              "centroid_hz": 562,
+              "high_db": -70.25
+            },
+            {
+              "centroid_hz": 967,
+              "high_db": -60.81
+            },
+            {
+              "centroid_hz": 1346,
+              "high_db": -54.52
+            },
+            {
+              "centroid_hz": 1680,
+              "high_db": -49.7
+            },
+            {
+              "centroid_hz": 2017,
+              "high_db": -45.75
+            },
+            {
+              "centroid_hz": 2356,
+              "high_db": -42.42
+            },
+            {
+              "centroid_hz": 2679,
+              "high_db": -39.64
+            }
+          ]
+        },
+        {
+          "bar": 2,
+          "eighths": [
+            {
+              "centroid_hz": 2990,
+              "high_db": -37.4
+            },
+            {
+              "centroid_hz": 3292,
+              "high_db": -35.68
+            },
+            {
+              "centroid_hz": 3587,
+              "high_db": -34.4
+            },
+            {
+              "centroid_hz": 3876,
+              "high_db": -33.44
+            },
+            {
+              "centroid_hz": 4166,
+              "high_db": -32.68
+            },
+            {
+              "centroid_hz": 4459,
+              "high_db": -32.06
+            },
+            {
+              "centroid_hz": 4756,
+              "high_db": -31.52
+            },
+            {
+              "centroid_hz": 5054,
+              "high_db": -31.04
+            }
+          ]
+        },
+        {
+          "bar": 3,
+          "eighths": [
+            {
+              "centroid_hz": 5350,
+              "high_db": -30.6
+            },
+            {
+              "centroid_hz": 5639,
+              "high_db": -30.21
+            },
+            {
+              "centroid_hz": 5920,
+              "high_db": -29.85
+            },
+            {
+              "centroid_hz": 6191,
+              "high_db": -29.54
+            },
+            {
+              "centroid_hz": 6454,
+              "high_db": -29.26
+            },
+            {
+              "centroid_hz": 6711,
+              "high_db": -29.01
+            },
+            {
+              "centroid_hz": 6965,
+              "high_db": -28.78
+            },
+            {
+              "centroid_hz": 7217,
+              "high_db": -28.57
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "eighths": [
+            {
+              "centroid_hz": 7468,
+              "high_db": -28.37
+            },
+            {
+              "centroid_hz": 7716,
+              "high_db": -28.19
+            },
+            {
+              "centroid_hz": 7962,
+              "high_db": -28.01
+            },
+            {
+              "centroid_hz": 8205,
+              "high_db": -27.85
+            },
+            {
+              "centroid_hz": 8443,
+              "high_db": -27.7
+            },
+            {
+              "centroid_hz": 8675,
+              "high_db": -27.56
+            },
+            {
+              "centroid_hz": 8901,
+              "high_db": -27.43
+            },
+            {
+              "centroid_hz": 9117,
+              "high_db": -27.32
+            }
+          ]
+        }
+      ],
+      "facts": {
+        "центроид, начало → конец первого такта, Гц": "171 → 9117",
+        "рост центроида за такт, Гц": 8946,
+        "рост центроида за трек, Гц": 8946,
+        "верхняя полоса 4–16 кГц, начало → конец, дБ": "-91.12 → -27.32",
+        "рост верхней полосы за трек, дБ": 63.8,
+        "изменений центроида внутри первого такта (>20 Гц)": 7
+      }
+    }
+  ]
+}

@@ -23,6 +23,7 @@
       <section class="panel tinder-panel">
         <h2 class="panel-title">Что слушаем</h2>
         <p id="prompt" class="tinder-prompt">—</p>
+        <p id="pair-context" class="panel-hint" hidden></p>
         <p class="panel-hint">
           Правила честного сравнения: громкость выровнена по гейну, стороны переставлены
           случайно, метки скрыты. Слушайте оба варианта целиком и решайте по вкусу,
@@ -30,8 +31,15 @@
         </p>
 
         <div class="tinder-actions">
+          <label class="tinder-mode">Сравниваем
+            <select id="pair-mode">
+              <option value="track">треки (композиция)</option>
+              <option value="timbre">тембры (одна партия)</option>
+            </select>
+          </label>
           <button id="btn-start" class="btn primary" type="button">Начать</button>
           <button id="btn-replay" class="btn" type="button" disabled>Ещё раз</button>
+          <button id="btn-skip" class="btn" type="button" disabled>Ни один</button>
         </div>
 
         <div id="status" class="tinder-status" aria-live="polite">Нажмите «Начать» — браузер спросит разрешение на звук.</div>
@@ -40,6 +48,7 @@
           <div class="tinder-key"><kbd>←</kbd><span>лучше A</span></div>
           <div class="tinder-key"><kbd>→</kbd><span>лучше B</span></div>
           <div class="tinder-key"><kbd>↓</kbd><span>ничья</span></div>
+          <div class="tinder-key"><kbd>↑</kbd><span>ни один</span></div>
           <div class="tinder-key"><kbd>Space</kbd><span>переслушать</span></div>
         </div>
 

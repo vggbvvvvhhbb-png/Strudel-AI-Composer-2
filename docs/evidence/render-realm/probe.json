@@ -1,0 +1,74 @@
+{
+  "generatedAt": "2026-11-19T09:47:20.806Z",
+  "probe": "render-realm (E-020/D-143)",
+  "result": {
+    "adapterBaseline": {
+      "ok": true,
+      "ms": 66
+    },
+    "realmRenders": [
+      {
+        "i": 0,
+        "ok": true,
+        "ms": 776,
+        "lufsI": -20.724443999243732
+      },
+      {
+        "i": 1,
+        "ok": true,
+        "ms": 634,
+        "lufsI": -20.72444399892807
+      },
+      {
+        "i": 2,
+        "ok": true,
+        "ms": 620,
+        "lufsI": -20.72444399921403
+      }
+    ],
+    "realmDeterminism": {
+      "maxAbsDiff": 2.9802322387695312e-8
+    },
+    "d104": {
+      "maxAbsDiff": 0,
+      "engineVersionMatch": true,
+      "engineVersion": "strudel-web@1.3.0/superdough@1.3.0",
+      "renderMode": "offline"
+    },
+    "liveIntact": {
+      "cyclesBefore": 0.1753166666666666,
+      "cyclesAfter": 0.6699833333333333,
+      "advancing": true,
+      "tailPresent": true
+    },
+    "legacyPath": {
+      "renders": [
+        {
+          "i": 0,
+          "ok": true
+        },
+        {
+          "i": 1,
+          "ok": false,
+          "error": "Failed to execute 'connect' on 'AudioNode': cannot connect to an AudioNode belonging to a different audio context."
+        }
+      ],
+      "defectConfirmed": true
+    },
+    "timbre": {
+      "ok": true,
+      "alias": "tp_upright_piano_v1",
+      "lufsI": -36.912588962161976,
+      "audible": true
+    }
+  },
+  "gate": {
+    "realm3of3": true,
+    "realmDeterminism": true,
+    "d104": true,
+    "liveIntact": true,
+    "timbreAudible": true,
+    "legacyDefectConfirmed": true
+  },
+  "pass": true
+}

@@ -52,6 +52,24 @@
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 12px;
+  align-items: center;
+}
+
+.tinder-mode {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-2, #a9c8bd);
+}
+
+.tinder-mode select {
+  background: var(--surface);
+  color: var(--text-1, #e8f5ee);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 6px 8px;
+  font: inherit;
 }
 
 .tinder-keys {

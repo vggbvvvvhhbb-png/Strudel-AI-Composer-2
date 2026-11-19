@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-18T21:06:16.238Z",
+  "node": "v24.14.1",
+  "seed": 1592598566,
+  "policy": "seeded-ir-v2",
+  "cases": [
+    {
+      "name": "synthRoom",
+      "maxAbsDiff": 0.00003051844785585678,
+      "repeatDiff": 0.000030518509475996325,
+      "peak": 0.294586181640625,
+      "wavIdentical": false,
+      "fingerprintIdentical": true,
+      "seed": 1592598566,
+      "policy": "seeded-ir-v2",
+      "ms": 2840
+    },
+    {
+      "name": "timbreRoom",
+      "maxAbsDiff": 0.000030518507941178045,
+      "repeatDiff": 0.000030517578125,
+      "peak": 0.04385509811700797,
+      "wavIdentical": false,
+      "fingerprintIdentical": true,
+      "seed": 1592598566,
+      "policy": "seeded-ir-v2",
+      "ms": 3331
+    }
+  ],
+  "pass": true,
+  "browserVersion": "158.0.8127.36"
+}

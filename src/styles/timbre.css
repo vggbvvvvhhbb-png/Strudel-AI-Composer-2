@@ -1,0 +1,171 @@
+/* Панель выбора инструмента Timbre Palette (этап 4, D-131).
+   Грузится вместе с ленивым модулем picker.js — не в основном чанке. */
+
+.tp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+.tp-panel {
+  background: var(--surface, #10201a);
+  border: 1px solid var(--border, #24443a);
+  border-radius: 10px;
+  width: min(720px, 94vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.tp-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.tp-title {
+  font-weight: 600;
+  color: var(--text-1, #e8f5ee);
+}
+
+.tp-sub {
+  font-size: 0.85rem;
+  color: var(--text-2, #a9c8bd);
+  flex: 1;
+}
+
+.tp-close {
+  margin-left: auto;
+}
+
+.tp-status {
+  color: var(--text-2, #a9c8bd);
+  font-size: 0.9rem;
+  padding: 6px 0;
+}
+
+.tp-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.tp-filters select,
+.tp-filters input[type='search'] {
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-1, #e8f5ee);
+  border: 1px solid var(--border, #24443a);
+  border-radius: 5px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.tp-role-filter {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.85rem;
+  color: var(--text-2, #a9c8bd);
+}
+
+.tp-section-title {
+  margin: 12px 0 6px;
+  font-size: 0.9rem;
+  color: var(--text-2, #a9c8bd);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tp-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.tp-card {
+  border: 1px solid var(--border, #24443a);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tp-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tp-card-name {
+  font-weight: 600;
+  color: var(--text-1, #e8f5ee);
+  flex: 1;
+}
+
+.tp-license {
+  font-size: 0.75rem;
+  border: 1px solid var(--border, #24443a);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--text-2, #a9c8bd);
+  white-space: nowrap;
+}
+
+.tp-card-meta,
+.tp-card-passport,
+.tp-card-tags,
+.tp-card-score {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-2, #a9c8bd);
+}
+
+.tp-card-reasons {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 0.75rem;
+  color: var(--text-2, #a9c8bd);
+}
+
+.tp-card audio {
+  width: 100%;
+  height: 32px;
+}
+
+.tp-apply {
+  align-self: flex-start;
+}
+
+.tp-reset {
+  margin-top: 12px;
+}
+
+/* Чип звука в строке таймлайна: открывает панель выбора инструмента. */
+.tl-sound {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #24443a);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text-2, #a9c8bd);
+  cursor: pointer;
+}
+
+.tl-sound:hover {
+  color: var(--text-1, #e8f5ee);
+  border-color: var(--accent, #37b58c);
+}

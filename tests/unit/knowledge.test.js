@@ -8,6 +8,9 @@
 // рецепты переходов, кривые автоматизации, формы и прогрессии.
 
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { loadStrudel } from '../../server/music/strudel-runtime.mjs';
 import {
   PROGRESSIONS,
@@ -30,6 +33,7 @@ import {
 import { formsForStyle, formBars } from '../../server/music/knowledge/forms.js';
 
 const api = await loadStrudel();
+const here = dirname(fileURLToPath(import.meta.url));
 
 // Лады, которые понимает Strudel: только полные имена одним словом.
 const STRUDEL_MODES = new Set([
@@ -185,12 +189,18 @@ describe('knowledge: матрица ролей', () => {
     }
   });
 
-  it('синтезаторы ролей — из зарегистрированных в Strudel', () => {
-    const known = new Set(['sawtooth', 'square', 'triangle', 'sine', 'piano', 'pulse', 'supersaw', 'fm', 'am', 'organ']);
+  it('синтезаторы ролей — из измеренных в Strudel (а не из захардкоженного списка)', () => {
+    // Список берётся из измерения: docs/evidence/strudel/facts.json — прогон
+    // scripts/probe-strudel-facts.mjs рендерит каждый синтезатор и пишет,
+    // какие звучат. Раньше здесь стоял захардкоженный набор, где 'organ' и
+    // 'am' не звучат: движок отвечает «sound not found», и партия молчала.
+    const facts = JSON.parse(readFileSync(resolve(here, '../../docs/evidence/strudel/facts.json'), 'utf8'));
+    const known = new Set(facts.sounds.filter((s) => typeof s.lufsI === 'number').map((s) => s.name));
+    expect(known.size).toBeGreaterThan(5);
     for (const style of STYLES) {
       for (const role of ROLES) {
         const synth = ROLE_MATRIX[style][role].synth;
-        if (synth) expect(known.has(synth), `${style}/${role}: ${synth}`).toBe(true);
+        if (synth) expect(known.has(synth), `${style}/${role}: ${synth} — не измерен как звучащий`).toBe(true);
       }
     }
   });
@@ -324,7 +334,7 @@ describe('knowledge: кривые автоматизации', () => {
         const curve = CURVES[name](style, 8);
         expect(curve).toBeTruthy();
         expect(curve.kind).toBe('signal');
-        expect(['sine', 'perlin', 'saw']).toContain(curve.signal);
+        expect(['sine', 'perlin', 'saw', 'time']).toContain(curve.signal);
         expect(curve.slow).toBeGreaterThanOrEqual(1);
         expect(curve.range).toHaveLength(2);
         // Диапазон всегда по возрастанию; направление задаётся отдельно.
@@ -346,7 +356,7 @@ describe('knowledge: кривые автоматизации', () => {
   it('сигналы из белого списка Strudel', () => {
     for (const name of CURVE_NAMES) {
       const curve = CURVES[name]('techno', 8);
-      expect(['sine', 'perlin', 'saw', 'triangle']).toContain(curve.signal);
+      expect(['sine', 'perlin', 'saw', 'triangle', 'time']).toContain(curve.signal);
     }
   });
 

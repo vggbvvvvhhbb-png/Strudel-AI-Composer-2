@@ -283,8 +283,9 @@ resonance, cutoff, filter, sound, noise, sine, saw, square, time, cps, cpm, getC
 |---|---|
 | `local/daemon.mjs` | HTTP-сервер демона: `/health`, `/tasks`, `/tasks/:id`, `/tasks/:id/stream` (SSE). Авторизация по токену, fail-closed |
 | `local/queue.mjs` | DurableQueue: журнал `queue.jsonl` на диске; незавершённые задачи возвращаются в работу после перезапуска |
-| `local/tasks.mjs` | Реестр задач: `render`, `analyze`, `separate`, `analyze_stems`. Рендер — через существующий `render-worker.mjs`, анализ — через Python-воркер |
-| `local/client.mjs` | Клиент демона: `health`, `submit`, `status`, `streamTask`. Без побочных эффектов при импорте |
+| `local/tasks.mjs` | `render`, `analyze`, `separate`, `analyze_stems`, `passport`, `analyze_reference`; общие render/Python/DSP модули |
+| `local/reference.mjs` | P5: зарегистрированный WAV≤240с→htdemucs→агрегаты4слоёв, окно DSP≤12с; ни путей, ни последовательностей нот |
+| `local/client.mjs` | `health`, `submit`, `status`, `wait`, `streamTask`; ожидание терминального состояния с общим таймаутом/отменой |
 | `server/routes/local.js` | `/api/local/status`, `/api/local/tasks`, `/api/local/tasks/:id`, `/api/local/tasks/:id/stream` |
 
 **Свойства, которые нельзя потерять:**
@@ -308,7 +309,9 @@ resonance, cutoff, filter, sound, noise, sine, saw, square, time, cps, cpm, getC
 | Модуль | Что делает | Строки |
 |---|---|---|
 | `src/audio/render/offline.js` | чистый оркестратор рендера, **не знает про Web Audio** (рендер-функция внедряется снаружи) | `:76`, `:83`, `:112`, `:170` |
-| `src/audio/engine/adapter.js` | реальный `OfflineAudioContext`; `new OfflineAudioContext(2, sr*seconds, sr)` | `:173-229` |
+| `src/audio/render/realm.js` | менеджер изолированного рендера: iframe-realm на прогон, очередь, таймауты (D-143) | — |
+| `src/audio/render/seed.js` | Общая политика seeded-ir-v2: mulberry32 + завершение каждой IR в одноразовых realm и серверных страницах (D-150) | — |
+| `src/audio/engine/adapter.js` | реальный `OfflineAudioContext`; `new OfflineAudioContext(2, sr*seconds, sr)`; additive-хук `prepare` перед startRendering | `:173-229` |
 | `src/audio/metrics-report.js` | `buildMetricsReport` (`:41`), `ACCEPTANCE` (`:19-26`), zod-схема (`:176`), `parseMetricsReport` (`:222`) | — |
 | `src/audio/qa.js` | 13 кодов замечаний (`:16-30`), `runAudioQa` (`:53`), `acceptancePassed` (`:262`) | — |
 | `src/audio/dsp/loudness.js` | **свой** LUFS по BS.1770-4 (не pyloudnorm) | `:11-14,28,93,105` |
@@ -328,9 +331,19 @@ bass LUFS-I −21.91, true peak −12.33 dBTP, `lufsDeltaDb=0.000 passed=true`, 
 
 `docs/SPIKE-AUDIO.md:212-221` — сверка DSP с `ffmpeg ebur128`: |ΔLUFS| ≤ 0.05, |ΔdBTP| ≤ 0.01 на 6 фикстурах.
 
-**Важно (docs/HANDOFF.md:28-43):** офлайн-рендер — **операция с глобальным состоянием**, не чистая функция:
-движок переключает глобальный аудиоконтекст. Два рендера «в одном флаконе» перехватывают контекст друг у друга.
-Рендеры — строго последовательно.
+**Важно (D-143, фикс E-020):** офлайн-рендер студии изолирован в свежем
+iframe-realm на каждый прогон (`src/audio/render/realm.js` +
+`src/render-realm.js`, точка входа `render-realm.html`). Исторически
+рендер был **операцией с глобальным состоянием**: движок переключал
+глобальный аудиоконтекст, а superdough 1.3.0 удерживал узлы эффектов
+между контекстами (E-020) — быстрые последовательные рендеры падали.
+Realm уничтожается после рендера, удержания умирают вместе с ним; живой
+контекст студии рендер не трогает. Детерминизм IR реверберации обеспечен
+зерном PRNG и ожиданием каждой завершённой генерации IR, не наличием
+старого buffer (D-150/E-022). Та же политика действует в одноразовой
+серверной странице; Chromium сохраняется между заданиями. Вызовы рендера
+по-прежнему сериализуются очередью менеджера. Legacy-путь
+`adapter.renderCodeOffline` сохранён для зондов и всё ещё несёт E-020.
 
 **Официальный `renderPatternAudio` непригоден** (`tests/spike/browser/out.txt:35,248`): возвращает `undefined`,
 а WAV-блоб отдаёт через `<a download>` и **закрывает живой AudioContext**. Используется собственный рендер.
@@ -507,3 +520,35 @@ Pre-commit hook `.githooks/pre-commit` → только `check-secrets.js`.
 `docs/BRIEF.md` · `docs/SPIKE-AUDIO.md` · `docs/AUDIO-QA.md` · `docs/MUSIC-ANALYSIS.md` ·
 `docs/IR.md` · `docs/METRICS.md` · `docs/METRICS-V2.md` · `docs/COMPOSE.md` ·
 `docs/DECISIONS.md` · `F:\ГЕНЕРАЦИЯ ФОТОК\producers-deep-dive-v2.md` (план владельца v2).
+
+## 9. Музыкальный интеллект — RAG-база знаний (сессия 18.11.2026, D-134…D-141)
+
+Новый контур `server/rag/` — «музыкальное образование» ассистента.
+Не трогает существующие compose/агент/тиндер; счётчики вкуса и
+DPO-экспорт изолированы (инвариант D-132).
+
+| Модуль | Роль |
+|---|---|
+| `server/rag/schema.js` | Zod-схема записи знания (D-135): tonic+mode раздельно, роли из канона 12, bpm null≠0, chromatic-флаг, сверка пресетов с каталогом через zones |
+| `server/rag/harmony.js` | Правила гармонии: функции T/S/D по ладам, граф переходов, каденции, замены (тритоновая/backdoor/вторичная доминанта), MODE_INTERVALS, самопроверка |
+| `server/rag/music-check.js` | Нормализация тоники, питч-классы, принадлежность нот ладу по событиям queryArc |
+| `server/rag/dataset/entries.json` + `dataset.js` | 148 записей: 35 прежних +113 учебных,15 направлений/12 гайдов; fail-closed и единый текст эмбеддингов (D-146,D-152) |
+| `server/rag/genre-guide.js` | Локальный жанровый гайд перед TrackSpec; простые BPM/role-проверки и ограниченная коррекция (D-147) |
+| `server/music/compose/reference-plan.js` | Измеренный паспорт P5 в prompt; approved-кандидаты тембров по DSP, не перенос исходного аудио (D-149) |
+| `server/rag/search-core.js` | Ядро гибридного поиска: стадии exact→tonic→genre-roles→all, косинус/лексика, детерминированный тай-брейк |
+| `server/rag/store-local.js` / `store-supabase.js` | Интерфейс KnowledgeStore: память (тесты/офлайн) и Supabase/pgvector (RPC match_knowledge, `<=>`, HNSW, RLS без политик) |
+| `server/rag/migrations/001_knowledge.sql` | pgvector 0.8.2, vector(768), GIN по тегам, RPC; журнал `_rag_migrations` |
+| `server/rag/embeddings.js` | Ollama nomic-embed-text 768, префиксы search_document/search_query, честная деградация |
+| `server/rag/db.js` | Postgres-подключение (pooler eu-west-1), креды только env |
+| `server/rag/prompt.js` | Версионированный промпт mi-1.0.0 (D-138): теория + инструментарий (белый список из system.md, пресеты из каталога) + формат ответа |
+| `server/rag/parse-response.js` | Парсер: обоснование + блок кода, устойчив к вариациям |
+| `server/rag/code-validator.js` | 5 классов ошибок: syntax/runtime/empty-part/scale (с тактом)/unknown-sound (D-139) |
+| `server/rag/loop.js` | Петля self-correction до 3 попыток, структурный фидбек, честный отказ |
+| `server/rag/explain.js` | Детерминированное объяснение кода: прогрессии, функции, каденции, советы замен (D-140) |
+| `server/routes/rag.js` | /api/rag/{status,assist,explain}; feature 'rag-assist' в учёте цены |
+| `src/rag-assist.js` + панель в studio.html | UI: шаги отдельно от обоснования, применение кода по кнопке |
+| `scripts/rag-{migrate,upload,search-probe,eval}.mjs`, `scripts/probe-rag-ui.mjs` | Миграции, идемпотентная загрузка, зонды, оценка качества |
+
+Тесты: `tests/unit/rag-*.test.js` (schema/harmony/music-check/dataset/
+search-core/stores/embeddings/prompt/validator-loop/explain/route).
+Зонды: `docs/evidence/rag/`. Решения: D-134…D-141, эксперимент E-021.

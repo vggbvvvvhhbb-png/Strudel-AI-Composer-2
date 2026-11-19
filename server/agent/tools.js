@@ -40,6 +40,8 @@ import { specFromPlan } from '../../src/music/expand.js';
 import { applyPartEdit, PART_OPS } from '../../src/music/part-edit.js';
 import { TrackSpecSchema } from '../../src/schemas/track-spec.schema.js';
 import { schemaShape, zodToJsonSchema } from './json-schema.js';
+import { createDaemonClient } from '../../local/client.mjs';
+import { referenceTimbres } from '../music/compose/reference-plan.js';
 
 const LimitSchema = z.number().int().min(1).max(50).default(10);
 
@@ -112,6 +114,45 @@ export const TOOLS = [
     },
   },
   {
+    id: 'analyze_reference',
+    title: 'Локальный анализ аудиореференса',
+    description: 'По явно заданному ID готовой локальной аудиозадачи измеряет референс: Demucs-стемы, темп, лад, громкость, энергия и DSP-дескрипторы. Подбирает лицензированные тембры и передаёт паспорт композитору. Ориентир, не клон; до 240 секунд аудио, без скачивания и произвольных путей.',
+    schema: z.object({ taskId: z.string().uuid() }).strict(),
+    slow: true,
+    async run(args, ctx) {
+      const env = ctx.env ?? process.env;
+      if (!env.LOCAL_DAEMON_URL || !env.LOCAL_DAEMON_TOKEN) {
+        return { ok: false, degraded: true, reason: 'Локальный демон не настроен: нужны LOCAL_DAEMON_URL и LOCAL_DAEMON_TOKEN; данных референса нет.' };
+      }
+      const client = createDaemonClient({ baseUrl: env.LOCAL_DAEMON_URL, token: env.LOCAL_DAEMON_TOKEN });
+      let health;
+      try {
+        health = await client.health();
+      } catch {
+        return { ok: false, degraded: true, reason: 'Локальный демон недоступен; данных референса нет.' };
+      }
+      if (!health.analysis?.available || !health.analysis?.demucs_available) {
+        return { ok: false, degraded: true, reason: 'Локальный Python/Demucs недоступен; анализ референса не запускался.' };
+      }
+      const source = await client.status(args.taskId, { signal: ctx.signal });
+      if (source.state !== 'done' || !['analyze', 'passport', 'render'].includes(source.type)) {
+        return { ok: false, degraded: false, reason: 'Нужен ID готовой локальной аудиозадачи analyze, passport или render.' };
+      }
+      const task = await client.submit('analyze_reference', { sourceTaskId: args.taskId });
+      let completed;
+      try {
+        completed = await client.wait(task.id, { signal: ctx.signal });
+      } catch {
+        return { ok: false, degraded: true, taskId: task.id, reason: 'Локальный анализ референса не завершён; данных нет. Подробности доступны в локальной очереди. Отмена ожидания не удаляет задачу.' };
+      }
+      const passport = completed.result?.passport;
+      if (!passport) return { ok: false, degraded: false, reason: 'Задача завершена без измеренного паспорта.' };
+      const reference = { passport, candidates: referenceTimbres(passport) };
+      ctx.reference = reference;
+      return { ok: true, degraded: false, taskId: task.id, reference };
+    },
+  },
+  {
     id: 'compose_spec',
     title: 'Сборка спеки трека',
     description:
@@ -141,6 +182,7 @@ export const TOOLS = [
         signal: ctx.signal,
         onUsage: ctx.onUsage,
         sampleEntry,
+        reference: ctx.reference ?? null,
       });
       return {
         ok: true,

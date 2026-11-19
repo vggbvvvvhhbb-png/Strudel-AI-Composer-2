@@ -9,21 +9,20 @@
 
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { existsSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { pickBrowserPath, sweepStaleBrowserProfilesOnce, formatSweepReport } from '../../../lib/browser.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..', '..');
 const OUT_FILE = path.join(HERE, 'out.txt');
 
-const CHROME_PATHS = [
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-];
+// Уборка осиротевших профилей Playwright: один раз на процесс, до запуска
+// браузера (модуль сам глотает ошибки доступа к tmpdir).
+const sweep = sweepStaleBrowserProfilesOnce();
+if (sweep) console.log(formatSweepReport(sweep));
 
 const BASE_ARGS = ['--no-sandbox', '--mute-audio'];
 const AUTOPLAY_ARGS = ['--autoplay-policy=no-user-gesture-required'];
@@ -96,11 +95,6 @@ function startServer() {
 // --------------------------------------------------------------------------------------
 // Браузер
 // --------------------------------------------------------------------------------------
-
-function pickBrowserPath() {
-  for (const p of CHROME_PATHS) if (existsSync(p)) return p;
-  throw new Error('Не найден ни Chrome, ни Edge в стандартных путях');
-}
 
 async function launch(extraArgs = []) {
   return chromium.launch({

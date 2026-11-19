@@ -29,9 +29,11 @@ import {
   labelCoverage,
   labelStats,
   nextQueueOffset,
+  pairTypeOf,
   readLabels,
   readPairs,
 } from '../preference/ledger.js';
+import { buildTimbreQueue } from '../preference/timbre-pairs.js';
 import {
   getReviewerSession,
   hasServed,
@@ -98,6 +100,10 @@ export const PreferenceSchema = z.object({
   // Рендер без сэмплов: трек прозвучал неполным. Метка сохраняется (это
   // труд рецензента), но в обучение не идёт — см. server/taste/dataset.js.
   degraded: z.boolean().optional(),
+  // Тип пары (D-132): 'timbre' — суждение о тембре одной партии, не о
+  // композиции. Такие метки не входят в счётчики человеческого гейта
+  // (≥50 промтов / ≥60 пар) и в DPO-экспорт композиции.
+  pairType: z.enum(['track', 'timbre']).optional(),
   audio: z.object({
     a: AudioSideSchema.optional(),
     b: AudioSideSchema.optional(),
@@ -119,11 +125,18 @@ export const appendPreference = appendLabel;
  */
 router.get('/queue', (req, res) => {
   try {
+    const type = req.query.type === undefined || req.query.type === '' ? 'track' : String(req.query.type);
+    if (type !== 'track' && type !== 'timbre') {
+      res.status(400).json({ error: `неизвестный тип очереди «${type}»: track или timbre` });
+      return;
+    }
     const asked = req.query.offset;
     const offset = asked === undefined || asked === ''
-      ? nextQueueOffset()
+      ? nextQueueOffset(type)
       : Number(asked);
-    const pairs = buildQueue({ limit: req.query.limit, offset });
+    const pairs = type === 'timbre'
+      ? buildTimbreQueue({ limit: req.query.limit, offset })
+      : buildQueue({ limit: req.query.limit, offset });
     // Сессия рецензента: сервер выдаёт её сам и запоминает, какие пары в ней
     // показаны. Метка «человек выбрал» принимается только для пар этой
     // сессии — см. server/preference/session.js.
@@ -249,9 +262,14 @@ router.get('/pairs', (req, res) => {
  */
 router.get('/export', (req, res) => {
   const records = readLabels();
+  const pairsById = new Map(readPairs().map((pair) => [pair.pairId, pair]));
   const pairs = new Map();
   for (const record of records) {
     if (record.winner !== 'A' && record.winner !== 'B') continue;
+    // DPO-экспорт — для композиции (IR-признаки). Тембровые метки (D-132)
+    // сюда не попадают: у их пар нет IR, обучение композиции на них
+    // было бы подменой данных.
+    if (pairTypeOf(record, pairsById) === 'timbre') continue;
     const key = record.pairId;
     if (!pairs.has(key)) {
       pairs.set(key, { pairId: key, prompt: record.prompt, seed: record.seed, skillsVersion: record.skillsVersion, hashA: record.hashA, hashB: record.hashB });

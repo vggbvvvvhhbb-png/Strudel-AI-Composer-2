@@ -1,0 +1,362 @@
+{
+  "kind": "demucs-ladder-quality",
+  "created_at": "2026-11-19T17:00:32+0300",
+  "input": {
+    "path": "F:\\tmp-strudel\\ladder-work\\synth-mix.wav",
+    "synthetic": true,
+    "truth_stems": [
+      "bass",
+      "drums",
+      "other"
+    ],
+    "seconds": 60.0,
+    "sample_rate": 44100
+  },
+  "machine": {
+    "python": "3.12.16",
+    "torch": "2.5.1+cu121",
+    "demucs": "4.1.0",
+    "cuda_available": true,
+    "platform": "win32"
+  },
+  "available_memory_before": {
+    "available_commit_mb": 22408,
+    "available_physical_mb": 2304,
+    "total_commit_mb": 42544,
+    "source": "GlobalMemoryStatusEx"
+  },
+  "steps": [
+    {
+      "step": "baseline",
+      "args": [
+        "-n",
+        "htdemucs"
+      ],
+      "env": {},
+      "degraded": false,
+      "ok": true,
+      "returncode": 0,
+      "seconds": 8.95,
+      "min_available_commit_mb": 19587,
+      "max_vram_mb": 2130,
+      "monitor_samples": 20,
+      "stems": {
+        "drums": "F:\\tmp-strudel\\ladder-work\\baseline\\htdemucs\\synth-mix\\drums.wav",
+        "bass": "F:\\tmp-strudel\\ladder-work\\baseline\\htdemucs\\synth-mix\\bass.wav",
+        "vocals": "F:\\tmp-strudel\\ladder-work\\baseline\\htdemucs\\synth-mix\\vocals.wav",
+        "other": "F:\\tmp-strudel\\ladder-work\\baseline\\htdemucs\\synth-mix\\other.wav"
+      },
+      "stderr_tail": "                 | 35.099999999999994/64.35 [00:03<00:01, 17.06seconds/s]\n 64%|█████████████████████████████████████▌                     | 40.949999999999996/64.35 [00:03<00:01, 19.28seconds/s]\n 73%|█████████████████████████████████████████████████████                    | 46.8/64.35 [00:03<00:00, 21.08seconds/s]\n 82%|██████████████████████████████████████████████████████████▉             | 52.65/64.35 [00:04<00:00, 22.51seconds/s]\n 91%|██████████████████████████████████████████████████████████████████▎      | 58.5/64.35 [00:04<00:00, 23.57seconds/s]\n100%|████████████████████████████████████████████████████████████████████████| 64.35/64.35 [00:04<00:00, 24.57seconds/s]\n100%|████████████████████████████████████████████████████████████████████████| 64.35/64.35 [00:04<00:00, 14.11seconds/s]\n",
+      "stdout_tail": "Selected model is a bag of 1 models. You will see that many progress bars per track.\nSeparated tracks will be stored in F:\\tmp-strudel\\ladder-work\\baseline\\htdemucs\nSeparating track F:\\tmp-strudel\\ladder-work\\synth-mix.wav\n",
+      "quality": {
+        "per_stem": {
+          "drums": {
+            "sdr_db_vs_truth": 12.725754241699542,
+            "correlation_vs_baseline": 1.0,
+            "si_sdr_db_vs_baseline": Infinity
+          },
+          "bass": {
+            "sdr_db_vs_truth": 3.0784056473547623,
+            "correlation_vs_baseline": 1.0000001192092896,
+            "si_sdr_db_vs_baseline": Infinity
+          },
+          "vocals": {
+            "sdr_db_vs_truth": null,
+            "sdr_db_vs_truth_reason": "истинного источника нет (вокала в миксе нет)",
+            "correlation_vs_baseline": 1.0,
+            "si_sdr_db_vs_baseline": Infinity
+          },
+          "other": {
+            "sdr_db_vs_truth": 7.486559025043236,
+            "correlation_vs_baseline": 0.9999998807907104,
+            "si_sdr_db_vs_baseline": Infinity
+          }
+        },
+        "mix_reconstruction_db": -20.66555349559707,
+        "role": "baseline"
+      }
+    },
+    {
+      "step": "shifts0",
+      "args": [
+        "-n",
+        "htdemucs",
+        "--shifts",
+        "0"
+      ],
+      "env": {},
+      "degraded": true,
+      "ok": true,
+      "returncode": 0,
+      "seconds": 7.77,
+      "min_available_commit_mb": 19712,
+      "max_vram_mb": 2130,
+      "monitor_samples": 17,
+      "stems": {
+        "drums": "F:\\tmp-strudel\\ladder-work\\shifts0\\htdemucs\\synth-mix\\drums.wav",
+        "bass": "F:\\tmp-strudel\\ladder-work\\shifts0\\htdemucs\\synth-mix\\bass.wav",
+        "vocals": "F:\\tmp-strudel\\ladder-work\\shifts0\\htdemucs\\synth-mix\\vocals.wav",
+        "other": "F:\\tmp-strudel\\ladder-work\\shifts0\\htdemucs\\synth-mix\\other.wav"
+      },
+      "stderr_tail": "                 | 35.099999999999994/64.35 [00:02<00:01, 20.00seconds/s]\n 64%|█████████████████████████████████████▌                     | 40.949999999999996/64.35 [00:02<00:01, 21.76seconds/s]\n 73%|█████████████████████████████████████████████████████                    | 46.8/64.35 [00:03<00:00, 23.03seconds/s]\n 82%|██████████████████████████████████████████████████████████▉             | 52.65/64.35 [00:03<00:00, 24.00seconds/s]\n 91%|██████████████████████████████████████████████████████████████████▎      | 58.5/64.35 [00:03<00:00, 24.71seconds/s]\n100%|████████████████████████████████████████████████████████████████████████| 64.35/64.35 [00:03<00:00, 25.39seconds/s]\n100%|████████████████████████████████████████████████████████████████████████| 64.35/64.35 [00:03<00:00, 17.54seconds/s]\n",
+      "stdout_tail": "Selected model is a bag of 1 models. You will see that many progress bars per track.\nSeparated tracks will be stored in F:\\tmp-strudel\\ladder-work\\shifts0\\htdemucs\nSeparating track F:\\tmp-strudel\\ladder-work\\synth-mix.wav\n",
+      "quality": {
+        "per_stem": {
+          "drums": {
+            "sdr_db_vs_truth": 12.727954242124648,
+            "correlation_vs_baseline": 0.9994511604309082,
+            "si_sdr_db_vs_baseline": 29.555561807608598
+          },
+          "bass": {
+            "sdr_db_vs_truth": 3.081578675921733,
+            "correlation_vs_baseline": 0.9950656294822693,
+            "si_sdr_db_vs_baseline": 20.033403712173783
+          },
+          "vocals": {
+            "sdr_db_vs_truth": null,
+            "sdr_db_vs_truth_reason": "истинного источника нет (вокала в миксе нет)",
+            "correlation_vs_baseline": 0.5223687291145325,
+            "si_sdr_db_vs_baseline": 27.45491788492806
+          },
+          "other": {
+            "sdr_db_vs_truth": 7.47154941126325,
+            "correlation_vs_baseline": 0.9953706860542297,
+            "si_sdr_db_vs_baseline": 20.325445796288108
+          }
+        },
+        "mix_reconstruction_db": -20.618270408140553,
+        "role": "degraded"
+      }
+    },
+    {
+      "step": "segment7",
+      "args": [
+        "-n",
+        "htdemucs",
+        "--shifts",
+        "0",
+        "--segment",
+        "7"
+      ],
+      "env": {},
+      "degraded": true,
+      "ok": true,
+      "returncode": 0,
+      "seconds": 8.3,
+      "min_available_commit_mb": 20203,
+      "max_vram_mb": 1810,
+      "monitor_samples": 19,
+      "stems": {
+        "drums": "F:\\tmp-strudel\\ladder-work\\segment7\\htdemucs\\synth-mix\\drums.wav",
+        "bass": "F:\\tmp-strudel\\ladder-work\\segment7\\htdemucs\\synth-mix\\bass.wav",
+        "vocals": "F:\\tmp-strudel\\ladder-work\\segment7\\htdemucs\\synth-mix\\vocals.wav",
+        "other": "F:\\tmp-strudel\\ladder-work\\segment7\\htdemucs\\synth-mix\\other.wav"
+      },
+      "stderr_tail": "▌                              | 36.75/63.0 [00:02<00:01, 19.40seconds/s]\n 67%|█████████████████████████████████████████████████▎                        | 42.0/63.0 [00:03<00:01, 20.62seconds/s]\n 75%|██████████████████████████████████████████████████████▊                  | 47.25/63.0 [00:03<00:00, 21.48seconds/s]\n 83%|█████████████████████████████████████████████████████████████▋            | 52.5/63.0 [00:03<00:00, 21.76seconds/s]\n 92%|██████████████████████████████████████████████████████████████████▉      | 57.75/63.0 [00:03<00:00, 22.31seconds/s]\n100%|██████████████████████████████████████████████████████████████████████████| 63.0/63.0 [00:03<00:00, 22.75seconds/s]\n100%|██████████████████████████████████████████████████████████████████████████| 63.0/63.0 [00:03<00:00, 15.97seconds/s]\n",
+      "stdout_tail": "Selected model is a bag of 1 models. You will see that many progress bars per track.\nSeparated tracks will be stored in F:\\tmp-strudel\\ladder-work\\segment7\\htdemucs\nSeparating track F:\\tmp-strudel\\ladder-work\\synth-mix.wav\n",
+      "quality": {
+        "per_stem": {
+          "drums": {
+            "sdr_db_vs_truth": 12.71199735493954,
+            "correlation_vs_baseline": 0.9995187520980835,
+            "si_sdr_db_vs_baseline": 30.113844990496084
+          },
+          "bass": {
+            "sdr_db_vs_truth": 2.9690870235765527,
+            "correlation_vs_baseline": 0.9957228302955627,
+            "si_sdr_db_vs_baseline": 20.656820977082987
+          },
+          "vocals": {
+            "sdr_db_vs_truth": null,
+            "sdr_db_vs_truth_reason": "истинного источника нет (вокала в миксе нет)",
+            "correlation_vs_baseline": 0.6323684453964233,
+            "si_sdr_db_vs_baseline": 28.449573092545467
+          },
+          "other": {
+            "sdr_db_vs_truth": 7.331193330154639,
+            "correlation_vs_baseline": 0.9960969686508179,
+            "si_sdr_db_vs_baseline": 21.074619646975457
+          }
+        },
+        "mix_reconstruction_db": -20.61745404652147,
+        "role": "degraded"
+      }
+    },
+    {
+      "step": "segment5_overlap",
+      "args": [
+        "-n",
+        "htdemucs",
+        "--shifts",
+        "0",
+        "--segment",
+        "5",
+        "--overlap",
+        "0.1"
+      ],
+      "env": {},
+      "degraded": true,
+      "ok": true,
+      "returncode": 0,
+      "seconds": 8.33,
+      "min_available_commit_mb": 20745,
+      "max_vram_mb": 1695,
+      "monitor_samples": 19,
+      "stems": {
+        "drums": "F:\\tmp-strudel\\ladder-work\\segment5_overlap\\htdemucs\\synth-mix\\drums.wav",
+        "bass": "F:\\tmp-strudel\\ladder-work\\segment5_overlap\\htdemucs\\synth-mix\\bass.wav",
+        "vocals": "F:\\tmp-strudel\\ladder-work\\segment5_overlap\\htdemucs\\synth-mix\\vocals.wav",
+        "other": "F:\\tmp-strudel\\ladder-work\\segment5_overlap\\htdemucs\\synth-mix\\other.wav"
+      },
+      "stderr_tail": "█████▌                          | 40.5/63.0 [00:03<00:01, 18.86seconds/s]\n 71%|████████████████████████████████████████████████████▊                     | 45.0/63.0 [00:03<00:00, 19.40seconds/s]\n 79%|██████████████████████████████████████████████████████████▏               | 49.5/63.0 [00:03<00:00, 19.80seconds/s]\n 86%|███████████████████████████████████████████████████████████████▍          | 54.0/63.0 [00:03<00:00, 20.05seconds/s]\n 93%|████████████████████████████████████████████████████████████████████▋     | 58.5/63.0 [00:04<00:00, 20.33seconds/s]\n100%|██████████████████████████████████████████████████████████████████████████| 63.0/63.0 [00:04<00:00, 20.56seconds/s]\n100%|██████████████████████████████████████████████████████████████████████████| 63.0/63.0 [00:04<00:00, 14.74seconds/s]\n",
+      "stdout_tail": "Selected model is a bag of 1 models. You will see that many progress bars per track.\nSeparated tracks will be stored in F:\\tmp-strudel\\ladder-work\\segment5_overlap\\htdemucs\nSeparating track F:\\tmp-strudel\\ladder-work\\synth-mix.wav\n",
+      "quality": {
+        "per_stem": {
+          "drums": {
+            "sdr_db_vs_truth": 12.675775409080858,
+            "correlation_vs_baseline": 0.9992413520812988,
+            "si_sdr_db_vs_baseline": 28.150989249471657
+          },
+          "bass": {
+            "sdr_db_vs_truth": 2.7120298823833853,
+            "correlation_vs_baseline": 0.9913960695266724,
+            "si_sdr_db_vs_baseline": 17.60154224215189
+          },
+          "vocals": {
+            "sdr_db_vs_truth": null,
+            "sdr_db_vs_truth_reason": "истинного источника нет (вокала в миксе нет)",
+            "correlation_vs_baseline": 0.502026379108429,
+            "si_sdr_db_vs_baseline": 26.15636394576313
+          },
+          "other": {
+            "sdr_db_vs_truth": 7.297825307183082,
+            "correlation_vs_baseline": 0.9927856922149658,
+            "si_sdr_db_vs_baseline": 18.3827838447229
+          }
+        },
+        "mix_reconstruction_db": -20.481497354434673,
+        "role": "degraded"
+      }
+    },
+    {
+      "step": "no_cuda_cache",
+      "args": [
+        "-n",
+        "htdemucs",
+        "--shifts",
+        "0",
+        "--segment",
+        "5",
+        "--overlap",
+        "0.1"
+      ],
+      "env": {
+        "PYTORCH_NO_CUDA_MEMORY_CACHING": "1"
+      },
+      "degraded": true,
+      "ok": true,
+      "returncode": 0,
+      "seconds": 8.44,
+      "min_available_commit_mb": 20717,
+      "max_vram_mb": 1691,
+      "monitor_samples": 19,
+      "stems": {
+        "drums": "F:\\tmp-strudel\\ladder-work\\no_cuda_cache\\htdemucs\\synth-mix\\drums.wav",
+        "bass": "F:\\tmp-strudel\\ladder-work\\no_cuda_cache\\htdemucs\\synth-mix\\bass.wav",
+        "vocals": "F:\\tmp-strudel\\ladder-work\\no_cuda_cache\\htdemucs\\synth-mix\\vocals.wav",
+        "other": "F:\\tmp-strudel\\ladder-work\\no_cuda_cache\\htdemucs\\synth-mix\\other.wav"
+      },
+      "stderr_tail": "█████▌                          | 40.5/63.0 [00:03<00:01, 18.63seconds/s]\n 71%|████████████████████████████████████████████████████▊                     | 45.0/63.0 [00:03<00:00, 19.26seconds/s]\n 79%|██████████████████████████████████████████████████████████▏               | 49.5/63.0 [00:03<00:00, 19.72seconds/s]\n 86%|███████████████████████████████████████████████████████████████▍          | 54.0/63.0 [00:04<00:00, 19.96seconds/s]\n 93%|████████████████████████████████████████████████████████████████████▋     | 58.5/63.0 [00:04<00:00, 20.19seconds/s]\n100%|██████████████████████████████████████████████████████████████████████████| 63.0/63.0 [00:04<00:00, 20.37seconds/s]\n100%|██████████████████████████████████████████████████████████████████████████| 63.0/63.0 [00:04<00:00, 14.21seconds/s]\n",
+      "stdout_tail": "Selected model is a bag of 1 models. You will see that many progress bars per track.\nSeparated tracks will be stored in F:\\tmp-strudel\\ladder-work\\no_cuda_cache\\htdemucs\nSeparating track F:\\tmp-strudel\\ladder-work\\synth-mix.wav\n",
+      "quality": {
+        "per_stem": {
+          "drums": {
+            "sdr_db_vs_truth": 12.675775409080858,
+            "correlation_vs_baseline": 0.9992413520812988,
+            "si_sdr_db_vs_baseline": 28.150989249471657
+          },
+          "bass": {
+            "sdr_db_vs_truth": 2.7120298823833853,
+            "correlation_vs_baseline": 0.9913960695266724,
+            "si_sdr_db_vs_baseline": 17.60154224215189
+          },
+          "vocals": {
+            "sdr_db_vs_truth": null,
+            "sdr_db_vs_truth_reason": "истинного источника нет (вокала в миксе нет)",
+            "correlation_vs_baseline": 0.502026379108429,
+            "si_sdr_db_vs_baseline": 26.15636394576313
+          },
+          "other": {
+            "sdr_db_vs_truth": 7.297825307183082,
+            "correlation_vs_baseline": 0.9927856922149658,
+            "si_sdr_db_vs_baseline": 18.3827838447229
+          }
+        },
+        "mix_reconstruction_db": -20.481497354434673,
+        "role": "degraded"
+      }
+    },
+    {
+      "step": "cpu",
+      "args": [
+        "-n",
+        "htdemucs",
+        "--shifts",
+        "0",
+        "--segment",
+        "5",
+        "--overlap",
+        "0.1",
+        "-d",
+        "cpu"
+      ],
+      "env": {
+        "PYTORCH_NO_CUDA_MEMORY_CACHING": "1"
+      },
+      "degraded": true,
+      "ok": true,
+      "returncode": 0,
+      "seconds": 39.3,
+      "min_available_commit_mb": 21193,
+      "max_vram_mb": 849,
+      "monitor_samples": 83,
+      "stems": {
+        "drums": "F:\\tmp-strudel\\ladder-work-cpu\\cpu\\htdemucs\\synth-mix\\drums.wav",
+        "bass": "F:\\tmp-strudel\\ladder-work-cpu\\cpu\\htdemucs\\synth-mix\\bass.wav",
+        "vocals": "F:\\tmp-strudel\\ladder-work-cpu\\cpu\\htdemucs\\synth-mix\\vocals.wav",
+        "other": "F:\\tmp-strudel\\ladder-work-cpu\\cpu\\htdemucs\\synth-mix\\other.wav"
+      },
+      "stderr_tail": "█████▌                          | 40.5/63.0 [00:23<00:12,  1.83seconds/s]\n 71%|████████████████████████████████████████████████████▊                     | 45.0/63.0 [00:26<00:09,  1.85seconds/s]\n 79%|██████████████████████████████████████████████████████████▏               | 49.5/63.0 [00:28<00:07,  1.84seconds/s]\n 86%|███████████████████████████████████████████████████████████████▍          | 54.0/63.0 [00:31<00:04,  1.86seconds/s]\n 93%|████████████████████████████████████████████████████████████████████▋     | 58.5/63.0 [00:33<00:02,  1.92seconds/s]\n100%|██████████████████████████████████████████████████████████████████████████| 63.0/63.0 [00:35<00:00,  1.92seconds/s]\n100%|██████████████████████████████████████████████████████████████████████████| 63.0/63.0 [00:35<00:00,  1.77seconds/s]\n",
+      "stdout_tail": "Selected model is a bag of 1 models. You will see that many progress bars per track.\nSeparated tracks will be stored in F:\\tmp-strudel\\ladder-work-cpu\\cpu\\htdemucs\nSeparating track F:\\tmp-strudel\\ladder-work-cpu\\synth-mix.wav\n",
+      "quality": {
+        "per_stem": {
+          "drums": {
+            "sdr_db_vs_truth": 12.675777877970978,
+            "correlation_vs_baseline": 0.9999998807907104,
+            "si_sdr_db_vs_baseline": Infinity
+          },
+          "bass": {
+            "sdr_db_vs_truth": 2.712030510756864,
+            "correlation_vs_baseline": 1.0,
+            "si_sdr_db_vs_baseline": Infinity
+          },
+          "vocals": {
+            "sdr_db_vs_truth": null,
+            "sdr_db_vs_truth_reason": "истинного источника нет (вокала в миксе нет)",
+            "correlation_vs_baseline": 1.0,
+            "si_sdr_db_vs_baseline": Infinity
+          },
+          "other": {
+            "sdr_db_vs_truth": 7.297822561165353,
+            "correlation_vs_baseline": 0.9999998807907104,
+            "si_sdr_db_vs_baseline": Infinity
+          }
+        },
+        "mix_reconstruction_db": -20.48149866421902,
+        "role": "baseline"
+      }
+    }
+  ],
+  "note": "GPU-ступени и CPU-ступень пройдены на машине владельца 19.11.2026; лестница взята из ко��ового кода ddworker.memory.degradation_ladder, не переписана в пробе.",
+  "ladder_source": "server/deepdive/analysis/ddworker/memory.py: degradation_ladder"
+}

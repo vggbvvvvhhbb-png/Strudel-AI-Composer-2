@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-17T13:54:56.504Z",
+  "generatedAt": "2026-11-19T14:18:29.899Z",
   "mode": "mechanism",
   "ok": true,
   "releaseBlocked": true,
@@ -74,7 +74,90 @@
           "dynamic"
         ],
         "version": "1",
-        "timbreProfile": "bright"
+        "timbreProfile": "bright",
+        "licenses": [
+          "CC0-1.0"
+        ],
+        "license": "CC0-1.0",
+        "descriptor": {
+          "name": "Upright Piano (dyn1) — C#4",
+          "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Piano/Player_dyn1_rr1_020.wav",
+          "durationS": 11.842,
+          "sampleRate": 44100,
+          "channels": 2,
+          "loudness": {
+            "lufsI": -49.71,
+            "peakDbfs": -34.7,
+            "crestDb": 23.32
+          },
+          "spectral": {
+            "centroidHz": 481,
+            "rolloffHz": 508.7,
+            "flatness": 0.006966,
+            "bands": {
+              "sub": -83.53,
+              "low": -70.06,
+              "lowMid": -60.14,
+              "mid": -62.86,
+              "highMid": -80.01,
+              "high": -94.5
+            }
+          },
+          "transients": {
+            "count": 108,
+            "densityPerSec": 9.12,
+            "timesS": [
+              0.0058,
+              0.4238,
+              0.5979,
+              0.7314,
+              0.8243,
+              0.9578,
+              1.0913,
+              1.1784,
+              1.2829,
+              1.7705,
+              1.9505,
+              2.0782,
+              2.1362,
+              2.2407,
+              2.3452,
+              2.5194,
+              2.6471,
+              2.7342,
+              2.8793,
+              2.9315,
+              3.0128,
+              3.1753,
+              3.2276,
+              3.3437,
+              3.4656,
+              3.5701,
+              3.6571,
+              3.7384,
+              3.8545,
+              3.959,
+              4.0983,
+              4.1506
+            ]
+          },
+          "tonal": {
+            "f0Hz": 277.63,
+            "note": "C#",
+            "voicedRatio": 0.494
+          },
+          "tempo": {
+            "bpm": 152,
+            "confidence": 0.168
+          },
+          "character": [
+            "тёмный",
+            "плотный",
+            "тихий"
+          ]
+        },
+        "preview": "/timbre-audio/tp_upright_piano_v1/cs4.ogg",
+        "attribution": "«Upright Piano (dyn1) — C#4» by Simon Dalzell (Ivy Audio) / Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright Piano/Player_dyn1_rr1_020.wav"
       },
       {
         "id": "tp-upright-soft-v1",
@@ -93,7 +176,91 @@
           "intimate"
         ],
         "version": "1",
-        "timbreProfile": "warm"
+        "timbreProfile": "warm",
+        "licenses": [
+          "CC0-1.0"
+        ],
+        "license": "CC0-1.0",
+        "descriptor": {
+          "name": "Upright Nr1 (pp, мягкое) — C4",
+          "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright%20Nr1/UR1_C4_pp_RR1.wav",
+          "durationS": 11.015,
+          "sampleRate": 44100,
+          "channels": 2,
+          "loudness": {
+            "lufsI": -48.77,
+            "peakDbfs": -31.49,
+            "crestDb": 22.05
+          },
+          "spectral": {
+            "centroidHz": 453.9,
+            "rolloffHz": 489.9,
+            "flatness": 0.00122,
+            "bands": {
+              "sub": -78.18,
+              "low": -69.89,
+              "lowMid": -58.58,
+              "mid": -55.45,
+              "highMid": -69.61,
+              "high": -85.11
+            }
+          },
+          "transients": {
+            "count": 47,
+            "densityPerSec": 4.267,
+            "timesS": [
+              3.3205,
+              3.5527,
+              6.0662,
+              6.8209,
+              6.9312,
+              7.0066,
+              7.1459,
+              7.2678,
+              7.442,
+              7.5117,
+              7.6394,
+              7.6974,
+              7.7671,
+              7.9064,
+              7.9877,
+              8.0747,
+              8.1386,
+              8.2024,
+              8.2547,
+              8.365,
+              8.4521,
+              8.5972,
+              8.6494,
+              8.7771,
+              8.841,
+              8.9165,
+              8.9687,
+              9.0558,
+              9.1371,
+              9.2009,
+              9.3228,
+              9.4854
+            ]
+          },
+          "tonal": {
+            "f0Hz": 522.38,
+            "note": "C",
+            "voicedRatio": 0.64
+          },
+          "tempo": {
+            "bpm": 172.27,
+            "confidence": 0.2
+          },
+          "character": [
+            "тёмный",
+            "плотный",
+            "тональный",
+            "тихий"
+          ]
+        },
+        "preview": "/timbre-audio/tp_upright_soft_v1/c4.ogg",
+        "attribution": "«Upright Nr1 (pp, мягкое) — C4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Keys/Upright Nr1/UR1_C4_pp_RR1.wav"
       },
       {
         "id": "tp-solo-violin-v1",
@@ -111,7 +278,91 @@
           "bright"
         ],
         "version": "1",
-        "timbreProfile": "bright"
+        "timbreProfile": "bright",
+        "licenses": [
+          "CC0-1.0"
+        ],
+        "license": "CC0-1.0",
+        "descriptor": {
+          "name": "Solo Violin (arco vib, p) — E4",
+          "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Arco%20Vib/LLVln_ArcoVib_E4_p.wav",
+          "durationS": 14.74,
+          "sampleRate": 44100,
+          "channels": 2,
+          "loudness": {
+            "lufsI": -32.61,
+            "peakDbfs": -21.94,
+            "crestDb": 14.65
+          },
+          "spectral": {
+            "centroidHz": 805.5,
+            "rolloffHz": 1281.2,
+            "flatness": 0.000066,
+            "bands": {
+              "sub": -69.91,
+              "low": -54.45,
+              "lowMid": -42.18,
+              "mid": -40.24,
+              "highMid": -42.59,
+              "high": -50.88
+            }
+          },
+          "transients": {
+            "count": 127,
+            "densityPerSec": 8.616,
+            "timesS": [
+              0.0116,
+              0.1161,
+              0.3483,
+              0.4296,
+              0.505,
+              0.5863,
+              0.8069,
+              0.9694,
+              1.0565,
+              1.2016,
+              1.2887,
+              1.4164,
+              1.4919,
+              1.637,
+              1.7241,
+              1.8576,
+              1.9679,
+              2.0782,
+              2.1537,
+              2.2814,
+              2.3742,
+              2.4323,
+              2.5542,
+              2.6935,
+              2.8793,
+              2.9489,
+              3.0708,
+              3.1463,
+              3.2044,
+              3.274,
+              3.3611,
+              3.512
+            ]
+          },
+          "tonal": {
+            "f0Hz": 330.56,
+            "note": "E",
+            "voicedRatio": 0.987
+          },
+          "tempo": {
+            "bpm": 136,
+            "confidence": 0.167
+          },
+          "character": [
+            "тёмный",
+            "плотный",
+            "тональный",
+            "тихий"
+          ]
+        },
+        "preview": "/timbre-audio/tp_solo_violin_v1/c4.ogg",
+        "attribution": "«Solo Violin (arco vib, p) — C4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C4_p.wav"
       },
       {
         "id": "tp-violin-section-v1",
@@ -130,7 +381,91 @@
           "warm"
         ],
         "version": "1",
-        "timbreProfile": "warm"
+        "timbreProfile": "warm",
+        "licenses": [
+          "CC0-1.0"
+        ],
+        "license": "CC0-1.0",
+        "descriptor": {
+          "name": "Violin Section (sus vib) — G4",
+          "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin%20Section/susVib/VlnEns_susVib_G4_v1.wav",
+          "durationS": 13.21,
+          "sampleRate": 44100,
+          "channels": 2,
+          "loudness": {
+            "lufsI": -30.4,
+            "peakDbfs": -18.31,
+            "crestDb": 17.18
+          },
+          "spectral": {
+            "centroidHz": 2485.2,
+            "rolloffHz": 3819.5,
+            "flatness": 0.005631,
+            "bands": {
+              "sub": -83.3,
+              "low": -67.38,
+              "lowMid": -50.62,
+              "mid": -38.51,
+              "highMid": -39.87,
+              "high": -44.88
+            }
+          },
+          "transients": {
+            "count": 127,
+            "densityPerSec": 9.614,
+            "timesS": [
+              0.0639,
+              0.1742,
+              0.2902,
+              0.418,
+              0.5515,
+              0.6327,
+              0.6966,
+              0.7895,
+              0.8998,
+              1.0043,
+              1.132,
+              1.2481,
+              1.341,
+              1.4512,
+              1.5035,
+              1.5615,
+              1.6834,
+              1.7589,
+              1.8518,
+              1.9563,
+              2.0376,
+              2.1072,
+              2.2059,
+              2.3046,
+              2.3626,
+              2.4265,
+              2.5484,
+              2.6471,
+              2.7458,
+              2.8502,
+              2.9663,
+              3.1695
+            ]
+          },
+          "tonal": {
+            "f0Hz": 783.95,
+            "note": "G",
+            "voicedRatio": 0.969
+          },
+          "tempo": {
+            "bpm": 143.56,
+            "confidence": 0.206
+          },
+          "character": [
+            "средний",
+            "плотный",
+            "тональный",
+            "тихий"
+          ]
+        },
+        "preview": "/timbre-audio/tp_violin_section_v1/c4.ogg",
+        "attribution": "«Violin Section (sus vib) — C4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Violin Section/susVib/VlnEns_susVib_C4_v1.wav"
       },
       {
         "id": "tp-viola-section-v1",
@@ -149,7 +484,91 @@
           "warm"
         ],
         "version": "1",
-        "timbreProfile": "dark"
+        "timbreProfile": "dark",
+        "licenses": [
+          "CC0-1.0"
+        ],
+        "license": "CC0-1.0",
+        "descriptor": {
+          "name": "Viola Section (sus vib) — D3",
+          "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola%20Section/susvib/ViolaEns_susvib_D3_v1_1.wav",
+          "durationS": 10.543,
+          "sampleRate": 44100,
+          "channels": 2,
+          "loudness": {
+            "lufsI": -38.55,
+            "peakDbfs": -26.13,
+            "crestDb": 15.81
+          },
+          "spectral": {
+            "centroidHz": 987.1,
+            "rolloffHz": 1563.8,
+            "flatness": 0.000446,
+            "bands": {
+              "sub": -73.94,
+              "low": -58.31,
+              "lowMid": -47.03,
+              "mid": -44.63,
+              "highMid": -50.81,
+              "high": -61.2
+            }
+          },
+          "transients": {
+            "count": 102,
+            "densityPerSec": 9.675,
+            "timesS": [
+              0.029,
+              0.1219,
+              0.1858,
+              0.267,
+              0.3773,
+              0.505,
+              0.6502,
+              0.7663,
+              0.8591,
+              0.9927,
+              1.0565,
+              1.132,
+              1.2016,
+              1.3119,
+              1.3932,
+              1.4629,
+              1.5267,
+              1.637,
+              1.8286,
+              1.9737,
+              2.0259,
+              2.1188,
+              2.2001,
+              2.2988,
+              2.38,
+              2.4323,
+              2.5484,
+              2.6297,
+              2.7283,
+              2.8328,
+              2.9315,
+              3.0012
+            ]
+          },
+          "tonal": {
+            "f0Hz": 293.78,
+            "note": "D",
+            "voicedRatio": 0.959
+          },
+          "tempo": {
+            "bpm": 161.5,
+            "confidence": 0.168
+          },
+          "character": [
+            "тёмный",
+            "плотный",
+            "тональный",
+            "тихий"
+          ]
+        },
+        "preview": "/timbre-audio/tp_viola_section_v1/c4.ogg",
+        "attribution": "«Viola Section (sus vib) — C4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Viola Section/susvib/ViolaEns_susvib_C4_v1_1.wav"
       },
       {
         "id": "tp-cello-section-v1",
@@ -168,7 +587,91 @@
           "warm"
         ],
         "version": "1",
-        "timbreProfile": "dark"
+        "timbreProfile": "dark",
+        "licenses": [
+          "CC0-1.0"
+        ],
+        "license": "CC0-1.0",
+        "descriptor": {
+          "name": "Cello Section (sus vib) — C3",
+          "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello%20Section/susvib/susvib_C3_v1_1.wav",
+          "durationS": 9.237,
+          "sampleRate": 44100,
+          "channels": 2,
+          "loudness": {
+            "lufsI": -31.2,
+            "peakDbfs": -20.64,
+            "crestDb": 13.53
+          },
+          "spectral": {
+            "centroidHz": 520.1,
+            "rolloffHz": 855.9,
+            "flatness": 0.000167,
+            "bands": {
+              "sub": -60.98,
+              "low": -45.54,
+              "lowMid": -36.49,
+              "mid": -39.68,
+              "highMid": -45.78,
+              "high": -56.39
+            }
+          },
+          "transients": {
+            "count": 70,
+            "densityPerSec": 7.578,
+            "timesS": [
+              0.0406,
+              0.1451,
+              0.209,
+              0.4238,
+              0.476,
+              0.5863,
+              0.6385,
+              0.8301,
+              0.9462,
+              1.0333,
+              1.3061,
+              1.5209,
+              1.6718,
+              1.8054,
+              1.9098,
+              1.9969,
+              2.0724,
+              2.1943,
+              2.4323,
+              2.6239,
+              2.6993,
+              2.769,
+              2.8561,
+              3.0592,
+              3.2914,
+              3.3553,
+              3.512,
+              3.6339,
+              3.7152,
+              3.7907,
+              3.9126,
+              3.9648
+            ]
+          },
+          "tonal": {
+            "f0Hz": 261.61,
+            "note": "C",
+            "voicedRatio": 0.953
+          },
+          "tempo": {
+            "bpm": 123.05,
+            "confidence": 0.174
+          },
+          "character": [
+            "тёмный",
+            "плотный",
+            "тональный",
+            "тихий"
+          ]
+        },
+        "preview": "/timbre-audio/tp_cello_section_v1/g3.ogg",
+        "attribution": "«Cello Section (sus vib) — G3» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Cello Section/susvib/susvib_G3_v1_1.wav"
       },
       {
         "id": "tp-harp-v1",
@@ -186,7 +689,91 @@
           "bright"
         ],
         "version": "1",
-        "timbreProfile": "bright"
+        "timbreProfile": "bright",
+        "licenses": [
+          "CC0-1.0"
+        ],
+        "license": "CC0-1.0",
+        "descriptor": {
+          "name": "Harp (mf) — C5",
+          "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_C5_mf.wav",
+          "durationS": 7.013,
+          "sampleRate": 44100,
+          "channels": 2,
+          "loudness": {
+            "lufsI": -35.26,
+            "peakDbfs": -17.16,
+            "crestDb": 25.22
+          },
+          "spectral": {
+            "centroidHz": 849.4,
+            "rolloffHz": 541,
+            "flatness": 0.018518,
+            "bands": {
+              "sub": -78.11,
+              "low": -63.89,
+              "lowMid": -48.28,
+              "mid": -43.78,
+              "highMid": -59.12,
+              "high": -72.25
+            }
+          },
+          "transients": {
+            "count": 41,
+            "densityPerSec": 5.846,
+            "timesS": [
+              0.0406,
+              1.666,
+              2.1072,
+              2.1943,
+              2.5194,
+              2.6006,
+              2.6703,
+              2.7458,
+              2.8096,
+              2.8909,
+              2.9954,
+              3.1057,
+              3.303,
+              3.3611,
+              3.4714,
+              3.7036,
+              3.7732,
+              3.9416,
+              3.9938,
+              4.0635,
+              4.139,
+              4.2609,
+              4.3363,
+              4.4582,
+              4.5685,
+              4.8298,
+              4.9342,
+              5.0968,
+              5.2013,
+              5.2883,
+              5.4044,
+              5.567
+            ]
+          },
+          "tonal": {
+            "f0Hz": 520.49,
+            "note": "C",
+            "voicedRatio": 0.905
+          },
+          "tempo": {
+            "bpm": 143.55,
+            "confidence": 0.225
+          },
+          "character": [
+            "тёмный",
+            "плотный",
+            "тональный",
+            "тихий"
+          ]
+        },
+        "preview": "/timbre-audio/tp_harp_v1/g3.ogg",
+        "attribution": "«Harp (mf) — G3» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Harp/KSHarp_G3_mf.wav"
       },
       {
         "id": "tp-contrabass-sus-v1",
@@ -205,7 +792,90 @@
           "warm"
         ],
         "version": "1",
-        "timbreProfile": "dark"
+        "timbreProfile": "dark",
+        "licenses": [
+          "CC0-1.0"
+        ],
+        "license": "CC0-1.0",
+        "descriptor": {
+          "name": "Solo Contrabass (sus, non vib) — A1",
+          "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/SusNV/BKCtbss_SusNV_A1_v1_rr1.wav",
+          "durationS": 7.083,
+          "sampleRate": 44100,
+          "channels": 2,
+          "loudness": {
+            "lufsI": -25.39,
+            "peakDbfs": -17.25,
+            "crestDb": 10.83
+          },
+          "spectral": {
+            "centroidHz": 143.7,
+            "rolloffHz": 193.8,
+            "flatness": 0.000027,
+            "bands": {
+              "sub": -39.23,
+              "low": -29.77,
+              "lowMid": -34.11,
+              "mid": -45.7,
+              "highMid": -58.01,
+              "high": -72.17
+            }
+          },
+          "transients": {
+            "count": 60,
+            "densityPerSec": 8.471,
+            "timesS": [
+              0.0639,
+              0.1742,
+              0.3077,
+              0.418,
+              0.5283,
+              0.5805,
+              0.6792,
+              0.7895,
+              0.9056,
+              1.0971,
+              1.2249,
+              1.341,
+              1.4338,
+              1.5093,
+              1.579,
+              1.6312,
+              1.7589,
+              1.846,
+              1.9447,
+              2.0259,
+              2.1711,
+              2.38,
+              2.5078,
+              2.7167,
+              2.7806,
+              2.9431,
+              3.0244,
+              3.1173,
+              3.216,
+              3.3553,
+              3.4075,
+              3.5178
+            ]
+          },
+          "tonal": {
+            "f0Hz": 109.99,
+            "note": "A",
+            "voicedRatio": 0.955
+          },
+          "tempo": {
+            "bpm": 136,
+            "confidence": 0.186
+          },
+          "character": [
+            "тёмный",
+            "плотный",
+            "тональный"
+          ]
+        },
+        "preview": "/timbre-audio/tp_contrabass_sus_v1/cs2.ogg",
+        "attribution": "«Solo Contrabass (sus, non vib) — C#2» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Contrabass/SusNV/BKCtbss_SusNV_C#2_v1_rr1.wav"
       },
       {
         "id": "tp-contrabass-pizz-v1",
@@ -223,7 +893,91 @@
           "jazz"
         ],
         "version": "1",
-        "timbreProfile": "warm"
+        "timbreProfile": "warm",
+        "licenses": [
+          "CC0-1.0"
+        ],
+        "license": "CC0-1.0",
+        "descriptor": {
+          "name": "Solo Contrabass (pizz) — A1",
+          "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Contrabass/Pizz/BKCtbss_Pizz_A1_v1_rr1.wav",
+          "durationS": 3.533,
+          "sampleRate": 44100,
+          "channels": 2,
+          "loudness": {
+            "lufsI": -40.75,
+            "peakDbfs": -22.1,
+            "crestDb": 21.26
+          },
+          "spectral": {
+            "centroidHz": 117.9,
+            "rolloffHz": 129.2,
+            "flatness": 0.000301,
+            "bands": {
+              "sub": -53.83,
+              "low": -44.86,
+              "lowMid": -50.01,
+              "mid": -63.56,
+              "highMid": -82.62,
+              "high": -97.55
+            }
+          },
+          "transients": {
+            "count": 37,
+            "densityPerSec": 10.474,
+            "timesS": [
+              0.0929,
+              0.1974,
+              0.3309,
+              0.4122,
+              0.5979,
+              0.6734,
+              0.8127,
+              0.923,
+              1.0565,
+              1.1088,
+              1.1668,
+              1.2481,
+              1.3293,
+              1.3816,
+              1.4629,
+              1.5964,
+              1.6776,
+              1.7415,
+              1.817,
+              1.8692,
+              1.9273,
+              2.0143,
+              2.0898,
+              2.2233,
+              2.3859,
+              2.4439,
+              2.4961,
+              2.6355,
+              2.6877,
+              2.7632,
+              2.8444,
+              2.9315
+            ]
+          },
+          "tonal": {
+            "f0Hz": 110.31,
+            "note": "A",
+            "voicedRatio": 0.888
+          },
+          "tempo": {
+            "bpm": 92.28,
+            "confidence": 0.389
+          },
+          "character": [
+            "тёмный",
+            "плотный",
+            "тональный",
+            "тихий"
+          ]
+        },
+        "preview": "/timbre-audio/tp_contrabass_pizz_v1/cs2.ogg",
+        "attribution": "«Solo Contrabass (pizz) — C#2» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_C#2_v1_rr1.wav"
       },
       {
         "id": "tp-solo-violin-pizz-v1",
@@ -242,7 +996,73 @@
           "short"
         ],
         "version": "1",
-        "timbreProfile": "bright"
+        "timbreProfile": "bright",
+        "licenses": [
+          "CC0-1.0"
+        ],
+        "license": "CC0-1.0",
+        "descriptor": {
+          "name": "Solo Violin (pizz, p) — E4",
+          "source": "https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo%20Violin/Pizz/LLVln_Pizz_E4_p_RR1.wav",
+          "durationS": 1.246,
+          "sampleRate": 44100,
+          "channels": 2,
+          "loudness": {
+            "lufsI": -47.75,
+            "peakDbfs": -31.9,
+            "crestDb": 18.71
+          },
+          "spectral": {
+            "centroidHz": 428.6,
+            "rolloffHz": 344.5,
+            "flatness": 0.006404,
+            "bands": {
+              "sub": -79.73,
+              "low": -64.1,
+              "lowMid": -52.63,
+              "mid": -55.39,
+              "highMid": -71.47,
+              "high": -80.04
+            }
+          },
+          "transients": {
+            "count": 14,
+            "densityPerSec": 11.239,
+            "timesS": [
+              0.0116,
+              0.1277,
+              0.2322,
+              0.3425,
+              0.4238,
+              0.4876,
+              0.5863,
+              0.6502,
+              0.7372,
+              0.7953,
+              0.894,
+              0.952,
+              1.0971,
+              1.161
+            ]
+          },
+          "tonal": {
+            "f0Hz": 327.54,
+            "note": "E",
+            "voicedRatio": 0.988
+          },
+          "tempo": {
+            "bpm": 172.27,
+            "confidence": 0.154
+          },
+          "character": [
+            "тёмный",
+            "плотный",
+            "тональный",
+            "тихий"
+          ]
+        },
+        "preview": "/timbre-audio/tp_solo_violin_pizz_v1/c4.ogg",
+        "attribution": "«Solo Violin (pizz, p) — C4» by Versilian Studios LLC — CC0-1.0 — https://github.com/sgossner/VSCO-2-CE/blob/master/Strings/Solo Violin/Pizz/LLVln_Pizz_C4_p_RR1.wav"
       }
     ]
   },

@@ -1,0 +1,91 @@
+{
+  "kind": "worker-failure-modes-live",
+  "created_at": "2026-11-19T17:10:00+0300",
+  "note": "Живые прогоны настоящего Python-воркера (server/deepdive/analysis/worker.py) на машине владельца. Воркер запускался с DD_PYTHON=F:\\strudel-env\\Scripts\\python.exe (torch 2.5.1+cu121, CUDA, demucs 4.1.0). Вход — синтезированный микс 60 с (probe-demucs-ladder.py). Подменён был ТОЛЬКО дочерний процесс Demucs (через PYTHONPATH) — воркер, HTTP-цепочка и лестница деградации настоящие.",
+  "machine": {
+    "python_worker": "3.12.16 (F:\\strudel-env)",
+    "torch": "2.5.1+cu121",
+    "cuda_available": true,
+    "demucs": "4.1.0",
+    "numpy": "2.5.4"
+  },
+  "cases": [
+    {
+      "name": "успех: настоящее разделение",
+      "port": 8021,
+      "substituted": false,
+      "http_status": 200,
+      "response": {
+        "stems": {
+          "drums": "F:\\tmp-strudel\\worker-separate\\htdemucs\\synth-mix\\drums.wav",
+          "bass": "F:\\tmp-strudel\\worker-separate\\htdemucs\\synth-mix\\bass.wav",
+          "vocals": "F:\\tmp-strudel\\worker-separate\\htdemucs\\synth-mix\\vocals.wav",
+          "other": "F:\\tmp-strudel\\worker-separate\\htdemucs\\synth-mix\\other.wav"
+        },
+        "seconds": 7.68,
+        "model": "htdemucs",
+        "attempts": [
+          { "step": "baseline", "params": ["-n", "htdemucs"], "ok": true, "error": null }
+        ],
+        "degraded": false,
+        "measured": {
+          "available_commit_mb": 24128,
+          "available_physical_mb": 4013,
+          "total_commit_mb": 42544,
+          "source": "GlobalMemoryStatusEx"
+        }
+      }
+    },
+    {
+      "name": "отказ по памяти: CPU-аллокатор (host_alloc)",
+      "port": 8022,
+      "substituted": "python -m demucs → заглушка: stderr 'DefaultCPUAllocator: not enough memory', код выхода 1",
+      "http_status": 200,
+      "response": {
+        "status": "insufficient_memory",
+        "kind": "host_alloc",
+        "message": "Не хватило памяти для разделения: все экономные режимы Demucs исчерпаны (последняя попытка — cpu).",
+        "attempts": [
+          { "step": "baseline", "params": ["-n", "htdemucs"], "ok": false, "kind": "host_alloc" },
+          { "step": "shifts0", "params": ["-n", "htdemucs", "--shifts", "0"], "ok": false, "kind": "host_alloc" },
+          { "step": "segment7", "params": ["-n", "htdemucs", "--shifts", "0", "--segment", "7"], "ok": false, "kind": "host_alloc" },
+          { "step": "segment5_overlap", "params": ["-n", "htdemucs", "--shifts", "0", "--segment", "5", "--overlap", "0.1"], "ok": false, "kind": "host_alloc" },
+          { "step": "no_cuda_cache", "params": ["-n", "htdemucs", "--shifts", "0", "--segment", "5", "--overlap", "0.1"], "ok": false, "kind": "host_alloc" },
+          { "step": "cpu", "params": ["-n", "htdemucs", "--shifts", "0", "--segment", "5", "--overlap", "0.1", "-d", "cpu"], "ok": false, "kind": "host_alloc" }
+        ],
+        "measured": {
+          "available_commit_mb": 23902,
+          "available_physical_mb": 3721,
+          "total_commit_mb": 42544,
+          "source": "GlobalMemoryStatusEx"
+        },
+        "degraded": true
+      },
+      "note": "Лестница пройдена целиком (6 ступеней), ответ — терминальный статус, НЕ ошибка HTTP и НЕ «успех». Воркер остался жив."
+    },
+    {
+      "name": "нативное падение дочернего процесса (worker_crashed)",
+      "port": 8023,
+      "substituted": "python -m demucs → заглушка: ExitProcess(3221225477) = 0xC0000005",
+      "http_status": 500,
+      "response": {
+        "error": "WorkerCrashError: demucs завершился с кодом 3221225477: fake demucs: simulating native access violation; полный stderr: demucs.stderr.log в out_dir"
+      },
+      "note": "Лестница НЕ пройдена: краш — это сбой процесса, а не нехватка памяти (D-153/D-158). Классификатор увидел код выхода и остановился на первой попытке."
+    },
+    {
+      "name": "посторонняя ошибка (не память) — не маскируется под отказ по памяти",
+      "port": 8024,
+      "substituted": "python -m demucs → заглушка: 'some unrelated failure', код выхода 1",
+      "http_status": 500,
+      "response": {
+        "error": "RuntimeError: demucs завершился с кодом 1: fake demucs: some unrelated failure; полный stderr: demucs.stderr.log в out_dir"
+      },
+      "note": "Классификатор памяти вернул None → лестница не пройдена, отказ не переименован в insufficient_memory."
+    }
+  ],
+  "technical_notes": [
+    "os._exit(3221225477) на Windows бросает OverflowError («Python int too large to convert to C int») и даёт код выхода 1. Нативный код 0xC0000005 воспроизводится только через ctypes.windll.kernel32.ExitProcess — это измерено, а не предположено.",
+    "Подмена пакета Demucs через PYTHONPATH требует __init__.py: обычный пакет из site-packages перебивает namespace-пакет, поэтому первый прогон молча выполнил НАСТОЯЩИЙ Demucs (замечено по наличию стемов в ответе)."
+  ]
+}

@@ -134,6 +134,32 @@
           <div id="agent-usage" class="agent-usage"></div>
         </section>
 
+        <!-- Музыкальный интеллект: RAG-ассистент с теорией, валидатором
+             и петлёй self-correction; объяснение кода детерминированное (D-140). -->
+        <section class="panel rag-panel" aria-label="Музыкальный интеллект">
+          <h2 class="panel-title">Музыкальный интеллект</h2>
+          <p class="hint">
+            Ассистент с музыкальным образованием: база знаний, проверка кода,
+            петля исправлений. <span id="rag-status"></span>
+          </p>
+          <label class="visually-hidden" for="rag-input">Запрос образованному ассистенту</label>
+          <textarea
+            id="rag-input"
+            rows="2"
+            placeholder="Например: тёплые джазовые аккорды для lofi в ля миноре"
+          ></textarea>
+          <div class="row">
+            <button id="rag-generate" class="btn primary" type="button">Сгенерировать с теорией</button>
+            <button id="rag-explain" class="btn ghost" type="button">Объяснить код</button>
+          </div>
+          <div id="rag-steps" class="agent-stream" aria-live="polite"></div>
+          <div id="rag-rationale" class="agent-summary"></div>
+          <div id="rag-explain-out" class="agent-summary"></div>
+          <div class="row">
+            <button id="rag-apply" class="btn" type="button" hidden>Применить код</button>
+          </div>
+        </section>
+
         <!-- ШАГ 3 — инженерные панели (показываются только на шаге «Правьте») -->
         <div id="step-advanced" class="step-advanced">
           <details class="panel studio-details">
@@ -437,6 +463,14 @@
               <h3 class="panel-title">⚠️ Что двойник не воспроизводит</h3>
               <div id="dive-honesty" class="dive-honesty">
                 <p class="hint">Список ограничений придёт вместе с разбором.</p>
+              </div>
+            </section>
+
+            <!-- Отказы и деградации -->
+            <section class="panel dive-card dive-card-failures" aria-label="Что не получилось измерить">
+              <h3 class="panel-title">🧯 Что не получилось измерить</h3>
+              <div id="dive-failures" class="dive-failures">
+                <p class="hint">Список отказов придёт вместе с разбором.</p>
               </div>
             </section>
 

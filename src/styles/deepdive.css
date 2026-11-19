@@ -719,6 +719,31 @@ main.app-grid[data-view='dive'] > .col-right {
   border-top: 1px solid var(--border);
 }
 
+/* --- Отказы и деградации --- */
+.dive-failures {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.dive-failure-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.dive-failure-item {
+  list-style: disc;
+}
+
+.dive-card-failures {
+  border-left: 3px solid var(--warn);
+}
+
 /* --- Итерации улучшения --- */
 .dive-iterations {
   display: flex;

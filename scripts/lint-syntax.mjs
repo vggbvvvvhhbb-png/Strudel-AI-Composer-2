@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { join, relative } from 'node:path';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const DIRS = ['src', 'server', 'scripts', 'tests', 'eval'];
+const DIRS = ['src', 'server', 'scripts', 'tests', 'eval', 'lib'];
 const SKIP = new Set(['node_modules', 'dist', '.git', '.sharrowkin', 'public']);
 // Фикстуры «сломанного» кода существуют как данные для тестов валидатора —
 // проверять их синтаксис нельзя, они должны быть сломаны.

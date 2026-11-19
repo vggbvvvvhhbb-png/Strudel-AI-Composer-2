@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-18",
+  "branch": "feat/music-education",
+  "tests": {"passed":1907,"files":115,"added":258,"skipped":0},
+  "gate": {"command":"npm run gate","passed":14,"total":14,"seconds":112.3},
+  "bundleKiB": {"js":938.1,"css":68.0,"largestChunk":641.2,"gzip":325.7},
+  "dataset": {"before":35,"after":148,"added":113,"directions":15,"guides":12,"uniqueNewCodeExamples":113,"originalRecordsUnchanged":true},
+  "contentReview": {"recordsReviewed":81,"corrections":6,"runtimeOnlyIsNotMusicalAccuracy":true},
+  "search": {"lexicalControlRelevantFirst":5,"total":5,"semantic":false,"supabase":null,"reason":"Ollama unavailable; title/genre-filter control, not blind benchmark"},
+  "upload": {"dryRun":148,"embedded":0,"remoteWrite":false,"remoteCountObservedInBrowser":35},
+  "mockCorrection": {"beforeBpm":110,"afterBpm":132,"attempts":2,"usedFallback":false},
+  "release": {"command":"npm run check:release","exitCode":2,"blockedBanks":2,"unconfirmedSampleNames":219,"decision":"D-099"},
+  "notMeasured": {"humanPreference":"no blind A/B performed","liveLLMEffect":"correction was mocked, not a live LLM trial","referenceTool":"analysis capability available; daemon transport not configured, analyze_reference not implemented"},
+  "gateFirstFailure": {"testsPassed":1904,"testsFailed":1,"reason":"rag-route hardcoded35; changed exact expectation148, no test skipped"}
+}

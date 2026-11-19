@@ -129,6 +129,17 @@ export function formatEstimate(estimate) {
   return formatMinutes(estimate.minutesMin, estimate.minutesMax);
 }
 
+export function formatEstimateScope(estimate) {
+  if (estimate.separate) {
+    return `Время сепарации: ${formatEstimate(estimate)} · CPU, верхняя граница по худшему замеру; без очереди и рендера двойника. Полный результат: нет данных по времени.`;
+  }
+  return `Оценка без разделения на стемы: ${formatEstimate(estimate)} · без очереди; экстраполяция замера 125 с, время длинного двойника не гарантировано.`;
+}
+
+export function formatStageRemaining(label, seconds) {
+  return `${label} — ${seconds > 0 ? formatRemaining(seconds) : 'оценка превышена, этап продолжается'}`;
+}
+
 /** «осталось ~12 мин» — по остатку в секундах. */
 export function formatRemaining(seconds) {
   const n = Number(seconds);

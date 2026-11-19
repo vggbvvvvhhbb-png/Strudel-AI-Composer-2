@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-18",
+  "baseCommit": "73ed6c3",
+  "branch": "feat/music-education",
+  "machine": {"platform":"win32", "node":"v24.14.1", "cpu":"AMD Ryzen 5 5500", "cpus":12, "ramMiB":16231},
+  "dependencies": "existing node_modules; npm ci not run",
+  "commands": {"test":"npm test", "gate":"npm run gate", "bundle":"npm run bundle:budget"},
+  "tests": {"passed":1649,"files":113,"seconds":62.25},
+  "gate": {"passed":14,"total":14,"seconds":108.9},
+  "bundleKiB": {"js":937.7,"css":68.0,"largestChunk":641.2,"gzip":325.5},
+  "dataset": {"count":35,"originalRecordsSha256":"9c70eed64f80fe2af4978f472b525270e53a1b0c6e80c7afa8e7f933e1ebcf2e"},
+  "referenceAnalysis": {"analysisAvailable":true,"demucsAvailable":true,"model":"htdemucs","daemonTransportAvailable":false,"reason":"127.0.0.1:3213 ECONNREFUSED; capability probe is not an end-to-end tool"},
+  "semanticSearch": {"available":false,"reason":"embeddingsAvailable() returned false; lexical control only"},
+  "release": "not run in baseline; D-099 must be checked separately"
+}

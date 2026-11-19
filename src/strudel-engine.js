@@ -7,21 +7,7 @@
 //   движок (superdough) ─► masterIn ─► [worklet: EQ→glue→лимитер→метры] ─► выход
 //
 // Контекст и мастер принадлежат студии (src/audio/graph.js), движок — гость.
-import {
-  initStrudel,
-  evaluate,
-  hush,
-  getAudioContext,
-  setAudioContext,
-  getSuperdoughAudioController,
-  setSuperdoughAudioController,
-  initAudio,
-  registerSynthSounds,
-  superdough,
-  Pattern,
-  samples,
-  loadBuffer,
-} from '@strudel/web';
+import { strudelApi } from './audio/engine/strudel-api.js';
 import { highlightBlock } from './core/highlight.js';
 import { visualPlan } from './core/visual-plan.js';
 import { installJadeVisuals } from './pianoroll.js';
@@ -31,9 +17,10 @@ import { createStudioGraph } from './audio/graph.js';
 import { createEngineAdapter } from './audio/engine/adapter.js';
 import { SAMPLE_SETS } from './sample-banks.js';
 import { masterPresetFor, masterPresetForCode } from './audio/master-presets.js';
-import { renderAndMeasure, audioBufferToChannels } from './audio/render/offline.js';
+import { renderAndMeasure } from './audio/render/offline.js';
+import { createRealmRenderer } from './audio/render/realm.js';
 import { allSamplesReady } from './samples-ready.js';
-import { ensureTimbreForCode } from './timbre/register.js';
+import { ensureTimbreForCode, fetchTimbreCatalog } from './timbre/register.js';
 
 export { visualPlan };
 
@@ -56,21 +43,8 @@ let adapter = null;
 // true, если мастер-шина не поднялась и звук идёт напрямую в выход.
 let directOutput = false;
 
-/** Модуль @strudel/web в виде объекта — так его ждёт адаптер движка. */
-const strudelApi = {
-  initStrudel,
-  evaluate,
-  hush,
-  getAudioContext,
-  setAudioContext,
-  getSuperdoughAudioController,
-  setSuperdoughAudioController,
-  initAudio,
-  registerSynthSounds,
-  superdough,
-  samples,
-  loadBuffer,
-};
+/** Именованные функции движка, которые модуль использует напрямую. */
+const { evaluate, hush, samples, getAudioContext } = strudelApi;
 
 function dpr() {
   return Math.min(window.devicePixelRatio || 1, 2);
@@ -171,6 +145,9 @@ export function initEngine(container) {
       get directOutput() {
         return directOutput;
       },
+      // Отладочная ручка офлайн-рендера для браузерных зондов
+      // (scripts/probe-render-realm.mjs, tests/spike/browser).
+      renderTrackOffline,
     };
 
     // Прогреваем сэмплы заранее: к моменту первого нажатия «play»
@@ -243,6 +220,13 @@ function applyMasterForCode(code) {
 /** Адаптер движка — для позиции, темпа и офлайн-рендера. */
 export function engineAdapter() {
   return adapter;
+}
+
+let realm = null;
+/** Менеджер изолированного рендера: один на страницу, realm — на рендер. */
+function realmRenderer() {
+  if (!realm) realm = createRealmRenderer();
+  return realm;
 }
 
 let samplesPromise = null;
@@ -355,12 +339,15 @@ export function stop() {
 /**
  * Офлайн-рендер трека и отчёт о звучании (фаза 3).
  *
- * Рендер идёт в отдельном OfflineAudioContext (H3) и считается тем же
- * DSP-ядром, что звучит в реалтайме. Отчёт несёт паспорт происхождения:
- * версию движка, способ рендера и повторяемость (два прогона).
+ * Рендер изолирован в свежем iframe-realm на каждый прогон (E-020/D-143):
+ * глобальные пулы узлов superdough 1.3.0 не переживают уничтожение realm,
+ * поэтому быстрые последовательные рендеры не ловят cross-context connect.
+ * Живой контекст и контроллер студии рендер не трогает — живой трек
+ * продолжает звучать без восстановления. DSP и паспорт происхождения те же
+ * (инвариант D-104 проверяется зондом scripts/probe-render-realm.mjs).
  *
- * Честное ограничение: офлайн-рендер пересоздаёт контроллер superdough, поэтому
- * после рендера живой трек возвращается на место повторной оценкой кода.
+ * Сэмплы и пресеты Timbre realm грузит сам (банки — до готовности, пресеты —
+ * прогревом конкретных файлов); отказ — ошибка рендера, не тихая подмена.
  * Соло-рендеры партий требуют разметки партий в коде — это фаза 4.
  *
  * @param {{code?:string, bars?:[number,number], sampleRate?:number, cps?:number, runs?:number}} [options]
@@ -369,47 +356,26 @@ export function stop() {
 export async function renderTrackOffline({ code, bars = [0, 16], sampleRate = 48000, cps = 0.5, runs = 2 } = {}) {
   await initPromise;
   if (!initialized) throw new Error('Струдия не инициализирована');
-  // Сэмплы нужны ДО рендера: иначе ударные и пианино молчат
-  // («sound piano not found!») и отчёт меряет не тот трек, который слышен.
-  // Живое исполнение делает то же самое (см. evaluateCode).
-  await waitForSamples();
   const target = code ?? currentCode;
   if (!target) throw new Error('Нет кода для рендера');
-  // Пресеты Timbre (D-128): отказ прогрева — ошибка рендера (образец D-119).
-  if (target.includes('tp_')) {
-    const timbre = await ensureTimbreForCode(target, adapter);
-    if (!timbre.ok) {
-      throw new Error(`Пресеты тембра не загрузились: ${timbre.errors.join('; ')}`);
-    }
-  }
-  const restore = currentCode && currentCode !== target ? currentCode : null;
 
-  try {
-    return await renderAndMeasure({
-      render: async ({ fromCycle, toCycle, sampleRate: sr, cps: c }) => {
-        const buffer = await adapter.renderCodeOffline({
-          code: target,
-          fromCycle,
-          toCycle,
-          sampleRate: sr,
-          cps: c,
-        });
-        return { channels: audioBufferToChannels(buffer), sampleRate: sr };
-      },
-      bars,
-      sampleRate,
-      cps,
-      runs,
-    });
-  } finally {
-    if (restore) {
-      try {
-        await evaluateCode(restore);
-      } catch (error) {
-        console.warn('Живой трек не восстановлен после рендера:', error?.message || error);
-      }
-    }
+  // Каталог Timbre родитель отдаёт realm сам (кэш родителя): каждый свежий
+  // iframe не должен ходить в /api/timbre/catalog — лимитер 20 req/min.
+  // Отказ каталога — ошибка рендера (fail-closed, D-128).
+  let timbre = null;
+  if (target.includes('tp_')) {
+    const catalog = await fetchTimbreCatalog();
+    timbre = { sampleMap: catalog.sampleMap, presets: catalog.presets };
   }
+
+  return renderAndMeasure({
+    render: ({ fromCycle, toCycle, sampleRate: sr, cps: c }) =>
+      realmRenderer().render({ code: target, fromCycle, toCycle, sampleRate: sr, cps: c, timbre }),
+    bars,
+    sampleRate,
+    cps,
+    runs,
+  });
 }
 
 export function reset() {
