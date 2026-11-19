@@ -8,24 +8,23 @@
 //   • демон переживает обрыв связи (очередь не теряется).
 //
 // ЧТО МЕРЯЕТСЯ ЗДЕСЬ И ЧТО НЕТ.
-//   Измеримо на этой машине: рендер (Chrome есть), устойчивость очереди,
-//   побайтовое совпадение локального и серверного пути рендера.
-//   НЕ измеримо без Python-окружения владельца: разделение на стемы (Demucs
-//   требует numpy + torch + demucs). Там, где данных нет, пишется «нет данных»
-//   с указанием причины — а не ноль и не «работает».
+//   Измеряются рендер, устойчивость очереди и совпадение звука двух путей.
+//   Сепарация измеряется собственной задачей на синтетическом WAV, если
+//   Python-воркер сообщает доступность Demucs; один health не доказывает успех.
+//   Без результата задачи пишется «нет данных», а не ноль и не «работает».
 //
 // ЗАПУСК: node scripts/gate-b.mjs
 // Пишет отчёт: docs/evidence/agent/gate-b.json
 
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createDaemonClient } from '../local/client.mjs';
 import { createRenderWorker } from '../server/deepdive/render/render-worker.mjs';
+import { encodeWav } from '../src/core/wav.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
@@ -88,17 +87,39 @@ function readWavSync(filePath) {
 /**
  * Достаёт PCM из WAV (16 бит) — сравнивать надо звук, а не заголовок файла.
  * @param {Buffer} wav
- * @returns {Buffer}
+ * @returns {{pcm: Buffer, sampleRate: number, channels: number, frames: number}}
  */
 function pcmOf(wav) {
+  if (wav.length < 12 || wav.toString('ascii', 0, 4) !== 'RIFF' || wav.toString('ascii', 8, 12) !== 'WAVE') {
+    throw new Error('это не WAV-файл');
+  }
   let offset = 12;
-  while (offset < wav.length - 8) {
+  let format = null;
+  let pcm = null;
+  while (offset + 8 <= wav.length) {
     const id = wav.toString('ascii', offset, offset + 4);
     const size = wav.readUInt32LE(offset + 4);
-    if (id === 'data') return wav.subarray(offset + 8, offset + 8 + size);
+    if (offset + 8 + size > wav.length) throw new Error('обрезанный блок WAV');
+    if (id === 'fmt ') {
+      if (size < 16) throw new Error('неполный формат WAV');
+      const channels = wav.readUInt16LE(offset + 10);
+      const sampleRate = wav.readUInt32LE(offset + 12);
+      if (wav.readUInt16LE(offset + 8) !== 1 || wav.readUInt16LE(offset + 22) !== 16) {
+        throw new Error('поддерживается только signed PCM16');
+      }
+      if (!channels || !sampleRate || wav.readUInt16LE(offset + 20) !== channels * 2) {
+        throw new Error('неверный формат PCM16');
+      }
+      format = { channels, sampleRate };
+    } else if (id === 'data') {
+      pcm = wav.subarray(offset + 8, offset + 8 + size);
+    }
     offset += 8 + size + (size % 2);
   }
-  return wav.subarray(44);
+  if (!format || !pcm?.length || pcm.length % (format.channels * 2)) {
+    throw new Error('нет полных отсчётов PCM16');
+  }
+  return { pcm, ...format, frames: pcm.length / (format.channels * 2) };
 }
 
 /**
@@ -111,17 +132,27 @@ function pcmOf(wav) {
  * @param {Buffer|null} a
  * @param {Buffer|null} b
  */
-function compareAudio(a, b) {
-  if (!a || !b) return { maxAbsDiffNormalized: null, diffSamples: null, total: null };
-  const pa = pcmOf(a);
-  const pb = pcmOf(b);
-  if (pa.length !== pb.length) {
-    return { maxAbsDiffNormalized: null, diffSamples: null, total: pa.length, error: `разная длина: ${pa.length} против ${pb.length}` };
+export function compareAudio(a, b) {
+  const missing = { maxAbsDiffNormalized: null, diffSamples: null, total: null };
+  if (!a || !b) return missing;
+  let pa;
+  let pb;
+  try {
+    pa = pcmOf(a);
+    pb = pcmOf(b);
+  } catch (error) {
+    return { ...missing, error: error.message };
+  }
+  const total = pa.frames * pa.channels;
+  for (const field of ['sampleRate', 'channels', 'frames']) {
+    if (pa[field] !== pb[field]) {
+      return { ...missing, total, error: `разный ${field}: ${pa[field]} против ${pb[field]}` };
+    }
   }
   let max = 0;
   let diff = 0;
-  for (let i = 0; i < pa.length; i += 1) {
-    const d = Math.abs(pa[i] - pb[i]);
+  for (let i = 0; i < pa.pcm.length; i += 2) {
+    const d = Math.abs(pa.pcm.readInt16LE(i) - pb.pcm.readInt16LE(i));
     if (d > 0) diff += 1;
     if (d > max) max = d;
   }
@@ -129,14 +160,73 @@ function compareAudio(a, b) {
     maxAbsDiff: max,
     maxAbsDiffNormalized: max / 32768,
     diffSamples: diff,
-    total: pa.length,
-    relativeDiff: diff / pa.length,
+    total,
+    relativeDiff: diff / total,
   };
 }
 
+function sanitizedError(error) {
+  return String(error?.message || error || 'неизвестная ошибка')
+    .replaceAll(TOKEN, '[redacted]')
+    .replace(/(bearer\s+)[^\s"']+/gi, '$1[redacted]')
+    .replace(/((?:api[_-]?key|token|authorization|password|secret)\s*[:=]\s*)[^\s,;]+/gi, '$1[redacted]')
+    .replace(/:\/\/[^/\s@]+@/g, '://[redacted]@')
+    .replace(/\s+/g, ' ')
+    .slice(0, 400);
+}
+
+export function assessSeparation(analysis, task = null, wallMs = null, twinWallMs = null) {
+  let ok = null;
+  let reason = null;
+  let stemCount = null;
+  if (!analysis?.available) {
+    reason = `нет данных: ${sanitizedError(analysis?.reason || 'Python-воркер недоступен')}`;
+  } else if (!analysis.demucs_available) {
+    reason = 'нет данных: Python-воркер отвечает, но Demucs недоступен';
+  } else if (!task || !['done', 'error'].includes(task.state)) {
+    reason = 'нет данных: health не доказывает завершение задачи сепарации';
+  } else {
+    const result = task.result;
+    stemCount = ['drums', 'bass', 'vocals', 'other']
+      .filter((name) => typeof result?.stems?.[name] === 'string' && result.stems[name].trim()).length;
+    ok = task.state === 'done' && result?.ok === true && stemCount === 4
+      && Number.isFinite(wallMs) && wallMs >= 0
+      && Number.isFinite(result.seconds) && result.seconds >= 0;
+    if (!ok) reason = sanitizedError(task.error || 'сепарация не вернула 4 стема и измеренное время');
+  }
+  const firstTwinWallMs = ok && Number.isFinite(twinWallMs) && twinWallMs >= 0
+    ? wallMs + twinWallMs : null;
+  return {
+    ok,
+    reason,
+    stemCount,
+    firstTwinWallMs,
+    firstTwinOk: firstTwinWallMs === null ? null : firstTwinWallMs <= FIRST_TWIN_LIMIT_S * 1000,
+  };
+}
+
+function syntheticSeparationWav() {
+  const sampleRate = 44100;
+  const frames = 60 * sampleRate;
+  const left = new Float32Array(frames);
+  const right = new Float32Array(frames);
+  for (let i = 0; i < frames; i += 1) {
+    const t = i / sampleRate;
+    const beat = t % 0.5;
+    const kick = 0.2 * Math.exp(-beat * 30) * Math.sin(2 * Math.PI * 60 * t);
+    left[i] = kick + 0.1 * Math.sin(2 * Math.PI * 220 * t);
+    right[i] = kick + 0.1 * Math.sin(2 * Math.PI * 330 * t);
+  }
+  return Buffer.from(encodeWav([left, right], sampleRate));
+}
+
 async function main() {
-  const stateDir = path.join(ROOT, '.scratch', 'gate-b-state');
-  rmSync(stateDir, { recursive: true, force: true });
+  const outIndex = process.argv.indexOf('--out');
+  if (outIndex >= 0 && (!process.argv[outIndex + 1] || process.argv[outIndex + 1].startsWith('--'))) {
+    throw new Error('--out требует путь к отчёту');
+  }
+  const outPath = path.resolve(ROOT, outIndex >= 0 ? process.argv[outIndex + 1] : 'docs/evidence/agent/gate-b.json');
+  const stateDir = mkdtempSync(path.join(ROOT, '.scratch', 'gate-b-state-'));
 
   const daemon = spawn(process.execPath, ['local/daemon.mjs'], {
     cwd: ROOT,
@@ -152,7 +242,10 @@ async function main() {
   daemon.stdout.on('data', (chunk) => daemonLog.push(chunk.toString()));
   daemon.stderr.on('data', (chunk) => daemonLog.push(chunk.toString()));
 
-  const measured = {};
+  const measured = {
+    separation: { ok: null, reason: 'нет данных: задача сепарации не выполнялась' },
+    firstTwin: { ok: null, wallMs: null, reason: 'нет данных: сепарация 60 с + рендер 16 тактов не измерены' },
+  };
   try {
     // Ждём демона.
     const client = createDaemonClient({ baseUrl: BASE, token: TOKEN });
@@ -260,7 +353,7 @@ async function main() {
       check('файлы WAV побайтово идентичны', true, `sha256 ${serverSha.slice(0, 16)}…`);
     } else {
       note('файлы WAV побайтово идентичны',
-        `нет: sha256 разошёлся (${String(twinResult.wavSha256).slice(0, 12)}… против ${serverSha.slice(0, 12)}…). Причина измерена: смесь осциллятора и сэмпла расходится на 1 LSB (E-019). Допуск проекта соблюдён.`);
+        `нет: sha256 разошёлся (${String(twinResult.wavSha256).slice(0, 12)}… против ${serverSha.slice(0, 12)}…). ${audio.maxAbsDiffNormalized === null ? audio.error || 'нет данных о звуке' : `Измеренный maxAbsDiff = ${audio.maxAbsDiffNormalized.toExponential(2)} (допуск 1e-4)`}.`);
     }
 
     // --- 4. Очередь переживает обрыв связи ------------------------------
@@ -276,19 +369,83 @@ async function main() {
     measured.durability = durability;
     check('задача переживает перезапуск демона', durability.finalState === 'done',
       `восстановлено задач: ${durability.restored}, финальное состояние: ${durability.finalState}`);
+
+    // --- 5. Сепарация собственного 60-секундного WAV ---------------------
+    const analysis = measured.analysisWorker ?? {};
+    let separationTask = null;
+    let separationId = null;
+    let separationWallMs = null;
+    let separationError = null;
+    let inputPath = null;
+    if (analysis.available && analysis.demucs_available) {
+      let started = null;
+      try {
+        const separationDir = mkdtempSync(path.join(stateDir, 'separation-'));
+        inputPath = path.join(separationDir, 'synthetic-60s.wav');
+        const stemsDir = path.join(separationDir, 'stems');
+        writeFileSync(inputPath, syntheticSeparationWav());
+        started = Date.now();
+        const submitted = await client.submit('separate', {
+          path: inputPath, outDir: stemsDir, model: 'htdemucs', timeoutMs: 10 * 60 * 1000,
+        });
+        separationId = submitted.id;
+        separationTask = await waitDone(client, separationId);
+        separationWallMs = Date.now() - started;
+        if (separationTask.state === 'done') {
+          for (const name of ['drums', 'bass', 'vocals', 'other']) {
+            const stemPath = separationTask.result?.stems?.[name];
+            if (typeof stemPath !== 'string' || !stemPath.trim()) throw new Error(`нет стема ${name}`);
+            const relative = path.relative(stemsDir, stemPath);
+            if (!relative || relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+              throw new Error(`стем ${name} вне каталога задачи`);
+            }
+            const stat = statSync(stemPath);
+            if (!stat.isFile() || stat.size <= 44) throw new Error(`пустой стем ${name}`);
+          }
+        }
+      } catch (error) {
+        separationError = sanitizedError(error);
+        if (started !== null && separationWallMs === null) separationWallMs = Date.now() - started;
+      }
+    }
+    const assessment = assessSeparation(analysis,
+      separationError ? { ...separationTask, state: 'error', error: separationError } : separationTask,
+      separationWallMs, twinResult.wallMs);
+    const separationResult = separationTask?.result;
+    measured.separation = {
+      ok: assessment.ok,
+      reason: assessment.reason,
+      taskId: separationId,
+      state: separationTask?.state ?? null,
+      wallMs: separationWallMs,
+      separationMs: Number.isFinite(separationResult?.seconds) ? separationResult.seconds * 1000 : null,
+      model: separationResult?.model ?? null,
+      requestedModel: 'htdemucs',
+      stemCount: assessment.stemCount,
+      input: inputPath ? { path: inputPath, kind: 'synthetic', durationS: 60, channels: 2, sampleRate: 44100 } : null,
+    };
+    measured.firstTwin = {
+      ok: assessment.firstTwinOk,
+      wallMs: assessment.firstTwinWallMs,
+      reason: assessment.firstTwinWallMs === null
+        ? assessment.reason || 'нет данных: время рендера 16 тактов недоступно' : null,
+    };
+    if (assessment.ok === null) {
+      note('сепарация 60 с не измерена', assessment.reason);
+    } else {
+      check('сепарация 60 с завершилась с 4 стемами', assessment.ok,
+        assessment.reason || `${separationResult.model}, ${assessment.stemCount} стема за ${(separationWallMs / 1000).toFixed(1)} с wall; сепарация ${separationResult.seconds} с`);
+    }
+    if (assessment.firstTwinOk === null) {
+      note('first-twin (сепарация 60 с + рендер 16 тактов) не измерен', measured.firstTwin.reason);
+    } else {
+      check('first-twin (сепарация 60 с + рендер 16 тактов) укладывается в 7 минут', assessment.firstTwinOk,
+        `${(assessment.firstTwinWallMs / 1000).toFixed(1)} с из ${FIRST_TWIN_LIMIT_S} с`);
+    }
   } catch (err) {
-    check('гейт выполнен без исключений', false, err?.message || String(err));
+    check('гейт выполнен без исключений', false, sanitizedError(err));
   } finally {
     daemon.kill('SIGTERM');
-  }
-
-  // --- 5. Разделение на стемы: данных нет ------------------------------
-  const analysis = measured.analysisWorker ?? {};
-  if (analysis.available) {
-    check('разделение на стемы доступно на этой машине', true, 'Python-воркер отвечает');
-  } else {
-    note('разделение на стемы не измерено',
-      `${analysis.reason ?? 'Python-воркер недоступен'} — нужны numpy, torch и demucs (D-097, машина владельца)`);
   }
 
   const failed = checks.filter((item) => item.ok === false);
@@ -302,21 +459,19 @@ async function main() {
       serverFullTrackSeconds: SERVER_4MIN_SECONDS,
     },
     notMeasured: {
-      separation: analysis.available
-        ? null
-        : 'нет данных: Python-воркер (numpy + torch + demucs) на этой машине не запущен; требуется окружение владельца (D-097)',
+      separation: measured.separation.ok === null ? measured.separation.reason : null,
+      firstTwin: measured.firstTwin.ok === null ? measured.firstTwin.reason : null,
     },
     passed: checks.filter((item) => item.ok === true).length,
     total: checks.length,
     checks,
     measured,
   };
-  const outDir = path.join(ROOT, 'docs', 'evidence', 'agent');
-  mkdirSync(outDir, { recursive: true });
-  writeFileSync(path.join(outDir, 'gate-b.json'), `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+  mkdirSync(path.dirname(outPath), { recursive: true });
+  writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 
   console.log(`\nГейт B: ${checks.filter((item) => item.ok === true).length}/${checks.length} проверок прошли`);
-  console.log('Отчёт: docs/evidence/agent/gate-b.json');
+  console.log(`Отчёт: ${outPath}`);
   if (failed.length) process.exit(1);
 }
 
@@ -401,7 +556,9 @@ async function checkDurability({ code, spawnDaemon, stateDir, port, token }) {
   };
 }
 
-main().catch((error) => {
-  console.error('✗ гейт B упал:', error?.message || error);
-  process.exit(1);
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error('✗ гейт B упал:', sanitizedError(error));
+    process.exit(1);
+  });
+}

@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-18T21:58:01.187Z",
+  "node": "v24.14.1",
+  "source": "own synthetic signal, not a music-quality benchmark",
+  "checks": {},
+  "stages": [
+    {
+      "tool": "analyze_reference",
+      "ok": false,
+      "ms": 518.7,
+      "reason": "Локальный анализ референса не завершён; данных нет. Подробности доступны в локальной очереди. Отмена ожидания не удаляет задачу."
+    },
+    {
+      "tool": "compose_spec",
+      "ok": true,
+      "ms": 90.6,
+      "reason": null
+    },
+    {
+      "tool": "compile",
+      "ok": true,
+      "ms": 2.3,
+      "reason": null
+    }
+  ],
+  "model": "scripted mock, real tools and Python/Demucs",
+  "analysis": {
+    "available": true,
+    "reason": null,
+    "demucs_available": true,
+    "separation_model": "htdemucs",
+    "python": "3.12.16"
+  },
+  "wallMs": 613,
+  "fallbackComposed": true,
+  "processFailureCode": null,
+  "resourceRefusal": true,
+  "availableCommitMb": 1233,
+  "error": "[{\"tool\":\"analyze_reference\",\"ok\":false,\"ms\":518.7,\"reason\":\"Локальный анализ референса не завершён; данных нет. Подробности доступны в локальной очереди. Отмена ожидания не удаляет задачу.\"},{\"tool\":\"compose_spec\",\"ok\":true,\"ms\":90.6,\"reason\":null},{\"tool\":\"compile\",\"ok\":true,\"ms\":2.3,\"reason\":null}]"
+}

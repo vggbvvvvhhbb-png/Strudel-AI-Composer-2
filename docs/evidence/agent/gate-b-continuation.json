@@ -1,0 +1,201 @@
+{
+  "checkedAt": "2026-11-18T22:01:58.840Z",
+  "gate": "B — local-first",
+  "machine": {
+    "platform": "win32",
+    "arch": "x64",
+    "cpus": 12,
+    "totalMemMb": 16231,
+    "node": "v24.14.1"
+  },
+  "limits": {
+    "firstTwinSeconds": 420,
+    "fullTrackSeconds": 900,
+    "serverFullTrackSeconds": 3384
+  },
+  "notMeasured": {
+    "separation": null,
+    "firstTwin": "RuntimeError: Demucs не запущен: запас commit memory Windows 903 МБ, нужно не менее 3072 МБ. Закройте ненужные приложения и повторите задачу; наличие CUDA не гарантирует запас памяти."
+  },
+  "passed": 10,
+  "total": 13,
+  "checks": [
+    {
+      "name": "демон поднялся и отвечает",
+      "ok": true,
+      "detail": "win32/x64, 12 CPU, 16231 МБ RAM"
+    },
+    {
+      "name": "демон без токена не отвечает",
+      "ok": true,
+      "detail": "HTTP 401 без Authorization"
+    },
+    {
+      "name": "рендер 16 тактов выполнен",
+      "ok": true,
+      "detail": "32 с аудио за 1.7 с wall (18.4× realtime)"
+    },
+    {
+      "name": "рендер 16 тактов укладывается в 7 минут (без учёта сепарации)",
+      "ok": true,
+      "detail": "1.7 с из 420 с"
+    },
+    {
+      "name": "в паспорте рендера есть fingerprint",
+      "ok": true,
+      "detail": "code_sha256 7d0cb5897b3a…, движок strudel-web@1.3.0/superdough@1.3.0"
+    },
+    {
+      "name": "полный 4-минутный трек укладывается в 15 минут",
+      "ok": true,
+      "detail": "49.6 с из 900 с"
+    },
+    {
+      "name": "локальный рендер быстрее серверного замера",
+      "ok": true,
+      "detail": "49.6 с против 56.4 мин на сервере — в 68.2 раза быстрее"
+    },
+    {
+      "name": "звук локального и серверного рендера совпадает в пределах допуска проекта",
+      "ok": true,
+      "detail": "maxAbsDiff = 3.05e-5 (допуск 1e-4), отличается сэмплов: 994 из 3072000"
+    },
+    {
+      "name": "паспорта рендера совпадают по движку, частоте и коду",
+      "ok": true,
+      "detail": "движок strudel-web@1.3.0/superdough@1.3.0, частота 48000 Гц, код 7d0cb5897b3a…"
+    },
+    {
+      "name": "файлы WAV побайтово идентичны",
+      "ok": null,
+      "detail": "нет: sha256 разошёлся (d545e8c4b3e4… против 15102a037daa…). Измеренный maxAbsDiff = 3.05e-5 (допуск 1e-4).",
+      "note": "нет данных"
+    },
+    {
+      "name": "задача переживает перезапуск демона",
+      "ok": true,
+      "detail": "восстановлено задач: 1, финальное состояние: done"
+    },
+    {
+      "name": "сепарация 60 с завершилась с 4 стемами",
+      "ok": false,
+      "detail": "RuntimeError: Demucs не запущен: запас commit memory Windows 903 МБ, нужно не менее 3072 МБ. Закройте ненужные приложения и повторите задачу; наличие CUDA не гарантирует запас памяти."
+    },
+    {
+      "name": "first-twin (сепарация 60 с + рендер 16 тактов) не измерен",
+      "ok": null,
+      "detail": "RuntimeError: Demucs не запущен: запас commit memory Windows 903 МБ, нужно не менее 3072 МБ. Закройте ненужные приложения и повторите задачу; наличие CUDA не гарантирует запас памяти.",
+      "note": "нет данных"
+    }
+  ],
+  "measured": {
+    "separation": {
+      "ok": false,
+      "reason": "RuntimeError: Demucs не запущен: запас commit memory Windows 903 МБ, нужно не менее 3072 МБ. Закройте ненужные приложения и повторите задачу; наличие CUDA не гарантирует запас памяти.",
+      "taskId": "92a2783d-10ec-4970-bb37-011115f2c742",
+      "state": "error",
+      "wallMs": 271,
+      "separationMs": null,
+      "model": null,
+      "requestedModel": "htdemucs",
+      "stemCount": 0,
+      "input": {
+        "path": "F:\\ГЕНЕРАЦИЯ ФОТОК\\Новая папка\\Strudel AI Composer\\.scratch\\gate-b-state-OjnQB7\\separation-dN4Bkt\\synthetic-60s.wav",
+        "kind": "synthetic",
+        "durationS": 60,
+        "channels": 2,
+        "sampleRate": 44100
+      }
+    },
+    "firstTwin": {
+      "ok": null,
+      "wallMs": null,
+      "reason": "RuntimeError: Demucs не запущен: запас commit memory Windows 903 МБ, нужно не менее 3072 МБ. Закройте ненужные приложения и повторите задачу; наличие CUDA не гарантирует запас памяти."
+    },
+    "machine": {
+      "platform": "win32",
+      "arch": "x64",
+      "cpus": 12,
+      "totalMemMb": 16231,
+      "node": "v24.14.1"
+    },
+    "analysisWorker": {
+      "available": true,
+      "reason": null,
+      "demucs_available": true,
+      "separation_model": "htdemucs",
+      "python": "3.12.16"
+    },
+    "twin": {
+      "wallMs": 1741,
+      "renderMs": 1530,
+      "durationS": 32,
+      "wavBytes": 6144044,
+      "wavSha256": "d545e8c4b3e45f1be2d40456637df81fd28a93bf2fe9bd900c29e87021c73c32",
+      "fingerprint": {
+        "browser": "chromium",
+        "browser_version": "131.0.6778.33",
+        "os": "win32",
+        "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+        "sample_rate": 48000,
+        "code_sha256": "7d0cb5897b3a971c5eb01a7ddffdd094a194270c7ab94709d2c9ea5dcf050923",
+        "seed": 1592598566,
+        "render_policy": "seeded-ir-v2"
+      }
+    },
+    "fullTrack": {
+      "wallMs": 49616,
+      "durationS": 240,
+      "wavBytes": 46080044,
+      "wavSha256": "1e0af08bd9b3875b6545cb70f1b18154606d7336dc0067d304cd2a31134f3810",
+      "realtimeFactor": 4.837149306675266
+    },
+    "speedupVsServer": 68.20380522412125,
+    "bitExact": {
+      "localSha256": "d545e8c4b3e45f1be2d40456637df81fd28a93bf2fe9bd900c29e87021c73c32",
+      "serverSha256": "15102a037daa77fa31f97feccc08cdc438a02bff3b20eac4b3b6d0d6797c0bde",
+      "audio": {
+        "maxAbsDiff": 1,
+        "maxAbsDiffNormalized": 0.000030517578125,
+        "diffSamples": 994,
+        "total": 3072000,
+        "relativeDiff": 0.0003235677083333333
+      },
+      "localFingerprint": {
+        "browser": "chromium",
+        "browser_version": "131.0.6778.33",
+        "os": "win32",
+        "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+        "sample_rate": 48000,
+        "code_sha256": "7d0cb5897b3a971c5eb01a7ddffdd094a194270c7ab94709d2c9ea5dcf050923",
+        "seed": 1592598566,
+        "render_policy": "seeded-ir-v2"
+      },
+      "serverFingerprint": {
+        "browser": "chromium",
+        "browser_version": "158.0.8127.36",
+        "os": "win32",
+        "engine_version": "strudel-web@1.3.0/superdough@1.3.0",
+        "sample_rate": 48000,
+        "code_sha256": "7d0cb5897b3a971c5eb01a7ddffdd094a194270c7ab94709d2c9ea5dcf050923",
+        "seed": 1592598566,
+        "render_policy": "seeded-ir-v2"
+      },
+      "tolerance": {
+        "maxAbsDiff": 0.0001,
+        "project": "docs/BRIEF.md:73"
+      }
+    },
+    "durability": {
+      "restored": 1,
+      "finalState": "done",
+      "taskId": "cd3d7506-be80-4c8d-9909-c31adc506bae",
+      "log": [
+        "[local] после перезапуска возвращено задач: 1",
+        "[local] задача cd3d7506-be80-4c8d-9909-c31adc506bae в работе",
+        "[local] демон слушает http://127.0.0.1:3226 (очередь: F:\\ГЕНЕРАЦИЯ ФОТОК\\Новая папка\\Strudel AI Composer\\.scratch\\gate-b-state-OjnQB7\\durability)",
+        "[local] задача cd3d7506-be80-4c8d-9909-c31adc506bae готова"
+      ]
+    }
+  }
+}

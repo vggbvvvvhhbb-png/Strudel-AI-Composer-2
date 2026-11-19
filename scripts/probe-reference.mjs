@@ -12,6 +12,9 @@ import { fallbackSpec } from '../server/music/compose/pipeline.js';
 import { encodeWav } from '../src/core/wav.js';
 import { runStrudel } from '../server/music/strudel-runtime.mjs';
 
+const outputIndex = process.argv.indexOf('--out');
+const evidence = resolve(outputIndex < 0 ? 'docs/evidence/agent/reference-probe.json' : process.argv[outputIndex + 1] ?? '');
+if (outputIndex >= 0 && !process.argv[outputIndex + 1]) throw new Error('--out требует путь к evidence JSON');
 const workspace = await mkdtemp(resolve('.scratch/reference-probe-'));
 const token = randomBytes(24).toString('hex');
 const report = { date: new Date().toISOString(), node: process.version, source: 'own synthetic signal, not a music-quality benchmark', checks: {}, stages: [], model: 'scripted mock, real tools and Python/Demucs' };
@@ -69,7 +72,11 @@ try {
   report.wallMs = Math.round(performance.now() - started);
   report.fallbackComposed = Boolean(final?.bag?.spec);
   const failed = daemon.queue.list().find(task => task.type === 'analyze_reference' && task.state === 'error');
-  if (failed) report.processFailureCode = /кодом (\d+)/.exec(failed.error ?? '')?.[1] ?? null;
+  if (failed) {
+    report.processFailureCode = /кодом (\d+)/.exec(failed.error ?? '')?.[1] ?? null;
+    report.resourceRefusal = /commit memory Windows/.test(failed.error ?? '');
+    report.availableCommitMb = Number(/commit memory Windows (\d+) МБ/.exec(failed.error ?? '')?.[1]) || null;
+  }
   assert.ok(report.stages.every(s => s.ok), JSON.stringify(report.stages));
   assert.ok(final.bag.reference?.passport);
   assert.ok(referencePresent && guidePresent);
@@ -90,8 +97,10 @@ try {
   report.error = String(error.message);
   process.exitCode = 1;
 } finally {
-  if (daemon) await new Promise(resolve => daemon.server.close(resolve));
-  const evidence = resolve('docs/evidence/agent/reference-probe.json');
+  if (daemon) {
+    await daemon.registry.close();
+    await new Promise(resolve => daemon.server.close(resolve));
+  }
   await writeFile(evidence, JSON.stringify(report, null, 2));
   console.log(JSON.stringify({ checks: report.checks, stages: report.stages, wallMs: report.wallMs, error: report.error ?? null, evidence }, null, 2));
   await rm(workspace, { recursive: true, force: true });

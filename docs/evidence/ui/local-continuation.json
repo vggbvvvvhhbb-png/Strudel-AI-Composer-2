@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-19",
+  "environment": "Vite 5177 + isolated MOCK_LLM backend 3117 + authenticated daemon 3213; real Chromium renderer",
+  "checks": {
+    "authenticatedDaemonConnected": true,
+    "unauthenticatedDaemonHttpStatus": 401,
+    "renderTaskState": "done",
+    "renderDurationS": 32,
+    "renderWallMs": 1963,
+    "renderAudioPlaySucceeded": true,
+    "audioReadyState": 4,
+    "audioError": null,
+    "emptyEditorRefusesNewRender": true,
+    "queuePersistsAfterReload": true,
+    "codeOnlyVerdictDoesNotClaimAudioClean": true,
+    "clippingWarningPreserved": true,
+    "consoleErrorsAndWarnings": 0
+  },
+  "caveats": [
+    "No human music-quality assessment performed.",
+    "Mock composition reports 144 clipped samples and 0.28 dBTP; it is not L0-certified.",
+    "Python availability does not imply separation success.",
+    "Existing backend 3001 and worker 8010 were not terminated or restarted."
+  ]
+}
