@@ -5,6 +5,7 @@
 // что звучит (queryArc), а не текст.
 
 import { staticValidate, parseErrorLocation } from '../../src/core/validator.js';
+import { checkRules } from '../../src/core/rules.js';
 import { runStrudel } from '../music/strudel-runtime.mjs';
 import { normalizeTonic, pitchClassOfNote, scalePitchClasses } from './music-check.js';
 import { getKey } from '../../src/core/code-model.js';
@@ -39,21 +40,22 @@ export function extractSoundNames(code) {
  * Полная валидация кода.
  * @param {string} code
  * @param {{catalog: object, voice?: object, cycles?: number, key?: {tonic: string, mode: string}}} opts
- * @returns {Promise<{ok: boolean, errors: object[], stats: object}>}
+ * @returns {Promise<{ok: boolean, errors: object[], warnings: object[], stats: object}>}
  */
 export async function validateGeneratedCode(code, { catalog, voice = loadVoiceRules(), cycles = 8, key = null }) {
   const errors = [];
+  const warnings = [];
   const stat = staticValidate(code);
   if (!stat.ok) {
     errors.push({ class: 'syntax', line: stat.error?.line ?? 0, message: stat.error?.message || 'синтаксическая ошибка' });
-    return { ok: false, errors, stats: { parts: 0, events: 0 } };
+    return { ok: false, errors, warnings, stats: { parts: 0, events: 0 } };
   }
 
   const run = await runStrudel(code, { cycles });
   if (!run.ok) {
     const loc = parseErrorLocation(run.error, code);
     errors.push({ class: 'runtime', line: loc.line, message: loc.message });
-    return { ok: false, errors, stats: { parts: run.order.length, events: 0 } };
+    return { ok: false, errors, warnings, stats: { parts: run.order.length, events: 0 } };
   }
 
   let events = 0;
@@ -61,6 +63,16 @@ export async function validateGeneratedCode(code, { catalog, voice = loadVoiceRu
     const n = run.parts[part].length;
     events += n;
     if (n === 0) errors.push({ class: 'empty-part', part, message: `партия ${part} не даёт событий` });
+  }
+
+  // Правила линтера R1–R7: ловят «тихие пустоты» — код исполняется, а звука нет.
+  // Ошибка правила = код чинить; предупреждение = код играет не так, как читается.
+  const rules = checkRules(code);
+  for (const finding of rules.errors) {
+    errors.push({ class: 'rule', id: finding.id, line: finding.line, message: finding.message });
+  }
+  for (const finding of rules.warnings) {
+    warnings.push({ class: 'rule', id: finding.id, line: finding.line, message: finding.message });
   }
 
   // Принадлежность ладу: по звучащим высотам, с номером такта.
@@ -95,7 +107,7 @@ export async function validateGeneratedCode(code, { catalog, voice = loadVoiceRu
     }
   }
 
-  return { ok: errors.length === 0, errors, stats: { parts: run.order.length, events, cycles } };
+  return { ok: errors.length === 0, errors, warnings, stats: { parts: run.order.length, events, cycles } };
 }
 
 /** Структурный фидбек модели по ошибкам валидации (русский, с тактами). */
