@@ -199,6 +199,33 @@ def _venv_python() -> str:
     return sys.executable
 
 
+def _check_separation_memory() -> None:
+    if os.name != "nt":
+        return
+    import ctypes
+    from ctypes import wintypes
+
+    class MemoryStatus(ctypes.Structure):
+        _fields_ = [("length", wintypes.DWORD), ("load", wintypes.DWORD)] + [
+            (name, ctypes.c_ulonglong) for name in (
+                "total_physical", "available_physical", "total_commit", "available_commit",
+                "total_virtual", "available_virtual", "available_extended_virtual",
+            )
+        ]
+
+    status = MemoryStatus()
+    status.length = ctypes.sizeof(status)
+    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+        raise RuntimeError("не удалось проверить запас commit memory Windows перед Demucs")
+    available_mb = status.available_commit // (1024 * 1024)
+    # Свободная физическая RAM не отражает оставшийся лимит выделения памяти Windows.
+    if available_mb < 3072:
+        raise RuntimeError(
+            f"Demucs не запущен: запас commit memory Windows {available_mb} МБ, нужно не менее 3072 МБ. "
+            "Закройте ненужные приложения и повторите задачу; наличие CUDA не гарантирует запас памяти."
+        )
+
+
 def handle_separate(body: dict) -> dict:
     path = _require_file(body.get("path"))
     model = str(body.get("model") or "htdemucs")
@@ -209,12 +236,13 @@ def handle_separate(body: dict) -> dict:
     out_path.mkdir(parents=True, exist_ok=True)
 
     python = _venv_python()
-    command = [python, "-m", "demucs", "-n", model, "-o", str(out_path), path]
+    command = [python, "-X", "faulthandler", "-m", "demucs", "-n", model, "-o", str(out_path), path]
     started = time.time()
     try:
         # Мьютекс держим ВОКРУГ запуска Demucs: ровно то время, когда память
         # занята по-настоящему.
         with heavy_lock() as locked:
+            _check_separation_memory()
             if locked:
                 sys.stderr.write(
                     json.dumps(
@@ -225,16 +253,18 @@ def handle_separate(body: dict) -> dict:
                 )
                 sys.stderr.flush()
             completed = subprocess.run(
-                command, capture_output=True, text=True, timeout=7200, check=False
+                command, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                env={**os.environ, "PYTHONIOENCODING": "utf-8"}, timeout=7200, check=False
             )
     except FileNotFoundError as exc:
         raise RuntimeError(f"не найден интерпретатор для demucs: {python}") from exc
     except subprocess.TimeoutExpired as exc:
         raise RuntimeError("demucs не уложился в таймаут 7200 с") from exc
 
+    (out_path / "demucs.stderr.log").write_text(completed.stderr or "", encoding="utf-8")
     if completed.returncode != 0:
         tail = (completed.stderr or completed.stdout or "")[-800:]
-        raise RuntimeError(f"demucs завершился с кодом {completed.returncode}: {tail}")
+        raise RuntimeError(f"demucs завершился с кодом {completed.returncode}: {tail}; полный stderr: demucs.stderr.log в out_dir")
 
     found: dict = {}
     for stem in ("drums", "bass", "vocals", "other"):
