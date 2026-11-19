@@ -334,7 +334,7 @@ describe('knowledge: кривые автоматизации', () => {
         const curve = CURVES[name](style, 8);
         expect(curve).toBeTruthy();
         expect(curve.kind).toBe('signal');
-        expect(['sine', 'perlin', 'saw']).toContain(curve.signal);
+        expect(['sine', 'perlin', 'saw', 'time']).toContain(curve.signal);
         expect(curve.slow).toBeGreaterThanOrEqual(1);
         expect(curve.range).toHaveLength(2);
         // Диапазон всегда по возрастанию; направление задаётся отдельно.
@@ -356,7 +356,7 @@ describe('knowledge: кривые автоматизации', () => {
   it('сигналы из белого списка Strudel', () => {
     for (const name of CURVE_NAMES) {
       const curve = CURVES[name]('techno', 8);
-      expect(['sine', 'perlin', 'saw', 'triangle']).toContain(curve.signal);
+      expect(['sine', 'perlin', 'saw', 'triangle', 'time']).toContain(curve.signal);
     }
   });
 

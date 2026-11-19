@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-19T01:48:12.012Z",
+  "measuredAt": "2026-11-19T10:01:46.971Z",
   "package": "@strudel/web",
   "version": "1.3.0",
   "api": {
@@ -969,6 +969,58 @@
     ],
     "error": null
   },
+  "ramps": {
+    "sine": {
+      "ok": true,
+      "cutoffs": [
+        2100,
+        2100,
+        2100,
+        2100
+      ],
+      "turns": 0
+    },
+    "sineSlow": {
+      "ok": true,
+      "cutoffs": [
+        2100,
+        3444,
+        4000,
+        3444
+      ],
+      "turns": 1
+    },
+    "time": {
+      "ok": true,
+      "cutoffs": [
+        200,
+        4000,
+        7800,
+        11600
+      ],
+      "turns": 0
+    },
+    "timeSlow": {
+      "ok": true,
+      "cutoffs": [
+        200,
+        675,
+        1150,
+        1625
+      ],
+      "turns": 0
+    },
+    "sawSlow": {
+      "ok": true,
+      "cutoffs": [
+        200,
+        675,
+        1150,
+        1625
+      ],
+      "turns": 0
+    }
+  },
   "tempo": {
     "nodeHasSetCpm": false,
     "nodeHasSetcps": false,
@@ -1024,8 +1076,8 @@
     },
     {
       "name": "supersaw",
-      "lufsI": -26.11807550147583,
-      "truePeakDbtp": -15.196970679479072,
+      "lufsI": -26.040509741592135,
+      "truePeakDbtp": -16.63809825122898,
       "events": 2,
       "error": null
     },

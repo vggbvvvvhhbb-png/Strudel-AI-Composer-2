@@ -1,12 +1,19 @@
 // Рецепты автоматизации: кривые движения параметров.
 //
 // Автоматизация в Strudel — это СИГНАЛ в аргументе метода:
-//   .gain(sine.slow(8).range(0.2, 0.9))
-//   .lpf(perlin.range(300, 4000))
+//   .gain(time.slow(8).range(0.2, 0.9))
+//   .lpf(time.slow(8).range(300, 4000))
 //
 // Статичное .gain(0.5) — не автоматизация: параметр не меняется.
 // Доля автоматизации считается по значениям событий (см. DECISIONS.md D-008),
 // поэтому здесь важно, чтобы сигнал действительно менялся.
+//
+// ПОЧЕМУ time, А НЕ sine (измерено, E-042, реестр фактов §7):
+//   sine.slow(N) за N тактов проходит ПОЛНЫЙ период синуса — срез фильтра
+//   открывается и снова закрывается (3650 → 7000 → 300 Гц, две смены
+//   направления). time.slow(N) идёт в одну сторону и остаётся в диапазоне
+//   (300 → 6581 Гц, ноль смен направления). Для «дыхания» громкости, где
+//   колебание и нужно, остаётся perlin (кривая motion).
 //
 // Диапазоны по стилям: у EDM-стилей размах больше, у lofi/ambient — уже.
 
@@ -44,17 +51,17 @@ export const CURVE_RANGES = {
 export const CURVES = {
   sweep: (style, barsLen) => {
     const [from, to] = rangeFor(style, 'sweep');
-    return signal('sine', Math.max(1, barsLen), [from, to]);
+    return signal('time', Math.max(1, barsLen), [from, to]);
   },
   swell: (style, barsLen) => {
     const [from, to] = rangeFor(style, 'swell');
-    return signal('sine', Math.max(1, barsLen), [from, to]);
+    return signal('time', Math.max(1, barsLen), [from, to]);
   },
   fade: (style, barsLen) => {
     const [from, to] = rangeFor(style, 'fade');
     // Диапазон всегда по возрастанию, направление задаётся отдельно:
     // затухание идёт от большего к меньшему.
-    return signal('sine', Math.max(1, barsLen), [to, from], 'down');
+    return signal('time', Math.max(1, barsLen), [to, from], 'down');
   },
   motion: (style, barsLen) => {
     const [from, to] = rangeFor(style, 'motion');
