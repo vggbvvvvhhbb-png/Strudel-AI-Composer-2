@@ -14,8 +14,8 @@ const errorsOf = (code) => checkRules(code).errors;
 const warningsOf = (code) => checkRules(code).warnings;
 
 describe('реестр правил', () => {
-  it('все семь правил на месте и с уровнями', () => {
-    expect(RULES.map((r) => r.id)).toEqual(['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']);
+  it('все восемь правил на месте и с уровнями', () => {
+    expect(RULES.map((r) => r.id)).toEqual(['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8']);
     for (const rule of RULES) {
       expect(['error', 'warn']).toContain(rule.level);
       expect(rule.title.length).toBeGreaterThan(0);
@@ -118,6 +118,13 @@ describe('R2 — аккорд без .voicing()', () => {
     expect(fixed).toContain('note("<[a3,c4,e4] [f3,a3,c4]>")');
     expect(ids(fixed)).not.toContain('R2');
   });
+
+  it('НЕ ругается на последовательность символов аккордов (D-161)', () => {
+    // Замер: chord("<Cm Ab>").voicing() → 9 событий, 9 нот; движок понимает.
+    expect(ids('$CHORDS: chord("<Cm Ab>").voicing()')).not.toContain('R2');
+    expect(ids('$CHORDS: chord("<Am7 FM7 CM7 G6>").voicing()')).not.toContain('R2');
+    expect(ids('$CHORDS: chord("Cm").voicing()')).not.toContain('R2');
+  });
 });
 
 describe('R3 — регистр имени функции', () => {
@@ -195,6 +202,34 @@ describe('R7 — duck без жертвы на орбите', () => {
   it('не ловит duckorbit при наличии жертвы', () => {
     const code = '$KICK: s("bd*4").duckorbit(2).duckattack(0.2)\n$BASS: note("c2").s("sine").orbit(2)';
     expect(ids(code)).not.toContain('R7');
+  });
+});
+
+describe('R8 — колебательный сигнал вместо рампы', () => {
+  it('ловит быстрый sine.range в фильтре', () => {
+    const res = warningsOf('$MEL: note("c4").s("sawtooth").lpf(sine.range(200,4000))');
+    expect(res.map((w) => w.id)).toContain('R8');
+    expect(res.find((w) => w.id === 'R8').message).toMatch(/time\.range/);
+  });
+
+  it('ловит perlin.range в фильтре', () => {
+    expect(ids('$MEL: note("c4").s("sawtooth").lpf(perlin.range(300,4000))')).toContain('R8');
+  });
+
+  it('не ловит настоящий рамп time.range', () => {
+    expect(ids('$MEL: note("c4").s("sawtooth").lpf(time.range(200,4000))')).not.toContain('R8');
+  });
+
+  it('не ловит осознанно замедленный сигнал .slow()', () => {
+    expect(ids('$MEL: note("c4").s("sawtooth").lpf(sine.slow(8).range(200,4000)).seg(16)')).not.toContain('R8');
+  });
+
+  it('не ловит обычное число в фильтре', () => {
+    expect(ids('$MEL: note("c4").lpf(1200)')).not.toContain('R8');
+  });
+
+  it('не ловит сигнал в gain (там колебание — законный приём)', () => {
+    expect(ids('$MEL: note("c4").gain(sine.range(0.2,0.8))')).not.toContain('R8');
   });
 });
 

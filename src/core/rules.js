@@ -64,6 +64,9 @@ export const MEASURED_NAMES = new Set([
   'cps', 'cpm', 'gain', 'room', 'size', 'lpf', 'hpf', 'bpf', 'attack', 'decay',
   'sustain', 'release', 'slow', 'fast', 'every', 'off', 'when', 'often',
   'sometimes', 'struct', 'mask', 'arrange', 'silence', 'press', 'legato',
+  // Сигналы-генераторы (измерены как рабочие, §7 реестра фактов):
+  // time — монотонная ось для рампов, saw — пилообразный рамп.
+  'time', 'saw',
 ]);
 
 /** Сигналы Strudel: значение читается один раз на ноту, если не задан .seg(). */
@@ -213,7 +216,7 @@ function ruleChordVoicing(code) {
     while ((m = chordRe.exec(part.text)) !== null) {
       const spelling = m[1];
       const line = lineOfMatch(code, part.start + m.index);
-      const isNoteList = /[\s<>]/.test(spelling);
+      const isNoteList = isNoteListSpelling(spelling);
 
       if (isNoteList) {
         const fixed = fixNoteListChord(spelling);
@@ -250,6 +253,26 @@ function ruleChordVoicing(code) {
     }
   }
   return findings;
+}
+
+/**
+ * Список НОТ или последовательность СИМВОЛОВ аккордов?
+ *
+ * Замер (E-043):
+ *   chord("Cm")                        → 10 событий, 10 нот — работает;
+ *   chord("<Cm Ab>").voicing()         → 9 событий, 9 нот — работает;
+ *   chord("<Am7 FM7 CM7 G6>").voicing()→ 10 событий с нотами — работает;
+ *   chord("<a3 c4 e4>").voicing()      → 0 событий («unknown chord a3») — тишина.
+ *
+ * Значит список нот — это когда ВСЕ токены похожи на высоты (a3, c4, eb4, f#3).
+ * Символы аккордов (Cm, Ab, Am7, F^7, G6) нотами не являются: прежняя проверка
+ * «есть пробел или угловые скобки» ругалась на рабочую форму, которой полон
+ * корпус знаний (D-161).
+ */
+function isNoteListSpelling(spelling) {
+  const tokens = String(spelling || '').replace(/[<>]/g, ' ').split(/\s+/).filter(Boolean);
+  if (!tokens.length) return false;
+  return tokens.every((token) => /^[a-g](#|b)?\d+$/.test(token));
 }
 
 /**
@@ -407,6 +430,52 @@ function ruleDuckWithoutTarget(code) {
   return findings;
 }
 
+/**
+ * R8 — колебательный сигнал вместо рампы в фильтре.
+ *
+ * ЗАМЕР (E-042, docs/evidence/music/filter-ramp-2026-11-19.json):
+ *   .lpf(sine.range(200,4000))        → срез 2100 → 2827 → 3444 → 3855 → 4000 → 3855 → 2100:
+ *                                      две смены направления, центроид стоит (193 → 193 Гц),
+ *                                      верхняя полоса падает (−2.9 дБ). Фильтр НЕ открывается.
+ *   .lpf(time.range(200,4000))        → срез 200 → 4000 монотонно, центроид 97 → 253 Гц,
+ *                                      верхняя полоса +51.8 дБ. Это настоящий рамп.
+ *   .lpf(sine.slow(8).range(...))     → монотонно в пределах окна (0 смен направления),
+ *                                      но синус остаётся синусом: через период срез вернётся.
+ *
+ * Правило ловит только ЗАВЕДОМО колебательные сигналы (sine/perlin/tri/saw/square)
+ * без .slow(): их нельзя прочитать как «рампу». .slow() не exempt-ится — наоборот,
+ * он делает колебание медленным, и это допустимый приём.
+ */
+function ruleOscillatingSignalInFilter(code) {
+  const findings = [];
+  const re = /\.(lpf|hpf|bpf|cutoff)\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g;
+  for (const part of splitParts(code)) {
+    const stripped = stripLiterals(part.text);
+    let m;
+    while ((m = re.exec(stripped)) !== null) {
+      const method = m[1];
+      if (!FILTER_METHODS.has(method)) continue;
+      const argument = m[2];
+      // time.range — измеренный монотонный рамп; .slow() — осознанное замедление.
+      if (/\btime\s*\./.test(argument)) continue;
+      if (/\.slow\s*\(/.test(argument)) continue;
+      const signal = /\b(sine|perlin|tri|triangle|saw|sawtooth|square)\s*\.\s*range\s*\(/.exec(argument);
+      if (!signal) continue;
+      findings.push({
+        id: 'R8',
+        level: 'warn',
+        line: part.startLine,
+        message:
+          `Партия ${part.label}: ${signal[1]}.range() в .${method}() — колебательный сигнал, срез не раскрывается монотонно ` +
+          '(измерено: sine.range идёт 2100 → 4000 → 2100 и обратно). Для нарастания используют time.range(200,4000) ' +
+          '(измерено: срез 200 → 4000 монотонно, верхняя полоса +51.8 дБ).',
+        fix: null,
+      });
+    }
+  }
+  return findings;
+}
+
 /** Реестр правил: порядок = порядок проверки. */
 export const RULES = [
   { id: 'R1', level: 'error', title: 'Написание лада', check: ruleScaleSpelling },
@@ -416,6 +485,7 @@ export const RULES = [
   { id: 'R5', level: 'warn', title: 'Слишком короткий duckattack', check: ruleDuckAttackTooShort },
   { id: 'R6', level: 'warn', title: 'Сигнал без .seg()', check: ruleSignalWithoutSeg },
   { id: 'R7', level: 'warn', title: 'Duck без жертвы на орбите', check: ruleDuckWithoutTarget },
+  { id: 'R8', level: 'warn', title: 'Колебательный сигнал вместо рампы', check: ruleOscillatingSignalInFilter },
 ];
 
 /**
