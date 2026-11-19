@@ -10,6 +10,6 @@ export const dnb = {
     '$BREAK: s("bd ~ sd ~ ~ sd ~ ~").fast(2).gain(.8)._scope()',
     '$RIDE: s("hh*8").gain(.35)._scope()',
     '$BASS: note("e1 ~ <d1 e1> ~").s("sawtooth").lpf(220).gain(.85)._pianoroll()',
-    '$STAB: chord("<e4 ~> <g4 ~>").voicing().s("square").gain(.3).room(.4)._pianoroll()',
+    '$STAB: note("<[e4] ~> <[g4] ~>").s("square").gain(.3).room(.4)._pianoroll()',
   ].join('\n'),
 };

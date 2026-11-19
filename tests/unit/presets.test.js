@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PRESETS } from '../../src/presets/index.js';
 import { staticValidate } from '../../src/core/validator.js';
 import { parseParts, getBpm, getKey, captureMixer, applyMixerState } from '../../src/core/code-model.js';
+import { runStrudel } from '../../server/music/strudel-runtime.mjs';
 
 describe('встроенные пресеты', () => {
   it('все 6 пресетов валидны: BPM, key, ≥3 партии, статические проверки', () => {
@@ -11,6 +12,25 @@ describe('встроенные пресеты', () => {
       expect(getBpm(p.code)).toBe(p.bpm);
       expect(getKey(p.code)).toBe(p.key);
       expect(parseParts(p.code).length).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('каждая партия пресета реально звучит: есть высоты или сэмпл', async () => {
+    // Регресс: chord("...") без .voicing() даёт события, но БЕЗ высот —
+    // партия молчала. Замер 19.11.2026: у всех шести пресетов аккордовая
+    // партия была без высот, у ambient/techno/dnb (.voicing() поверх списка
+    // нот) она не давала даже событий.
+    for (const p of PRESETS) {
+      const run = await runStrudel(p.code, { cycles: 4 });
+      expect(run.ok, `${p.name}: ${run.error}`).toBe(true);
+      for (const part of run.order) {
+        const haps = run.parts[part];
+        expect(haps.length, `${p.name}/${part}: партия без событий`).toBeGreaterThan(0);
+        const sounds = haps.some((h) => h.value && (h.value.note || h.value.s));
+        expect(sounds, `${p.name}/${part}: события без высот и без сэмпла`).toBe(true);
+        const unvoiced = haps.some((h) => h.value && h.value.chord);
+        expect(unvoiced, `${p.name}/${part}: chord() без .voicing() — партия без высот`).toBe(false);
+      }
     }
   });
 
