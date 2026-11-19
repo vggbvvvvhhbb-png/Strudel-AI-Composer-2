@@ -1,0 +1,73 @@
+{
+  "probe": "lna-public",
+  "date": "2026-11-19T14:15:58.544Z",
+  "publicOrigin": "https://5whh8l06ukzr9.space.mcode.io",
+  "target": "http://127.0.0.1:8123",
+  "navigationError": null,
+  "pageResult": "origin = https://5whh8l06ukzr9.space.mcode.io\nsecure context = true\nuser agent = Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/158.0.0.0 Safari/537.36\n\nfetch 127.0.0.1 (обычный) -> ОШИБКА: Failed to fetch\nfetch 127.0.0.1 (targetAddressSpace: local) -> ОШИБКА: Failed to fetch\nfetch localhost -> ОШИБКА: Failed to fetch\nfetch 127.0.0.1 (no-cors) -> ОШИБКА: Failed to fetch",
+  "targetHits": [],
+  "reachedCases": [],
+  "notReachedCases": [
+    "plain",
+    "local",
+    "localhost",
+    "nocors"
+  ],
+  "consoleMessages": [
+    {
+      "type": "error",
+      "text": "Access to fetch at 'http://127.0.0.1:8123/ping?case=plain' from origin 'https://5whh8l06ukzr9.space.mcode.io' has been blocked by CORS policy: Permission was denied for this request to access the `loopback` address space."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'http://127.0.0.1:8123/ping?case=local' from origin 'https://5whh8l06ukzr9.space.mcode.io' has been blocked by CORS policy: Request had a target IP address space of `local` yet the resource is in address space `loopback`."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'http://localhost:8123/ping?case=localhost' from origin 'https://5whh8l06ukzr9.space.mcode.io' has been blocked by CORS policy: Permission was denied for this request to access the `loopback` address space."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'http://127.0.0.1:8123/ping?case=nocors' from origin 'https://5whh8l06ukzr9.space.mcode.io' has been blocked by CORS policy: Permission was denied for this request to access the `loopback` address space."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    }
+  ],
+  "failedRequests": [
+    {
+      "url": "http://127.0.0.1:8123/ping?case=plain",
+      "method": "GET",
+      "failure": "net::ERR_FAILED"
+    },
+    {
+      "url": "http://127.0.0.1:8123/ping?case=local",
+      "method": "GET",
+      "failure": "net::ERR_FAILED"
+    },
+    {
+      "url": "http://localhost:8123/ping?case=localhost",
+      "method": "GET",
+      "failure": "net::ERR_FAILED"
+    },
+    {
+      "url": "http://127.0.0.1:8123/ping?case=nocors",
+      "method": "GET",
+      "failure": "net::ERR_FAILED"
+    }
+  ],
+  "note": "Разрешение LNA в headless-Chrome выдать нельзя (диалога нет), поэтому отказ — ожидаемый исход для публичного origin. Смысл замера — отделить «запрос не дошёл» от «ответ спрятал CORS»: попадания видны в targetHits."
+}
