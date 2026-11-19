@@ -128,10 +128,13 @@ describe('маршруты локального демона', () => {
   });
 
   it('SSE начинается со снимка настоящей задачи, включая завершённую ошибкой', async () => {
+    // payload проходит строгую схему типа, но файл не существует: задача
+    // честно падает в error — и SSE всё равно отдаёт снимок.
     const submitted = await fetch(`${base}/api/local/tasks`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'passport', payload: {} }),
+      body: JSON.stringify({ type: 'passport', payload: { path: path.join(ROOT, '.scratch', 'no-such-file.wav') } }),
     });
+    expect(submitted.status).toBe(202);
     const { id } = await submitted.json();
     const res = await fetch(`${base}/api/local/tasks/${id}/stream`, { signal: AbortSignal.timeout(5000) });
     expect(res.headers.get('content-type')).toContain('text/event-stream');
