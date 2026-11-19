@@ -49,7 +49,7 @@ export async function probeAnalysisWorker(options = {}) {
       details: {
         demucs_available: Boolean(body?.models?.demucs_available),
         separation_model: body?.models?.separation ?? null,
-        python: body?.python ?? null,
+        python: body?.versions?.python ?? null,
       },
     };
   } catch (err) {

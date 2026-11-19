@@ -24,6 +24,7 @@
 // открытый в сеть рендерер — это дыра. Можно задать LOCAL_DAEMON_ALLOW_ANON=1
 // только для локальных экспериментов.
 
+import 'dotenv/config';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
@@ -300,13 +301,15 @@ if (isMain) {
     );
     process.exit(1);
   }
-  const { server } = await createDaemon();
+  const { server, registry } = await createDaemon();
   server.listen(PORT, HOST, () => {
     console.log(`[local] демон слушает http://${HOST}:${PORT} (очередь: ${STATE_DIR})`);
   });
-  const shutdown = () => {
-    server.close(() => process.exit(0));
+  const shutdown = async () => {
+    server.close();
     setTimeout(() => process.exit(0), 2000).unref();
+    await registry.close();
+    process.exit(0);
   };
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
